@@ -116,9 +116,9 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="action_search_image">Image search</string>
     <string name="action_switch_catalog">Catalog mode</string>
     <string name="action_switch_board">Board mode</string>
-    <string name="action_scroll_to_top">Top</string>
-    <string name="action_scroll_to_bottom">Bottom</string>
-    <string name="action_sort">Sort</string>
+    <string name="action_scroll_to_top" tools:ignore="MissingTranslation">Top</string>
+    <string name="action_scroll_to_bottom" tools:ignore="MissingTranslation">Bottom</string>
+    <string name="action_sort" tools:ignore="MissingTranslation">Sort</string>
     <string name="action_rename_pin">Rename bookmark</string>
     <string name="action_rename">Rename</string>
     <string name="action_reply">Reply</string>
@@ -130,7 +130,7 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="order_image">Image count</string>
     <string name="order_newest">Newest</string>
     <string name="order_oldest">Oldest</string>
-    <string name="order_modified">Latest reply</string>
+    <string name="order_modified" tools:ignore="MissingTranslation">Latest reply</string>
 
     <string name="search_hint">Search</string>
     <string name="search_results">Found %1$s for \"%2$s\"</string>
@@ -395,8 +395,8 @@ Enable \"Play videos with external player\" in the settings to play videos with 
     <string name="settings_sites">Sites</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_appearance_description">Theme, layout, fonts, etc.</string>
-    <string name="settings_behavior">Behavior</string>
-    <string name="settings_behavior_description">Thread refresh, captcha, etc.</string>
+    <string name="settings_behavior" tools:ignore="MissingTranslation">Behavior</string>
+    <string name="settings_behavior_description" tools:ignore="MissingTranslation">Thread refresh, captcha, etc.</string>
     <string name="settings_media">Media</string>
     <string name="settings_media_description">Save location, auto loading, etc.</string>
     <string name="settings_filters">Filters</string>
@@ -481,7 +481,7 @@ Enable \"Play videos with external player\" in the settings to play videos with 
     <string name="setting_post_filename">Show filename on posts</string>
 
     <!-- Behavior -->
-    <string name="settings_screen_behavior">Behavior</string>
+    <string name="settings_screen_behavior" tools:ignore="MissingTranslation">Behavior</string>
 
     <!-- Behavior general group -->
     <string name="settings_group_general">General</string>
@@ -510,7 +510,7 @@ Enable \"Play videos with external player\" in the settings to play videos with 
     <string name="setting_volume_key_scrolling">Volume keys scroll content</string>
     <string name="setting_tap_no_rely">Tap the post number to reply</string>
     <string name="setting_open_link_confirmation">Ask before opening links</string>
-    <string name="setting_open_link_browser">Always open links in external browser</string>
+    <string name="setting_open_link_browser" tools:ignore="MissingTranslation">Always open links in external browser</string>
 
 
     <!-- Behavior proxy group -->
@@ -556,8 +556,8 @@ If disabled, save the image with the filename the uploader assigned."
 
     <string name="setting_video_auto_load">Automatically load videos</string>
 
-    <string name="setting_video_auto_loop">Enable automatic video-looping</string>
-    <string name="setting_video_auto_loop_description">Automatically loop video content</string>
+    <string name="setting_video_auto_loop" tools:ignore="MissingTranslation">Enable automatic video-looping</string>
+    <string name="setting_video_auto_loop_description" tools:ignore="MissingTranslation">Automatically loop video content</string>
 
 
     <!-- Save location settings -->
@@ -596,7 +596,7 @@ Tap the toolbar menu to change its color."
     <string name="setting_pass_logout">Logout</string>
     <string name="setting_pass_logging_in">Loading&#8230;</string>
     <string name="setting_pass_error">Connection error</string>
-    <string name="setting_pass_bottom_description">"
+    <string name="setting_pass_bottom_description" tools:ignore="MissingTranslation">"
 <![CDATA[
 Forgot your 4chan Pass login details?<br>
 <a href=\"https://www.4chan.org/pass?reset\">Go here to reset your PIN.</a><br>
@@ -606,7 +606,7 @@ Don't have a 4chan Pass?<br>
 ]]>
     "</string>
 
-    <string name="settings_screen_theme">Themes</string>
+    <string name="settings_screen_theme" tools:ignore="MissingTranslation">Themes</string>
     <string name="image_quality" tools:ignore="MissingTranslation">Image quality: %1$d</string>
     <string name="scale_reduce" tools:ignore="MissingTranslation">Reduce: %1$dx</string>
     <string name="could_not_decode_image_bitmap" tools:ignore="MissingTranslation">Could not decode image bitmap</string>
