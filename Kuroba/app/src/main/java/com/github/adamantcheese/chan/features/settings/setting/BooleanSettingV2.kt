@@ -77,7 +77,6 @@ class BooleanSettingV2 : SettingV2(), Setting.SettingCallback<Boolean> {
       "topDescription='$topDescription', bottomDescription=$bottomDescription, settingValue=$currentValue)"
   }
 
-
   companion object {
     fun createBuilder(
       context: Context,
