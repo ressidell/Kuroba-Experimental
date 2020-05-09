@@ -30,6 +30,7 @@ class ListSettingV2<T : Any> : SettingV2() {
   }
 
   fun updateSetting(value: Any) {
+    update()
     setting?.set(value as T)
   }
 
