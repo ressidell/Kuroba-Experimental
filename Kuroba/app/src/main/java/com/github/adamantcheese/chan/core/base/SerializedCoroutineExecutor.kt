@@ -8,8 +8,8 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 
 /**
- * Executes all posts callbacks sequentially using an unlimited channel. This means that there won't
- * be two coroutines running at the same time posted on this executor.
+ * Executes all callbacks sequentially using an unlimited channel. This means that there won't
+ * be two callbacks running at the same time posted on this executor.
  * */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SerializedCoroutineExecutor(private val scope: CoroutineScope) {
