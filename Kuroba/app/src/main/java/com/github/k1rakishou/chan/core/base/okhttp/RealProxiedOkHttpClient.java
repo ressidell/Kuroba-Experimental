@@ -1,8 +1,11 @@
 package com.github.k1rakishou.chan.core.base.okhttp;
 
+import androidx.annotation.NonNull;
+
 import com.github.k1rakishou.chan.Chan;
 import com.github.k1rakishou.chan.core.di.HttpLoggingInterceptorInstaller;
-import com.github.k1rakishou.chan.core.settings.ChanSettings;
+import com.github.k1rakishou.chan.core.manager.ProxyStorage;
+import com.github.k1rakishou.chan.core.net.KurobaProxySelector;
 
 import kotlin.Lazy;
 import okhttp3.Dns;
@@ -14,34 +17,48 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 // this is basically the same as OkHttpClient, but with a singleton for a proxy instance
 public class RealProxiedOkHttpClient implements ProxiedOkHttpClient {
     private OkHttpClient proxiedClient;
-    private Dns okHttpDns;
-    private Chan.OkHttpProtocols okHttpProtocols;
-    private Lazy<HttpLoggingInterceptor> loggingInterceptorLazyKt;
+
+    private final Dns okHttpDns;
+    private final Chan.OkHttpProtocols okHttpProtocols;
+    private final ProxyStorage proxyStorage;
+    private final Lazy<HttpLoggingInterceptor> loggingInterceptorLazyKt;
 
     public RealProxiedOkHttpClient(
             Dns okHttpDns,
             Chan.OkHttpProtocols okHttpProtocols,
+            ProxyStorage proxyStorage,
             Lazy<HttpLoggingInterceptor> loggingInterceptorLazyKt
     ) {
         this.okHttpDns = okHttpDns;
         this.okHttpProtocols = okHttpProtocols;
+        this.proxyStorage = proxyStorage;
         this.loggingInterceptorLazyKt = loggingInterceptorLazyKt;
     }
 
+    @NonNull
     @Override
-    public synchronized OkHttpClient getProxiedClient() {
+    public OkHttpClient getProxiedClient() {
         if (proxiedClient == null) {
-            // Proxies are usually slow, so they have increased timeouts
-            OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                    .proxy(ChanSettings.getProxy())
-                    .connectTimeout(30, SECONDS)
-                    .readTimeout(30, SECONDS)
-                    .writeTimeout(30, SECONDS)
-                    .protocols(okHttpProtocols.getProtocols())
-                    .dns(okHttpDns);
+            synchronized (this) {
+                if (proxiedClient == null) {
+                    KurobaProxySelector kurobaProxySelector = new KurobaProxySelector(
+                            proxyStorage,
+                            ProxyStorage.ProxyActionType.SiteRequests
+                    );
 
-            HttpLoggingInterceptorInstaller.install(builder, loggingInterceptorLazyKt);
-            proxiedClient = builder.build();
+                    // Proxies are usually slow, so they have increased timeouts
+                    OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                            .connectTimeout(30, SECONDS)
+                            .readTimeout(30, SECONDS)
+                            .writeTimeout(30, SECONDS)
+                            .protocols(okHttpProtocols.getProtocols())
+                            .proxySelector(kurobaProxySelector)
+                            .dns(okHttpDns);
+
+                    HttpLoggingInterceptorInstaller.install(builder, loggingInterceptorLazyKt);
+                    proxiedClient = builder.build();
+                }
+            }
         }
 
         return proxiedClient;
