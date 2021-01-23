@@ -45,7 +45,7 @@ class EpoxyBoardSelectionButtonView @JvmOverloads constructor(
     textView.text = context.getString(R.string.selected_board_code, boardCode)
   }
 
-  @ModelProp(options = [ModelProp.Option.IgnoreRequireHashCode])
+  @ModelProp(options = [ModelProp.Option.NullOnRecycle, ModelProp.Option.IgnoreRequireHashCode])
   fun bindClickCallback(callback: (() -> Unit)?) {
     if (callback == null) {
       rootView.setOnThrottlingClickListener(null)
