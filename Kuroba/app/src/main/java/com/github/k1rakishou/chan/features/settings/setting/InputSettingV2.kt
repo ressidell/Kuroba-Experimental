@@ -55,6 +55,7 @@ class InputSettingV2<T : Any> : SettingV2() {
     if (this === other) return true
     if (other !is InputSettingV2<*>) return false
 
+    if (getCurrent() != other.getCurrent()) return false
     if (updateCounter != other.updateCounter) return false
     if (requiresRestart != other.requiresRestart) return false
     if (requiresUiRefresh != other.requiresUiRefresh) return false
@@ -68,6 +69,7 @@ class InputSettingV2<T : Any> : SettingV2() {
 
   override fun hashCode(): Int {
     var result = updateCounter
+    result = 31 * result + getCurrent().hashCode()
     result = 31 * result + requiresRestart.hashCode()
     result = 31 * result + requiresUiRefresh.hashCode()
     result = 31 * result + settingsIdentifier.hashCode()
