@@ -67,6 +67,8 @@ class FuukaApi(
       chanReaderProcessor.setOp(originalPost)
       postBuilders.forEach { chanPostBuilder -> chanReaderProcessor.addPost(chanPostBuilder) }
     }
+
+    chanReaderProcessor.applyChanReadOptions()
   }
 
   override suspend fun loadCatalog(
