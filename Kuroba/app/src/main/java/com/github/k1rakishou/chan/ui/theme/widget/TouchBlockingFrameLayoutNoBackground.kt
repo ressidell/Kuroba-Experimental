@@ -5,7 +5,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.FrameLayout
 
-class TouchBlockingFrameLayoutNoBackground @JvmOverloads constructor(
+open class TouchBlockingFrameLayoutNoBackground @JvmOverloads constructor(
   context: Context,
   attributeSet: AttributeSet? = null,
   defStyle: Int = 0
