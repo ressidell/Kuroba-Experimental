@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.features.media_viewer.helper
 
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
+import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import kotlinx.coroutines.channels.BufferOverflow
@@ -12,16 +13,20 @@ import kotlinx.coroutines.flow.asSharedFlow
 class MediaViewerScrollerHelper(
   private val chanThreadManager: ChanThreadManager
 ) {
-  private val _mediaViewerScrollEventsFlow = MutableSharedFlow<ChanPostImage>(
+  private val _mediaViewerScrollEventsFlow = MutableSharedFlow<ScrollToImageEvent>(
     extraBufferCapacity = 1,
     onBufferOverflow = BufferOverflow.DROP_OLDEST
   )
 
-  val mediaViewerScrollEventsFlow: SharedFlow<ChanPostImage>
+  val mediaViewerScrollEventsFlow: SharedFlow<ScrollToImageEvent>
     get() = _mediaViewerScrollEventsFlow.asSharedFlow()
 
-  fun onScrolledTo(postDescriptor: PostDescriptor, mediaLocation: MediaLocation) {
-    if (mediaLocation !is MediaLocation.Remote) {
+  fun onScrolledTo(
+    chanDescriptor: ChanDescriptor?,
+    postDescriptor: PostDescriptor,
+    mediaLocation: MediaLocation
+  ) {
+    if (chanDescriptor == null || mediaLocation !is MediaLocation.Remote) {
       return
     }
 
@@ -33,7 +38,12 @@ class MediaViewerScrollerHelper(
       return
     }
 
-    _mediaViewerScrollEventsFlow.tryEmit(chanPostImage)
+    _mediaViewerScrollEventsFlow.tryEmit(ScrollToImageEvent(chanDescriptor, chanPostImage))
   }
+
+  data class ScrollToImageEvent(
+    val chanDescriptor: ChanDescriptor,
+    val chanPostImage: ChanPostImage
+  )
 
 }
