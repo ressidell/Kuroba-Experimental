@@ -41,17 +41,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
 
-                <com.github.k1rakishou.chan.ui.view.HidingBottomNavigationView
-                    android:id="@+id/bottom_navigation_view"
+                <com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
+                    android:id="@+id/navigation_view"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/bottom_nav_view_height"
+                    android:layout_height="@dimen/navigation_view_size"
                     android:layout_alignParentBottom="true"
                     tools:menu="@menu/bottom_navigation_menu" />
 
                 <com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanel
                     android:id="@+id/bottom_menu_panel"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/bottom_nav_view_height"
+                    android:layout_height="@dimen/navigation_view_size"
                     android:layout_alignParentBottom="true" />
 
             </RelativeLayout>
