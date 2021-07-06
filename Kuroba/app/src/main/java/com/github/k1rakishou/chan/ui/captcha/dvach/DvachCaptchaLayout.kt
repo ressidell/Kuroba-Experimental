@@ -140,8 +140,7 @@ class DvachCaptchaLayout(context: Context) : TouchBlockingFrameLayout(context),
       onVerifyClick = { captchaId, token ->
         val solution = CaptchaSolution.TokenWithIdSolution(
           id = captchaId,
-          token = token,
-          type = CaptchaSolution.TokenWithIdSolution.Type.DvachCaptcha
+          token = token
         )
 
         captchaHolder.addNewSolution(solution)
@@ -216,7 +215,7 @@ class DvachCaptchaLayout(context: Context) : TouchBlockingFrameLayout(context),
           modifier = Modifier
             .width(112.dp)
             .height(36.dp),
-          text = stringResource(id = R.string.captcha_layout_dvach_reload)
+          text = stringResource(id = R.string.captcha_layout_reload)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -234,7 +233,7 @@ class DvachCaptchaLayout(context: Context) : TouchBlockingFrameLayout(context),
           modifier = Modifier
             .width(112.dp)
             .height(36.dp),
-          text = stringResource(id = R.string.captcha_layout_dvach_verify)
+          text = stringResource(id = R.string.captcha_layout_verify)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
