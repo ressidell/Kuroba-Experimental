@@ -226,7 +226,7 @@ class ComposeBoardsSelectorController(
         .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
       chanTheme = chanTheme,
       themeEngine = themeEngine,
-      backgroundColor = backgroundColor,
+      onBackgroundColor = backgroundColor,
       searchQuery = searchQuery,
       onSearchQueryChanged = { newQuery -> onSearchQueryChangedRemembered.value.invoke(newQuery) }
     )
@@ -272,9 +272,13 @@ class ComposeBoardsSelectorController(
             }
           )
         } else if (siteIcon.drawable != null) {
+          val bitmapPainter = remember {
+            BitmapPainter(siteIcon.drawable!!.bitmap.asImageBitmap())
+          }
+
           Image(
             modifier = siteIconModifier,
-            painter = BitmapPainter(siteIcon.drawable!!.bitmap.asImageBitmap()),
+            painter = bitmapPainter,
             contentDescription = null
           )
         }
