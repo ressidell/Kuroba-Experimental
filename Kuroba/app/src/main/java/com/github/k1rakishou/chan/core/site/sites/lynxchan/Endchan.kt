@@ -10,7 +10,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 class Endchan : LynxchanSite() {
   private val defaultDomain = "https://endchan.net/".toHttpUrl()
-  private val siteIconLazy by lazy { SiteIcon.fromFavicon(imageLoaderV2, "https://endchan.net/favicon.ico".toHttpUrl()) }
+  private val siteIconLazy by lazy { SiteIcon.fromFavicon(imageLoaderV2, "https://${defaultDomain}favicon.ico".toHttpUrl()) }
 
   override val domain: Lazy<HttpUrl> = lazy {
     val siteDomain = siteDomainSetting?.get()
@@ -39,6 +39,10 @@ class Endchan : LynxchanSite() {
     get() = siteIconLazy
   override val urlHandler: Lazy<BaseLynxchanUrlHandler>
     get() = siteUrlHandler
+  override val postingViaFormData: Boolean
+    get() = false
+  override val supportsPosting: Boolean
+    get() = true
 
   class EndchanUrlHandler(baseUrl: HttpUrl, mediaHosts: Array<HttpUrl>) : BaseLynxchanUrlHandler(
     url = baseUrl,
