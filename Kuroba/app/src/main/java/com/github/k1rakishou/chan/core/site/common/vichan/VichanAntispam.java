@@ -55,9 +55,7 @@ public class VichanAntispam {
     public VichanAntispam(Lazy<RealProxiedOkHttpClient> proxiedOkHttpClient, HttpUrl url) {
         this.proxiedOkHttpClient = proxiedOkHttpClient;
         this.url = url;
-    }
 
-    public void addDefaultIgnoreFields() {
         fieldsToIgnore.addAll(Arrays.asList(
                 "board",
                 "thread",

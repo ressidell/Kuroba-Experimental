@@ -103,7 +103,6 @@ open class VichanActions(
       ?: return ModularResult.error(CommonClientException("Failed to get desktopUrl by chanDescriptor: $replyChanDescriptor"))
 
     val antispam = VichanAntispam(proxiedOkHttpClient, desktopUrl)
-    antispam.addDefaultIgnoreFields()
 
     val antiSpamFieldsResult = antispam.get()
     if (antiSpamFieldsResult is ModularResult.Error) {
