@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:paddingLeft="8dp"
+    android:paddingTop="8dp"
+    android:paddingRight="8dp"
+    android:paddingBottom="8dp">
+
+    <FrameLayout
+        android:id="@+id/toolbar_go_to_post_button_container"
+        android:layout_width="@dimen/left_action_strip_button_size"
+        android:layout_height="@dimen/left_action_strip_button_size"
+        android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toTopOf="@+id/toolbar_post_replies_button_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/toolbar_go_to_post_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="6dp"
+            android:src="@drawable/ic_subdirectory_arrow_left_white_24dp"
+            android:tint="#fff" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/toolbar_post_replies_button_container"
+        android:layout_width="@dimen/left_action_strip_button_size"
+        android:layout_height="@dimen/left_action_strip_button_size"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toTopOf="@+id/toolbar_reload_button_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_go_to_post_button_container">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/toolbar_post_replies_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="6dp"
+            android:src="@drawable/ic_baseline_comment_24"
+            android:tint="#fff" />
+
+        <TextView
+            android:id="@+id/replies_count_text"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="end|top"
+            android:background="@drawable/circle_background_transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:gravity="center"
+            android:textColor="#fff"
+            android:textSize="11sp"
+            android:visibility="gone"
+            tools:text="99+"
+            tools:visibility="visible" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/toolbar_reload_button_container"
+        android:layout_width="@dimen/left_action_strip_button_size"
+        android:layout_height="@dimen/left_action_strip_button_size"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toTopOf="@+id/toolbar_download_button_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_post_replies_button_container">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/toolbar_reload_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="6dp"
+            android:src="@drawable/ic_refresh_white_24dp"
+            android:tint="#fff" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/toolbar_download_button_container"
+        android:layout_width="@dimen/left_action_strip_button_size"
+        android:layout_height="@dimen/left_action_strip_button_size"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toTopOf="@+id/toolbar_options_button_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_reload_button_container">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/toolbar_download_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="6dp"
+            android:src="@drawable/ic_file_download_white_24dp"
+            android:tint="#fff" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/toolbar_options_button_container"
+        android:layout_width="@dimen/left_action_strip_button_size"
+        android:layout_height="@dimen/left_action_strip_button_size"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_download_button_container">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/toolbar_options_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="6dp"
+            android:src="@drawable/ic_more_vert_white_24dp"
+            android:tint="#fff" />
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

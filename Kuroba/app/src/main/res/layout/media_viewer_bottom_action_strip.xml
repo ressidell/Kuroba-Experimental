@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
     android:paddingTop="4dp"
     android:paddingBottom="4dp">
 
     <FrameLayout
         android:id="@+id/toolbar_go_to_post_button_container"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_width="@dimen/bottom_action_strip_button_size"
+        android:layout_height="@dimen/bottom_action_strip_button_size"
         android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/toolbar_post_replies_button_container"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/toolbar_go_to_post_button"
-            android:layout_width="36dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
@@ -31,16 +33,18 @@
 
     <FrameLayout
         android:id="@+id/toolbar_post_replies_button_container"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_width="@dimen/bottom_action_strip_button_size"
+        android:layout_height="@dimen/bottom_action_strip_button_size"
         android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/toolbar_reload_button_container"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/toolbar_go_to_post_button_container">
+        app:layout_constraintStart_toEndOf="@+id/toolbar_go_to_post_button_container"
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/toolbar_post_replies_button"
-            android:layout_width="36dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
@@ -54,30 +58,32 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_gravity="end|top"
-            android:gravity="center"
+            android:background="@drawable/circle_background_transparent"
             android:clickable="false"
             android:focusable="false"
-            android:background="@drawable/circle_background_transparent"
+            android:gravity="center"
             android:textColor="#fff"
             android:textSize="11sp"
             android:visibility="gone"
             tools:text="99+"
-            tools:visibility="visible"/>
+            tools:visibility="visible" />
 
     </FrameLayout>
 
     <FrameLayout
         android:id="@+id/toolbar_reload_button_container"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_width="@dimen/bottom_action_strip_button_size"
+        android:layout_height="@dimen/bottom_action_strip_button_size"
         android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/toolbar_download_button_container"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/toolbar_post_replies_button_container">
+        app:layout_constraintStart_toEndOf="@+id/toolbar_post_replies_button_container"
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/toolbar_reload_button"
-            android:layout_width="36dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
@@ -90,16 +96,18 @@
 
     <FrameLayout
         android:id="@+id/toolbar_download_button_container"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_width="@dimen/bottom_action_strip_button_size"
+        android:layout_height="@dimen/bottom_action_strip_button_size"
         android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/toolbar_options_button_container"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/toolbar_reload_button_container">
+        app:layout_constraintStart_toEndOf="@+id/toolbar_reload_button_container"
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/toolbar_download_button"
-            android:layout_width="36dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
@@ -112,16 +120,18 @@
 
     <FrameLayout
         android:id="@+id/toolbar_options_button_container"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_width="@dimen/bottom_action_strip_button_size"
+        android:layout_height="@dimen/bottom_action_strip_button_size"
         android:background="@drawable/circle_background_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/toolbar_download_button_container">
+        app:layout_constraintStart_toEndOf="@+id/toolbar_download_button_container"
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/toolbar_options_button"
-            android:layout_width="36dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
