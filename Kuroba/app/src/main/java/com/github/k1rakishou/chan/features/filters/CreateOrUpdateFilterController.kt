@@ -409,17 +409,37 @@ class CreateOrUpdateFilterController(
         onCheckChanged = { checked -> onlyOnOP = checked }
       )
 
-      if (action == FilterAction.WATCH.id) {
-        KurobaComposeCheckbox(
-          modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-          text = stringResource(id = R.string.filter_watcher_notify),
-          enabled = true,
-          currentlyChecked = filterWatchNotify,
-          onCheckChanged = { checked -> filterWatchNotify = checked }
-        )
-      }
+    if (action == FilterAction.WATCH.id) {
+      KurobaComposeCheckbox(
+        modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight(),
+        text = stringResource(id = R.string.filter_watcher_notify),
+        enabled = true,
+        currentlyChecked = filterWatchNotify,
+        onCheckChanged = { checked -> filterWatchNotify = checked }
+      )
+
+      KurobaComposeCheckbox(
+        modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight(),
+        text = stringResource(id = R.string.filter_watcher_auto_save),
+        enabled = true,
+        currentlyChecked = filterWatchAutoSave,
+        onCheckChanged = { checked -> filterWatchAutoSave = checked }
+      )
+
+      KurobaComposeCheckbox(
+        modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight(),
+        text = stringResource(id = R.string.filter_watcher_auto_save_media),
+        enabled = filterWatchAutoSave,
+        currentlyChecked = filterWatchAutoSaveMedia,
+        onCheckChanged = { checked -> filterWatchAutoSaveMedia = checked }
+      )
+    }
 
       if (action != FilterAction.WATCH.id && action != FilterAction.AVOID_WATCH.id) {
         KurobaComposeCheckbox(
@@ -539,7 +559,7 @@ class CreateOrUpdateFilterController(
       }
     }
 
-    KurobaComposeText(
+    Text(
       modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight()
@@ -654,7 +674,7 @@ class CreateOrUpdateFilterController(
         key = filterAction.id,
         name = FilterAction.filterActionName(filterAction),
         groupId = groupId,
-        checked = chanFilterMutableState.action.value == filterAction.id
+        isCurrentlySelected = chanFilterMutableState.action.value == filterAction.id
       )
     }
 
