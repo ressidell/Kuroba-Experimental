@@ -26,6 +26,7 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -223,6 +224,8 @@ class CreateOrUpdateFilterController(
     var applyToSaved by remember { chanFilterMutableState.applyToSaved }
     var applyToEmptyComments by remember { chanFilterMutableState.applyToEmptyComments }
     var filterWatchNotify by remember { chanFilterMutableState.filterWatchNotify }
+    var filterWatchAutoSave by remember { chanFilterMutableState.filterWatchAutoSave }
+    var filterWatchAutoSaveMedia by remember { chanFilterMutableState.filterWatchAutoSaveMedia }
     val arrowDropDownDrawable = remember { getTextDrawableContent() }
 
     if (action == FilterAction.WATCH.id || action == FilterAction.AVOID_WATCH.id  ) {
@@ -804,6 +807,10 @@ class CreateOrUpdateFilterController(
     val applyToEmptyComments: MutableState<Boolean> = mutableStateOf(false),
     val filterWatchNotify: MutableState<Boolean> = mutableStateOf(false),
     val testPattern: MutableState<TextFieldValue> = mutableStateOf(TextFieldValue()),
+    val filterWatchAutoSave: MutableState<Boolean> = mutableStateOf(false),
+    val filterWatchAutoSaveMedia: MutableState<Boolean> = mutableStateOf(false),
+
+    val testPattern: MutableState<String> = mutableStateOf(""),
     val filterValidationResult: MutableState<FilterValidationResult> = mutableStateOf(FilterValidationResult.Undefined)
   ) {
 
@@ -823,6 +830,8 @@ class CreateOrUpdateFilterController(
         applyToSaved = applyToSaved.value,
         applyToEmptyComments = applyToEmptyComments.value,
         filterWatchNotify = filterWatchNotify.value,
+        filterWatchAutoSave = filterWatchAutoSave.value,
+        filterWatchAutoSaveMedia = filterWatchAutoSaveMedia.value,
       )
     }
 
@@ -843,6 +852,8 @@ class CreateOrUpdateFilterController(
           chanFilterMutableState.applyToSaved.value = chanFilterMutable.applyToSaved
           chanFilterMutableState.applyToEmptyComments.value = chanFilterMutable.applyToEmptyComments
           chanFilterMutableState.filterWatchNotify.value = chanFilterMutable.filterWatchNotify
+          chanFilterMutableState.filterWatchAutoSave.value = chanFilterMutable.filterWatchAutoSave
+          chanFilterMutableState.filterWatchAutoSaveMedia.value = chanFilterMutable.filterWatchAutoSaveMedia
 
           chanFilterMutableState.color.value = if (chanFilterMutable.color != 0) {
             chanFilterMutable.color
