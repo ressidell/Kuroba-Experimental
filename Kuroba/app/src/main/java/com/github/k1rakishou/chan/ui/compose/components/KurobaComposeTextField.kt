@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,29 +57,92 @@ fun KurobaComposeTextField(
   trailingIcon: @Composable (() -> Unit)? = null,
   interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
-  val prevTextFieldValue by remember { mutableStateOf<TextFieldValue>(TextFieldValue(value)) }
+  val chanTheme = LocalChanTheme.current
+  val view = LocalView.current
 
-  KurobaComposeTextField(
-    value = prevTextFieldValue,
-    modifier = modifier,
-    onValueChange = { tfv: TextFieldValue -> onValueChange(tfv.text) },
-    fontSize = fontSize,
-    maxLines = maxLines,
-    singleLine = singleLine,
-    keyboardOptions = keyboardOptions,
-    keyboardActions = keyboardActions,
-    textStyle = textStyle,
-    visualTransformation = visualTransformation,
-    enabled = enabled,
-    readOnly = readOnly,
-    isError = isError,
-    shape = shape,
-    label = label,
-    placeholder = placeholder,
-    leadingIcon = leadingIcon,
-    trailingIcon = trailingIcon,
-    interactionSource = interactionSource
+  DisposableEffect(
+    key1 = view,
+    effect = {
+      if (view.isAttachedToWindow) {
+        view.requestApplyInsets()
+      }
+
+      onDispose {
+        if (view.isAttachedToWindow) {
+          view.requestApplyInsets()
+        }
+      }
+    }
   )
+
+  val textSelectionColors = remember(key1 = chanTheme.accentColor) {
+    TextSelectionColors(
+      handleColor = Color.Transparent,
+      backgroundColor = chanTheme.accentColorCompose.copy(alpha = 0.4f)
+    )
+  }
+
+  CompositionLocalProvider(LocalTextSelectionColors provides textSelectionColors) {
+    val textFontSize = collectTextFontSize(defaultFontSize = fontSize)
+    val colors = chanTheme.textFieldColors()
+
+    // If color is not provided via the text style, use content color as a default
+    val textColor = textStyle.color.takeOrElse { colors.textColor(enabled).value }
+    val mergedTextStyle = textStyle.merge(TextStyle(color = textColor, fontSize = textFontSize))
+
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    @OptIn(ExperimentalMaterialApi::class)
+    BasicTextField(
+      value = value,
+      modifier = modifier
+        .background(colors.backgroundColor(enabled).value, shape)
+        .animatedHorizontalLine(
+          enabled = enabled,
+          isError = isError,
+          isFocused = isFocused,
+          lineWidth = 2.dp
+        )
+        .defaultMinSize(
+          minWidth = TextFieldDefaults.MinWidth,
+          minHeight = TextFieldDefaults.MinHeight
+        ),
+      onValueChange = onValueChange,
+      enabled = enabled,
+      readOnly = readOnly,
+      textStyle = mergedTextStyle,
+      cursorBrush = SolidColor(colors.cursorColor(isError).value),
+      visualTransformation = visualTransformation,
+      keyboardOptions = keyboardOptions,
+      keyboardActions = keyboardActions,
+      interactionSource = interactionSource,
+      singleLine = singleLine,
+      maxLines = maxLines,
+      decorationBox = @Composable { innerTextField ->
+        val labelFunc: (@Composable (() -> Unit))? = if (label == null) {
+          null
+        } else {
+          { label(interactionSource) }
+        }
+
+        TextFieldDefaults.TextFieldDecorationBox(
+          value = value,
+          visualTransformation = visualTransformation,
+          innerTextField = innerTextField,
+          placeholder = placeholder,
+          label = labelFunc,
+          leadingIcon = leadingIcon,
+          trailingIcon = trailingIcon,
+          singleLine = singleLine,
+          enabled = enabled,
+          isError = isError,
+          interactionSource = interactionSource,
+          colors = colors,
+          contentPadding = remember { PaddingValues(4.dp) }
+        )
+      }
+    )
+  }
 }
 
 @Composable
