@@ -1,15 +1,23 @@
 package com.github.k1rakishou.chan.features.reply.right
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutState
-import com.github.k1rakishou.chan.features.reply.data.SendReplyState
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 
@@ -17,59 +25,58 @@ import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 internal fun SendReplyButton(
   chanDescriptor: ChanDescriptor,
   replyLayoutState: ReplyLayoutState,
-  sendReplyState: SendReplyState,
   iconSize: Dp,
   padding: Dp,
   onCancelReplySendClicked: (ReplyLayoutState) -> Unit,
-  onSendReplyClicked: (ChanDescriptor, ReplyLayoutState) -> Unit,
-  replySendProgress: Float?
+  onSendReplyClicked: (ChanDescriptor, ReplyLayoutState) -> Unit
 ) {
-  val buttonDrawableId = remember(key1 = sendReplyState) {
-    if (sendReplyState.canCancel) {
-      R.drawable.ic_baseline_clear_24
-    } else {
-      R.drawable.ic_baseline_send_24
-    }
+  val replySendProgressMut by replyLayoutState.replySendProgressInPercentsState
+  val replySendProgress = replySendProgressMut
+  val sendReplyState by replyLayoutState.sendReplyState
+
+  val buttonDrawableId = if (sendReplyState.canCancel) {
+    R.drawable.ic_baseline_clear_24
+  } else {
+    R.drawable.ic_baseline_send_24
   }
 
-  KurobaComposeIcon(
-    modifier = Modifier
-      .size(iconSize)
-      .padding(padding)
-      .kurobaClickable(
-        bounded = false,
-        onClick = {
-          if (sendReplyState.canCancel) {
-            onCancelReplySendClicked(replyLayoutState)
-          } else {
-            onSendReplyClicked(chanDescriptor, replyLayoutState)
+  Box {
+    KurobaComposeIcon(
+      modifier = Modifier
+        .size(iconSize)
+        .padding(padding)
+        .kurobaClickable(
+          bounded = false,
+          onClick = {
+            if (sendReplyState.canCancel) {
+              onCancelReplySendClicked(replyLayoutState)
+            } else {
+              onSendReplyClicked(chanDescriptor, replyLayoutState)
+            }
           }
-        }
-      ),
-    drawableId = buttonDrawableId
-  )
+        ),
+      drawableId = buttonDrawableId
+    )
 
-//  Box(
-//    modifier = Modifier.size(iconSize)
-//  ) {
-//
-//
-//    // TODO: Change to a different way
-//    if (replySendProgress != null) {
-//      if (replySendProgress > 0f && replySendProgress < 1f) {
-//        KurobaComposeProgressIndicator(
-//          modifier = Modifier
-//              .fillMaxSize()
-//              .padding(4.dp),
-//          progress = replySendProgress
-//        )
-//      } else if (replySendProgress >= 1f) {
-//        KurobaComposeProgressIndicator(
-//          modifier = Modifier
-//              .fillMaxSize()
-//              .padding(4.dp),
-//        )
-//      }
-//    }
-//  }
+    if (replySendProgress >= 0) {
+      Box(
+        modifier = Modifier
+          .wrapContentSize()
+          .align(Alignment.TopEnd)
+          .drawBehind {
+            drawRoundRect(
+              color = Color.Black.copy(alpha = 0.8f),
+              cornerRadius = CornerRadius(x = 4.dp.toPx(), y = 4.dp.toPx())
+            )
+          }
+          .padding(horizontal = 4.dp)
+      ) {
+        KurobaComposeText(
+          text = "${replySendProgress}%",
+          color = Color.White,
+          fontSize = 10.sp
+        )
+      }
+    }
+  }
 }
