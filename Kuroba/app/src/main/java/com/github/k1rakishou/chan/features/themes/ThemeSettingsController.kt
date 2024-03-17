@@ -29,13 +29,13 @@ import androidx.viewpager.widget.ViewPager
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
@@ -97,10 +97,13 @@ class ThemeSettingsController(context: Context) : Controller(context) {
   override fun onCreate() {
     super.onCreate()
 
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
         swipeable = false
-      ),
+      )
+    )
+
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -453,10 +456,7 @@ class ThemeSettingsController(context: Context) : Controller(context) {
       postCellDataWidthNoPaddings: Int
     ): CoordinatorLayout {
       val kurobaToolbarState = KurobaToolbarState()
-      kurobaToolbarState.pushOrUpdateDefaultLayer(
-        navigationFlags = DeprecatedNavigationFlags(
-          hasBack = false
-        ),
+      kurobaToolbarState.enterDefaultMode(
         leftItem = BackArrowMenuItem(onClick = {  }),
         middleContent = ToolbarMiddleContent.Title(
           title = ToolbarText.String(theme.name)

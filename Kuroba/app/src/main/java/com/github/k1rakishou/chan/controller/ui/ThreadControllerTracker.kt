@@ -57,7 +57,7 @@ class ThreadControllerTracker(
 
     val shouldNotInterceptTouchEvent = tracking
       || navController.isBlockingInput
-      || !(navController.topController?.toolbarState?.swipeable ?: false)
+      || !(navController.topController?.swipeable ?: false)
       || getBelowTop() == null
 
     if (shouldNotInterceptTouchEvent) {

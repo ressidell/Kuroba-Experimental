@@ -85,7 +85,7 @@ class BoardArchiveController(
   override fun onCreate() {
     super.onCreate()
 
-    toolbarState.pushOrUpdateDefaultLayer(
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -98,7 +98,7 @@ class BoardArchiveController(
         withMenuItem(
           id = ACTION_SEARCH,
           drawableId = R.drawable.ic_search_white_24dp,
-          onClick = { toolbarState.enterSearchMode(viewModel.searchToolbarState) }
+          onClick = { toolbarState.enterSearchMode() }
         )
       }
     )
@@ -186,7 +186,7 @@ class BoardArchiveController(
     val endReached by viewModel.endReached
 
     val searchState = rememberSimpleSearchStateV2<BoardArchiveViewModel.ArchiveThread>(
-      textFieldState = viewModel.searchToolbarState.searchQueryState
+      textFieldState = toolbarState.search.searchQueryState
     )
     val searchQuery = searchState.textFieldState.text
 

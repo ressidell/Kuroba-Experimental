@@ -61,6 +61,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.base.BaseSelectionHelper
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.compose.AsyncData
@@ -72,8 +73,6 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
@@ -102,7 +101,9 @@ import com.github.k1rakishou.model.data.thread.ThreadDownload
 import com.github.k1rakishou.model.util.ChanPostUtils
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -137,12 +138,15 @@ class LocalArchiveController(
   override fun onCreate() {
     super.onCreate()
 
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
         swipeable = false,
         hasDrawer = true,
         hasBack = false
-      ),
+      )
+    )
+
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -153,13 +157,13 @@ class LocalArchiveController(
       ),
       iconClickInterceptor = {
         viewModel.viewModelSelectionHelper.unselectAll()
-        return@pushOrUpdateDefaultLayer false
+        return@enterDefaultMode false
       },
       menuBuilder = {
         withMenuItem(
           id = ACTION_SEARCH,
           drawableId = R.drawable.ic_search_white_24dp,
-          onClick = { toolbarState.enterSearchMode(viewModel.searchToolbarState) }
+          onClick = { toolbarState.enterSearchMode() }
         )
         withMenuItem(
           id = ACTION_UPDATE_ALL,
@@ -186,6 +190,24 @@ class LocalArchiveController(
       viewModel.controllerTitleInfoUpdatesFlow
         .debounce(1.seconds)
         .collect { controllerTitleInfo -> updateControllerTitle(controllerTitleInfo) }
+    }
+
+    controllerScope.launch {
+      toolbarState.search.listenForSearchVisibilityUpdates()
+        .onEach { searchVisible ->
+          if (!searchVisible) {
+            viewModel.updateQueryAndReload(null)
+          }
+
+          viewModel.onSearchVisibilityChanged(searchVisible)
+        }
+        .collect()
+    }
+
+    controllerScope.launch {
+      toolbarState.search.listenForSearchQueryUpdates()
+        .onEach { query -> viewModel.updateQueryAndReload(query) }
+        .collect()
     }
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
@@ -327,7 +349,7 @@ class LocalArchiveController(
           .simpleVerticalScrollbar(state, chanTheme, bottomPadding)
       ) {
         if (threadDownloadViews.isEmpty()) {
-          val searchQuery = viewModel.searchToolbarState.searchQueryState.text
+          val searchQuery = toolbarState.search.searchQueryState.text
           if (searchQuery.isNullOrEmpty()) {
             item {
               KurobaComposeErrorMessage(
@@ -878,10 +900,10 @@ class LocalArchiveController(
 
   private fun enterSelectionModeOrUpdate() {
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode(viewModel.selectionToolbarState)
+      toolbarState.enterSelectionMode()
     }
 
-    viewModel.selectionToolbarState.updateTitle(ToolbarText.String(formatSelectionText()))
+    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {
@@ -912,8 +934,7 @@ class LocalArchiveController(
       )
     }
 
-    toolbarState.updateTitle(
-      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+    toolbarState.default.updateTitle(
       newTitle = ToolbarText.String(titleString)
     )
   }

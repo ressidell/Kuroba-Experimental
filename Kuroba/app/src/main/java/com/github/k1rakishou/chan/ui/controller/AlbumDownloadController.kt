@@ -23,7 +23,6 @@ import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2.SimpleSaveab
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController.Options.MultipleImages
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
@@ -89,7 +88,7 @@ class AlbumDownloadController(context: Context) : Controller(context),
     super.onCreate()
     view = AppModuleAndroidUtils.inflate(context, R.layout.controller_album_download)
 
-    toolbarState.pushOrUpdateDefaultLayer(
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -266,8 +265,7 @@ class AlbumDownloadController(context: Context) : Controller(context),
   }
 
   private fun updateTitle() {
-    toolbarState.updateTitle(
-      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+    toolbarState.default.updateTitle(
       newTitle = ToolbarText.String(appResources.string(R.string.album_download_screen, checkCount, items.size))
     )
   }

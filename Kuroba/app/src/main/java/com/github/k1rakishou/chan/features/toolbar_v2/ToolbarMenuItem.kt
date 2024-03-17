@@ -6,8 +6,10 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.IntState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import com.github.k1rakishou.chan.R
@@ -16,6 +18,11 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+
+data class ToolbarMenu(
+  val menuItems: SnapshotStateList<ToolbarMenuItem> = mutableStateListOf(),
+  val overflowMenuItems: SnapshotStateList<AbstractToolbarMenuOverflowItem> = mutableStateListOf()
+)
 
 open class ToolbarMenuItem(
   val id: Int? = null,

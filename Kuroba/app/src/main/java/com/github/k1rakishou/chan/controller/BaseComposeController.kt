@@ -17,7 +17,6 @@ import androidx.lifecycle.ViewModel
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
@@ -67,8 +66,9 @@ abstract class BaseComposeController<VM : ViewModel>(
     }
 
     open fun setupNavigation() {
-        toolbarState.pushOrUpdateDefaultLayer(
-            navigationFlags = DeprecatedNavigationFlags(swipeable = false),
+        updateNavigationFlags(DeprecatedNavigationFlags(swipeable = false))
+
+        toolbarState.enterDefaultMode(
             leftItem = BackArrowMenuItem(
                 onClick = {
                     // TODO: New toolbar

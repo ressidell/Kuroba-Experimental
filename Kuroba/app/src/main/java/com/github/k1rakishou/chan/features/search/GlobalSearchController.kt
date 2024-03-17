@@ -5,6 +5,7 @@ import android.view.View
 import com.airbnb.epoxy.EpoxyController
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
@@ -23,7 +24,6 @@ import com.github.k1rakishou.chan.features.search.epoxy.epoxyButtonView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchInputView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchSiteView
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
@@ -70,12 +70,15 @@ class GlobalSearchController(
   override fun onCreate() {
     super.onCreate()
 
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
         swipeable = false,
         hasDrawer = true,
         hasBack = false
-      ),
+      )
+    )
+
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar

@@ -39,7 +39,6 @@ import com.github.k1rakishou.chan.features.settings.screens.PluginSettingsScreen
 import com.github.k1rakishou.chan.features.settings.screens.SecuritySettingsScreen
 import com.github.k1rakishou.chan.features.settings.screens.WatcherSettingsScreen
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingDelegate
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -271,8 +270,6 @@ class SettingsCoordinator(
   private val job = SupervisorJob()
 
   private val screensBuiltOnce = SuspendableInitializer<Unit>("screensBuiltOnce")
-
-  val searchToolbarState = KurobaSearchToolbarState()
 
   fun onCreate() {
     AppModuleAndroidUtils.extractActivityComponent(context)

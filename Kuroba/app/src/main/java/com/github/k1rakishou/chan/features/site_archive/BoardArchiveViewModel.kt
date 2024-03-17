@@ -14,7 +14,6 @@ import com.github.k1rakishou.chan.core.manager.SeenPostsManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.site.sites.archive.NativeArchivePost
 import com.github.k1rakishou.chan.core.site.sites.archive.NativeArchivePostList
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
 import com.github.k1rakishou.common.BadStatusResponseException
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.core_logger.Logger
@@ -59,8 +58,6 @@ class BoardArchiveViewModel(
     get() = _rememberedFirstVisibleItemScrollOffset
 
   val alreadyVisitedThreads = mutableStateMapOf<ChanDescriptor.ThreadDescriptor, Unit>()
-
-  val searchToolbarState = KurobaSearchToolbarState()
 
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)

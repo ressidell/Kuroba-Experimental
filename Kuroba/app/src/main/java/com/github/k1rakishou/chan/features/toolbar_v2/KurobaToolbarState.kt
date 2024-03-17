@@ -7,11 +7,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
+import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
-import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaDefaultToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
+import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarParams
+import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaToolbarSearchContent
+import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
 import com.github.k1rakishou.core_logger.Logger
@@ -22,13 +27,18 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 @Stable
 class KurobaToolbarState {
-  private val _toolbarLayerEventFlow = MutableSharedFlow<KurobaToolbarLayerEvent>(extraBufferCapacity = Channel.UNLIMITED)
-  val toolbarLayerEventFlow: SharedFlow<KurobaToolbarLayerEvent>
+  private val _toolbarLayerEventFlow = MutableSharedFlow<KurobaToolbarStateEvent>(extraBufferCapacity = Channel.UNLIMITED)
+  val toolbarLayerEventFlow: SharedFlow<KurobaToolbarStateEvent>
     get() = _toolbarLayerEventFlow.asSharedFlow()
 
-  private val _layers = mutableStateListOf<KurobaToolbarLayer>()
-  val topLayer: KurobaToolbarLayer
-    get() = requireNotNull(_layers.lastOrNull()) { "Toolbar has not layers!" }
+  private val _toolbarStates = mutableStateListOf<IKurobaToolbarState>()
+  val topToolbar: IKurobaToolbarState
+    get() = requireNotNull(_toolbarStates.lastOrNull()) { "Toolbar has not states!" }
+
+  val default by lazy(LazyThreadSafetyMode.NONE) { KurobaDefaultToolbarState() }
+  val search by lazy(LazyThreadSafetyMode.NONE) { KurobaSearchToolbarState() }
+  val selection by lazy(LazyThreadSafetyMode.NONE) { KurobaSelectionToolbarState() }
+  val reply by lazy(LazyThreadSafetyMode.NONE) { KurobaReplyToolbarState() }
 
   private val _enabledState = mutableStateOf(false)
   val enabledState: State<Boolean>
@@ -41,14 +51,6 @@ class KurobaToolbarState {
     get() = _toolbarHeightState
   val toolbarHeight: Dp?
     get() = _toolbarHeightState.value
-
-  private val _deprecatedNavigationFlags = mutableStateOf<DeprecatedNavigationFlags?>(null)
-  val hasDrawer: Boolean
-    get() = _deprecatedNavigationFlags.value?.hasDrawer == true
-  val hasBack: Boolean
-    get() = _deprecatedNavigationFlags.value?.hasBack == true
-  val swipeable: Boolean
-    get() = _deprecatedNavigationFlags.value?.swipeable == true
 
   fun onToolbarHeightChanged(totalToolbarHeight: Dp) {
     if (totalToolbarHeight.isSpecified && totalToolbarHeight > 0.dp) {
@@ -66,93 +68,134 @@ class KurobaToolbarState {
     _enabledState.value = false
   }
 
-  fun pushOrUpdateDefaultLayer(
-    navigationFlags: DeprecatedNavigationFlags = DeprecatedNavigationFlags(),
+  fun enterDefaultMode(
     leftItem: ToolbarMenuItem?,
     middleContent: ToolbarMiddleContent? = null,
-    menuBuilder: ToolbarMenuBuilder.() -> Unit = { },
-    iconClickInterceptor: (ToolbarMenuItem) -> Boolean = { false }
-  ) {
-    pushOrUpdateLayer(
-      toolbarLayerId = ToolbarLayerId.Default,
-      kurobaToolbarState = KurobaDefaultToolbarState(),
-      leftItem = leftItem,
-      middleContent = middleContent,
-      menuBuilder = menuBuilder,
-      iconClickInterceptor = iconClickInterceptor
-    )
-
-    _deprecatedNavigationFlags.value = navigationFlags
-  }
-
-  fun pushOrUpdateLayer(
-    toolbarLayerId: ToolbarLayerId,
-    kurobaToolbarState: IKurobaToolbarState,
-    leftItem: ToolbarMenuItem?,
-    middleContent: ToolbarMiddleContent? = null,
-    menuBuilder: ToolbarMenuBuilder.() -> Unit = { },
+    menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
     iconClickInterceptor: (ToolbarMenuItem) -> Boolean = { false }
   ) {
     val toolbarMenuBuilder = ToolbarMenuBuilder()
-    with(toolbarMenuBuilder) { menuBuilder() }
+    menuBuilder?.invoke(toolbarMenuBuilder)
 
-    val toolbarLayer = KurobaToolbarLayer(
-      toolbarLayerId = toolbarLayerId,
-      kurobaToolbarState = kurobaToolbarState,
-      leftIcon = leftItem,
-      middleContent = middleContent,
-      toolbarMenu = toolbarMenuBuilder.build(),
-      iconClickInterceptor = iconClickInterceptor
+    enterToolbarMode(
+      params = KurobaDefaultToolbarParams(
+        leftItem = leftItem,
+        middleContent = middleContent,
+        toolbarMenu = toolbarMenuBuilder.build(),
+        iconClickInterceptor = iconClickInterceptor
+      ),
+      state = default
     )
-
-    val indexOfLayer = _layers.indexOfFirst { prevLayer -> prevLayer.toolbarLayerId == toolbarLayer.toolbarLayerId }
-    if (indexOfLayer != _layers.lastIndex) {
-      if (isDevBuild()) {
-        error("Can only update top layer. indexOfLayer: ${indexOfLayer}, lastIndex: ${_layers.lastIndex}")
-      } else {
-        Logger.error(TAG) { "Can only update top layer. indexOfLayer: ${indexOfLayer}, lastIndex: ${_layers.lastIndex}" }
-      }
-
-      return
-    }
-
-    if (indexOfLayer >= 0) {
-      _layers[indexOfLayer] = toolbarLayer
-      _toolbarLayerEventFlow.tryEmit(KurobaToolbarLayerEvent.Replaced(toolbarLayer))
-    } else {
-      _layers += toolbarLayer
-      _toolbarLayerEventFlow.tryEmit(KurobaToolbarLayerEvent.Pushed(toolbarLayer))
-      toolbarLayer.kurobaToolbarState.onLayerPushed()
-    }
-
   }
 
-  fun popLayer(): Boolean {
-    if (_layers.size <= 1) {
+  fun isInDefaultMode(): Boolean {
+    return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Default
+  }
+
+  fun exitDefaultMode() {
+    exitToolbarMode(ToolbarStateKind.Default)
+  }
+
+  fun enterSearchMode(
+    menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
+  ) {
+    val toolbarMenuBuilder = ToolbarMenuBuilder()
+    menuBuilder?.invoke(toolbarMenuBuilder)
+
+    enterToolbarMode(
+      params = KurobaSearchToolbarParams(
+        toolbarMenu = toolbarMenuBuilder.build(),
+      ),
+      state = search
+    )
+  }
+
+  fun isInSearchMode(): Boolean {
+    return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Search
+  }
+
+  fun exitSearchMode() {
+    if (topToolbar.kind == ToolbarStateKind.Search) {
+      pop()
+    }
+  }
+
+  fun enterSelectionMode(
+    title: ToolbarText? = null,
+    menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
+  ) {
+    val toolbarMenuBuilder = ToolbarMenuBuilder()
+    menuBuilder?.invoke(toolbarMenuBuilder)
+
+    enterToolbarMode(
+      params = KurobaSelectionToolbarParams(
+        title = title,
+        toolbarMenu = toolbarMenuBuilder.build(),
+      ),
+      state = selection
+    )
+  }
+
+  fun isInSelectionMode(): Boolean {
+    return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Selection
+  }
+
+  fun exitSelectionMode() {
+    if (topToolbar.kind == ToolbarStateKind.Selection) {
+      pop()
+    }
+  }
+
+  fun enterReplyMode(
+    menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
+  ) {
+    val toolbarMenuBuilder = ToolbarMenuBuilder()
+    menuBuilder?.invoke(toolbarMenuBuilder)
+
+    enterToolbarMode(
+      params = KurobaReplyToolbarParams(
+        toolbarMenu = toolbarMenuBuilder.build(),
+      ),
+      state = reply
+    )
+  }
+
+  fun isInReplyMode(): Boolean {
+    return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Reply
+  }
+
+  fun exitReplyMode() {
+    if (topToolbar.kind == ToolbarStateKind.Reply) {
+      pop()
+    }
+  }
+
+  fun pop(): Boolean {
+    if (_toolbarStates.size <= 1) {
       return false
     }
 
-    val lastLayer = _layers.removeLastOrNull()
-    if (lastLayer != null) {
-      lastLayer.kurobaToolbarState.onLayerPopped()
-      _toolbarLayerEventFlow.tryEmit(KurobaToolbarLayerEvent.Popped(lastLayer))
+    val topToolbar = _toolbarStates.removeLastOrNull()
+    if (topToolbar != null) {
+      topToolbar.onPopped()
+      _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Popped(topToolbar.kind))
     }
 
     return true
   }
 
-  fun popAllLayers() {
-    while (_layers.size > 1) {
-      popLayer()
+  fun popAll() {
+    while (_toolbarStates.size > 1) {
+      pop()
     }
   }
 
   fun onBack(): Boolean {
-    return popLayer()
+    return pop()
   }
 
   fun showToolbar() {
-
+    TODO("TODO: New toolbar")
   }
 
   fun onTransitionStart(other: KurobaToolbarState) {
@@ -171,129 +214,11 @@ class KurobaToolbarState {
     TODO("TODO: New toolbar")
   }
 
-  fun enterSearchMode(searchState: KurobaSearchToolbarState) {
-    pushOrUpdateLayer(
-      toolbarLayerId = ToolbarLayerId.Search,
-      kurobaToolbarState = searchState,
-      leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
-      ),
-      middleContent = ToolbarMiddleContent.Custom(
-        content = { KurobaToolbarSearchContent(searchState) }
-      )
-    )
-  }
-
-  fun isInSearchMode(): Boolean {
-    return _layers.lastOrNull()?.toolbarLayerId == ToolbarLayerId.Search
-  }
-
-  fun exitSearchMode() {
-    if (topLayer.toolbarLayerId == ToolbarLayerId.Search) {
-      popLayer()
-    }
-  }
-
-  fun enterSelectionMode(selectionState: KurobaSelectionToolbarState) {
-    pushOrUpdateLayer(
-      toolbarLayerId = ToolbarLayerId.Selection,
-      kurobaToolbarState = selectionState,
-      leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
-      ),
-      middleContent = ToolbarMiddleContent.Custom(
-        content = {
-          // TODO: New toolbar
-        }
-      )
-    )
-  }
-
-  fun isInSelectionMode(): Boolean {
-    return _layers.lastOrNull()?.toolbarLayerId == ToolbarLayerId.Selection
-  }
-
-  fun exitSelectionMode() {
-    if (topLayer.toolbarLayerId == ToolbarLayerId.Selection) {
-      popLayer()
-    }
-  }
-
-  fun enterReplyMode(replyState: KurobaReplyToolbarState) {
-    TODO("Not yet implemented")
-  }
-
-  fun isInReplyMode(): Boolean {
-    TODO("Not yet implemented")
-  }
-
-  fun exitReplyMode() {
-    TODO("Not yet implemented")
-  }
-
-  fun updateToolbarLayer(
-    toolbarLayerId: ToolbarLayerId,
-    updater: (KurobaToolbarLayer) -> KurobaToolbarLayer?
-  ) {
-    val indexOfLayer = _layers.indexOfFirst { kurobaToolbarLayer -> kurobaToolbarLayer.toolbarLayerId == toolbarLayerId }
-    if (indexOfLayer < 0) {
-      return
-    }
-
-    val oldLayer = _layers[indexOfLayer]
-    val newLayer = updater(oldLayer)
-
-    if (newLayer == null || oldLayer == newLayer) {
-      return
-    }
-
-    _layers[indexOfLayer] = newLayer
-  }
-
-  fun updateTitle(
-    toolbarLayerId: ToolbarLayerId = topLayer.toolbarLayerId,
-    newTitle: ToolbarText
-  ) {
-    updateToolbarLayer(toolbarLayerId) { oldLayer ->
-      when (oldLayer.middleContent) {
-        is ToolbarMiddleContent.Custom -> null
-        is ToolbarMiddleContent.Title -> {
-          oldLayer.copy(middleContent = oldLayer.middleContent.copy(title = newTitle))
-        }
-        null -> null
-      }
-    }
-  }
-
-  fun updateSubtitle(
-    toolbarLayerId: ToolbarLayerId = topLayer.toolbarLayerId,
-    newSubTitle: ToolbarText
-  ) {
-    updateToolbarLayer(toolbarLayerId) { oldLayer ->
-      when (oldLayer.middleContent) {
-        is ToolbarMiddleContent.Custom -> null
-        is ToolbarMiddleContent.Title -> {
-          oldLayer.copy(middleContent = oldLayer.middleContent.copy(subtitle = newSubTitle))
-        }
-        null -> null
-      }
-    }
-  }
-
   fun findItem(id: Int): ToolbarMenuItem? {
-    for (toolbarLayer in _layers) {
-      if (toolbarLayer.leftIcon?.id == id) {
-        return toolbarLayer.leftIcon
-      }
-
-      for (menuItem in toolbarLayer.toolbarMenu.menuItems) {
-        if (menuItem.id == id) {
-          return menuItem
-        }
+    for (toolbarState in _toolbarStates) {
+      val toolbarMenuItem = toolbarState.findItem(id)
+      if (toolbarMenuItem?.id == id) {
+        return toolbarMenuItem
       }
     }
 
@@ -301,18 +226,10 @@ class KurobaToolbarState {
   }
 
   fun findOverflowItem(id: Int): ToolbarMenuOverflowItem? {
-    for (toolbarLayer in _layers) {
-      val overflowMenuItems = mutableListOf<ToolbarMenuOverflowItem>()
-      overflowMenuItems += toolbarLayer.toolbarMenu.overflowMenuItems
-        .filterIsInstance<ToolbarMenuOverflowItem>()
-
-      for (overflowMenuItem in overflowMenuItems) {
-        if (overflowMenuItem.id == id) {
-          return overflowMenuItem
-        }
-
-        overflowMenuItems += overflowMenuItem.subItems
-          .filterIsInstance<ToolbarMenuOverflowItem>()
+    for (toolbarState in _toolbarStates) {
+      val toolbarOverflowMenuItem = toolbarState.findOverflowItem(id)
+      if (toolbarOverflowMenuItem?.id == id) {
+        return toolbarOverflowMenuItem
       }
     }
 
@@ -320,18 +237,10 @@ class KurobaToolbarState {
   }
 
   fun findCheckableOverflowItem(id: Int): ToolbarMenuCheckableOverflowItem? {
-    for (toolbarLayer in _layers) {
-      val overflowMenuItems = mutableListOf<ToolbarMenuCheckableOverflowItem>()
-      overflowMenuItems += toolbarLayer.toolbarMenu.overflowMenuItems
-        .filterIsInstance<ToolbarMenuCheckableOverflowItem>()
-
-      for (overflowMenuItem in overflowMenuItems) {
-        if (overflowMenuItem.id == id) {
-          return overflowMenuItem
-        }
-
-        overflowMenuItems += overflowMenuItem.subItems
-          .filterIsInstance<ToolbarMenuCheckableOverflowItem>()
+    for (toolbarState in _toolbarStates) {
+      val toolbarCheckableOverflowMenuItem = toolbarState.findCheckableOverflowItem(id)
+      if (toolbarCheckableOverflowMenuItem?.id == id) {
+        return toolbarCheckableOverflowMenuItem
       }
     }
 
@@ -339,23 +248,8 @@ class KurobaToolbarState {
   }
 
   fun checkOrUncheckItem(subItem: ToolbarMenuCheckableOverflowItem, check: Boolean) {
-    for (toolbarLayer in _layers) {
-      val overflowMenuItems = mutableListOf<ToolbarMenuCheckableOverflowItem>()
-      overflowMenuItems += toolbarLayer.toolbarMenu.overflowMenuItems
-        .filterIsInstance<ToolbarMenuCheckableOverflowItem>()
-
-      val groupId = subItem.groupId
-
-      for (overflowMenuItem in overflowMenuItems) {
-        if (overflowMenuItem.id == subItem.id) {
-          overflowMenuItem.updateChecked(check)
-        } else if (groupId != null && overflowMenuItem.groupId == groupId) {
-          overflowMenuItem.updateChecked(false)
-        }
-
-        overflowMenuItems += overflowMenuItem.subItems
-          .filterIsInstance<ToolbarMenuCheckableOverflowItem>()
-      }
+    for (toolbarState in _toolbarStates) {
+      toolbarState.checkOrUncheckItem(subItem, check)
     }
   }
 
@@ -373,12 +267,42 @@ class KurobaToolbarState {
 //    }
   }
 
-  enum class ToolbarLayerId {
-    Default,
-    Search,
-    Selection;
+  private fun enterToolbarMode(
+    params: IKurobaToolbarParams,
+    state: IKurobaToolbarState
+  ) {
+    val indexOfState = _toolbarStates.indexOfFirst { prevLayer -> prevLayer.kind == params.kind }
+    if (indexOfState != _toolbarStates.lastIndex) {
+      if (isDevBuild()) {
+        error("Can only update top toolbar. indexOfState: ${indexOfState}, lastIndex: ${_toolbarStates.lastIndex}")
+      } else {
+        Logger.error(TAG) {
+          "Can only update top toolbar. indexOfState: ${indexOfState}, lastIndex: ${_toolbarStates.lastIndex}"
+        }
+      }
 
-    fun isSearch(): Boolean = this == Search
+      return
+    }
+
+    if (indexOfState >= 0) {
+      val prevToolbarLayer = _toolbarStates[indexOfState]
+      prevToolbarLayer.update(params)
+
+      _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Updated(prevToolbarLayer.kind))
+    } else {
+      state.update(params)
+
+      _toolbarStates += state
+      state.onPushed()
+
+      _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Pushed(state.kind))
+    }
+  }
+
+  fun exitToolbarMode(kind: ToolbarStateKind) {
+    if (topToolbar.kind == kind) {
+      pop()
+    }
   }
 
   companion object {

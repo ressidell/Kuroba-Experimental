@@ -27,10 +27,10 @@ import androidx.compose.ui.graphics.toArgb
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.controller.transition.ControllerTransition
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
@@ -80,11 +80,14 @@ class ThreadSlideController(
 
     doubleNavigationController = this
 
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
         swipeable = false,
         hasDrawer = true
-      ),
+      )
+    )
+
+    toolbarState.enterDefaultMode(
       leftItem = null,
       middleContent = null
     )

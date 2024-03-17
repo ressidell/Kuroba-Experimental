@@ -26,7 +26,6 @@ import com.github.k1rakishou.chan.core.manager.UpdateManager
 import com.github.k1rakishou.chan.core.site.SiteResolver
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
 import com.github.k1rakishou.chan.features.reply.data.PostFormattingButtonsFactory
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.helper.RuntimePermissionsHelper
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -177,13 +176,6 @@ class ActivityModule {
   ): PostFormattingButtonsFactory {
     Logger.deps("PostFormattingButtonsFactory")
     return PostFormattingButtonsFactory(boardManagerLazy, themeEngineLazy)
-  }
-
-  @PerActivity
-  @Provides
-  fun provideKurobaToolbarStateManager(): KurobaToolbarStateManager {
-    Logger.deps("KurobaToolbarStateManager")
-    return KurobaToolbarStateManager()
   }
 
 }

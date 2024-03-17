@@ -20,6 +20,7 @@ import android.content.Context
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.R.string.action_reload
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
@@ -34,8 +35,6 @@ import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
@@ -106,6 +105,13 @@ open class ViewThreadController(
     threadLayout.setBoardPostViewMode(ChanSettings.BoardPostViewMode.LIST)
     view.setBackgroundColor(themeEngine.chanTheme.backColor)
 
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
+        hasDrawer = true,
+        scrollableTitle = ChanSettings.scrollingTextForThreadTitles.get()
+      )
+    )
+
     buildToolbar()
 
     controllerScope.launch {
@@ -158,11 +164,7 @@ open class ViewThreadController(
   }
 
   private fun buildToolbar() {
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
-        hasDrawer = true,
-        scrollableTitle = ChanSettings.scrollingTextForThreadTitles.get()
-      ),
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -667,8 +669,7 @@ open class ViewThreadController(
     if (oldThreadDescriptor == newThreadDescriptor) {
       setNavigationTitleFromDescriptor(newThreadDescriptor)
     } else {
-      toolbarState.updateTitle(
-        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      toolbarState.default.updateTitle(
         newTitle = ToolbarText.String(getString(R.string.loading))
       )
     }
@@ -678,8 +679,7 @@ open class ViewThreadController(
     val originalPost = chanThreadManager.getChanThread(threadDescriptor)
       ?.getOriginalPost()
 
-    toolbarState.updateTitle(
-      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+    toolbarState.default.updateTitle(
       newTitle = ToolbarText.String(ChanPostUtils.getTitle(originalPost, threadDescriptor))
     )
   }
@@ -723,8 +723,7 @@ open class ViewThreadController(
   override fun onShowError() {
     super.onShowError()
 
-    toolbarState.updateTitle(
-      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+    toolbarState.default.updateTitle(
       newTitle = ToolbarText.Id(R.string.thread_loading_error_title)
     )
   }

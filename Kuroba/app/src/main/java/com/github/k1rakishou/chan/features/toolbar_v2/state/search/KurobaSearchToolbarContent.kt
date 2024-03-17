@@ -27,12 +27,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun KurobaToolbarSearchContent(searchState: KurobaSearchToolbarState) {
+fun KurobaSearchToolbarContent(state: KurobaSearchToolbarState) {
   val chanTheme = LocalChanTheme.current
   val focusRequester = remember { FocusRequester() }
   val coroutineScope = rememberCoroutineScope()
 
-  val searchQueryState = searchState.searchQueryState
+  val searchQueryState = state.searchQueryState
 
   DisposableEffect(
     key1 = Unit,
@@ -72,7 +72,7 @@ fun KurobaToolbarSearchContent(searchState: KurobaSearchToolbarState) {
 
     KurobaComposeClickableIcon(
       drawableId = R.drawable.ic_baseline_clear_24,
-      onClick = { searchState.clearSearchQuery() }
+      onClick = { state.clearSearchQuery() }
     )
   }
 }

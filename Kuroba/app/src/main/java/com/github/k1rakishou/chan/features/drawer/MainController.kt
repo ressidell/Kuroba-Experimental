@@ -692,7 +692,7 @@ class MainController(
     val topController = mainToolbarNavigationController?.topController
       ?: return
 
-    if (topController.toolbarState.hasDrawer) {
+    if (topController.hasDrawer) {
       drawerLayout.openDrawer(drawer)
     }
   }

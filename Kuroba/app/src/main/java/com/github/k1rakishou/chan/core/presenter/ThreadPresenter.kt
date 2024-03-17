@@ -65,7 +65,6 @@ import com.github.k1rakishou.chan.core.site.sites.chan4.Chan4
 import com.github.k1rakishou.chan.core.usecase.RefreshChan4CaptchaTicketUseCase
 import com.github.k1rakishou.chan.features.drawer.data.NavigationHistoryEntry
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToPostHelper
-import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarState
 import com.github.k1rakishou.chan.ui.adapter.PostAdapter.PostAdapterCallback
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.ui.cell.GenericPostCell
@@ -227,8 +226,6 @@ class ThreadPresenter @Inject constructor(
     get() = _mediaViewerGoToPostHelper.get()
   private val refreshChan4CaptchaTicketUseCase: RefreshChan4CaptchaTicketUseCase
     get() = _refreshChan4CaptchaTicketUseCase.get()
-
-  val replyToolbarState = KurobaReplyToolbarState()
 
   override val endOfCatalogReached: Boolean
     get() {

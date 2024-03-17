@@ -62,7 +62,7 @@ class ProxySetupController(
   override fun onCreate() {
     super.onCreate()
 
-    toolbarState.pushOrUpdateDefaultLayer(
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -278,10 +278,10 @@ class ProxySetupController(
 
   private fun enterSelectionModeOrUpdate() {
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode(presenter.selectionToolbarState)
+      toolbarState.enterSelectionMode()
     }
 
-    presenter.selectionToolbarState.updateTitle(ToolbarText.String(formatSelectionText()))
+    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {

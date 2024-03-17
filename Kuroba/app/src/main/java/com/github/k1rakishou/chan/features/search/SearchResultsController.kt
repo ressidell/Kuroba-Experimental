@@ -7,6 +7,7 @@ import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyRecyclerView
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
@@ -23,7 +24,6 @@ import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchLoadingView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchPostDividerView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchPostView
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
@@ -70,6 +70,24 @@ class SearchResultsController(
 
   override fun onCreate() {
     super.onCreate()
+
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
+        swipeable = false,
+        scrollableTitle = true
+      )
+    )
+
+    toolbarState.enterDefaultMode(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String("")
+      )
+    )
 
     updateTitle(null)
 
@@ -230,20 +248,7 @@ class SearchResultsController(
       }
     }
 
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
-        swipeable = false,
-        scrollableTitle = true
-      ),
-      leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
-      ),
-      middleContent = ToolbarMiddleContent.Title(
-        title = ToolbarText.String(title)
-      )
-    )
+    toolbarState.default.updateTitle(newTitle = ToolbarText.String(title))
   }
 
   companion object {

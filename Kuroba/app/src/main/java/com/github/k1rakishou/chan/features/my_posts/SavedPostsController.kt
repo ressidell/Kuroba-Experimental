@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.base.BaseSelectionHelper
 import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
@@ -39,7 +40,6 @@ import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
@@ -87,12 +87,15 @@ class SavedPostsController(
   }
 
   override fun updateToolbarState(): KurobaToolbarState {
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
         hasDrawer = true,
         hasBack = false,
         swipeable = false
-      ),
+      )
+    )
+
+    toolbarState.enterDefaultMode(
       leftItem = HamburgMenuItem(
         onClick = { toolbarIcon ->
           // TODO: New toolbar.
@@ -103,12 +106,12 @@ class SavedPostsController(
       ),
       iconClickInterceptor = {
         viewModel.viewModelSelectionHelper.unselectAll()
-        return@pushOrUpdateDefaultLayer false
+        return@enterDefaultMode false
       },
       menuBuilder = {
         withMenuItem(
           drawableId = R.drawable.ic_search_white_24dp,
-          onClick = { toolbarState.enterSearchMode(viewModel.searchToolbarState) }
+          onClick = { toolbarState.enterSearchMode() }
         )
 
         withOverflowMenu {
@@ -160,18 +163,22 @@ class SavedPostsController(
     }
 
     controllerScope.launch {
-      viewModel.searchToolbarState.listenForSearchVisibilityUpdates()
+      toolbarState.search.listenForSearchVisibilityUpdates()
         .onEach { searchVisible ->
           if (!searchVisible) {
-            viewModel.updateQueryAndReload(null)
+            viewModel.updateSearchQuery(null)
+            viewModel.updateQueryAndReload()
           }
         }
         .collect()
     }
 
     controllerScope.launch {
-      viewModel.searchToolbarState.listenForSearchQueryUpdates()
-        .onEach { entered -> viewModel.updateQueryAndReload(entered) }
+      toolbarState.search.listenForSearchQueryUpdates()
+        .onEach { entered ->
+          viewModel.updateSearchQuery(entered)
+          viewModel.updateQueryAndReload()
+        }
         .collect()
     }
 
@@ -197,7 +204,7 @@ class SavedPostsController(
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     mainControllerCallbacks.hideBottomPanel()
 
-    viewModel.updateQueryAndReload(null)
+    viewModel.updateQueryAndReload()
     viewModel.viewModelSelectionHelper.unselectAll()
   }
 
@@ -301,7 +308,7 @@ class SavedPostsController(
         .simpleVerticalScrollbar(state, chanTheme, bottomPadding)
     ) {
       if (savedRepliesGrouped.isEmpty()) {
-        val searchQuery = viewModel.searchToolbarState.searchQueryState.text
+        val searchQuery = toolbarState.search.searchQueryState.text
         if (searchQuery.isNullOrEmpty()) {
           item(key = "nothing_found_message") {
             KurobaComposeErrorMessage(
@@ -497,10 +504,10 @@ class SavedPostsController(
 
   private fun enterSelectionModeOrUpdate() {
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode(viewModel.selectionToolbarState)
+      toolbarState.enterSelectionMode()
     }
 
-    viewModel.selectionToolbarState.updateTitle(ToolbarText.String(formatSelectionText()))
+    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {

@@ -43,7 +43,6 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenTh
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen.Companion.clampColumnsCount
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
@@ -147,7 +146,7 @@ class AlbumViewController(
       R.drawable.ic_baseline_view_comfy_24
     }
 
-    toolbarState.pushOrUpdateDefaultLayer(
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -247,8 +246,7 @@ class AlbumViewController(
           ?.name
 
         if (compositeCatalogName.isNotNullNorBlank()) {
-          toolbarState.updateTitle(
-            toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+          toolbarState.default.updateTitle(
             newTitle = ToolbarText.String(compositeCatalogName)
           )
         }

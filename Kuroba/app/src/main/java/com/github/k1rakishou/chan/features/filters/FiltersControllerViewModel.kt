@@ -18,8 +18,6 @@ import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.ChanFilterManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.site.parser.CommentParserHelper
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
-import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.ui.compose.reorder.move
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItemId
@@ -50,9 +48,6 @@ class FiltersControllerViewModel(
   private val boardManager: BoardManager,
   private val themeEngine: ThemeEngine,
 ) : BaseViewModel() {
-  val toolbarSearchState = KurobaSearchToolbarState()
-  val toolbarSelectionState = KurobaSelectionToolbarState()
-
   private val _filters = mutableStateListOf<ChanFilterInfo>()
   val filters: List<ChanFilterInfo>
     get() = _filters

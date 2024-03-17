@@ -18,6 +18,7 @@ import com.airbnb.epoxy.EpoxyRecyclerView
 import com.airbnb.epoxy.EpoxyViewHolder
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.base.BaseSelectionHelper
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
@@ -43,7 +44,6 @@ import com.github.k1rakishou.chan.features.bookmarks.epoxy.epoxyGridThreadBookma
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.epoxyListThreadBookmarkViewHolder
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
@@ -310,7 +310,7 @@ class BookmarksController(
     }
 
     controllerScope.launch {
-      bookmarksPresenter.searchState.listenForSearchVisibilityUpdates()
+      toolbarState.search.listenForSearchVisibilityUpdates()
         .onEach { searchVisible ->
           isInSearchMode = searchVisible
           bookmarksPresenter.onSearchModeChanged(searchVisible)
@@ -322,7 +322,7 @@ class BookmarksController(
     }
 
     controllerScope.launch {
-      bookmarksPresenter.searchState.listenForSearchQueryUpdates()
+      toolbarState.search.listenForSearchQueryUpdates()
         .onEach { entered -> bookmarksPresenter.onSearchEntered(entered) }
         .collect()
     }
@@ -379,12 +379,15 @@ class BookmarksController(
   }
 
   override fun updateToolbarState(): KurobaToolbarState {
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
         hasDrawer = true,
         hasBack = false,
         swipeable = false
-      ),
+      )
+    )
+
+    toolbarState.enterDefaultMode(
       leftItem = HamburgMenuItem(
         onClick = { toolbarIcon ->
           // TODO: New toolbar.
@@ -395,13 +398,13 @@ class BookmarksController(
       ),
       iconClickInterceptor = {
         exitReorderingModeIfActive()
-        return@pushOrUpdateDefaultLayer false
+        return@enterDefaultMode false
       },
       menuBuilder = {
         withMenuItem(
           id = null,
           drawableId = R.drawable.ic_search_white_24dp,
-          onClick = { toolbarState.enterSearchMode(bookmarksPresenter.searchState) }
+          onClick = { toolbarState.enterSearchMode() }
         )
         withMenuItem(
           id = ACTION_CHANGE_VIEW_BOOKMARK_MODE,
@@ -1011,15 +1014,13 @@ class BookmarksController(
   }
 
   private fun updateTitleWithoutStats() {
-    toolbarState.updateTitle(
-      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+    toolbarState.default.updateTitle(
       newTitle = ToolbarText.String(getString(R.string.controller_bookmarks))
     )
   }
 
   private fun updateTitleWithStats(state: BookmarksControllerState.Data) {
-    toolbarState.updateTitle(
-      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+    toolbarState.default.updateTitle(
       newTitle = ToolbarText.String(formatTitleWithStats(state))
     )
   }
@@ -1062,14 +1063,10 @@ class BookmarksController(
 
   private fun enterSelectionModeOrUpdate() {
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode(bookmarksPresenter.selectionState)
-      bookmarksPresenter.selectionState.updateTitle(ToolbarText.String(formatSelectionText()))
-    } else {
-      toolbarState.updateTitle(
-        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Selection,
-        newTitle = ToolbarText.String(formatSelectionText())
-      )
+      toolbarState.enterSelectionMode()
     }
+
+    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {

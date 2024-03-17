@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyRecyclerView
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.AppRestarter
 import com.github.k1rakishou.chan.core.manager.SettingsNotificationManager
@@ -22,8 +23,6 @@ import com.github.k1rakishou.chan.features.settings.setting.ListSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.RangeSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.SettingV2
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
@@ -82,12 +81,15 @@ class MainSettingsControllerV2(
     epoxyRecyclerView = view.findViewById(R.id.settings_recycler_view)
     epoxyRecyclerView.itemAnimator = null
 
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
         hasBack = false,
         swipeable = false,
         hasDrawer = true
-      ),
+      )
+    )
+
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -100,9 +102,7 @@ class MainSettingsControllerV2(
         withMenuItem(
           id = ACTION_SEARCH,
           drawableId = R.drawable.ic_search_white_24dp,
-          onClick = {
-            toolbarState.enterSearchMode(settingsCoordinator.searchToolbarState)
-          }
+          onClick = { toolbarState.enterSearchMode() }
         )
       }
     )
@@ -127,7 +127,7 @@ class MainSettingsControllerV2(
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
 
     controllerScope.launch {
-      settingsCoordinator.searchToolbarState.listenForSearchVisibilityUpdates()
+      toolbarState.search.listenForSearchVisibilityUpdates()
         .onEach { searchVisible ->
           if (!searchVisible) {
             settingsCoordinator.rebuildCurrentScreen(BuildOptions.Default)
@@ -137,7 +137,7 @@ class MainSettingsControllerV2(
     }
 
     controllerScope.launch {
-      settingsCoordinator.searchToolbarState.listenForSearchQueryUpdates()
+      toolbarState.search.listenForSearchQueryUpdates()
         .onEach { searchQuery -> settingsCoordinator.onSearchEntered(searchQuery) }
         .collect()
     }
@@ -193,8 +193,7 @@ class MainSettingsControllerV2(
           }
         }
         is SettingsCoordinator.RenderAction.RenderScreen -> {
-          toolbarState.updateTitle(
-            toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+          toolbarState.default.updateTitle(
             newTitle = ToolbarText.String(renderAction.settingsScreen.title)
           )
 

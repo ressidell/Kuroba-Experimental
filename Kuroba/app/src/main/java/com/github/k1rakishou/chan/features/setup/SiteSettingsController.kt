@@ -68,7 +68,7 @@ class SiteSettingsController(
       ?.name()
       ?: siteDescriptor.siteName
 
-    toolbarState.pushOrUpdateDefaultLayer(
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar

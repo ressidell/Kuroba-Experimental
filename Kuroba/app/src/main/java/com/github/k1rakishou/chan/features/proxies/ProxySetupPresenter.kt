@@ -6,7 +6,6 @@ import com.github.k1rakishou.chan.core.helper.ProxyStorage
 import com.github.k1rakishou.chan.features.proxies.data.ProxyEntryView
 import com.github.k1rakishou.chan.features.proxies.data.ProxyEntryViewSelection
 import com.github.k1rakishou.chan.features.proxies.data.ProxySetupState
-import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.core_logger.Logger
@@ -22,8 +21,6 @@ class ProxySetupPresenter(
   private val proxyStorage: ProxyStorage
 ) : BasePresenter<ProxySetupView>() {
   private val proxySetupState = MutableStateFlow<ProxySetupState>(ProxySetupState.Uninitialized)
-
-  val selectionToolbarState = KurobaSelectionToolbarState()
 
   override fun onCreate(view: ProxySetupView) {
     super.onCreate(view)

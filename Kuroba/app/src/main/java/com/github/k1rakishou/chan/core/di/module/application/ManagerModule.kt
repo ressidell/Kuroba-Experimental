@@ -95,10 +95,12 @@ import com.github.k1rakishou.chan.features.posting.solvers.two_captcha.TwoCaptch
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadProgressNotifier
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingCoordinator
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingDelegate
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.AppConstants
+import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_logger.Logger.deps
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.fsaf.FileManager
@@ -983,4 +985,12 @@ class ManagerModule {
       notificationManagerCompat
     )
   }
+
+  @Singleton
+  @Provides
+  fun provideKurobaToolbarStateManager(): KurobaToolbarStateManager {
+    Logger.deps("KurobaToolbarStateManager")
+    return KurobaToolbarStateManager()
+  }
+
 }

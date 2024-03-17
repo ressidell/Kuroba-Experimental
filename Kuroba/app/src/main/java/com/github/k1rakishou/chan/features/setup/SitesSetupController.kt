@@ -119,7 +119,7 @@ class SitesSetupController(context: Context) : Controller(context), SitesSetupVi
 
     view = inflate(context, R.layout.controller_sites_setup)
 
-    toolbarState.pushOrUpdateDefaultLayer(
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar

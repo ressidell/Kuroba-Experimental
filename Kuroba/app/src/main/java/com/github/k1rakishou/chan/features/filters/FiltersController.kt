@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.base.BaseSelectionHelper
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
@@ -73,7 +74,6 @@ import com.github.k1rakishou.chan.core.usecase.ExportFiltersUseCase
 import com.github.k1rakishou.chan.core.usecase.ImportFiltersUseCase
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
@@ -157,8 +157,11 @@ class FiltersController(
   override fun onCreate() {
     super.onCreate()
 
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(swipeable = false),
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(swipeable = false)
+    )
+
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -171,7 +174,7 @@ class FiltersController(
         withMenuItem(
           id = ACTION_SEARCH,
           drawableId = R.drawable.ic_search_white_24dp,
-          onClick = { item -> toolbarState.enterSearchMode(viewModel.toolbarSearchState) }
+          onClick = { item -> toolbarState.enterSearchMode() }
         )
 
         withOverflowMenu {
@@ -339,7 +342,7 @@ class FiltersController(
     coroutineScope: CoroutineScope
   ) {
     val searchState = rememberSimpleSearchStateV2<FiltersControllerViewModel.ChanFilterInfo>(
-      textFieldState = viewModel.toolbarSearchState.searchQueryState
+      textFieldState = toolbarState.search.searchQueryState
     )
 
     val searchQuery = searchState.textFieldState.text
@@ -759,10 +762,10 @@ class FiltersController(
 
   private fun enterSelectionModeOrUpdate() {
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode(viewModel.toolbarSelectionState)
+      toolbarState.enterSelectionMode()
     }
 
-    viewModel.toolbarSelectionState.updateTitle(ToolbarText.String(formatSelectionText()))
+    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {

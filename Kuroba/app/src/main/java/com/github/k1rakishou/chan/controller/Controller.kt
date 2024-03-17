@@ -25,6 +25,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.CallSuper
 import androidx.annotation.StringRes
+import androidx.compose.runtime.mutableStateOf
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.activity.StartActivityCallbacks
@@ -135,6 +136,18 @@ abstract class Controller(
 
   protected val cancellableToast = CancellableToast()
 
+  private val _navigationFlags = mutableStateOf<DeprecatedNavigationFlags>(DeprecatedNavigationFlags())
+  val hasDrawer: Boolean
+    get() = _navigationFlags.value.hasDrawer == true
+  val hasBack: Boolean
+    get() = _navigationFlags.value.hasBack == true
+  val swipeable: Boolean
+    get() = _navigationFlags.value.swipeable == true
+
+  fun updateNavigationFlags(newNavigationFlags: DeprecatedNavigationFlags) {
+    _navigationFlags.value = newNavigationFlags
+  }
+
   fun controllerViewOrNull(): ViewGroup? {
     if (::view.isInitialized) {
       return view
@@ -226,7 +239,7 @@ abstract class Controller(
     _alive = false
     compositeDisposable.clear()
     job.cancelChildren()
-    toolbarState.popAllLayers()
+    toolbarState.popAll()
 
     if (LOG_STATES) {
       Logger.e("LOG_STATES", javaClass.simpleName + " onDestroy")

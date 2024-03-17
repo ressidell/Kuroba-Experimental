@@ -12,8 +12,6 @@ import com.github.k1rakishou.chan.features.bookmarks.data.GroupOfThreadBookmarkI
 import com.github.k1rakishou.chan.features.bookmarks.data.ThreadBookmarkItemView
 import com.github.k1rakishou.chan.features.bookmarks.data.ThreadBookmarkSelection
 import com.github.k1rakishou.chan.features.bookmarks.data.ThreadBookmarkStats
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
-import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
@@ -53,9 +51,6 @@ class BookmarksPresenter(
     .toSerialized()
 
   private val searchFlow = MutableStateFlow<SearchQuery>(SearchQuery.Closed)
-
-  val searchState = KurobaSearchToolbarState()
-  val selectionState = KurobaSelectionToolbarState()
 
   override fun onCreate(view: BookmarksView) {
     super.onCreate(view)

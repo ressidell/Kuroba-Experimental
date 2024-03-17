@@ -8,6 +8,7 @@ import android.widget.Toast
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.ChanSettings.BoardPostViewMode
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.controller.ui.NavigationControllerContainerLayout
 import com.github.k1rakishou.chan.core.base.SerializedCoroutineExecutor
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
@@ -28,9 +29,7 @@ import com.github.k1rakishou.chan.features.setup.BoardSelectionController
 import com.github.k1rakishou.chan.features.setup.SiteSettingsController
 import com.github.k1rakishou.chan.features.setup.SitesSetupController
 import com.github.k1rakishou.chan.features.site_archive.BoardArchiveController
-import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
@@ -53,7 +52,6 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.sp
 import com.github.k1rakishou.chan.utils.SpannableHelper
 import com.github.k1rakishou.common.FirewallType
 import com.github.k1rakishou.common.errorMessageOrClassName
-import com.github.k1rakishou.common.isNotNullNorEmpty
 import com.github.k1rakishou.common.resumeValueSafe
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
@@ -127,6 +125,13 @@ class BrowseController(
     view = container
 
     // Navigation
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
+        hasBack = false,
+        hasDrawer = true
+      )
+    )
+
     buildMenu(catalogLoaded = false)
 
     // Presenter
@@ -194,13 +199,8 @@ class BrowseController(
   override suspend fun showSitesNotSetup() {
     super.showSitesNotSetup()
 
-    toolbarState.updateTitle(
-      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
-      newTitle = ToolbarText.Id(R.string.browse_controller_title_app_setup)
-    )
-
-    toolbarState.updateSubtitle(
-      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+    toolbarState.default.updateTitle(
+      newTitle = ToolbarText.Id(R.string.browse_controller_title_app_setup),
       newSubTitle = ToolbarText.Id(R.string.browse_controller_subtitle)
     )
   }
@@ -296,11 +296,7 @@ class BrowseController(
 //      }
     }
 
-    toolbarState.pushOrUpdateDefaultLayer(
-      navigationFlags = DeprecatedNavigationFlags(
-        hasBack = false,
-        hasDrawer = true
-      ),
+    toolbarState.enterDefaultMode(
       leftItem = HamburgMenuItem(
         onClick = {
           // TODO: New toolbar
@@ -777,36 +773,20 @@ class BrowseController(
       val board = boardManager.byBoardDescriptor(boardDescriptor)
         ?: return
 
-      toolbarState.updateTitle(
-        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
-        newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/")
-      )
-
-      toolbarState.updateSubtitle(
-        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      toolbarState.default.updateTitle(
+        newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/"),
         newSubTitle = ToolbarText.String(board.name ?: "")
       )
     } else {
       catalogDescriptor as ChanDescriptor.CompositeCatalogDescriptor
 
-      toolbarState.updateTitle(
-        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
-        newTitle = ToolbarText.Id(R.string.composite_catalog)
-      )
-
-      toolbarState.updateSubtitle(
-        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      toolbarState.default.updateTitle(
+        newTitle = ToolbarText.Id(R.string.composite_catalog),
         newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
       )
 
       updateCompositeCatalogNavigationSubtitleJob = controllerScope.launch {
         val newTitle = presenter.getCompositeCatalogNavigationTitle(catalogDescriptor)
-        if (newTitle.isNotNullNorEmpty()) {
-          toolbarState.updateTitle(
-            toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
-            newTitle = ToolbarText.String(newTitle)
-          )
-        }
 
         val compositeCatalogSubTitle = SpannableHelper.getCompositeCatalogNavigationSubtitle(
           siteManager = siteManager,
@@ -816,8 +796,8 @@ class BrowseController(
           compositeCatalogDescriptor = catalogDescriptor
         )
 
-        toolbarState.updateSubtitle(
-          toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+        toolbarState.default.updateTitle(
+          newTitle = ToolbarText.String(newTitle ?: ""),
           newSubTitle = ToolbarText.Spanned(compositeCatalogSubTitle)
         )
       }

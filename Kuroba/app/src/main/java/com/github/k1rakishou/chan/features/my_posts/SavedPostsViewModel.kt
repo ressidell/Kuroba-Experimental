@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.features.my_posts
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.chan.R
@@ -10,8 +11,6 @@ import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.SavedReplyManager
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
-import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItemId
 import com.github.k1rakishou.common.isNotNullNorEmpty
@@ -39,9 +38,6 @@ class SavedPostsViewModel(
   private val searchQueryDebouncer = DebouncingCoroutineExecutor(viewModelScope)
   val viewModelSelectionHelper = ViewModelSelectionHelper<PostDescriptor, MenuItemClickEvent>()
 
-  val searchToolbarState = KurobaSearchToolbarState()
-  val selectionToolbarState = KurobaSelectionToolbarState()
-
   val myPostsViewModelState: StateFlow<MyPostsViewModelState>
     get() = _myPostsViewModelState.asStateFlow()
 
@@ -53,6 +49,8 @@ class SavedPostsViewModel(
   val rememberedFirstVisibleItemScrollOffset: Int
     get() = _rememberedFirstVisibleItemScrollOffset
 
+  private val _searchQuery = mutableStateOf<String?>(null)
+
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)
   }
@@ -60,6 +58,10 @@ class SavedPostsViewModel(
   fun updatePrevLazyListState(firstVisibleItemIndex: Int, firstVisibleItemScrollOffset: Int) {
     _rememberedFirstVisibleItemIndex = firstVisibleItemIndex
     _rememberedFirstVisibleItemScrollOffset = firstVisibleItemScrollOffset
+  }
+
+  fun updateSearchQuery(newSearchQuery: String?) {
+    _searchQuery.value = newSearchQuery
   }
 
   override suspend fun onViewModelReady() {
@@ -116,7 +118,7 @@ class SavedPostsViewModel(
     viewModelSelectionHelper.toggleSelection(postDescriptor)
   }
 
-  fun updateQueryAndReload(newQuery: String?) {
+  fun updateQueryAndReload() {
     searchQueryDebouncer.post(125L, { reloadSavedReplies() })
   }
 
@@ -192,7 +194,7 @@ class SavedPostsViewModel(
 
         val comment = savedReply.comment ?: "<Empty comment>"
 
-        val searchQuery = searchToolbarState.searchQueryState.text
+        val searchQuery = _searchQuery.value
         if (searchQuery.isNotNullNorEmpty()) {
           var matches = false
 

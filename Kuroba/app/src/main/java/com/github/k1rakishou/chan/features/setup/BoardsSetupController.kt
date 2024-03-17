@@ -131,7 +131,7 @@ class BoardsSetupController(
     val site = siteManager.bySiteDescriptor(siteDescriptor)!!
     val syntheticSite = site.isSynthetic
 
-    toolbarState.pushOrUpdateDefaultLayer(
+    toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar

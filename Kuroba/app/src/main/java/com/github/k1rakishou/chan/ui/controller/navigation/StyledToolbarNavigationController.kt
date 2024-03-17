@@ -118,7 +118,7 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
 
     if (to != null) {
       val mainController = mainController
-      mainController?.onNavigationItemDrawerInfoUpdated(to.toolbarState.hasDrawer)
+      mainController?.onNavigationItemDrawerInfoUpdated(to.hasDrawer)
     }
   }
 
@@ -131,7 +131,7 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
 
     if (finish && to != null) {
       val mainController = mainController
-      mainController?.onNavigationItemDrawerInfoUpdated(to.toolbarState.hasDrawer)
+      mainController?.onNavigationItemDrawerInfoUpdated(to.hasDrawer)
     }
   }
 

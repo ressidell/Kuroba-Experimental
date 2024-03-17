@@ -242,26 +242,24 @@ abstract class ThreadController(
     controllerScope.launch {
       globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow
         .onEach { replyLayoutVisibilityEvents ->
-          kurobaToolbarState?.let { toolbarState ->
-            val isInReplyLayoutMode = toolbarState.isInReplyMode()
-            val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.anyOpened() || replyLayoutVisibilityEvents.anyExpanded()
+          val isInReplyLayoutMode = kurobaToolbarState.isInReplyMode()
+          val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.anyOpened() || replyLayoutVisibilityEvents.anyExpanded()
 
-            if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
-              return@let
-            }
+          if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
+            return@onEach
+          }
 
-            if (anyReplyLayoutOpenedOrExpanded) {
-              toolbarState.enterReplyMode(threadLayout.presenter.replyToolbarState)
-            } else {
-              toolbarState.exitReplyMode()
-            }
+          if (anyReplyLayoutOpenedOrExpanded) {
+            kurobaToolbarState.enterReplyMode()
+          } else {
+            kurobaToolbarState.exitReplyMode()
           }
         }
         .collect()
     }
 
     controllerScope.launch {
-      snapshotFlow { toolbarState.toolbarHeightState.value }
+      snapshotFlow { kurobaToolbarState.toolbarHeightState.value }
         .onEach { toolbarHeight -> onToolbarHeightChanged(toolbarHeight) }
         .collect()
     }
