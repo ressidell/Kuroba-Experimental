@@ -131,7 +131,7 @@ class ResolveDuplicateImagesController(
       resolveDuplicateImagesPresenter.resolve()
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       resolveDuplicateImagesPresenter.listenForStateUpdates()
         .collect { state -> renderState(state) }
     }

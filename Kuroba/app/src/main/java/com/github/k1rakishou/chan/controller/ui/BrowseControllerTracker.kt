@@ -30,7 +30,7 @@ class BrowseControllerTracker(
     }
 
     val navController = navigationController
-    if (navController.top == null) {
+    if (navController.topController == null) {
       return false
     }
 

@@ -30,12 +30,12 @@ internal class GlobalSearchPresenter(
     BehaviorProcessor.createDefault<GlobalSearchControllerState>(GlobalSearchControllerState.Uninitialized)
   private val searchResultsStateStorage = SearchResultsStateStorage
 
-  private val searchUpdateExecutor = RendezvousCoroutineExecutor(scope = scope)
+  private val searchUpdateExecutor = RendezvousCoroutineExecutor(scope = presenterScope)
 
   override fun onCreate(view: GlobalSearchView) {
     super.onCreate(view)
 
-    scope.launch {
+    presenterScope.launch {
       if (searchResultsStateStorage.searchInputState != null) {
         if (tryRestorePrevState()) {
           return@launch

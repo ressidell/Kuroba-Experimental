@@ -25,6 +25,8 @@ import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.site.common.DefaultPostParser
 import com.github.k1rakishou.chan.core.site.parser.CommentParser
 import com.github.k1rakishou.chan.core.site.parser.PostParser
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.adapter.PostAdapter
 import com.github.k1rakishou.chan.ui.cell.GenericPostCell
 import com.github.k1rakishou.chan.ui.cell.PostCell
@@ -32,8 +34,6 @@ import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface
 import com.github.k1rakishou.chan.ui.cell.ThreadStatusCell
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -127,7 +127,7 @@ class ThemeControllerHelper(
   suspend fun createSimpleThreadView(
     context: Context,
     theme: ChanTheme,
-    navigationItem: NavigationItem,
+    kurobaToolbarState: KurobaToolbarState,
     navigationController: NavigationController,
     options: Options,
     postCellDataWidthNoPaddings: Int
@@ -291,10 +291,8 @@ class ThemeControllerHelper(
       intArrayOf(Color.WHITE, uncheckedColor)
     )
 
-    val toolbar = Toolbar(context)
-    toolbar.setIgnoreThemeChanges()
-    toolbar.setBackgroundColor(theme.primaryColor)
-    toolbar.setNavigationItem(false, true, navigationItem, theme)
+    val toolbar = KurobaToolbarView(context)
+    toolbar.init(kurobaToolbarState)
 
     val fab = FloatingActionButton(context)
     fab.id = R.id.theme_view_fab_id

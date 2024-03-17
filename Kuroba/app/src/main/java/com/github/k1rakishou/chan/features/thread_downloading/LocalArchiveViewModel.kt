@@ -17,6 +17,8 @@ import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFact
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.usecase.ExportDownloadedThreadAsHtmlUseCase
 import com.github.k1rakishou.chan.core.usecase.ExportDownloadedThreadMediaUseCase
+import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItemId
 import com.github.k1rakishou.common.AppConstants
@@ -33,7 +35,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,10 +69,6 @@ class LocalArchiveViewModel(
   val state: StateFlow<ViewModelState>
     get() = _state.asStateFlow()
 
-  private var _searchQuery = mutableStateOf<String?>(null)
-  val searchQuery: State<String?>
-    get() = _searchQuery
-
   var viewMode = mutableStateOf<ViewMode>(ViewMode.ShowAll)
 
   private val _controllerTitleInfoUpdatesFlow = MutableStateFlow<ControllerTitleInfo?>(null)
@@ -85,6 +85,9 @@ class LocalArchiveViewModel(
   val rememberedFirstVisibleItemScrollOffset: Int
     get() = _rememberedFirstVisibleItemScrollOffset
 
+  val searchToolbarState = KurobaSearchToolbarState()
+  val selectionToolbarState = KurobaSelectionToolbarState()
+
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)
   }
@@ -100,6 +103,22 @@ class LocalArchiveViewModel(
       threadDownloadManager.threadsProcessedFlow
         .debounce(1.seconds)
         .collect { refreshCacheAndReload() }
+    }
+
+    viewModelScope.launch {
+      searchToolbarState.listenForSearchVisibilityUpdates()
+        .onEach { searchVisible ->
+          if (!searchVisible) {
+            updateQueryAndReload(null)
+          }
+        }
+        .collect()
+    }
+
+    viewModelScope.launch {
+      searchToolbarState.listenForSearchQueryUpdates()
+        .onEach { query -> updateQueryAndReload(query) }
+        .collect()
     }
 
     refreshCacheAndReload()
@@ -127,19 +146,17 @@ class LocalArchiveViewModel(
     )
   }
 
-  fun updateQueryAndReload(query: String?) {
-    _searchQuery.value = query
-
+  private fun updateQueryAndReload(searchQuery: String?) {
     // If state is not data then do nothing
     if (_state.value.threadDownloadsAsync !is AsyncData.Data) {
       return
     }
 
-    reload()
+    reload(searchQuery)
   }
 
-  fun reload() {
-    val threadDownloadViews = filterThreadDownloads()
+  fun reload(searchQuery: String? = null) {
+    val threadDownloadViews = filterThreadDownloads(searchQuery)
 
     _state.updateState {
       copy(threadDownloadsAsync = AsyncData.Data(threadDownloadViews))
@@ -156,9 +173,7 @@ class LocalArchiveViewModel(
     }
   }
 
-  private fun filterThreadDownloads(): List<ThreadDownloadView> {
-   val query = _searchQuery.value
-
+  private fun filterThreadDownloads(searchQuery: String?): List<ThreadDownloadView> {
     val filteredThreadDownloadViews = cachedThreadDownloadViews
       .filter { threadDownloadView ->
         return@filter when (viewMode.value) {
@@ -168,17 +183,17 @@ class LocalArchiveViewModel(
         }
       }
 
-    if (query.isNullOrEmpty()) {
+    if (searchQuery.isNullOrEmpty()) {
       return filteredThreadDownloadViews.toList()
     }
 
     return filteredThreadDownloadViews
       .filter { threadDownloadView ->
-        if (threadDownloadView.threadSubject.contains(query, ignoreCase = true)) {
+        if (threadDownloadView.threadSubject.contains(searchQuery, ignoreCase = true)) {
           return@filter true
         }
 
-        if (threadDownloadView.threadDownloadInfo.contains(query, ignoreCase = true)) {
+        if (threadDownloadView.threadDownloadInfo.contains(searchQuery, ignoreCase = true)) {
           return@filter true
         }
 
@@ -391,7 +406,7 @@ class LocalArchiveViewModel(
 
     _controllerTitleInfoUpdatesFlow.tryEmit(ControllerTitleInfo(active, total))
 
-    if (searchQuery.value != null) {
+    if (searchToolbarState.isInSearchMode()) {
       // Do not update the main state when in search mode because it will reset the filtered entries
       return
     }

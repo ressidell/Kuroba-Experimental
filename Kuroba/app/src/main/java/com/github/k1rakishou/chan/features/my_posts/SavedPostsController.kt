@@ -24,7 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -39,6 +39,11 @@ import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.SelectableItem
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
@@ -48,8 +53,6 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.navigation.TabPageController
-import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -58,6 +61,8 @@ import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -65,8 +70,7 @@ class SavedPostsController(
   context: Context,
   private val mainControllerCallbacks: MainControllerCallbacks,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : TabPageController(context),
-  ToolbarNavigationController.ToolbarSearchCallback, WindowInsetsListener {
+) : TabPageController(context),  WindowInsetsListener {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -75,29 +79,49 @@ class SavedPostsController(
   @Inject
   lateinit var dialogFactory: DialogFactory
 
-  private val bottomPadding = mutableStateOf(0)
+  private val bottomPadding = mutableIntStateOf(0)
   private val viewModel by lazy { requireComponentActivity().viewModelByKey<SavedPostsViewModel>() }
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 
-  override fun rebuildNavigationItem(navigationItem: NavigationItem) {
-    navigationItem.title = AppModuleAndroidUtils.getString(R.string.controller_saved_posts)
-    navigationItem.swipeable = false
-    navigationItem.hasDrawer = true
-    navigationItem.hasBack = false
-
-    navigationItem.buildMenu(context)
-      .withMenuItemClickInterceptor {
+  override fun updateToolbarState(): KurobaToolbarState {
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        hasDrawer = true,
+        hasBack = false,
+        swipeable = false
+      ),
+      leftItem = HamburgMenuItem(
+        onClick = { toolbarIcon ->
+          // TODO: New toolbar.
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.controller_saved_posts)
+      ),
+      iconClickInterceptor = {
         viewModel.viewModelSelectionHelper.unselectAll()
-        return@withMenuItemClickInterceptor false
+        return@pushOrUpdateDefaultLayer false
+      },
+      menuBuilder = {
+        withMenuItem(
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = { toolbarState.enterSearchMode(viewModel.searchToolbarState) }
+        )
+
+        withOverflowMenu {
+          withOverflowMenuItem(
+            id = ACTION_DELETE_ALL_SAVED_POSTS,
+            stringId = R.string.controller_saved_posts_delete_all,
+            onClick = { onDeleteAllSavedPostsClicked() }
+          )
+        }
       }
-      .withItem(R.drawable.ic_search_white_24dp) { requireToolbarNavController().showSearch() }
-      .withOverflow(requireNavController())
-      .withSubItem(ACTION_DELETE_ALL_SAVED_POSTS, R.string.controller_saved_posts_delete_all, { onDeleteAllSavedPostsClicked() })
-      .build()
-      .build()
+    )
+
+    return toolbarState
   }
 
   override fun onTabFocused() {
@@ -119,30 +143,36 @@ class SavedPostsController(
     return super.onBack()
   }
 
-  override fun onSearchVisibilityChanged(visible: Boolean) {
-    if (!visible) {
-      viewModel.updateQueryAndReload(null)
-    }
-  }
-
-  override fun onSearchEntered(entered: String) {
-    viewModel.updateQueryAndReload(entered)
-  }
-
   override fun onCreate() {
     super.onCreate()
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.viewModelSelectionHelper.selectionMode.collect { selectionEvent ->
         onNewSelectionEvent(selectionEvent)
       }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.viewModelSelectionHelper.bottomPanelMenuItemClickEventFlow
         .collect { menuItemClickEvent ->
           onMenuItemClicked(menuItemClickEvent.menuItemType, menuItemClickEvent.items)
         }
+    }
+
+    controllerScope.launch {
+      viewModel.searchToolbarState.listenForSearchVisibilityUpdates()
+        .onEach { searchVisible ->
+          if (!searchVisible) {
+            viewModel.updateQueryAndReload(null)
+          }
+        }
+        .collect()
+    }
+
+    controllerScope.launch {
+      viewModel.searchToolbarState.listenForSearchQueryUpdates()
+        .onEach { entered -> viewModel.updateQueryAndReload(entered) }
+        .collect()
     }
 
     mainControllerCallbacks.onBottomPanelStateChanged { onInsetsChanged() }
@@ -165,8 +195,6 @@ class SavedPostsController(
     super.onDestroy()
 
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-
-    toolbarNavControllerOrNull()?.closeSearch()
     mainControllerCallbacks.hideBottomPanel()
 
     viewModel.updateQueryAndReload(null)
@@ -174,7 +202,7 @@ class SavedPostsController(
   }
 
   override fun onInsetsChanged() {
-    bottomPadding.value = calculateBottomPaddingForRecyclerInDp(
+    bottomPadding.intValue = calculateBottomPaddingForRecyclerInDp(
       globalWindowInsetsManager = globalWindowInsetsManager,
       mainControllerCallbacks = mainControllerCallbacks
     )
@@ -224,7 +252,7 @@ class SavedPostsController(
         )
       },
       onHeaderLongClicked = { threadDescriptor ->
-        if (requireToolbarNavController().isSearchOpened) {
+        if (toolbarState.isInSearchMode()) {
           return@BuildSavedRepliesList
         }
 
@@ -232,7 +260,7 @@ class SavedPostsController(
         viewModel.toggleGroupSelection(threadDescriptor)
       },
       onReplyLongClicked = { postDescriptor ->
-        if (requireToolbarNavController().isSearchOpened) {
+        if (toolbarState.isInSearchMode()) {
           return@BuildSavedRepliesList
         }
 
@@ -273,7 +301,7 @@ class SavedPostsController(
         .simpleVerticalScrollbar(state, chanTheme, bottomPadding)
     ) {
       if (savedRepliesGrouped.isEmpty()) {
-        val searchQuery = viewModel.searchQuery
+        val searchQuery = viewModel.searchToolbarState.searchQueryState.text
         if (searchQuery.isNullOrEmpty()) {
           item(key = "nothing_found_message") {
             KurobaComposeErrorMessage(
@@ -461,21 +489,18 @@ class SavedPostsController(
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
         mainControllerCallbacks.hideBottomPanel()
-        requireNavController().requireToolbar().exitSelectionMode()
+        toolbarState.exitSelectionMode()
       }
       null -> return
     }
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val toolbar = requireNavController().requireToolbar()
-    if (!toolbar.isInSelectionMode) {
-      toolbar.enterSelectionMode(formatSelectionText())
-      return
+    if (!toolbarState.isInSelectionMode()) {
+      toolbarState.enterSelectionMode(viewModel.selectionToolbarState)
     }
 
-    navigation.selectionStateText = formatSelectionText()
-    toolbar.updateSelectionTitle(navigation)
+    viewModel.selectionToolbarState.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {

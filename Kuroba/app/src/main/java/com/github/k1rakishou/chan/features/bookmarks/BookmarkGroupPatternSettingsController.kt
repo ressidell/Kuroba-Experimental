@@ -205,7 +205,7 @@ class BookmarkGroupPatternSettingsController(
         KurobaComposeTextBarButton(
           enabled = validationResult.isOk(),
           onClick = {
-            mainScope.launch {
+            controllerScope.launch {
               viewModel.saveGroupMatcherPattern(bookmarkGroupId)
               pop()
             }
@@ -376,7 +376,7 @@ class BookmarkGroupPatternSettingsController(
   }
 
   private fun onSelectMatcherOperatorClicked(index: Int) {
-    mainScope.launch {
+    controllerScope.launch {
       val matcherOperator = selectMatcherConjunctiveOperator()
         ?: return@launch
 
@@ -386,7 +386,7 @@ class BookmarkGroupPatternSettingsController(
   }
 
   private fun onSelectMatcherFlagClicked(index: Int) {
-    mainScope.launch {
+    controllerScope.launch {
       val matcherFlag = selectMatcherFlag()
         ?: return@launch
 
@@ -396,7 +396,7 @@ class BookmarkGroupPatternSettingsController(
   }
 
   private fun onAddNewMatcherGroupClicked() {
-    mainScope.launch {
+    controllerScope.launch {
       val matcherOperator = selectMatcherConjunctiveOperator()
         ?: return@launch
 

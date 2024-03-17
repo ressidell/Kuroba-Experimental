@@ -13,7 +13,6 @@ import com.github.k1rakishou.chan.features.bookmarks.BookmarksController
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.my_posts.SavedPostsController
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableTabLayout
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
 import com.github.k1rakishou.chan.ui.widget.DisableableLayout
 import com.github.k1rakishou.chan.ui.widget.KurobaViewPager
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -28,7 +27,7 @@ class TabHostController(
   private val bookmarksToHighlight: List<ChanDescriptor.ThreadDescriptor>,
   private val mainControllerCallbacks: MainControllerCallbacks,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : Controller(context), ToolbarNavigationController.ToolbarSearchCallback, DisableableLayout {
+) : Controller(context), DisableableLayout {
   private lateinit var tabLayout: ColorizableTabLayout
   private lateinit var viewPager: KurobaViewPager
 
@@ -91,22 +90,14 @@ class TabHostController(
   }
 
   override fun isLayoutEnabled(): Boolean {
-    val topController = top
+    val topController = topController
       ?: return false
 
-    if (navigation.search) {
+    if (toolbarState.isInSearchMode()) {
       return false
     }
 
     return (topController as TabPageController).canSwitchTabs()
-  }
-
-  override fun onSearchVisibilityChanged(visible: Boolean) {
-    (top as? ToolbarNavigationController.ToolbarSearchCallback)?.onSearchVisibilityChanged(visible)
-  }
-
-  override fun onSearchEntered(entered: String) {
-    (top as? ToolbarNavigationController.ToolbarSearchCallback)?.onSearchEntered(entered)
   }
 
   private fun onScrolledToTab(pageType: PageType) {
@@ -163,7 +154,7 @@ class TabHostController(
       return controller.view == view
     }
 
-    override fun getCount(): Int = PageType.values().size
+    override fun getCount(): Int = PageType.entries.size
 
     private fun createController(pageType: PageType): TabPageController {
       return when (pageType) {
@@ -188,13 +179,10 @@ class TabHostController(
     private fun attachController(container: ViewGroup, childController: TabPageController) {
       addChildControllerOrMoveToTop(container, childController)
 
-      val newNavItem = NavigationItem()
-      childController.rebuildNavigationItem(newNavItem)
-      childController.navigation = newNavItem
+      val childControllerToolbarState = childController.updateToolbarState()
       childController.onTabFocused()
 
-      this@TabHostController.navigation = newNavItem
-      requireNavController().requireToolbar().setNavigationItem(false, true, newNavItem, null)
+      toolbarState.updateFromState(childControllerToolbarState)
     }
 
   }

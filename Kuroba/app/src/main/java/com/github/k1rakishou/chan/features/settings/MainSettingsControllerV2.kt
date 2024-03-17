@@ -21,7 +21,11 @@ import com.github.k1rakishou.chan.features.settings.setting.LinkSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.ListSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.RangeSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.SettingV2
-import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController.ToolbarSearchCallback
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
@@ -32,12 +36,15 @@ import com.github.k1rakishou.chan.utils.addOneshotModelBuildListener
 import com.github.k1rakishou.common.exhaustive
 import com.github.k1rakishou.common.updatePaddings
 import dagger.Lazy
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class MainSettingsControllerV2(
   context: Context,
   private val mainControllerCallbacks: MainControllerCallbacks
-) : BaseSettingsController(context), ToolbarSearchCallback, WindowInsetsListener {
+) : BaseSettingsController(context), WindowInsetsListener {
 
   @Inject
   lateinit var settingsNotificationManager: SettingsNotificationManager
@@ -75,13 +82,30 @@ class MainSettingsControllerV2(
     epoxyRecyclerView = view.findViewById(R.id.settings_recycler_view)
     epoxyRecyclerView.itemAnimator = null
 
-    navigation.buildMenu(context)
-      .withItem(R.drawable.ic_search_white_24dp) { requireToolbarNavController().showSearch() }
-      .build()
-
-    navigation.swipeable = false
-    navigation.hasDrawer = true
-    navigation.hasBack = false
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        hasBack = false,
+        swipeable = false,
+        hasDrawer = true
+      ),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String("")
+      ),
+      menuBuilder = {
+        withMenuItem(
+          id = ACTION_SEARCH,
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = {
+            toolbarState.enterSearchMode(settingsCoordinator.searchToolbarState)
+          }
+        )
+      }
+    )
 
     settingsCoordinator = SettingsCoordinator(context, requireNavController(), mainControllerCallbacks)
     settingsCoordinator.onCreate()
@@ -101,6 +125,22 @@ class MainSettingsControllerV2(
 
     epoxyRecyclerView.addOnScrollListener(scrollListener)
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
+
+    controllerScope.launch {
+      settingsCoordinator.searchToolbarState.listenForSearchVisibilityUpdates()
+        .onEach { searchVisible ->
+          if (!searchVisible) {
+            settingsCoordinator.rebuildCurrentScreen(BuildOptions.Default)
+          }
+        }
+        .collect()
+    }
+
+    controllerScope.launch {
+      settingsCoordinator.searchToolbarState.listenForSearchQueryUpdates()
+        .onEach { searchQuery -> settingsCoordinator.onSearchEntered(searchQuery) }
+        .collect()
+    }
   }
 
   override fun onDestroy() {
@@ -123,16 +163,6 @@ class MainSettingsControllerV2(
     )
 
     epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
-  }
-
-  override fun onSearchVisibilityChanged(visible: Boolean) {
-    if (!visible) {
-      settingsCoordinator.rebuildCurrentScreen(BuildOptions.Default)
-    }
-  }
-
-  override fun onSearchEntered(entered: String) {
-    settingsCoordinator.onSearchEntered(entered)
   }
 
   override fun onBack(): Boolean {
@@ -163,8 +193,10 @@ class MainSettingsControllerV2(
           }
         }
         is SettingsCoordinator.RenderAction.RenderScreen -> {
-          navigation.title = renderAction.settingsScreen.title
-          requireToolbarNavController().toolbar!!.updateTitle(navigation)
+          toolbarState.updateTitle(
+            toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+            newTitle = ToolbarText.String(renderAction.settingsScreen.title)
+          )
 
           renderScreen(renderAction.settingsScreen)
         }
@@ -474,5 +506,7 @@ class MainSettingsControllerV2(
 
   companion object {
     private const val TAG = "MainSettingsControllerV2"
+
+    private const val ACTION_SEARCH = 0
   }
 }

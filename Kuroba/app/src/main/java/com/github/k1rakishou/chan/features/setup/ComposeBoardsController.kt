@@ -149,7 +149,7 @@ class ComposeBoardsController(
           pop()
         },
         onSaveClicked = {
-          mainScope.launch { createOrUpdateCompositeCatalog() }
+          controllerScope.launch { createOrUpdateCompositeCatalog() }
         }
       )
     }
@@ -207,7 +207,7 @@ class ComposeBoardsController(
       return
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       val result = viewModel.createOrUpdateCompositeCatalog(
         newCompositeCatalogName = compositeCatalogName,
         prevCompositeCatalog = prevCompositeCatalog

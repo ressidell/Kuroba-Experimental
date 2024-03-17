@@ -145,7 +145,7 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
     focusManager: FocusManager,
     thirdEyeSettingState: ThirdEyeSettingsState
   ) {
-    mainScope.launch {
+    controllerScope.launch {
       val prevSettings = thirdEyeManager.settings()
 
       val newSettings = prevSettings.copy(
@@ -170,7 +170,7 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
     booruSetting: BooruSetting,
     thirdEyeSettingState: ThirdEyeSettingsState
   ) {
-    mainScope.launch {
+    controllerScope.launch {
       val prevSettings = thirdEyeManager.settings()
 
       val newSettings = prevSettings.copy(
@@ -195,7 +195,7 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
     booruSetting: BooruSetting,
     thirdEyeSettingState: ThirdEyeSettingsState
   ) {
-    mainScope.launch {
+    controllerScope.launch {
       val prevSettings = thirdEyeManager.settings()
 
       val newSettings = prevSettings.copy(
@@ -647,7 +647,7 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
       constraintLayoutBias = globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
       items = items,
       itemClickListener = { clickedItem ->
-        mainScope.launch {
+        controllerScope.launch {
           val itemId = clickedItem.key as Int
 
           if (itemId == ACTION_IMPORT) {

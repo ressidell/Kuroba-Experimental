@@ -8,35 +8,44 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ComposeView
 import com.github.k1rakishou.BottomNavViewButton
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar.ToolbarCollapseCallback
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.widget.SimpleAnimatorListener
 import com.github.k1rakishou.chan.utils.setAlphaFast
 import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.persist_state.PersistableChanState
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 class KurobaBottomNavigationView @JvmOverloads constructor(
   context: Context,
   attrs: AttributeSet? = null,
   defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), ToolbarCollapseCallback, NavigationViewContract {
-  private var attachedToWindow = false
-  private var toolbar: Toolbar? = null
-  private var attachedToToolbar = false
+) : FrameLayout(context, attrs, defStyleAttr), NavigationViewContract {
 
+  @Inject
+  lateinit var globalUiStateHolder: GlobalUiStateHolder
+
+  private var attachedToWindow = false
+  private var attachedToToolbar = false
   private var animating = false
   private var lastCollapseTranslationOffset = 0f
   private var isTranslationLocked = false
   private var isCollapseLocked = false
   private var isBottomNavViewEnabled = ChanSettings.isNavigationViewEnabled()
-
   private var menuItemClickListener: ((Int) -> Boolean)? = null
+
+  private val coroutineScope = KurobaCoroutineScope()
 
   private val kurobaComposeIconPanel by lazy {
     KurobaComposeIconPanel(
@@ -60,6 +69,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     set(value) { kurobaComposeIconPanel.setMenuItemSelected(value) }
 
   init {
+    // TODO: New toolbar. Injection.
     setOnApplyWindowInsetsListener(null)
 
     if (!isBottomNavViewEnabled) {
@@ -91,20 +101,6 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
 
   override fun onThemeChanged(chanTheme: ChanTheme) {
     this.setBackgroundColor(chanTheme.primaryColor)
-  }
-
-  override fun setToolbar(toolbar: Toolbar) {
-    if (!isBottomNavViewEnabled) {
-      completelyDisableBottomNavigationView()
-      return
-    }
-
-    this.toolbar = toolbar
-
-    if (attachedToWindow && !attachedToToolbar) {
-      toolbar.addCollapseCallback(this)
-      attachedToToolbar = true
-    }
   }
 
   override fun hide(lockTranslation: Boolean, lockCollapse: Boolean) {
@@ -187,9 +183,38 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     super.onAttachedToWindow()
     attachedToWindow = true
 
-    if (toolbar != null && !attachedToToolbar) {
-      toolbar?.addCollapseCallback(this)
+    if (!attachedToToolbar) {
       attachedToToolbar = true
+    }
+
+    coroutineScope.launch {
+      globalUiStateHolder.toolbarState.toolbarAppearanceFlow()
+        .onEach { toolbarVisible ->
+          if (!isBottomNavViewEnabled) {
+            completelyDisableBottomNavigationView()
+            return@onEach
+          }
+
+          onCollapseAnimationInternal(
+            collapse = !toolbarVisible,
+            isFromToolbarCallbacks = true
+          )
+        }
+        .collect()
+    }
+
+    coroutineScope.launch {
+      snapshotFlow { globalUiStateHolder.scrollState.scrollTransitionProgress }
+        .onEach { scrollTransitionProgressState ->
+          if (!isBottomNavViewEnabled) {
+            completelyDisableBottomNavigationView()
+            return@onEach
+          }
+
+          val scrollTransitionProgress = scrollTransitionProgressState.floatValue
+          onCollapseTranslation(scrollTransitionProgress)
+        }
+        .collect()
     }
   }
 
@@ -198,12 +223,13 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     attachedToWindow = false
 
     if (attachedToToolbar) {
-      toolbar?.removeCollapseCallback(this)
       attachedToToolbar = false
     }
+
+    coroutineScope.cancelChildren()
   }
 
-  override fun onCollapseTranslation(offset: Float) {
+  private fun onCollapseTranslation(offset: Float) {
     lastCollapseTranslationOffset = offset
 
     if (isCollapseLocked) {
@@ -220,10 +246,6 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     }
 
     this.alpha = newAlpha
-  }
-
-  override fun onCollapseAnimation(collapse: Boolean) {
-    onCollapseAnimationInternal(collapse, true)
   }
 
   override fun setOnNavigationItemSelectedListener(listener: (Int) -> Boolean) {
@@ -257,8 +279,8 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
 
     animate()
       .alpha(newAlpha)
-      .setDuration(Toolbar.TOOLBAR_ANIMATION_DURATION_MS)
-      .setInterpolator(Toolbar.TOOLBAR_ANIMATION_INTERPOLATOR)
+      .setDuration(KurobaToolbarView.ToolbarAnimationDurationMs)
+      .setInterpolator(KurobaToolbarView.ToolbarAnimationInterpolator)
       .setListener(object : SimpleAnimatorListener() {
         override fun onAnimationEnd(animation: Animator) {
           animating = false
@@ -289,12 +311,16 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
 
     animate()
       .alpha(newAlpha)
-      .setDuration(Toolbar.TOOLBAR_ANIMATION_DURATION_MS)
-      .setInterpolator(Toolbar.TOOLBAR_ANIMATION_INTERPOLATOR)
+      .setDuration(KurobaToolbarView.ToolbarAnimationDurationMs)
+      .setInterpolator(KurobaToolbarView.ToolbarAnimationInterpolator)
       .start()
   }
 
   private fun completelyDisableBottomNavigationView() {
+    if (visibility == View.GONE) {
+      return
+    }
+
     visibility = View.GONE
     isTranslationLocked = true
     isCollapseLocked = true

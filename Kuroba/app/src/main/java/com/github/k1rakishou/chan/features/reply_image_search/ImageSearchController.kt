@@ -45,6 +45,10 @@ import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.bypass.CookieResult
 import com.github.k1rakishou.chan.features.bypass.SiteFirewallBypassController
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
@@ -100,31 +104,43 @@ class ImageSearchController(
   }
 
   override fun setupNavigation() {
-    navigation.setTitle(R.string.image_search_controller_title)
-    navigation.swipeable = false
-
-    navigation
-      .buildMenu(context)
-      .withItem(ACTION_RELOAD, R.drawable.ic_refresh_white_24dp) {
-        val currentCaptchaController = findControllerOrNull { controller ->
-          return@findControllerOrNull controller is SiteFirewallBypassController &&
-                  controller.firewallType == FirewallType.YandexSmartCaptcha
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(swipeable = false),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
         }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.image_search_controller_title),
+        subtitle = null
+      ),
+      menuBuilder = {
+        withMenuItem(
+          id = ACTION_RELOAD,
+          drawableId = R.drawable.ic_refresh_white_24dp,
+          onClick = {
+            val currentCaptchaController = findControllerOrNull { controller ->
+              return@findControllerOrNull controller is SiteFirewallBypassController &&
+                controller.firewallType == FirewallType.YandexSmartCaptcha
+            }
 
-        currentCaptchaController?.stopPresenting()
-        controllerViewModel.reload()
+            currentCaptchaController?.stopPresenting()
+            controllerViewModel.reload()
+          }
+        )
       }
-      .build()
+    )
   }
 
   override fun onPrepare() {
-    mainScope.launch {
+    controllerScope.launch {
       controllerViewModel.searchErrorToastFlow
         .debounce(350L)
         .collect { errorMessage -> showToast(errorMessage) }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       controllerViewModel.solvingCaptcha.collect { urlToOpen ->
         if (urlToOpen == null) {
           return@collect

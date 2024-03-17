@@ -18,7 +18,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -36,15 +35,17 @@ import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
-import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateNullable
+import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
-import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.pxToDp
@@ -59,7 +60,7 @@ class BoardArchiveController(
   context: Context,
   private val catalogDescriptor: ChanDescriptor.CatalogDescriptor,
   private val onThreadClicked: (ChanDescriptor.ThreadDescriptor) -> Unit
-) : Controller(context), WindowInsetsListener, ToolbarNavigationController.ToolbarSearchCallback {
+) : Controller(context), WindowInsetsListener {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -67,7 +68,6 @@ class BoardArchiveController(
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
   private var blockClicking = false
-  private var toolbarSearchQuery = mutableStateOf<String?>(null)
   private val topPadding = mutableIntStateOf(0)
   private val bottomPadding = mutableIntStateOf(0)
 
@@ -85,11 +85,23 @@ class BoardArchiveController(
   override fun onCreate() {
     super.onCreate()
 
-    navigation.title = getString(R.string.controller_board_archive_title, catalogDescriptor.boardCode())
-
-    navigation.buildMenu(context)
-      .withItem(R.drawable.ic_search_white_24dp) { requireToolbarNavController().showSearch() }
-      .build()
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String(getString(R.string.controller_board_archive_title, catalogDescriptor.boardCode()))
+      ),
+      menuBuilder = {
+        withMenuItem(
+          id = ACTION_SEARCH,
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = { toolbarState.enterSearchMode(viewModel.searchToolbarState) }
+        )
+      }
+    )
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
     onInsetsChanged()
@@ -117,8 +129,10 @@ class BoardArchiveController(
   }
 
   override fun onInsetsChanged() {
-    val toolbarHeight = requireToolbarNavController().toolbar?.toolbarHeight
-      ?: getDimen(R.dimen.toolbar_height)
+    var toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeight?.toPx()?.toInt() }
+    if (toolbarHeight == null) {
+      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
+    }
 
     topPadding.intValue = pxToDp(toolbarHeight)
 
@@ -135,18 +149,6 @@ class BoardArchiveController(
         pxToDp(bottomNavViewHeight + globalWindowInsetsManager.bottom())
       }
     }
-  }
-
-  override fun onSearchVisibilityChanged(visible: Boolean) {
-    if (visible) {
-      toolbarSearchQuery.value = ""
-    } else {
-      toolbarSearchQuery.value = null
-    }
-  }
-
-  override fun onSearchEntered(entered: String) {
-    toolbarSearchQuery.value = entered
   }
 
   @Composable
@@ -183,14 +185,14 @@ class BoardArchiveController(
     val page by viewModel.page
     val endReached by viewModel.endReached
 
-    val searchState = rememberSimpleSearchStateNullable<BoardArchiveViewModel.ArchiveThread>(
-      searchQueryState = toolbarSearchQuery
+    val searchState = rememberSimpleSearchStateV2<BoardArchiveViewModel.ArchiveThread>(
+      textFieldState = viewModel.searchToolbarState.searchQueryState
     )
-    val searchQuery = searchState.query
+    val searchQuery = searchState.textFieldState.text
 
     val searchResultsPair by produceState(
-      initialValue = searchState.isUsingSearch() to archiveThreads,
-      key1 = searchState.query,
+      initialValue = searchState.usingSearch to archiveThreads,
+      key1 = searchQuery,
       key2 = page,
       producer = {
         withContext(Dispatchers.Default) {
@@ -206,7 +208,7 @@ class BoardArchiveController(
       initialFirstVisibleItemScrollOffset = viewModel.rememberedFirstVisibleItemScrollOffset
     )
 
-    if (!searchState.isUsingSearch()) {
+    if (!searchState.usingSearch) {
       DisposableEffect(key1 = Unit, effect = {
         onDispose {
           viewModel.updatePrevLazyListState(state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset)
@@ -255,7 +257,7 @@ class BoardArchiveController(
   @Composable
   private fun ListFooter(
     resultsFromSearch: Boolean,
-    searchQuery: String?,
+    searchQuery: CharSequence?,
     hasResults: Boolean,
     endReached: Boolean,
     page: Int?,
@@ -318,7 +320,7 @@ class BoardArchiveController(
   }
 
   private fun processSearchQuery(
-    searchQuery: String?,
+    searchQuery: CharSequence?,
     archiveThreads: List<BoardArchiveViewModel.ArchiveThread>
   ): Pair<Boolean, List<BoardArchiveViewModel.ArchiveThread>> {
     if (searchQuery == null || searchQuery.isEmpty()) {
@@ -380,6 +382,10 @@ class BoardArchiveController(
         fontSize = 14.ktu
       )
     }
+  }
+
+  companion object {
+    private const val ACTION_SEARCH = 0
   }
 
 }

@@ -14,8 +14,12 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.repository.ThemeJsonFilesRepository
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -62,8 +66,19 @@ class ThemeGalleryController(
       getString(R.string.theme_settings_controller_theme_dark)
     }
 
-    navigation.setTitle(getString(R.string.theme_gallery_screen_theme_gallery, themeType))
-    navigation.swipeable = false
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        swipeable = false
+      ),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String(getString(R.string.theme_gallery_screen_theme_gallery, themeType))
+      )
+    )
 
     view = AppModuleAndroidUtils.inflate(context, R.layout.controller_theme_gallery)
     themesList = view.findViewById(R.id.themes_list)
@@ -79,7 +94,7 @@ class ThemeGalleryController(
     presentController(loadingViewController)
 
     themesList.doOnPreDraw {
-      mainScope.launch {
+      controllerScope.launch {
         val themes = themeJsonFilesRepository.download()
           .filter { chanTheme -> chanTheme.isLightTheme == lightThemes }
 
@@ -132,18 +147,25 @@ class ThemeGalleryController(
   inner class ThemeViewHolder(itemView: FrameLayout) : RecyclerView.ViewHolder(itemView) {
 
     fun onBind(chanTheme: ChanTheme, postCellDataWidthNoPaddings: Int) {
-      val navigationItem = NavigationItem()
-      navigationItem.title = chanTheme.name
-      navigationItem.hasBack = false
+      val kurobaToolbarState = KurobaToolbarState()
+      kurobaToolbarState.pushOrUpdateDefaultLayer(
+        navigationFlags = DeprecatedNavigationFlags(
+          hasBack = false
+        ),
+        leftItem = BackArrowMenuItem(onClick = {  }),
+        middleContent = ToolbarMiddleContent.Title(
+          title = ToolbarText.String(chanTheme.name)
+        )
+      )
 
       val threadView = runBlocking {
         themeControllerHelper.createSimpleThreadView(
-          context,
-          chanTheme,
-          navigationItem,
-          requireNavController(),
-          ThemeControllerHelper.Options(),
-          postCellDataWidthNoPaddings
+          context = context,
+          theme = chanTheme,
+          kurobaToolbarState = kurobaToolbarState,
+          navigationController = requireNavController(),
+          options = ThemeControllerHelper.Options(),
+          postCellDataWidthNoPaddings = postCellDataWidthNoPaddings
         )
       }
 

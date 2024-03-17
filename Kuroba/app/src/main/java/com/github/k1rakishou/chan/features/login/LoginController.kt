@@ -35,6 +35,10 @@ import com.github.k1rakishou.chan.core.site.http.login.Chan4LoginRequest
 import com.github.k1rakishou.chan.core.site.http.login.DvachLoginRequest
 import com.github.k1rakishou.chan.core.site.sites.chan4.Chan4
 import com.github.k1rakishou.chan.core.site.sites.dvach.Dvach
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEditText
 import com.github.k1rakishou.chan.ui.view.CrossfadeView
@@ -80,7 +84,17 @@ class LoginController(
   override fun onCreate() {
     super.onCreate()
 
-    navigation.setTitle(getString(R.string.settings_screen_pass_title, site.name()))
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String(getString(R.string.settings_screen_pass_title, site.name()))
+      )
+    )
     
     view = inflate(context, R.layout.controller_pass).also { view ->
       crossfadeView = view.findViewById(R.id.crossfade)
@@ -215,7 +229,7 @@ class LoginController(
         button.setText(R.string.setting_pass_login)
         hideError()
       } else {
-        mainScope.launch { auth() }
+        controllerScope.launch { auth() }
       }
     }
   }

@@ -85,8 +85,8 @@ abstract class BasePostPopupController<T : PostPopupHelper.PostPopupData>(
   private lateinit var loadView: LoadView
   protected lateinit var postsView: ColorizableRecyclerView
 
-  protected val rendezvousCoroutineExecutor = RendezvousCoroutineExecutor(mainScope)
-  protected val debouncingCoroutineExecutor = DebouncingCoroutineExecutor(mainScope)
+  protected val rendezvousCoroutineExecutor = RendezvousCoroutineExecutor(controllerScope)
+  protected val debouncingCoroutineExecutor = DebouncingCoroutineExecutor(controllerScope)
 
   protected val themeEngineInitialized: Boolean
     get() = ::themeEngine.isInitialized

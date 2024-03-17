@@ -13,6 +13,9 @@ import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.proxies.data.ProxyEntryView
 import com.github.k1rakishou.chan.features.proxies.data.ProxySetupState
 import com.github.k1rakishou.chan.features.proxies.epoxy.epoxyProxyView
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEpoxyRecyclerView
@@ -23,7 +26,6 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.common.updateMargins
 import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.persist_state.PersistableChanState
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -59,7 +61,17 @@ class ProxySetupController(
 
   override fun onCreate() {
     super.onCreate()
-    navigation.title = getString(R.string.controller_proxy_setup_title)
+
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.controller_proxy_setup_title)
+      )
+    )
 
     view = inflate(context, R.layout.controller_proxy_setup)
     epoxyRecyclerView = view.findViewById(R.id.epoxy_recycler_view)
@@ -69,12 +81,12 @@ class ProxySetupController(
       requireNavController().pushController(ProxyEditorController(context, onApplyClickListener))
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       presenter.listenForStateUpdates()
         .collect { state -> onStateChanged(state) }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       proxySelectionHelper.listenForSelectionChanges()
         .collect { selectionEvent -> onNewSelectionEvent(selectionEvent) }
     }
@@ -152,7 +164,7 @@ class ProxySetupController(
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
         drawerCallbacks?.hideBottomPanel()
-        requireNavController().requireToolbar().exitSelectionMode()
+        toolbarState.exitSelectionMode()
         addProxyButton.show()
       }
     }
@@ -265,16 +277,11 @@ class ProxySetupController(
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val navController = requireNavController()
-    val toolbar = navController.requireToolbar()
-
-    if (!toolbar.isInSelectionMode) {
-      toolbar.enterSelectionMode(formatSelectionText())
-      return
+    if (!toolbarState.isInSelectionMode()) {
+      toolbarState.enterSelectionMode(presenter.selectionToolbarState)
     }
 
-    navigation.selectionStateText = formatSelectionText()
-    toolbar.updateSelectionTitle(navController.navigation)
+    presenter.selectionToolbarState.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {

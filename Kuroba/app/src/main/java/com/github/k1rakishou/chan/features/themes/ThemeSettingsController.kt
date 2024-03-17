@@ -34,10 +34,15 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarOverflowMenuBuilder
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuSubItem
 import com.github.k1rakishou.chan.ui.view.ViewPagerAdapter
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.ViewUtils.changeEdgeEffect
@@ -58,8 +63,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
-class ThemeSettingsController(context: Context) : Controller(context),
-  ToolbarMenuItem.ToobarThreedotMenuCallback {
+class ThemeSettingsController(context: Context) : Controller(context) {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -93,22 +97,32 @@ class ThemeSettingsController(context: Context) : Controller(context),
   override fun onCreate() {
     super.onCreate()
 
-    navigation.setTitle(R.string.settings_screen_theme)
-    navigation.swipeable = false
-
-    if (AndroidUtils.isAndroid10()) {
-      navigation
-        .buildMenu(context)
-        .withOverflow(navigationController, this)
-        .withCheckableSubItem(
-          ACTION_IGNORE_DARK_NIGHT_MODE,
-          R.string.action_ignore_dark_night_mode,
-          true,
-          ChanSettings.ignoreDarkNightMode.get()
-        ) { item -> onIgnoreDarkNightModeClick(item) }
-        .build()
-        .build()
-    }
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        swipeable = false
+      ),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.settings_screen_theme)
+      ),
+      menuBuilder = {
+        if (AndroidUtils.isAndroid10()) {
+          withOverflowMenu {
+            withCheckableOverflowMenuItem(
+              id = ACTION_IGNORE_DARK_NIGHT_MODE,
+              stringId = R.string.action_ignore_dark_night_mode,
+              visible = true,
+              checked = ChanSettings.ignoreDarkNightMode.get(),
+              onClick = { item -> onIgnoreDarkNightModeClick(item) }
+            )
+          }
+        }
+      }
+    )
 
     view = inflate(context, R.layout.controller_theme)
     pager = view.findViewById(R.id.pager)
@@ -127,7 +141,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
     }
 
     updateCurrentThemeIndicator(true)
-    mainScope.launch {
+    controllerScope.launch {
       val (width, _) = pager.awaitUntilGloballyLaidOutAndGetSize(waitForWidth = true)
       reload(postCellDataWidthNoPaddings = width)
     }
@@ -155,10 +169,9 @@ class ThemeSettingsController(context: Context) : Controller(context),
     PersistableChanState.themesIgnoreSystemDayNightModeMessageShown.set(true)
   }
 
-  private fun onIgnoreDarkNightModeClick(item: ToolbarMenuSubItem) {
-    navigation.findCheckableSubItem(ACTION_IGNORE_DARK_NIGHT_MODE)?.let { subItem ->
-      subItem.isChecked = ChanSettings.ignoreDarkNightMode.toggle()
-    }
+  private fun onIgnoreDarkNightModeClick(item: ToolbarMenuCheckableOverflowItem) {
+    toolbarState.findCheckableOverflowItem(ACTION_IGNORE_DARK_NIGHT_MODE)
+      ?.updateChecked(ChanSettings.ignoreDarkNightMode.toggle())
   }
 
   private fun reload(postCellDataWidthNoPaddings: Int) {
@@ -186,7 +199,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
     view.postDelayed({ updateColors(adapter, 0, root) }, UPDATE_COLORS_DELAY_MS)
   }
 
-  private fun resetTheme(item: ToolbarMenuSubItem) {
+  private fun resetTheme(item: ToolbarMenuOverflowItem) {
     val isDarkTheme = when (item.id) {
       ACTION_RESET_DARK_THEME -> true
       ACTION_RESET_LIGHT_THEME -> false
@@ -201,7 +214,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
     reload(postCellDataWidthNoPaddings = pager.width)
   }
 
-  private fun exportThemeToClipboard(item: ToolbarMenuSubItem) {
+  private fun exportThemeToClipboard(item: ToolbarMenuOverflowItem) {
     val isDarkTheme = when (item.id) {
       ACTION_EXPORT_DARK_THEME_TO_CLIPBOARD -> true
       ACTION_EXPORT_LIGHT_THEME_TO_CLIPBOARD -> false
@@ -217,7 +230,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
     AndroidUtils.setClipboardContent("Theme json", themeJson)
   }
 
-  private fun exportThemeToFile(item: ToolbarMenuSubItem) {
+  private fun exportThemeToFile(item: ToolbarMenuOverflowItem) {
     val isDarkTheme = when (item.id) {
       ACTION_EXPORT_DARK_THEME_TO_FILE -> true
       ACTION_EXPORT_LIGHT_THEME_TO_FILE -> false
@@ -241,7 +254,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
     })
   }
 
-  private fun importTheme(item: ToolbarMenuSubItem) {
+  private fun importTheme(item: ToolbarMenuOverflowItem) {
     val isDarkTheme = when (item.id) {
       ACTION_IMPORT_DARK_THEME -> true
       ACTION_IMPORT_LIGHT_THEME -> false
@@ -266,7 +279,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
       return
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       when (val result = themeEngine.exportThemeToFile(file, isDarkTheme)) {
         is ThemeParser.ThemeExportResult.Error -> {
           val message = context.getString(
@@ -283,7 +296,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
     }
   }
 
-  private fun importThemeFromClipboard(item: ToolbarMenuSubItem) {
+  private fun importThemeFromClipboard(item: ToolbarMenuOverflowItem) {
     val isDarkTheme = when (item.id) {
       ACTION_IMPORT_DARK_THEME_FROM_CLIPBOARD -> true
       ACTION_IMPORT_LIGHT_THEME_FROM_CLIPBOARD -> false
@@ -301,7 +314,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
       return
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       handleParseThemeResult(themeEngine.tryParseAndApplyTheme(clipboardContent, isDarkTheme))
     }
   }
@@ -313,7 +326,7 @@ class ThemeSettingsController(context: Context) : Controller(context),
       return
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       handleParseThemeResult(themeEngine.tryParseAndApplyTheme(file, isDarkTheme))
     }
   }
@@ -439,98 +452,92 @@ class ThemeSettingsController(context: Context) : Controller(context),
       theme: ChanTheme,
       postCellDataWidthNoPaddings: Int
     ): CoordinatorLayout {
-      val navigationItem = NavigationItem()
-      navigationItem.title = theme.name
-      navigationItem.hasBack = false
-
-      navigationItem.buildMenu(context)
-        .withOverflow(navigationController, this@ThemeSettingsController)
-        .addSubItems(theme.isDarkTheme)
-        .build()
-        .build()
+      val kurobaToolbarState = KurobaToolbarState()
+      kurobaToolbarState.pushOrUpdateDefaultLayer(
+        navigationFlags = DeprecatedNavigationFlags(
+          hasBack = false
+        ),
+        leftItem = BackArrowMenuItem(onClick = {  }),
+        middleContent = ToolbarMiddleContent.Title(
+          title = ToolbarText.String(theme.name)
+        ),
+        menuBuilder = {
+          withOverflowMenu { addItems(theme) }
+        }
+      )
 
       return themeControllerHelper.createSimpleThreadView(
-        context,
-        theme,
-        navigationItem,
-        requireNavController(),
-        ThemeControllerHelper.Options(
+        context = context,
+        theme = theme,
+        kurobaToolbarState = kurobaToolbarState,
+        navigationController = requireNavController(),
+        options = ThemeControllerHelper.Options(
           showMoreThemesButton = true,
           refreshThemesControllerFunc = { reload(postCellDataWidthNoPaddings = pager.width) }
         ),
-        postCellDataWidthNoPaddings
+        postCellDataWidthNoPaddings = postCellDataWidthNoPaddings
       )
+    }
+
+    private fun ToolbarOverflowMenuBuilder.addItems(theme: ChanTheme) {
+      if (theme.isDarkTheme) {
+        withOverflowMenuItem(
+          id = ACTION_IMPORT_DARK_THEME,
+          stringId = R.string.action_import_dark_theme,
+          onClick = { item -> importTheme(item) }
+        )
+        withOverflowMenuItem(
+          id = ACTION_IMPORT_DARK_THEME_FROM_CLIPBOARD,
+          stringId = R.string.action_import_dark_theme_from_clipboard,
+          onClick = { item -> importThemeFromClipboard(item) }
+        )
+        withOverflowMenuItem(
+          id = ACTION_EXPORT_DARK_THEME_TO_FILE,
+          stringId = R.string.action_export_dark_theme_to_file,
+          onClick = { item -> exportThemeToFile(item) }
+        )
+        withOverflowMenuItem(
+          id = ACTION_EXPORT_DARK_THEME_TO_CLIPBOARD,
+          stringId = R.string.action_export_dark_theme_to_clipboard,
+          onClick = { item -> exportThemeToClipboard(item) }
+        )
+        withOverflowMenuItem(
+          id = ACTION_RESET_DARK_THEME,
+          stringId = R.string.action_reset_dark_theme,
+          onClick = { item -> resetTheme(item) }
+        )
+      } else {
+        withOverflowMenuItem(
+          id = ACTION_IMPORT_LIGHT_THEME,
+          stringId = R.string.action_import_light_theme,
+          onClick = { item -> importTheme(item) }
+        )
+        withOverflowMenuItem(
+          id = ACTION_IMPORT_LIGHT_THEME_FROM_CLIPBOARD,
+          stringId = R.string.action_import_light_theme_from_clipboard,
+          onClick = { item -> importThemeFromClipboard(item) }
+        )
+        withOverflowMenuItem(
+          id = ACTION_EXPORT_LIGHT_THEME_TO_FILE,
+          stringId = R.string.action_export_light_theme_to_file,
+          onClick = { item -> exportThemeToFile(item) }
+        )
+        withOverflowMenuItem(
+          id = ACTION_EXPORT_LIGHT_THEME_TO_CLIPBOARD,
+          stringId = R.string.action_export_light_theme_to_clipboard,
+          onClick = { item -> exportThemeToClipboard(item) }
+        )
+        withOverflowMenuItem(
+          id = ACTION_RESET_LIGHT_THEME,
+          stringId = R.string.action_reset_light_theme,
+          onClick = { item -> resetTheme(item) }
+        )
+      }
     }
 
     override fun getCount(): Int {
       return 2
     }
-  }
-
-  private fun NavigationItem.MenuOverflowBuilder.addSubItems(
-    darkTheme: Boolean,
-  ): NavigationItem.MenuOverflowBuilder {
-    if (darkTheme) {
-      return this.withSubItem(
-        ACTION_IMPORT_DARK_THEME,
-        R.string.action_import_dark_theme,
-        { item -> importTheme(item) }
-      )
-        .withSubItem(
-          ACTION_IMPORT_DARK_THEME_FROM_CLIPBOARD,
-          R.string.action_import_dark_theme_from_clipboard,
-          { item -> importThemeFromClipboard(item) }
-        )
-        .withSubItem(
-          ACTION_EXPORT_DARK_THEME_TO_FILE,
-          R.string.action_export_dark_theme_to_file,
-          { item -> exportThemeToFile(item) }
-        )
-        .withSubItem(
-          ACTION_EXPORT_DARK_THEME_TO_CLIPBOARD,
-          R.string.action_export_dark_theme_to_clipboard,
-          { item -> exportThemeToClipboard(item) }
-        )
-        .withSubItem(
-          ACTION_RESET_DARK_THEME,
-          R.string.action_reset_dark_theme,
-          { item -> resetTheme(item) }
-        )
-    } else {
-      return this.withSubItem(
-        ACTION_IMPORT_LIGHT_THEME,
-        R.string.action_import_light_theme,
-        { item -> importTheme(item) }
-      )
-        .withSubItem(
-          ACTION_IMPORT_LIGHT_THEME_FROM_CLIPBOARD,
-          R.string.action_import_light_theme_from_clipboard,
-          { item -> importThemeFromClipboard(item) }
-        )
-        .withSubItem(
-          ACTION_EXPORT_LIGHT_THEME_TO_FILE,
-          R.string.action_export_light_theme_to_file,
-          { item -> exportThemeToFile(item) }
-        )
-        .withSubItem(
-          ACTION_EXPORT_LIGHT_THEME_TO_CLIPBOARD,
-          R.string.action_export_light_theme_to_clipboard,
-          { item -> exportThemeToClipboard(item) }
-        )
-        .withSubItem(
-          ACTION_RESET_LIGHT_THEME,
-          R.string.action_reset_light_theme,
-          { item -> resetTheme(item) }
-        )
-    }
-  }
-
-  override fun onMenuShown() {
-    // no-op
-  }
-
-  override fun onMenuHidden() {
-    // no-op
   }
 
   companion object {

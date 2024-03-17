@@ -96,7 +96,7 @@ class SiteFirewallBypassController(
     super.onCreate()
 
     // Add a frame delay for the navigation stuff to completely load
-    mainScope.launch {
+    controllerScope.launch {
       try {
         // Some users may have no WebView installed
         onCreateInternal()
@@ -199,13 +199,13 @@ class SiteFirewallBypassController(
 
     onThemeChanged()
 
-    mainScope.launch {
+    controllerScope.launch {
       waitAndHandleResult()
     }
   }
 
   private suspend fun waitAndHandleResult() {
-    val informationDialogJob = mainScope.launch {
+    val informationDialogJob = controllerScope.launch {
       if (!informationDialogShown.compareAndSet(false, true)) {
         // Dialog was already shown during this app launch
         return@launch
@@ -221,7 +221,7 @@ class SiteFirewallBypassController(
       )
     }
 
-    val autoCloseJob = mainScope.launch {
+    val autoCloseJob = controllerScope.launch {
       delay(AppConstants.FIREWALL_SCREEN_AUTO_CLOSE_TIMEOUT_MILLIS)
       ensureActive()
 

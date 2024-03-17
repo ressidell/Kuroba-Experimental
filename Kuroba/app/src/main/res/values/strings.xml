@@ -235,6 +235,7 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="order_activity">Thread activity</string>
 
     <string name="search_hint">Search</string>
+    <string name="type_to_search_hint">Type to search</string>
     <string name="search_query_hint">Search query</string>
     <string name="search_nothing_found">Nothing found</string>
     <string name="search_nothing_found_with_query">Nothing found by query \'%1$s\'</string>
@@ -918,11 +919,12 @@ Usually that means that you forgot to remove a space from the beginning or the e
     <string name="settings_trigger_thread_cleanup">Trigger thread cleanup</string>
     <string name="settings_trigger_post_cleanup">Trigger post cleanup</string>
 
-    <!-- Theme settings -->
+    <!-- Logs controller -->
     <string name="settings_logs_screen">Logs</string>
     <string name="settings_logs_copy">Copy</string>
     <string name="settings_logs_loading_logs">Loading logs, please wait</string>
     <string name="settings_logs_loading_logs_error">Error loading logs</string>
+    <string name="settings_logs_show_for_level">Show \'%1$s\' logs</string>
 
     <!-- Developer settings -->
     <string name="settings_check_update_apk_version_code">Check update apk version code</string>

@@ -17,7 +17,6 @@
 package com.github.k1rakishou.chan.ui.controller
 
 import android.content.Context
-import androidx.core.content.ContextCompat
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.R.string.action_reload
@@ -34,15 +33,19 @@ import com.github.k1rakishou.chan.core.presenter.ThreadPresenter
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarOverflowMenuBuilder
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
-import com.github.k1rakishou.chan.ui.toolbar.CheckableToolbarMenuSubItem
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuItem.ToobarThreedotMenuCallback
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuSubItem
 import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -71,7 +74,6 @@ open class ViewThreadController(
   startingThreadDescriptor: ThreadDescriptor
 ) : ThreadController(context, mainControllerCallbacks),
   ThreadLayoutCallback,
-  ToobarThreedotMenuCallback,
   ReplyAutoCloseListener {
 
   @Inject
@@ -103,19 +105,17 @@ open class ViewThreadController(
 
     threadLayout.setBoardPostViewMode(ChanSettings.BoardPostViewMode.LIST)
     view.setBackgroundColor(themeEngine.chanTheme.backColor)
-    navigation.hasDrawer = true
-    navigation.scrollableTitle = ChanSettings.scrollingTextForThreadTitles.get()
 
-    buildMenu()
+    buildToolbar()
 
-    mainScope.launch {
+    controllerScope.launch {
       bookmarksManager.listenForBookmarksChanges()
         .filter { bookmarkChange: BookmarkChange? -> bookmarkChange !is BookmarksInitialized }
         .debounce(350.milliseconds)
         .collect { bookmarkChange -> updatePinIconStateIfNeeded(bookmarkChange) }
     }
 
-    mainScope.launch(Dispatchers.Main) { loadThread(threadDescriptor) }
+    controllerScope.launch(Dispatchers.Main) { loadThread(threadDescriptor) }
   }
 
   private fun updatePinIconStateIfNeeded(bookmarkChange: BookmarkChange) {
@@ -157,138 +157,161 @@ open class ViewThreadController(
     updateLeftPaneHighlighting(null)
   }
 
-  protected fun buildMenu() {
-    val menuBuilder = navigation.buildMenu(context)
+  private fun buildToolbar() {
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        hasDrawer = true,
+        scrollableTitle = ChanSettings.scrollingTextForThreadTitles.get()
+      ),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String("")
+      ),
+      menuBuilder = {
+        withMenuItem(
+          id = ACTION_ALBUM,
+          drawableId = R.drawable.ic_image_white_24dp,
+          onClick = { item -> albumClicked(item) }
+        )
+        withMenuItem(
+          id = ACTION_PIN,
+          drawableId = R.drawable.ic_bookmark_border_white_24dp,
+          onClick = { item -> pinClicked(item) }
+        )
 
-    menuBuilder
-      .withItem(ACTION_ALBUM, R.drawable.ic_image_white_24dp) { item -> albumClicked(item) }
-      .withItem(ACTION_PIN, R.drawable.ic_bookmark_border_white_24dp) { item -> pinClicked(item) }
-    val menuOverflowBuilder = menuBuilder.withOverflow(navigationController, this)
+        withOverflowMenu {
+          if (!ChanSettings.enableReplyFab.get()) {
+            withOverflowMenuItem(
+              id = ACTION_REPLY,
+              stringId = R.string.action_reply,
+              onClick = { item -> replyClicked(item) })
+          }
 
-    if (!ChanSettings.enableReplyFab.get()) {
-      menuOverflowBuilder
-        .withSubItem(ACTION_REPLY, R.string.action_reply) { item -> replyClicked(item) }
-    }
-
-    menuOverflowBuilder
-      .withSubItem(
-        ACTION_SEARCH,
-        R.string.action_search
-      ) { item -> searchClicked(item) }
-      .withSubItem(
-        ACTION_RELOAD,
-        action_reload
-      ) { item -> reloadClicked(item) }
-      .withSubItem(
-        ACTION_DOWNLOAD_THREAD,
-        R.string.action_start_thread_download,
-        true,
-        { item -> downloadOrStopDownloadThread(item) }
-      )
-      .withSubItem(
-        ACTION_VIEW_REMOVED_POSTS,
-        R.string.action_view_removed_posts
-      ) { item -> showRemovedPostsDialog(item) }
-      .withSubItem(
-        ACTION_PREVIEW_THREAD_IN_ARCHIVE,
-        R.string.action_preview_thread_in_archive,
-        false
-      ) { showAvailableArchivesList(postDescriptor = threadDescriptor.toOriginalPostDescriptor(), preview = true) }
-      .withSubItem(
-        ACTION_OPEN_THREAD_IN_ARCHIVE,
-        R.string.action_open_in_archive,
-        false
-      ) { showAvailableArchivesList(postDescriptor = threadDescriptor.toOriginalPostDescriptor(), preview = false) }
-      .withSubItem(
-        ACTION_OPEN_BROWSER,
-        R.string.action_open_browser
-      ) { item -> openBrowserClicked(item) }
-      .withSubItem(
-        ACTION_SHARE,
-        R.string.action_share
-      ) { item -> shareClicked(item) }
-      .withSubItem(
-        ACTION_GO_TO_POST,
-        R.string.action_go_to_post,
-        isDevBuild()
-      ) { item -> onGoToPostClicked(item) }
-      .withMoreThreadOptions()
-      .withSubItem(
-        ACTION_SCROLL_TO_TOP,
-        R.string.action_scroll_to_top
-      ) { item -> upClicked(item) }
-      .withSubItem(
-        ACTION_SCROLL_TO_BOTTOM,
-        R.string.action_scroll_to_bottom
-      ) { item -> downClicked(item) }
-
-    menuOverflowBuilder
-      .build()
-      .build()
+          withOverflowMenuItem(
+            id = ACTION_SEARCH,
+            stringId = R.string.action_search,
+            onClick = { item -> searchClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_RELOAD,
+            stringId = action_reload,
+            onClick = { item -> reloadClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_DOWNLOAD_THREAD,
+            stringId = R.string.action_start_thread_download,
+            visible = true,
+            onClick = { item -> downloadOrStopDownloadThread(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_VIEW_REMOVED_POSTS,
+            stringId = R.string.action_view_removed_posts,
+            onClick = { item -> showRemovedPostsDialog(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_PREVIEW_THREAD_IN_ARCHIVE,
+            stringId = R.string.action_preview_thread_in_archive,
+            visible = false,
+            onClick = { showAvailableArchivesList(postDescriptor = threadDescriptor.toOriginalPostDescriptor(), preview = true) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_OPEN_THREAD_IN_ARCHIVE,
+            stringId = R.string.action_open_in_archive,
+            visible = false,
+            onClick = { showAvailableArchivesList(postDescriptor = threadDescriptor.toOriginalPostDescriptor(), preview = false) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_OPEN_BROWSER,
+            stringId = R.string.action_open_browser,
+            onClick = { item -> openBrowserClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SHARE,
+            stringId = R.string.action_share,
+            onClick = { item -> shareClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_GO_TO_POST,
+            stringId = R.string.action_go_to_post,
+            visible = isDevBuild(),
+            onClick = { item -> onGoToPostClicked(item) },
+            builder = { withMoreThreadOptions() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SCROLL_TO_TOP,
+            stringId = R.string.action_scroll_to_top,
+            onClick = { item -> upClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SCROLL_TO_BOTTOM,
+            stringId = R.string.action_scroll_to_bottom,
+            onClick = { item -> downClicked(item) }
+          )
+        }
+      }
+    )
   }
 
-  private fun NavigationItem.MenuOverflowBuilder.withMoreThreadOptions(): NavigationItem.MenuOverflowBuilder {
-    return withNestedOverflow(
-      ACTION_THREAD_MORE_OPTIONS,
-      R.string.action_thread_options,
-      true
+  private fun ToolbarOverflowMenuBuilder.withMoreThreadOptions() {
+    withCheckableOverflowMenuItem(
+      id = ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE,
+      stringId = R.string.action_use_scrolling_text_for_thread_title,
+      visible = true,
+      checked = ChanSettings.scrollingTextForThreadTitles.get(),
+      onClick = { item -> onThreadViewOptionClicked(item) }
     )
-      .addNestedCheckableItem(
-        ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE,
-        R.string.action_use_scrolling_text_for_thread_title,
-        true,
-        ChanSettings.scrollingTextForThreadTitles.get(),
-        ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE
-      ) { item -> onThreadViewOptionClicked(item) }
-      .addNestedCheckableItem(
-        ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR,
-        R.string.action_mark_your_posts_on_scrollbar,
-        true,
-        ChanSettings.markYourPostsOnScrollbar.get(),
-        ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR
-      ) { item -> onScrollbarLabelingOptionClicked(item) }
-      .addNestedCheckableItem(
-        ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR,
-        R.string.action_mark_replies_to_your_posts_on_scrollbar,
-        true,
-        ChanSettings.markRepliesToYourPostOnScrollbar.get(),
-        ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR
-      ) { item -> onScrollbarLabelingOptionClicked(item) }
-      .addNestedCheckableItem(
-        ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR,
-        R.string.action_mark_cross_thread_quotes_on_scrollbar,
-        true,
-        ChanSettings.markCrossThreadQuotesOnScrollbar.get(),
-        ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR
-      ) { item -> onScrollbarLabelingOptionClicked(item) }
-      .addNestedCheckableItem(
-        ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR,
-        R.string.action_mark_deleted_posts_on_scrollbar,
-        true,
-        ChanSettings.markDeletedPostsOnScrollbar.get(),
-        ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR
-      ) { item -> onScrollbarLabelingOptionClicked(item) }
-      .addNestedCheckableItem(
-        ACTION_MARK_HOT_POSTS_ON_SCROLLBAR,
-        R.string.action_mark_hot_posts_on_scrollbar,
-        true,
-        ChanSettings.markHotPostsOnScrollbar.get(),
-        ACTION_MARK_HOT_POSTS_ON_SCROLLBAR
-      ) { item -> onScrollbarLabelingOptionClicked(item) }
-      .addNestedCheckableItem(
-        ACTION_GLOBAL_NSFW_MODE,
-        R.string.action_catalog_thread_nsfw_mode,
-        true,
-        ChanSettings.globalNsfwMode.get(),
-        ACTION_GLOBAL_NSFW_MODE
-      ) { item -> onScrollbarLabelingOptionClicked(item) }
-      .addNestedItem(
-        ACTION_THIRD_EYE_SETTINGS,
-        R.string.action_third_eye_settings,
-        true,
-        ACTION_THIRD_EYE_SETTINGS
-      ) { presentController(ThirdEyeSettingsController(context)) }
-      .build()
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR,
+      stringId = R.string.action_mark_your_posts_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markYourPostsOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR,
+      stringId = R.string.action_mark_replies_to_your_posts_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markRepliesToYourPostOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR,
+      stringId = R.string.action_mark_cross_thread_quotes_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markCrossThreadQuotesOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR,
+      stringId = R.string.action_mark_deleted_posts_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markDeletedPostsOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_HOT_POSTS_ON_SCROLLBAR,
+      stringId = R.string.action_mark_hot_posts_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markHotPostsOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_GLOBAL_NSFW_MODE,
+      stringId = R.string.action_catalog_thread_nsfw_mode,
+      visible = true,
+      checked = ChanSettings.globalNsfwMode.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withOverflowMenuItem(
+      id = ACTION_THIRD_EYE_SETTINGS,
+      stringId = R.string.action_third_eye_settings,
+      visible = true,
+      onClick = { presentController(ThirdEyeSettingsController(context)) }
+    )
   }
 
   private fun albumClicked(item: ToolbarMenuItem) {
@@ -296,14 +319,14 @@ open class ViewThreadController(
   }
 
   private fun pinClicked(item: ToolbarMenuItem) {
-    mainScope.launch {
+    controllerScope.launch {
       if (threadLayout.presenter.pin()) {
         setPinIconState(true)
       }
     }
   }
 
-  private fun searchClicked(item: ToolbarMenuSubItem) {
+  private fun searchClicked(item: ToolbarMenuOverflowItem) {
     if (chanDescriptor == null) {
       return
     }
@@ -311,16 +334,16 @@ open class ViewThreadController(
     threadLayout.popupHelper.showSearchPopup(chanDescriptor!!)
   }
 
-  private fun replyClicked(item: ToolbarMenuSubItem) {
+  private fun replyClicked(item: ToolbarMenuOverflowItem) {
     threadLayout.openReply(true)
   }
 
   override fun onReplyViewShouldClose() {
-    toolbar?.exitReplyLayoutMode()
+    toolbarState.exitReplyMode()
     threadLayout.openReply(false)
   }
 
-  private fun reloadClicked(item: ToolbarMenuSubItem) {
+  private fun reloadClicked(item: ToolbarMenuOverflowItem) {
     threadLayout.presenter.resetTicker()
     threadLayout.presenter.normalLoad(
       showLoading = true,
@@ -328,7 +351,7 @@ open class ViewThreadController(
     )
   }
 
-  private fun downloadOrStopDownloadThread(item: ToolbarMenuSubItem) {
+  private fun downloadOrStopDownloadThread(item: ToolbarMenuOverflowItem) {
     val warningShown = PersistableChanState.threadDownloaderArchiveWarningShown.get()
 
     if (!warningShown && archivesManager.isSiteArchive(threadDescriptor.siteDescriptor())) {
@@ -344,7 +367,7 @@ open class ViewThreadController(
       return
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       when (threadDownloadManager.getStatus(threadDescriptor)) {
         ThreadDownload.Status.Running -> {
           threadDownloadManager.stopDownloading(threadDescriptor)
@@ -354,7 +377,7 @@ open class ViewThreadController(
           val threadDownloaderSettingsController = ThreadDownloaderSettingsController(
             context = context,
             downloadClicked = { downloadMedia ->
-              mainScope.launch {
+              controllerScope.launch {
                 val threadThumbnailUrl = chanThreadManager.getChanThread(threadDescriptor)
                   ?.getOriginalPost()
                   ?.firstImage()
@@ -383,11 +406,11 @@ open class ViewThreadController(
     }
   }
 
-  private fun showRemovedPostsDialog(item: ToolbarMenuSubItem?) {
+  private fun showRemovedPostsDialog(item: ToolbarMenuOverflowItem?) {
     threadLayout.presenter.showRemovedPostsDialog()
   }
 
-  private fun openBrowserClicked(item: ToolbarMenuSubItem) {
+  private fun openBrowserClicked(item: ToolbarMenuOverflowItem) {
     if (threadLayout.presenter.currentChanDescriptor == null) {
       showToast(R.string.cannot_open_in_browser_already_deleted)
       return
@@ -402,7 +425,7 @@ open class ViewThreadController(
     AppModuleAndroidUtils.openLink(url)
   }
 
-  private fun shareClicked(item: ToolbarMenuSubItem) {
+  private fun shareClicked(item: ToolbarMenuOverflowItem) {
     if (threadLayout.presenter.currentChanDescriptor == null) {
       showToast(R.string.cannot_shared_thread_already_deleted)
       return
@@ -417,7 +440,7 @@ open class ViewThreadController(
     shareLink(url)
   }
 
-  private fun onGoToPostClicked(item: ToolbarMenuSubItem) {
+  private fun onGoToPostClicked(item: ToolbarMenuOverflowItem) {
     dialogFactory.createSimpleDialogWithInput(
       context = context,
       titleTextId = R.string.view_thread_controller_enter_post_id,
@@ -433,60 +456,52 @@ open class ViewThreadController(
     )
   }
 
-  private fun onThreadViewOptionClicked(item: ToolbarMenuSubItem) {
-    val clickedItemId = item.value as Int?
-      ?: return
-
+  private fun onThreadViewOptionClicked(item: ToolbarMenuCheckableOverflowItem) {
+    val clickedItemId = item.id
     if (clickedItemId == ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE) {
-      item as CheckableToolbarMenuSubItem
-      item.isChecked = ChanSettings.scrollingTextForThreadTitles.toggle()
+      toolbarState.findCheckableOverflowItem(ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE)
+        ?.updateChecked(ChanSettings.scrollingTextForThreadTitles.toggle())
 
       showToast(R.string.restart_the_app)
-    } else {
-      throw IllegalStateException("Unknown clickedItemId $clickedItemId")
     }
   }
 
-  private fun onScrollbarLabelingOptionClicked(item: ToolbarMenuSubItem) {
-    val clickedItemId = item.value as Int?
-      ?: return
-
-    when (clickedItemId) {
+  private fun onScrollbarLabelingOptionClicked(item: ToolbarMenuCheckableOverflowItem) {
+    when (item.id) {
       ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR -> {
-        item as CheckableToolbarMenuSubItem
-        item.isChecked = ChanSettings.markRepliesToYourPostOnScrollbar.toggle()
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markRepliesToYourPostOnScrollbar.toggle())
       }
       ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR -> {
-        item as CheckableToolbarMenuSubItem
-        item.isChecked = ChanSettings.markCrossThreadQuotesOnScrollbar.toggle()
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markCrossThreadQuotesOnScrollbar.toggle())
       }
       ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR -> {
-        item as CheckableToolbarMenuSubItem
-        item.isChecked = ChanSettings.markYourPostsOnScrollbar.toggle()
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markYourPostsOnScrollbar.toggle())
       }
       ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR -> {
-        item as CheckableToolbarMenuSubItem
-        item.isChecked = ChanSettings.markDeletedPostsOnScrollbar.toggle()
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markDeletedPostsOnScrollbar.toggle())
       }
       ACTION_MARK_HOT_POSTS_ON_SCROLLBAR -> {
-        item as CheckableToolbarMenuSubItem
-        item.isChecked = ChanSettings.markHotPostsOnScrollbar.toggle()
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_HOT_POSTS_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markHotPostsOnScrollbar.toggle())
       }
       ACTION_GLOBAL_NSFW_MODE -> {
-        item as CheckableToolbarMenuSubItem
-        item.isChecked = ChanSettings.globalNsfwMode.toggle()
+        toolbarState.findCheckableOverflowItem(ACTION_GLOBAL_NSFW_MODE)
+          ?.updateChecked(ChanSettings.globalNsfwMode.toggle())
       }
-      else -> throw IllegalStateException("Unknown clickedItemId $clickedItemId")
     }
 
     threadLayout.presenter.quickReloadFromMemoryCache()
   }
 
-  private fun upClicked(item: ToolbarMenuSubItem) {
+  private fun upClicked(item: ToolbarMenuOverflowItem) {
     threadLayout.scrollTo(0, false)
   }
 
-  private fun downClicked(item: ToolbarMenuSubItem) {
+  private fun downClicked(item: ToolbarMenuOverflowItem) {
     threadLayout.scrollTo(-1, false)
   }
 
@@ -496,14 +511,14 @@ open class ViewThreadController(
   }
 
   override suspend fun showThread(descriptor: ThreadDescriptor, animated: Boolean) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "showThread($descriptor, $animated)")
       loadThread(descriptor)
     }
   }
 
   override suspend fun showCatalogWithoutFocusing(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "showCatalog($catalogDescriptor, $animated)")
 
       showCatalogInternal(
@@ -517,7 +532,7 @@ open class ViewThreadController(
   }
 
   override suspend fun showCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "showCatalog($catalogDescriptor, $animated)")
 
       showCatalogInternal(
@@ -531,7 +546,7 @@ open class ViewThreadController(
   }
 
   override suspend fun setCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "setCatalog($catalogDescriptor, $animated)")
 
       showCatalogInternal(
@@ -616,7 +631,6 @@ open class ViewThreadController(
 
     updateMenuItems()
     updateNavigationTitle(oldThreadDescriptor, newThreadDescriptor)
-    requireNavController().requireToolbar().updateTitle(navigation)
 
     setPinIconState(false)
     updateLeftPaneHighlighting(newThreadDescriptor)
@@ -631,7 +645,7 @@ open class ViewThreadController(
       postDescriptor = postDescriptor,
       scrollToPost = scrollToPost
     ) { threadDescriptor ->
-      mainScope.launch { loadThread(threadDescriptor = threadDescriptor, openingExternalThread = true) }
+      controllerScope.launch { loadThread(threadDescriptor = threadDescriptor, openingExternalThread = true) }
     }
   }
 
@@ -653,7 +667,10 @@ open class ViewThreadController(
     if (oldThreadDescriptor == newThreadDescriptor) {
       setNavigationTitleFromDescriptor(newThreadDescriptor)
     } else {
-      navigation.title = getString(R.string.loading)
+      toolbarState.updateTitle(
+        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+        newTitle = ToolbarText.String(getString(R.string.loading))
+      )
     }
   }
 
@@ -661,35 +678,36 @@ open class ViewThreadController(
     val originalPost = chanThreadManager.getChanThread(threadDescriptor)
       ?.getOriginalPost()
 
-    navigation.title = ChanPostUtils.getTitle(originalPost, threadDescriptor)
+    toolbarState.updateTitle(
+      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      newTitle = ToolbarText.String(ChanPostUtils.getTitle(originalPost, threadDescriptor))
+    )
   }
 
   private suspend fun updateMenuItems() {
-    navigation.findSubItem(ACTION_PREVIEW_THREAD_IN_ARCHIVE)?.let { retrieveDeletedPostsItem ->
-      retrieveDeletedPostsItem.visible = archivesManager.supports(threadDescriptor)
-    }
-    navigation.findSubItem(ACTION_OPEN_THREAD_IN_ARCHIVE)?.let { retrieveDeletedPostsItem ->
-      retrieveDeletedPostsItem.visible = archivesManager.supports(threadDescriptor)
-    }
+    toolbarState.findOverflowItem(ACTION_PREVIEW_THREAD_IN_ARCHIVE)
+      ?.updateVisibility(archivesManager.supports(threadDescriptor))
+    toolbarState.findOverflowItem(ACTION_OPEN_THREAD_IN_ARCHIVE)
+      ?.updateVisibility(archivesManager.supports(threadDescriptor))
 
     updateThreadDownloadItem()
   }
 
   private suspend fun updateThreadDownloadItem() {
-    navigation.findSubItem(ACTION_DOWNLOAD_THREAD)?.let { downloadThreadItem ->
+    toolbarState.findOverflowItem(ACTION_DOWNLOAD_THREAD)?.let { downloadThreadItem ->
       val status = threadDownloadManager.getStatus(threadDescriptor)
-      downloadThreadItem.visible = status != ThreadDownload.Status.Completed
+      downloadThreadItem.updateVisibility(status != ThreadDownload.Status.Completed)
 
       when (status) {
         null,
         ThreadDownload.Status.Stopped -> {
-          downloadThreadItem.text = getString(R.string.action_start_thread_download)
+          downloadThreadItem.updateMenuText(getString(R.string.action_start_thread_download))
         }
         ThreadDownload.Status.Running -> {
-          downloadThreadItem.text = getString(R.string.action_stop_thread_download)
+          downloadThreadItem.updateMenuText(getString(R.string.action_stop_thread_download))
         }
         ThreadDownload.Status.Completed -> {
-          downloadThreadItem.visible = false
+          downloadThreadItem.updateVisibility(false)
         }
       }
     }
@@ -700,15 +718,15 @@ open class ViewThreadController(
 
     setNavigationTitleFromDescriptor(threadDescriptor)
     setPinIconState(false)
-    requireNavController().requireToolbar().updateTitle(navigation)
-    requireNavController().requireToolbar().updateViewForItem(navigation)
   }
 
   override fun onShowError() {
     super.onShowError()
 
-    navigation.title = getString(R.string.thread_loading_error_title)
-    requireNavController().requireToolbar().updateTitle(navigation)
+    toolbarState.updateTitle(
+      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      newTitle = ToolbarText.Id(R.string.thread_loading_error_title)
+    )
   }
 
   private fun updateLeftPaneHighlighting(chanDescriptor: ChanDescriptor?) {
@@ -753,23 +771,25 @@ open class ViewThreadController(
       return
     }
 
-    val menuItem = navigation.findItem(ACTION_PIN)
+    val menuItem = toolbarState.findItem(ACTION_PIN)
       ?: return
 
     pinItemPinned = pinned
 
-    val outline = ContextCompat.getDrawable(context, R.drawable.ic_bookmark_border_white_24dp)
-    val white = ContextCompat.getDrawable(context, R.drawable.ic_bookmark_white_24dp)
-    val drawable = if (pinned) white else outline
+    val drawableId = if (pinned) {
+      R.drawable.ic_bookmark_white_24dp
+    } else {
+      R.drawable.ic_bookmark_border_white_24dp
+    }
 
-    menuItem.setImage(drawable, animated)
+    menuItem.updateDrawableId(drawableId)
   }
 
   override fun threadBackPressed(): Boolean {
     val threadDescriptor = threadFollowHistoryManager.removeTop()
       ?: return false
 
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       loadThread(threadDescriptor, openingPreviousThread = true)
     }
 
@@ -779,14 +799,6 @@ open class ViewThreadController(
   override fun threadBackLongPressed() {
     threadFollowHistoryManager.clearAllExcept(threadDescriptor)
     showToast(R.string.thread_follow_history_has_been_cleared)
-  }
-
-  override fun onMenuShown() {
-    // no-op
-  }
-
-  override fun onMenuHidden() {
-    // no-op
   }
 
   override fun onLostFocus(wasFocused: ThreadControllerType) {
@@ -800,7 +812,7 @@ open class ViewThreadController(
 
     if (historyNavigationManager.isInitialized) {
       if (threadLayout.presenter.chanThreadLoadingState == ThreadPresenter.ChanThreadLoadingState.Loaded) {
-        mainScope.launch { historyNavigationManager.moveNavElementToTop(threadDescriptor) }
+        controllerScope.launch { historyNavigationManager.moveNavElementToTop(threadDescriptor) }
       }
     }
 

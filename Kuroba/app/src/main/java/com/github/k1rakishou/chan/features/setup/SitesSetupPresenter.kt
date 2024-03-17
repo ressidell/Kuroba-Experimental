@@ -24,8 +24,8 @@ class SitesSetupPresenter(
   override fun onCreate(view: SitesSetupView) {
     super.onCreate(view)
 
-    scope.launch(Dispatchers.Default) {
-      val loadingJob = scope.launch {
+    presenterScope.launch(Dispatchers.Default) {
+      val loadingJob = presenterScope.launch {
         delay(50)
         setState(SitesSetupControllerState.Loading)
       }
@@ -49,7 +49,7 @@ class SitesSetupPresenter(
   }
 
   fun onSiteEnableStateChanged(siteDescriptor: SiteDescriptor, enabled: Boolean) {
-    scope.launch {
+    presenterScope.launch {
       if (siteManager.activateOrDeactivateSite(siteDescriptor, enabled)) {
         showSites()
       }

@@ -185,9 +185,6 @@ import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingConstraintLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingCoordinatorLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayout
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarContainer
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.ui.view.CircularChunkedLoadingBar
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FloatingMenu
@@ -360,11 +357,9 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(thumbnailView: PostImageThumbnailView)
   fun inject(threadLayout: ThreadLayout)
   fun inject(threadListLayout: ThreadListLayout)
-  fun inject(toolbarContainer: ToolbarContainer)
   fun inject(cardPostCell: CardPostCell)
   fun inject(captchaLayout: CaptchaLayout)
   fun inject(floatingMenu: FloatingMenu)
-  fun inject(toolbar: Toolbar)
   fun inject(threadStatusCell: ThreadStatusCell)
   fun inject(postCell: PostCell)
   fun inject(albumViewCell: AlbumViewCell)
@@ -395,7 +390,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(attachNewFileButton: AttachNewFileButton)
   fun inject(optionalSwipeViewPager: OptionalSwipeViewPager)
   fun inject(fastScroller: FastScroller)
-  fun inject(toolbarMenuItem: ToolbarMenuItem)
   fun inject(postImageThumbnailViewWrapper: PostImageThumbnailViewWrapper)
   fun inject(thumbnailMediaView: ThumbnailMediaView)
   fun inject(fullImageMediaView: FullImageMediaView)

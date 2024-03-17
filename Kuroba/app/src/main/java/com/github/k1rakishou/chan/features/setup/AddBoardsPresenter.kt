@@ -50,8 +50,8 @@ class AddBoardsPresenter(
   }
 
   private fun showInactiveBoards() {
-    scope.launch(Dispatchers.Default) {
-      val loadingJob = scope.launch {
+    presenterScope.launch(Dispatchers.Default) {
+      val loadingJob = presenterScope.launch {
         delay(50)
         setState(AddBoardsControllerState.Loading)
       }

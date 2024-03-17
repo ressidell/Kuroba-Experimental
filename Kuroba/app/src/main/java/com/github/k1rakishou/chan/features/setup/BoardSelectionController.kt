@@ -111,7 +111,7 @@ class BoardSelectionController(
 
     openSettingsButton.setOnClickListener { showOptions() }
 
-    mainScope.launch {
+    controllerScope.launch {
       startListeningForSearchQueries()
         .collect { (doneClicked, query) ->
           if (!doneClicked) {

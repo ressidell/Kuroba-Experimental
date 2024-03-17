@@ -40,6 +40,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -70,6 +71,11 @@ import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
@@ -83,7 +89,6 @@ import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompo
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
-import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -107,8 +112,7 @@ class LocalArchiveController(
   context: Context,
   private val mainControllerCallbacks: MainControllerCallbacks,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : Controller(context),
-  ToolbarNavigationController.ToolbarSearchCallback, WindowInsetsListener {
+) : Controller(context), WindowInsetsListener {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -123,7 +127,7 @@ class LocalArchiveController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val bottomPadding = mutableStateOf(0)
+  private val bottomPadding = mutableIntStateOf(0)
   private val viewModel by lazy { requireComponentActivity().viewModelByKey<LocalArchiveViewModel>() }
 
   override fun injectDependencies(component: ActivityComponent) {
@@ -133,49 +137,52 @@ class LocalArchiveController(
   override fun onCreate() {
     super.onCreate()
 
-    navigation.title = getString(R.string.controller_local_archive_title)
-    navigation.swipeable = false
-    navigation.hasDrawer = true
-    navigation.hasBack = false
-
-    navigation.buildMenu(context)
-      .withMenuItemClickInterceptor {
-        viewModel.viewModelSelectionHelper.unselectAll()
-        return@withMenuItemClickInterceptor false
-      }
-      .withItem(ACTION_SEARCH, R.drawable.ic_search_white_24dp) { requireToolbarNavController().showSearch() }
-      .withItem(ACTION_UPDATE_ALL, R.drawable.ic_refresh_white_24dp) {
-        mainScope.launch {
-          if (!viewModel.hasNotCompletedDownloads()) {
-            showToast(getString(R.string.controller_local_archive_no_threads_to_update))
-            return@launch
-          }
-
-          ThreadDownloadingCoordinator.startOrRestartThreadDownloading(
-            appContext = context.applicationContext,
-            appConstants = appConstants,
-            eager = true
-          )
-
-          showToast(R.string.controller_local_archive_updating_threads, Toast.LENGTH_LONG)
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        swipeable = false,
+        hasDrawer = true,
+        hasBack = false
+      ),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
         }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.controller_local_archive_title)
+      ),
+      iconClickInterceptor = {
+        viewModel.viewModelSelectionHelper.unselectAll()
+        return@pushOrUpdateDefaultLayer false
+      },
+      menuBuilder = {
+        withMenuItem(
+          id = ACTION_SEARCH,
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = { toolbarState.enterSearchMode(viewModel.searchToolbarState) }
+        )
+        withMenuItem(
+          id = ACTION_UPDATE_ALL,
+          drawableId = R.drawable.ic_refresh_white_24dp,
+          onClick = { onRefreshClicked() }
+        )
       }
-      .build()
+    )
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.viewModelSelectionHelper.selectionMode.collect { selectionEvent ->
         onNewSelectionEvent(selectionEvent)
       }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.viewModelSelectionHelper.bottomPanelMenuItemClickEventFlow
         .collect { menuItemClickEvent ->
           onMenuItemClicked(menuItemClickEvent.menuItemType, menuItemClickEvent.items)
         }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.controllerTitleInfoUpdatesFlow
         .debounce(1.seconds)
         .collect { controllerTitleInfo -> updateControllerTitle(controllerTitleInfo) }
@@ -210,29 +217,16 @@ class LocalArchiveController(
     super.onDestroy()
 
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-
-    toolbarNavControllerOrNull()?.closeSearch()
     mainControllerCallbacks.hideBottomPanel()
 
-    viewModel.updateQueryAndReload(null)
     viewModel.viewModelSelectionHelper.unselectAll()
   }
 
   override fun onInsetsChanged() {
-    bottomPadding.value = calculateBottomPaddingForRecyclerInDp(
+    bottomPadding.intValue = calculateBottomPaddingForRecyclerInDp(
       globalWindowInsetsManager = globalWindowInsetsManager,
       mainControllerCallbacks = mainControllerCallbacks
     )
-  }
-
-  override fun onSearchVisibilityChanged(visible: Boolean) {
-    if (!visible) {
-      viewModel.updateQueryAndReload(null)
-    }
-  }
-
-  override fun onSearchEntered(entered: String) {
-    viewModel.updateQueryAndReload(entered)
   }
 
   @Composable
@@ -274,7 +268,7 @@ class LocalArchiveController(
         startActivityCallback.loadThread(threadDescriptor, animated = true)
       },
       onThreadDownloadLongClicked = { threadDescriptor ->
-        if (requireToolbarNavController().isSearchOpened) {
+        if (toolbarState.isInSearchMode()) {
           return@BuildThreadDownloadsList
         }
 
@@ -333,7 +327,7 @@ class LocalArchiveController(
           .simpleVerticalScrollbar(state, chanTheme, bottomPadding)
       ) {
         if (threadDownloadViews.isEmpty()) {
-          val searchQuery = viewModel.searchQuery.value
+          val searchQuery = viewModel.searchToolbarState.searchQueryState.text
           if (searchQuery.isNullOrEmpty()) {
             item {
               KurobaComposeErrorMessage(
@@ -670,7 +664,8 @@ class LocalArchiveController(
         modifier = Modifier
           .size(ICON_SIZE)
           .clickable {
-            val message = getString(R.string.controller_local_archive_thread_last_download_status_error, downloadResultMsg)
+            val message =
+              getString(R.string.controller_local_archive_thread_last_download_status_error, downloadResultMsg)
             showToast(message, Toast.LENGTH_LONG)
           }
       )
@@ -766,7 +761,7 @@ class LocalArchiveController(
           constraintLayoutBias = globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
           items = items,
           itemClickListener = { clickedItem ->
-            mainScope.launch {
+            controllerScope.launch {
               when (clickedItem.key as Int) {
                 ACTION_EXPORT_THREADS -> {
                   exportThreadAsHtml(selectedItems)
@@ -797,7 +792,7 @@ class LocalArchiveController(
       override fun onResult(uri: Uri) {
         val loadingViewController = LoadingViewController(context, false)
 
-        val job = mainScope.launch(start = CoroutineStart.LAZY) {
+        val job = controllerScope.launch(start = CoroutineStart.LAZY) {
           try {
             viewModel.exportThreadsAsHtml(
               outputDirUri = uri,
@@ -836,7 +831,7 @@ class LocalArchiveController(
       override fun onResult(uri: Uri) {
         val loadingViewController = LoadingViewController(context, false)
 
-        val job = mainScope.launch(start = CoroutineStart.LAZY) {
+        val job = controllerScope.launch(start = CoroutineStart.LAZY) {
           try {
             viewModel.exportThreadsMedia(
               outputDirectoryUri = uri,
@@ -875,21 +870,18 @@ class LocalArchiveController(
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
         mainControllerCallbacks.hideBottomPanel()
-        requireNavController().requireToolbar().exitSelectionMode()
+        toolbarState.exitSelectionMode()
       }
       null -> return
     }
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val toolbar = requireNavController().requireToolbar()
-    if (!toolbar.isInSelectionMode) {
-      toolbar.enterSelectionMode(formatSelectionText())
-      return
+    if (!toolbarState.isInSelectionMode()) {
+      toolbarState.enterSelectionMode(viewModel.selectionToolbarState)
     }
 
-    navigation.selectionStateText = formatSelectionText()
-    toolbar.updateSelectionTitle(navigation)
+    viewModel.selectionToolbarState.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {
@@ -906,8 +898,7 @@ class LocalArchiveController(
       return
     }
 
-    val toolbar = requireNavController().requireToolbar()
-    if (toolbar.isInSelectionMode) {
+    if (toolbarState.isInSelectionMode()) {
       return
     }
 
@@ -921,9 +912,27 @@ class LocalArchiveController(
       )
     }
 
-    navigation.title = titleString
+    toolbarState.updateTitle(
+      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      newTitle = ToolbarText.String(titleString)
+    )
+  }
 
-    toolbar.updateTitle(navigation)
+  private fun onRefreshClicked() {
+    controllerScope.launch {
+      if (!viewModel.hasNotCompletedDownloads()) {
+        showToast(getString(R.string.controller_local_archive_no_threads_to_update))
+        return@launch
+      }
+
+      ThreadDownloadingCoordinator.startOrRestartThreadDownloading(
+        appContext = context.applicationContext,
+        appConstants = appConstants,
+        eager = true
+      )
+
+      showToast(R.string.controller_local_archive_updating_threads, Toast.LENGTH_LONG)
+    }
   }
 
   companion object {

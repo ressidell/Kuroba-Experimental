@@ -258,8 +258,6 @@ class StartActivity : ControllerHostActivity(),
     themeEngine.setRootView(this, mainController.view)
     pushController(mainController)
 
-    mainController.attachBottomNavViewToToolbar()
-
     // Prevent overdraw
     // Do this after setContentView, or the decor creating will reset the background to a
     // default non-null drawable

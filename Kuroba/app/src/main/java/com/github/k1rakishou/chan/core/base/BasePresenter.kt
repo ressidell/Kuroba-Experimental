@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 abstract class BasePresenter<V> {
   private var view: V? = null
 
-  protected val scope = MainScope() + CoroutineName("Presenter_${this::class.java.simpleName}")
+  protected val presenterScope = MainScope() + CoroutineName("Presenter_${this::class.java.simpleName}")
   protected val compositeDisposable = CompositeDisposable()
 
   @CallSuper
@@ -28,7 +28,7 @@ abstract class BasePresenter<V> {
   open fun onDestroy() {
     this.view = null
 
-    scope.cancel()
+    presenterScope.cancel()
     compositeDisposable.clear()
   }
 
@@ -46,7 +46,7 @@ abstract class BasePresenter<V> {
    * */
   suspend fun withView(func: suspend V.() -> Unit) {
     view?.let { v ->
-      withContext(scope.coroutineContext + Dispatchers.Main.immediate) {
+      withContext(presenterScope.coroutineContext + Dispatchers.Main.immediate) {
         val result = ModularResult.Try { func(v) }
         handleResult(result)
       }

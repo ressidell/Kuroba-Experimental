@@ -8,6 +8,10 @@ import com.github.k1rakishou.chan.ui.globalstate.global.IMainUiState
 import com.github.k1rakishou.chan.ui.globalstate.global.MainUiState
 import com.github.k1rakishou.chan.ui.globalstate.reply.IReplyLayoutGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.scroll.IScrollGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.scroll.ScrollGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.toolbar.IToolbarGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.toolbar.ToolbarGlobalState
 
 class GlobalUiStateHolder {
   private val _mainUiState = MainUiState()
@@ -26,6 +30,14 @@ class GlobalUiStateHolder {
   val drawer: IDrawerGlobalState.Readable
     get() = _drawer
 
+  private val _scrollState = ScrollGlobalState()
+  val scrollState: IScrollGlobalState.Readable
+    get() = _scrollState
+
+  private val _toolbarState = ToolbarGlobalState()
+  val toolbarState: IToolbarGlobalState.Readable
+    get() = _toolbarState
+
   fun updateMainUiState(updater: (IMainUiState.Writeable) -> Unit) {
     updater(_mainUiState)
   }
@@ -40,6 +52,14 @@ class GlobalUiStateHolder {
 
   fun updateDrawerState(updater: (IDrawerGlobalState.Writable) -> Unit) {
     updater(_drawer)
+  }
+
+  fun updateScrollState(updater: (IScrollGlobalState.Writable) -> Unit) {
+    updater(_scrollState)
+  }
+
+  fun updateToolbarState(updater: (IToolbarGlobalState.Writable) -> Unit) {
+    updater(_toolbarState)
   }
 
 }

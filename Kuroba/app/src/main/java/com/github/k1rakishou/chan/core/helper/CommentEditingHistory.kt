@@ -22,7 +22,7 @@ class CommentEditingHistory(
   }
 
   fun updateCommentEditingHistory(commentInputState: CommentInputState) {
-    debouncer.post({
+    debouncer.post(DEBOUNCE_TIME) {
       val last = buffer.peek()
       if (last != null && last == commentInputState) {
         return@post
@@ -30,7 +30,7 @@ class CommentEditingHistory(
 
       buffer.push(commentInputState)
       callback.updateRevertChangeButtonVisibility(isHistoryActuallyEmpty())
-    }, DEBOUNCE_TIME)
+    }
   }
 
   fun onRevertChangeButtonClicked() {

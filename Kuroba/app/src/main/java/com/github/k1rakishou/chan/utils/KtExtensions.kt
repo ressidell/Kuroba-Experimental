@@ -13,6 +13,10 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisallowComposableCalls
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.Lifecycle
@@ -30,6 +34,7 @@ import com.github.k1rakishou.chan.core.di.module.viewmodel.IHasViewModelProvider
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.showToast
 import com.github.k1rakishou.common.errorMessageOrClassName
+import com.github.k1rakishou.common.requireComponentActivity
 import com.github.k1rakishou.common.resumeValueSafe
 import com.github.k1rakishou.core_logger.Logger
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -297,6 +302,21 @@ fun fixImageUrlIfNecessary(requestUrl: String, imageUrl: String?): String? {
 
   Logger.e(TAG, "Unknown kind of broken image url: \"$imageUrl\". If you see this report it to devs!")
   return null
+}
+
+@Composable
+inline fun <reified VM : ViewModel> rememberViewModel(
+  key: String? = null,
+  noinline defaultArgs: (@DisallowComposableCalls () -> Bundle)? = null
+): VM {
+  val context = LocalContext.current
+
+  return remember(key1 = VM::class.java, key2 = key) {
+    context.requireComponentActivity().viewModelByKey<VM>(
+      key = key,
+      defaultArgs = defaultArgs?.invoke()
+    )
+  }
 }
 
 inline fun <reified VM : ViewModel> ComponentActivity.viewModelByKey(

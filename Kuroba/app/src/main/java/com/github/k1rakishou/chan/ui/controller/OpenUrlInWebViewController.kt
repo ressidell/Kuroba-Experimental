@@ -48,7 +48,7 @@ class OpenUrlInWebViewController(
     super.onCreate()
 
     // Add a frame delay for the navigation stuff to completely load
-    mainScope.launch {
+    controllerScope.launch {
       try {
         // Some users may have no WebView installed
         onCreateInternal()

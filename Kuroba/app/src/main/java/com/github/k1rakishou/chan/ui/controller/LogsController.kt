@@ -45,14 +45,17 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarOverflowMenuBuilder
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.compose.verticalScrollbar
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuSubItem
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.core_logger.LogStorage
 import com.github.k1rakishou.core_logger.Logger
@@ -89,17 +92,27 @@ class LogsController(context: Context) : Controller(context) {
   override fun onCreate() {
     super.onCreate()
 
-    navigation.setTitle(R.string.settings_logs_screen)
-    navigation
-      .buildMenu(context)
-      .withOverflow(navigationController)
-      .withSubItem(
-        ACTION_LOGS_COPY,
-        R.string.settings_logs_copy, ToolbarMenuSubItem.ClickCallback { item -> copyLogsClicked(item) }
-      )
-      .addLogLevelFilters()
-      .build()
-      .build()
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.settings_logs_screen)
+      ),
+      menuBuilder = {
+        withOverflowMenu {
+          withOverflowMenuItem(
+            id = ACTION_LOGS_COPY,
+            stringId = R.string.settings_logs_copy,
+            onClick = { item -> copyLogsClicked(item) }
+          )
+
+          addLogLevels()
+        }
+      }
+    )
 
     view = ComposeView(context)
       .also { composeView ->
@@ -232,7 +245,16 @@ class LogsController(context: Context) : Controller(context) {
     }
   }
 
-  private fun NavigationItem.MenuOverflowBuilder.addLogLevelFilters(): NavigationItem.MenuOverflowBuilder {
+  private fun copyLogsClicked(item: ToolbarMenuOverflowItem) {
+    if (logsToCopy == null) {
+      return
+    }
+
+    AndroidUtils.setClipboardContent("Logs", logsToCopy)
+    showToast(R.string.settings_logs_copied_to_clipboard)
+  }
+
+  private fun ToolbarOverflowMenuBuilder.addLogLevels() {
     LogStorage.LogLevel.entries.forEach { logLevel ->
       val id = when (logLevel) {
         LogStorage.LogLevel.Dependencies -> ACTION_SHOW_DEPENDENCY_LOGS
@@ -244,33 +266,28 @@ class LogsController(context: Context) : Controller(context) {
 
       val isChecked = checkStates[id] ?: false
 
-      withCheckableSubItem(id, "Show '${logLevel.logLevelName}' logs", true, isChecked) { clickedSubItem ->
-        when (clickedSubItem.id) {
-          ACTION_SHOW_DEPENDENCY_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
-          ACTION_SHOW_VERBOSE_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
-          ACTION_SHOW_DEBUG_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
-          ACTION_SHOW_WARNING_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
-          ACTION_SHOW_ERROR_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
-          else -> return@withCheckableSubItem
+      withCheckableOverflowMenuItem(
+        id = id,
+        text = appResources.string(R.string.settings_logs_show_for_level, logLevel.logLevelName),
+        visible = true,
+        checked = isChecked,
+        onClick = { clickedSubItem ->
+          when (clickedSubItem.id) {
+            ACTION_SHOW_DEPENDENCY_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
+            ACTION_SHOW_VERBOSE_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
+            ACTION_SHOW_DEBUG_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
+            ACTION_SHOW_WARNING_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
+            ACTION_SHOW_ERROR_LOGS -> checkStates[id] = (checkStates[id] ?: false).not()
+            else -> return@withCheckableOverflowMenuItem
+          }
+
+          toolbarState.findCheckableOverflowItem(clickedSubItem.id)?.let { subItem ->
+            subItem.updateChecked(checkStates[subItem.id] ?: false)
+            forceLogReloadState.intValue += 1
+          }
         }
-
-        navigation.findCheckableSubItem(clickedSubItem.id)?.let { subItem ->
-          subItem.isChecked = checkStates[subItem.id] ?: false
-          forceLogReloadState.intValue += 1
-        }
-      }
+      )
     }
-
-    return this
-  }
-
-  private fun copyLogsClicked(item: ToolbarMenuSubItem) {
-    if (logsToCopy == null) {
-      return
-    }
-
-    AndroidUtils.setClipboardContent("Logs", logsToCopy)
-    showToast(R.string.settings_logs_copied_to_clipboard)
   }
 
   companion object {

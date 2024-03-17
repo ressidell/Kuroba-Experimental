@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.ExperimentalTime
 
 class AddBoardsController(
   context: Context,
@@ -65,7 +64,6 @@ class AddBoardsController(
     component.inject(this)
   }
 
-  @OptIn(ExperimentalTime::class)
   override fun onCreate() {
     super.onCreate()
 
@@ -76,7 +74,7 @@ class AddBoardsController(
     addBoards = view.findViewById(R.id.add_boards)
     outsideArea = view.findViewById(R.id.outside_area)
 
-    mainScope.launch {
+    controllerScope.launch {
       startListeningForSearchQueries()
         .debounce(50.milliseconds)
         .collect { query -> presenter.onSearchQueryChanged(query) }
@@ -89,7 +87,7 @@ class AddBoardsController(
       pop()
     }
 
-    addBoardsExecutor = RendezvousCoroutineExecutor(mainScope)
+    addBoardsExecutor = RendezvousCoroutineExecutor(controllerScope)
 
     checkAll.setOnClickListener {
       addBoardsExecutor.post {

@@ -9,14 +9,13 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.updatePadding
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
 import com.github.k1rakishou.core_themes.ChanTheme
 
 class KurobaNavigationRailView @JvmOverloads constructor(
   context: Context,
   attrs: AttributeSet? = null,
   defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), Toolbar.ToolbarCollapseCallback, NavigationViewContract {
+) : FrameLayout(context, attrs, defStyleAttr), NavigationViewContract {
 
   private val kurobaComposeIconPanel by lazy {
     KurobaComposeIconPanel(
@@ -69,20 +68,8 @@ class KurobaNavigationRailView @JvmOverloads constructor(
     leftPadding?.let { padding -> updatePadding(left = padding) }
   }
 
-  override fun onCollapseTranslation(offset: Float) {
-    // no-op
-  }
-
-  override fun onCollapseAnimation(collapse: Boolean) {
-    // no-op
-  }
-
   override fun setOnNavigationItemSelectedListener(listener: (Int) -> Boolean) {
     this.menuItemClickListener = listener
-  }
-
-  override fun setToolbar(toolbar: Toolbar) {
-    // no-op
   }
 
   override fun hide(lockTranslation: Boolean, lockCollapse: Boolean) {

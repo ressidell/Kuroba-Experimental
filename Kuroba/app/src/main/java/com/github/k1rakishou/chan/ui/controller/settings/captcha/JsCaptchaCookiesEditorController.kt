@@ -4,6 +4,9 @@ import android.content.Context
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 
 class JsCaptchaCookiesEditorController(context: Context) :
   Controller(context), JsCaptchaCookiesEditorLayout.JsCaptchaCookiesEditorControllerCallbacks {
@@ -15,7 +18,17 @@ class JsCaptchaCookiesEditorController(context: Context) :
   override fun onCreate() {
     super.onCreate()
 
-    navigation.setTitle(R.string.js_captcha_cookies_editor_controller_title)
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.js_captcha_cookies_editor_controller_title)
+      )
+    )
+
     view = JsCaptchaCookiesEditorLayout(context).apply {
       onReady(this@JsCaptchaCookiesEditorController)
     }

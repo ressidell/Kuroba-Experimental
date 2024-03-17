@@ -31,6 +31,10 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.ReportManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCustomTextField
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
@@ -74,16 +78,25 @@ class ReportIssueController(
 
   override fun onCreate() {
     super.onCreate()
-    navigation.setTitle(R.string.report_controller_report_an_error_problem)
 
-    navigation
-      .buildMenu(context)
-      .withItem(
-        ACTION_SEND_REPORT,
-        R.drawable.ic_send_white_24dp,
-        { onSendReportClick() }
-      )
-      .build()
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.report_controller_report_an_error_problem)
+      ),
+      menuBuilder = {
+        withMenuItem(
+          id = ACTION_SEND_REPORT,
+          drawableId = R.drawable.ic_send_white_24dp,
+          onClick = { onSendReportClick() }
+        )
+      }
+    )
 
     view = ComposeView(context).apply {
       setContent {

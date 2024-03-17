@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.ui.view
 
 import android.view.ViewGroup
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
 import com.github.k1rakishou.core_themes.ChanTheme
 
 interface NavigationViewContract {
@@ -15,7 +14,6 @@ interface NavigationViewContract {
   fun setOnNavigationItemSelectedListener(listener: (Int) -> Boolean)
 
   fun updatePaddings(leftPadding: Int?, bottomPadding: Int?)
-  fun setToolbar(toolbar: Toolbar)
   fun hide(lockTranslation: Boolean, lockCollapse: Boolean)
   fun show(unlockTranslation: Boolean, unlockCollapse: Boolean)
   fun resetState(unlockTranslation: Boolean, unlockCollapse: Boolean)

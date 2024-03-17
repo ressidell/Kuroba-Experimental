@@ -34,10 +34,11 @@ import com.github.k1rakishou.chan.core.base.ControllerHostActivity
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.ControllerNavigationManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.navigation.ControllerWithNavigation
 import com.github.k1rakishou.chan.core.navigation.RequiresNoBottomNavBar
 import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.ui.controller.PopupController
 import com.github.k1rakishou.chan.ui.controller.ThreadController
@@ -48,8 +49,7 @@ import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
+import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.ui.widget.CancellableToast
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
@@ -70,15 +70,23 @@ import javax.inject.Inject
 
 @Suppress("LeakingThis")
 @DoNotStrip
-abstract class Controller(@JvmField var context: Context) {
-
+abstract class Controller(
+  @JvmField var context: Context
+) {
   lateinit var view: ViewGroup
 
   @Inject
   lateinit var controllerNavigationManager: ControllerNavigationManager
+  @Inject
+  lateinit var kurobaToolbarStateManager: KurobaToolbarStateManager
+  @Inject
+  lateinit var appResources: AppResources
 
-  @JvmField
-  var navigation = NavigationItem()
+  open val controllerKey: ControllerKey
+    get() = ControllerKey(this::class.java.name)
+  val toolbarState: KurobaToolbarState
+    get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
+
   @JvmField
   var parentController: Controller? = null
   @JvmField
@@ -104,15 +112,12 @@ abstract class Controller(@JvmField var context: Context) {
   @JvmField
   var presentingThisController: Controller? = null
 
-  val top: Controller?
+  val topController: Controller?
     get() = if (childControllers.size > 0) {
       childControllers[childControllers.size - 1]
     } else {
       null
     }
-
-  open val toolbar: Toolbar?
-    get() = null
 
   private var _alive = false
   val alive: Boolean
@@ -126,7 +131,7 @@ abstract class Controller(@JvmField var context: Context) {
     private set
 
   private val job = SupervisorJob()
-  protected var mainScope = CoroutineScope(job + Dispatchers.Main + CoroutineName("Controller_${this::class.java.simpleName}"))
+  protected var controllerScope = CoroutineScope(job + Dispatchers.Main + CoroutineName("Controller_${this::class.java.simpleName}"))
 
   protected val cancellableToast = CancellableToast()
 
@@ -136,14 +141,6 @@ abstract class Controller(@JvmField var context: Context) {
     }
 
     return null
-  }
-
-  fun getCurrentControllerWithNavigation(): ControllerWithNavigation {
-    if (doubleNavigationController != null) {
-      return doubleNavigationController!!
-    } else {
-      return navigationController!!
-    }
   }
 
   fun requireToolbarNavController(): ToolbarNavigationController {
@@ -157,10 +154,6 @@ abstract class Controller(@JvmField var context: Context) {
 
   fun toolbarNavControllerOrNull(): ToolbarNavigationController? {
     return navigationController as? ToolbarNavigationController
-  }
-
-  fun requireToolbar(): Toolbar = requireNotNull(toolbar) {
-    "Toolbar was not set"
   }
 
   fun requireNavController(): NavigationController = requireNotNull(navigationController) {
@@ -233,6 +226,7 @@ abstract class Controller(@JvmField var context: Context) {
     _alive = false
     compositeDisposable.clear()
     job.cancelChildren()
+    toolbarState.popAllLayers()
 
     if (LOG_STATES) {
       Logger.e("LOG_STATES", javaClass.simpleName + " onDestroy")

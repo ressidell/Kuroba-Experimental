@@ -22,6 +22,10 @@ import com.github.k1rakishou.chan.features.search.epoxy.epoxyBoardSelectionButto
 import com.github.k1rakishou.chan.features.search.epoxy.epoxyButtonView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchInputView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchSiteView
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
@@ -66,10 +70,21 @@ class GlobalSearchController(
   override fun onCreate() {
     super.onCreate()
 
-    navigation.title = getString(R.string.controller_search)
-    navigation.swipeable = false
-    navigation.hasDrawer = true
-    navigation.hasBack = false
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        swipeable = false,
+        hasDrawer = true,
+        hasBack = false
+      ),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.controller_search)
+      )
+    )
 
     view = inflate(context, R.layout.controller_global_search)
     epoxyRecyclerView = view.findViewById(R.id.epoxy_recycler_view)

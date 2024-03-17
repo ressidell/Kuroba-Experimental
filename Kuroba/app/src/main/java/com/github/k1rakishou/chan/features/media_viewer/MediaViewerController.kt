@@ -220,7 +220,7 @@ class MediaViewerController(
       showReplyChain(post.postDescriptor)
     }
     override fun onPostLinkableClicked(post: ChanPost, linkable: PostLinkable, inPopup: Boolean) {
-      mainScope.launch {
+      controllerScope.launch {
         val currentChanDescriptor = chanDescriptor
           ?: return@launch
 
@@ -287,7 +287,7 @@ class MediaViewerController(
 
   private val mediaLongClickMenuHelper by lazy {
     MediaLongClickMenuHelper(
-      scope = mainScope,
+      scope = controllerScope,
       globalWindowInsetsManager = globalWindowInsetsManager,
       imageSaverV2 = imageSaverV2,
       getMediaViewerAdapterFunc = { mediaViewerAdapter },
@@ -326,7 +326,7 @@ class MediaViewerController(
 
     onInsetsChanged()
 
-    mainScope.launch(context = Dispatchers.Main.immediate) {
+    controllerScope.launch(context = Dispatchers.Main.immediate) {
       viewModel.transitionInfoFlow.collect { transitionInfo ->
         BackgroundUtils.ensureMainThread()
 
@@ -339,7 +339,7 @@ class MediaViewerController(
       }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.mediaViewerState.collect { mediaViewerState ->
         BackgroundUtils.ensureMainThread()
 
@@ -464,7 +464,7 @@ class MediaViewerController(
     autoSwipeJob?.cancel()
     autoSwipeJob = null
 
-    autoSwipeJob = mainScope.launch {
+    autoSwipeJob = controllerScope.launch {
       val swiped = when (pager.swipeDirection.withoutDefault()) {
         null,
         OptionalSwipeViewPager.SwipeDirection.Default -> return@launch

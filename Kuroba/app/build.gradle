@@ -288,12 +288,16 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxandroid:${versions.rxandroid}"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin_version}"
     implementation "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlin_version}"
+    implementation 'org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5'
     implementation "joda-time:joda-time:${versions.joda_time}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${versions.kotlin_coroutines_version}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.kotlin_coroutines_version}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:${versions.kotlin_coroutines_version}"
     implementation "io.coil-kt:coil:${versions.coil}"
     implementation "io.coil-kt:coil-compose:${versions.coil}"
+    implementation "cafe.adriel.voyager:voyager-core:${versions.voyager}"
+    implementation "cafe.adriel.voyager:voyager-navigator:${versions.voyager}"
+    implementation "cafe.adriel.voyager:voyager-transitions:${versions.voyager}"
 
     // noinspection GradleDependency wants to upgrade to older version
     implementation "com.github.K1rakishou:Fuck-Storage-Access-Framework:${versions.fsaf}"

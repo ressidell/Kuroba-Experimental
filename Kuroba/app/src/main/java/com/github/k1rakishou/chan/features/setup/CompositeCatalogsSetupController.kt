@@ -38,6 +38,9 @@ import com.github.k1rakishou.chan.core.base.RendezvousCoroutineExecutor
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
@@ -70,7 +73,7 @@ class CompositeCatalogsSetupController(
     requireComponentActivity().viewModelByKey<CompositeCatalogsSetupControllerViewModel>()
   }
   private val bottomPadding = mutableStateOf(0)
-  private val rendezvousCoroutineExecutor = RendezvousCoroutineExecutor(mainScope)
+  private val rendezvousCoroutineExecutor = RendezvousCoroutineExecutor(controllerScope)
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -79,7 +82,16 @@ class CompositeCatalogsSetupController(
   override fun onCreate() {
     super.onCreate()
 
-    navigation.title = getString(R.string.controller_composite_catalogs_setup_title)
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.controller_composite_catalogs_setup_title)
+      )
+    )
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
     onInsetsChanged()

@@ -25,6 +25,9 @@ import com.github.k1rakishou.chan.features.setup.data.BoardsSetupControllerState
 import com.github.k1rakishou.chan.features.setup.epoxy.EpoxyBoardView
 import com.github.k1rakishou.chan.features.setup.epoxy.EpoxyBoardViewModel_
 import com.github.k1rakishou.chan.features.setup.epoxy.epoxyBoardView
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
@@ -124,29 +127,43 @@ class BoardsSetupController(
 
   override fun onCreate() {
     super.onCreate()
-    navigation.title = context.getString(R.string.controller_boards_setup_title, siteDescriptor.siteName)
 
     val site = siteManager.bySiteDescriptor(siteDescriptor)!!
     val syntheticSite = site.isSynthetic
 
-    val builder = navigation
-      .buildMenu(context)
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String(context.getString(R.string.controller_boards_setup_title, siteDescriptor.siteName))
+      ),
+      menuBuilder = {
+        if (!syntheticSite) {
+          withMenuItem(
+            id = ACTION_REFRESH,
+            drawableId = R.drawable.ic_refresh_white_24dp,
+            onClick = { presenter.updateBoardsFromServerAndDisplayActive() }
+          )
+        }
 
-    if (!syntheticSite) {
-      builder
-        .withItem(R.drawable.ic_refresh_white_24dp) { presenter.updateBoardsFromServerAndDisplayActive() }
-    }
+        withOverflowMenu {
+          withOverflowMenuItem(
+            id = ACTION_SORT_BOARDS_ALPHABETICALLY,
+            stringId = R.string.controller_boards_setup_sort_boards_alphabetically,
+            onClick = { presenter.sortBoardsAlphabetically() }
+          )
 
-    builder
-      .withOverflow(navigationController)
-      .withSubItem(ACTION_SORT_BOARDS_ALPHABETICALLY, R.string.controller_boards_setup_sort_boards_alphabetically) {
-        presenter.sortBoardsAlphabetically()
+          withOverflowMenuItem(
+            id = ACTION_DELETE_ALL_BOARDS,
+            stringId = R.string.controller_boards_setup_delete_all_boards,
+            onClick = { presenter.deactivateAllBoards() }
+          )
+        }
       }
-      .withSubItem(ACTION_DELETE_ALL_BOARDS, R.string.controller_boards_setup_delete_all_boards) {
-        presenter.deactivateAllBoards()
-      }
-      .build()
-      .build()
+    )
 
     view = inflate(context, R.layout.controller_boards_setup)
     epoxyRecyclerView = view.findViewById(R.id.epoxy_recycler_view)
@@ -196,7 +213,7 @@ class BoardsSetupController(
   }
 
   override fun onBoardsLoaded() {
-    mainScope.launch { showToast(R.string.controller_boards_setup_boards_updated) }
+    controllerScope.launch { showToast(R.string.controller_boards_setup_boards_updated) }
   }
 
   private fun onStateChanged(state: BoardsSetupControllerState) {
@@ -286,6 +303,7 @@ class BoardsSetupController(
   companion object {
     private const val ACTION_SORT_BOARDS_ALPHABETICALLY = 0
     private const val ACTION_DELETE_ALL_BOARDS = 1
+    private const val ACTION_REFRESH = 2
   }
 
 }

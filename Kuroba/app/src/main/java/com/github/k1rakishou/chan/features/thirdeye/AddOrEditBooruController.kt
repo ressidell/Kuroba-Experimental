@@ -142,7 +142,7 @@ class AddOrEditBooruController(
             pop()
           },
           saveClicked = {
-            mainScope.launch {
+            controllerScope.launch {
               val validationResult = validate(booruSettingState)
                 .toastOnError(longToast = true)
               

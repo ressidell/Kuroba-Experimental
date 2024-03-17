@@ -41,11 +41,10 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.animation.cancelAnimations
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar.ToolbarCollapseCallback
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
@@ -59,12 +58,10 @@ import javax.inject.Inject
 
 class HidingFloatingActionButton
   : AppCompatImageView,
-  ToolbarCollapseCallback,
   WindowInsetsListener,
   ThemeEngine.ThemeChangesListener {
 
   private var attachedToWindow = false
-  private var toolbar: Toolbar? = null
   private var attachedToToolbar = false
   private var coordinatorLayout: CoordinatorLayout? = null
   private var bottomNavViewHeight = 0
@@ -160,15 +157,16 @@ class HidingFloatingActionButton
     setAlphaFast(0f)
   }
 
-  fun setToolbar(toolbar: Toolbar) {
-    this.toolbar = toolbar
-    updatePaddings()
-
-    if (attachedToWindow && !attachedToToolbar) {
-      toolbar.addCollapseCallback(this)
-      attachedToToolbar = true
-    }
-  }
+  // TODO: New reply layout
+//  fun setToolbar(toolbar: Toolbar) {
+//    this.toolbar = toolbar
+//    updatePaddings()
+//
+//    if (attachedToWindow && !attachedToToolbar) {
+//      toolbar.addCollapseCallback(this)
+//      attachedToToolbar = true
+//    }
+//  }
 
   fun setThreadControllerType(threadControllerType: ThreadControllerType) {
     this.threadControllerType = threadControllerType
@@ -200,11 +198,13 @@ class HidingFloatingActionButton
   }
 
   fun hide() {
-    onCollapseAnimation(collapse = true)
+    // TODO: New toolbar.
+//    onCollapseAnimation(collapse = true)
   }
 
   fun show() {
-    onCollapseAnimation(collapse = false)
+    // TODO: New toolbar.
+//    onCollapseAnimation(collapse = false)
   }
 
   override fun onTouchEvent(ev: MotionEvent): Boolean {
@@ -226,10 +226,11 @@ class HidingFloatingActionButton
     require(parent is CoordinatorLayout) { "HidingFloatingActionButton must be a parent of CoordinatorLayout" }
     coordinatorLayout = parent as CoordinatorLayout
 
-    if (toolbar != null && !attachedToToolbar) {
-      toolbar!!.addCollapseCallback(this)
-      attachedToToolbar = true
-    }
+    // TODO: New reply layout
+//    if (toolbar != null && !attachedToToolbar) {
+//      toolbar!!.addCollapseCallback(this)
+//      attachedToToolbar = true
+//    }
 
     if (!isInEditMode) {
       startListeningForInsetsChangesIfNeeded()
@@ -243,10 +244,11 @@ class HidingFloatingActionButton
     cancelPrevAnimation()
     attachedToWindow = false
 
-    if (attachedToToolbar) {
-      toolbar!!.removeCollapseCallback(this)
-      attachedToToolbar = false
-    }
+    // TODO: New reply layout
+//    if (attachedToToolbar) {
+//      toolbar!!.removeCollapseCallback(this)
+//      attachedToToolbar = false
+//    }
 
     stopListeningForInsetsChanges()
     themeEngine.removeListener(this)
@@ -303,40 +305,42 @@ class HidingFloatingActionButton
     outlinePath.close()
   }
 
-  override fun onCollapseTranslation(offset: Float) {
-    if (!isThreadMode) {
-      // We are either showing an error or an empty message or loading view, so we can't update the
-      // FAB state.
-      return
-    }
+  // TODO: New reply layout
+//  override fun onCollapseTranslation(offset: Float) {
+//    if (!isThreadMode) {
+//      // We are either showing an error or an empty message or loading view, so we can't update the
+//      // FAB state.
+//      return
+//    }
+//
+//    if (isSnackbarShowing || !focused) {
+//      return
+//    }
+//
+//    val newFabAlpha = 1f - offset
+//
+//    if (newFabAlpha >= 1f && isCurrentReplyLayoutOpened()) {
+//      // If trying to show and currently reply layout is opened - do not show.
+//      return
+//    }
+//
+//    if (newFabAlpha != this.alpha) {
+//      cancelPrevAnimation()
+//
+//      if (newFabAlpha < 0.5f) {
+//        setVisibilityFast(GONE)
+//      } else if (newFabAlpha > 0.5f) {
+//        setVisibilityFast(VISIBLE)
+//      }
+//
+//      setAlphaFast(newFabAlpha)
+//    }
+//  }
 
-    if (isSnackbarShowing || !focused) {
-      return
-    }
-
-    val newFabAlpha = 1f - offset
-
-    if (newFabAlpha >= 1f && isCurrentReplyLayoutOpened()) {
-      // If trying to show and currently reply layout is opened - do not show.
-      return
-    }
-
-    if (newFabAlpha != this.alpha) {
-      cancelPrevAnimation()
-
-      if (newFabAlpha < 0.5f) {
-        setVisibilityFast(GONE)
-      } else if (newFabAlpha > 0.5f) {
-        setVisibilityFast(VISIBLE)
-      }
-
-      setAlphaFast(newFabAlpha)
-    }
-  }
-
-  override fun onCollapseAnimation(collapse: Boolean) {
-    onCollapseAnimationInternal(collapse)
-  }
+  // TODO: New reply layout
+//  override fun onCollapseAnimation(collapse: Boolean) {
+//    onCollapseAnimationInternal(collapse)
+//  }
 
   private fun onCollapseAnimationInternal(collapse: Boolean, forced: Boolean = false) {
     if (collapse && currentFabAnimation == CurrentFabAnimation.Hiding
@@ -381,8 +385,8 @@ class HidingFloatingActionButton
     }
 
     val alphaAnimation = ValueAnimator.ofFloat(this.alpha, newFabAlpha).apply {
-      duration = Toolbar.TOOLBAR_ANIMATION_DURATION_MS
-      interpolator = Toolbar.TOOLBAR_ANIMATION_INTERPOLATOR
+      duration = KurobaToolbarView.ToolbarAnimationDurationMs
+      interpolator = KurobaToolbarView.ToolbarAnimationInterpolator
 
       doOnStart {
         if (!collapse) {

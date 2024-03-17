@@ -89,7 +89,7 @@ class PostRepliesPopupController(
     val repliesAdapter = getRepliesAdapterOrInitializeEverything(data, chanDescriptor)
     repliesAdapter.init(data.forPostWithDescriptor)
 
-    mainScope.launch {
+    controllerScope.launch {
       val (width, _) = postsView.awaitUntilGloballyLaidOutAndGetSize(waitForWidth = true)
 
       val retainedPosts = postHideHelper.get().processPostFilters(chanDescriptor, data.posts, mutableSetOf())

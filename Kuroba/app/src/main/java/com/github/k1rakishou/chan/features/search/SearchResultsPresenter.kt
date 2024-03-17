@@ -62,7 +62,7 @@ internal class SearchResultsPresenter(
     super.onCreate(view)
     searchParameters.assertValid()
 
-    scope.launch {
+    presenterScope.launch {
       if (searchResultsStateStorage.searchResultsState != null) {
         setState(SearchResultsControllerState.Data(searchResultsStateStorage.searchResultsState!!))
         return@launch
@@ -80,7 +80,7 @@ internal class SearchResultsPresenter(
   }
 
   override fun onThemeChanged() {
-    scope.launch {
+    presenterScope.launch {
       val dataState = (searchResultsControllerStateSubject.value as? SearchResultsControllerState.Data)?.data
       if (dataState == null) {
         return@launch
@@ -129,13 +129,13 @@ internal class SearchResultsPresenter(
     // Get rid of the error and show loading indicator
     setState(SearchResultsControllerState.Loading)
 
-    scope.launch {
+    presenterScope.launch {
       doSearch()
     }
   }
 
   fun loadNewPage(data: SearchResultsControllerStateData) {
-    scope.launch {
+    presenterScope.launch {
       val nextPage = (data.nextPageCursor as? PageCursor.Page)?.value
         ?: return@launch
 

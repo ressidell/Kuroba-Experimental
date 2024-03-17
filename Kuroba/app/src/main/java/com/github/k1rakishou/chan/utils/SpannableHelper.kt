@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableString
-import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
 import android.text.style.BackgroundColorSpan
 import android.text.style.CharacterStyle
@@ -17,10 +16,9 @@ import android.text.style.TypefaceSpan
 import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
+import androidx.compose.ui.text.AnnotatedString
 import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.drawable.toBitmap
 import androidx.core.text.getSpans
-import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.ELLIPSIS_SYMBOL
@@ -34,13 +32,8 @@ import com.github.k1rakishou.core_spannable.PostSearchQueryForegroundSpan
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
-import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
 import com.github.k1rakishou.model.data.filter.HighlightFilterKeyword
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 
 object SpannableHelper {
 
@@ -240,7 +233,6 @@ object SpannableHelper {
     val span: CharacterStyle
   )
 
-  @OptIn(ExperimentalTime::class)
   suspend fun getCompositeCatalogNavigationSubtitle(
     siteManager: SiteManager,
     coroutineScope: CoroutineScope,
@@ -248,52 +240,55 @@ object SpannableHelper {
     fontSizePx: Int,
     compositeCatalogDescriptor: ChanDescriptor.CompositeCatalogDescriptor,
     visibleCatalogsCount: Int = 4
-  ): CharSequence {
-    val spannableStringBuilder = SpannableStringBuilder()
-    val catalogsBySites = compositeCatalogDescriptor.catalogDescriptors
-    val cache = mutableMapOf<SiteDescriptor, Bitmap>()
+  ): AnnotatedString {
+//    val spannableStringBuilder = SpannableStringBuilder()
+//    val catalogsBySites = compositeCatalogDescriptor.catalogDescriptors
+//    val cache = mutableMapOf<SiteDescriptor, Bitmap>()
+//
+//    catalogsBySites
+//      .take(visibleCatalogsCount)
+//      .forEach { catalogDescriptor ->
+//        coroutineScope.ensureActive()
+//
+//        val bitmap = cache.getOrPut(
+//          key = catalogDescriptor.siteDescriptor(),
+//          defaultValue = {
+//            var iconBitmap = withTimeoutOrNull(5.seconds) {
+//              siteManager.bySiteDescriptor(catalogDescriptor.siteDescriptor())
+//                ?.icon()
+//                ?.getIconSuspend(context)
+//                ?.bitmap
+//            }
+//
+//            if (iconBitmap == null) {
+//              iconBitmap = AppModuleAndroidUtils.getDrawable(R.drawable.error_icon).toBitmap()
+//            }
+//
+//            return@getOrPut iconBitmap
+//          })
+//
+//        if (spannableStringBuilder.isNotEmpty()) {
+//          spannableStringBuilder.append("+")
+//        }
+//
+//        spannableStringBuilder
+//          .append("  ", getIconSpan(bitmap, fontSizePx), 0)
+//          .append(catalogDescriptor.boardCode())
+//      }
+//
+//    if (catalogsBySites.size > visibleCatalogsCount) {
+//      val omittedCount = catalogsBySites.size - visibleCatalogsCount
+//
+//      spannableStringBuilder
+//        .append(" + ")
+//        .append(omittedCount.toString())
+//        .append(" more")
+//    }
+//
+//    return spannableStringBuilder
 
-    catalogsBySites
-      .take(visibleCatalogsCount)
-      .forEach { catalogDescriptor ->
-        coroutineScope.ensureActive()
-
-        val bitmap = cache.getOrPut(
-          key = catalogDescriptor.siteDescriptor(),
-          defaultValue = {
-            var iconBitmap = withTimeoutOrNull(5.seconds) {
-              siteManager.bySiteDescriptor(catalogDescriptor.siteDescriptor())
-                ?.icon()
-                ?.getIconSuspend(context)
-                ?.bitmap
-            }
-
-            if (iconBitmap == null) {
-              iconBitmap = AppModuleAndroidUtils.getDrawable(R.drawable.error_icon).toBitmap()
-            }
-
-            return@getOrPut iconBitmap
-          })
-
-        if (spannableStringBuilder.isNotEmpty()) {
-          spannableStringBuilder.append("+")
-        }
-
-        spannableStringBuilder
-          .append("  ", getIconSpan(bitmap, fontSizePx), 0)
-          .append(catalogDescriptor.boardCode())
-      }
-
-    if (catalogsBySites.size > visibleCatalogsCount) {
-      val omittedCount = catalogsBySites.size - visibleCatalogsCount
-
-      spannableStringBuilder
-        .append(" + ")
-        .append(omittedCount.toString())
-        .append(" more")
-    }
-
-    return spannableStringBuilder
+    // TODO: New toolbar.
+    TODO()
   }
 
   private fun getIconSpan(icon: Bitmap, fontSizePx: Int): ImageSpan {

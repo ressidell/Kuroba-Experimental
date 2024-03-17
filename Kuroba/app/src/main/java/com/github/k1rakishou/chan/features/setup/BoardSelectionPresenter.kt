@@ -38,7 +38,7 @@ class BoardSelectionPresenter(
   override fun onCreate(view: BoardSelectionView) {
     super.onCreate(view)
 
-    scope.launch {
+    presenterScope.launch {
       siteManager.awaitUntilInitialized()
       boardManager.awaitUntilInitialized()
 
@@ -62,7 +62,7 @@ class BoardSelectionPresenter(
   }
 
   fun reloadBoards() {
-    scope.launch { showActiveSitesWithBoardsSorted() }
+    presenterScope.launch { showActiveSitesWithBoardsSorted() }
   }
 
   private suspend fun showActiveSitesWithBoardsSorted(query: String = "") {

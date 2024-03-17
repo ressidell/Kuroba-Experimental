@@ -52,6 +52,7 @@ import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper
 import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper.ImageReencodingHelperCallback
 import com.github.k1rakishou.chan.features.reply_attach_sound.CreateSoundMediaController
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.controller.PostLinksController
@@ -64,7 +65,6 @@ import com.github.k1rakishou.chan.ui.helper.RemovedPostsHelper.RemovedPostsCallb
 import com.github.k1rakishou.chan.ui.layout.ThreadListLayout.ThreadListLayoutCallback
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableTextView
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
 import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.LoadView
 import com.github.k1rakishou.chan.ui.view.NavigationViewContract
@@ -207,8 +207,8 @@ class ThreadLayout @JvmOverloads constructor(
   private val job = SupervisorJob()
   private val coroutineScope = CoroutineScope(job + Dispatchers.Main + CoroutineName("ThreadLayout"))
 
-  override val toolbar: Toolbar?
-    get() = callback.toolbar
+  override val kurobaToolbarState: KurobaToolbarState
+    get() = callback.kurobaToolbarState
 
   override val chanDescriptor: ChanDescriptor?
     get() = presenter.currentChanDescriptor
@@ -293,7 +293,9 @@ class ThreadLayout @JvmOverloads constructor(
       AndroidUtils.removeFromParentView(replyButton)
     } else {
       replyButton.setOnClickListener(this)
-      replyButton.setToolbar(callback.toolbar!!)
+
+      // TODO: New reply layout
+//      replyButton.setToolbar(callback.toolbar!!)
     }
 
     coroutineScope.launch {
@@ -1042,12 +1044,7 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   override fun showToolbar() {
-    val currentToolbar = toolbar
-      ?: return
-
-    scrollToBottomDebouncer.post({
-      currentToolbar.collapseShow(true)
-    }, SCROLL_TO_BOTTOM_DEBOUNCE_TIMEOUT_MS)
+    scrollToBottomDebouncer.post(SCROLL_TO_BOTTOM_DEBOUNCE_TIMEOUT_MS) { kurobaToolbarState.showToolbar() }
   }
 
   override fun showAvailableArchivesList(postDescriptor: PostDescriptor, preview: Boolean) {
@@ -1463,7 +1460,7 @@ class ThreadLayout @JvmOverloads constructor(
 
 
   interface ThreadLayoutCallback {
-    val toolbar: Toolbar?
+    val kurobaToolbarState: KurobaToolbarState
     val threadControllerType: ThreadControllerType
 
     suspend fun showThread(descriptor: ChanDescriptor.ThreadDescriptor, animated: Boolean)

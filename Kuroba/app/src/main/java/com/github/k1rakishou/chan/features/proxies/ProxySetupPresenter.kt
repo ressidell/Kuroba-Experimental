@@ -6,11 +6,11 @@ import com.github.k1rakishou.chan.core.helper.ProxyStorage
 import com.github.k1rakishou.chan.features.proxies.data.ProxyEntryView
 import com.github.k1rakishou.chan.features.proxies.data.ProxyEntryViewSelection
 import com.github.k1rakishou.chan.features.proxies.data.ProxySetupState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.core_logger.Logger
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
@@ -21,14 +21,14 @@ class ProxySetupPresenter(
   private val proxySelectionHelper: ProxySelectionHelper,
   private val proxyStorage: ProxyStorage
 ) : BasePresenter<ProxySetupView>() {
-
-  @ExperimentalCoroutinesApi
   private val proxySetupState = MutableStateFlow<ProxySetupState>(ProxySetupState.Uninitialized)
+
+  val selectionToolbarState = KurobaSelectionToolbarState()
 
   override fun onCreate(view: ProxySetupView) {
     super.onCreate(view)
 
-    scope.launch {
+    presenterScope.launch {
       proxySelectionHelper.listenForSelectionChanges()
         .debounce(100.milliseconds)
         .collect { reloadProxies() }
@@ -42,7 +42,7 @@ class ProxySetupPresenter(
   }
 
   fun toggleProxyEnableDisableState(proxyEntryView: ProxyEntryView) {
-    scope.launch(Dispatchers.Default) {
+    presenterScope.launch(Dispatchers.Default) {
       proxyStorage.enableDisableProxy(proxyEntryView)
         .safeUnwrap { error ->
           Logger.e(TAG, "Failed to enable/disable proxy", error)
@@ -64,7 +64,7 @@ class ProxySetupPresenter(
   }
 
   fun deleteProxies(selectedItems: List<ProxyStorage.ProxyKey>) {
-    scope.launch(Dispatchers.Default) {
+    presenterScope.launch(Dispatchers.Default) {
       proxyStorage.deleteProxies(selectedItems)
         .safeUnwrap { error ->
           Logger.e(TAG, "Failed to delete proxies: ${selectedItems}", error)
@@ -86,7 +86,7 @@ class ProxySetupPresenter(
   }
 
   fun reloadProxies() {
-    scope.launch(Dispatchers.Default) {
+    presenterScope.launch(Dispatchers.Default) {
       proxyStorage.loadProxies()
 
       val allProxies = proxyStorage.getAllProxies()

@@ -191,7 +191,7 @@ public class SplitNavigationController
     }
 
     @Override
-    public boolean pushController(Controller to, ControllerTransition controllerTransition) {
+    public boolean pushController(Controller to, ControllerTransition transition) {
         if (popup == null) {
             popup = new PopupController(context);
             presentController(popup);
@@ -199,7 +199,7 @@ public class SplitNavigationController
             popup.setChildController(popupChild);
             popupChild.pushController(to, false);
         } else {
-            popupChild.pushController(to, controllerTransition);
+            popupChild.pushController(to, transition);
         }
 
         return true;
@@ -216,7 +216,7 @@ public class SplitNavigationController
     }
 
     @Override
-    public boolean popController(ControllerTransition controllerTransition) {
+    public boolean popController(ControllerTransition transition) {
         if (popup != null) {
             if (popupChild.childControllers.size() == 1) {
                 if (mainControllerCallbacks != null) {
@@ -230,7 +230,7 @@ public class SplitNavigationController
                 popup = null;
                 popupChild = null;
             } else {
-                popupChild.popController(controllerTransition);
+                popupChild.popController(transition);
             }
             return true;
         } else {

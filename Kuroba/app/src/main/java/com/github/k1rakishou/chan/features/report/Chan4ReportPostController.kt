@@ -232,7 +232,7 @@ class Chan4ReportPostController(
             }
           }
 
-          mainScope.launch {
+          controllerScope.launch {
             val reportPostResult = viewModel.reportPost(
               postDescriptor = postDescriptor,
               captchaInfo = captchaInfo,

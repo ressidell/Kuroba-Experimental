@@ -20,6 +20,8 @@ import android.content.Context
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.widget.Toast
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.unit.Dp
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import com.github.k1rakishou.chan.R
@@ -45,6 +47,7 @@ import com.github.k1rakishou.chan.features.media_viewer.MediaViewerOptions
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenAlbumHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.report.Chan4ReportPostController
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
@@ -53,7 +56,6 @@ import com.github.k1rakishou.chan.ui.helper.OpenExternalThreadHelper
 import com.github.k1rakishou.chan.ui.helper.ShowPostsInExternalThreadHelper
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
@@ -86,7 +88,6 @@ abstract class ThreadController(
   SlideChangeListener,
   ApplicationVisibilityListener,
   ThemeEngine.ThemeChangesListener,
-  Toolbar.ToolbarHeightUpdatesCallback,
   AlbumViewController.ThreadControllerCallbacks {
 
   @Inject
@@ -158,8 +159,8 @@ abstract class ThreadController(
   val chanDescriptor: ChanDescriptor?
     get() = threadLayout.presenter.currentChanDescriptor
 
-  override val toolbar: Toolbar?
-    get() = (navigationController as? ToolbarNavigationController)?.toolbar
+  override val kurobaToolbarState: KurobaToolbarState
+    get() = (navigationController as ToolbarNavigationController).toolbarState
 
   abstract override val threadControllerType: ThreadControllerType
 
@@ -182,14 +183,12 @@ abstract class ThreadController(
 
     view = swipeRefreshLayout
 
-    serializedCoroutineExecutor = SerializedCoroutineExecutor(mainScope)
+    serializedCoroutineExecutor = SerializedCoroutineExecutor(controllerScope)
     applicationVisibilityManager.addListener(this)
-
-    toolbar?.addToolbarHeightUpdatesCallback(this)
 
     showPostsInExternalThreadHelper = ShowPostsInExternalThreadHelper(
       context = context,
-      scope = mainScope,
+      scope = controllerScope,
       postPopupHelper = threadLayout.popupHelper,
       chanThreadManagerLazy = chanThreadManagerLazy,
       presentControllerFunc = { controller -> presentController(controller) },
@@ -209,7 +208,7 @@ abstract class ThreadController(
       threadFollowHistoryManagerLazy = threadFollowHistoryManagerLazy
     )
 
-    mainScope.launch {
+    controllerScope.launch {
       mediaViewerScrollerHelper.mediaViewerScrollEventsFlow
         .collect { scrollToImageEvent ->
           val descriptor = scrollToImageEvent.chanDescriptor
@@ -221,7 +220,7 @@ abstract class ThreadController(
         }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       mediaViewerOpenAlbumHelper.mediaViewerOpenAlbumEventsFlow
         .collect { openAlbumEvent ->
           val descriptor = openAlbumEvent.chanDescriptor
@@ -233,18 +232,18 @@ abstract class ThreadController(
         }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       appSettingsUpdateAppRefreshHelper.settingsUpdatedEvent.collect {
         Logger.d(TAG, "Reloading thread because app settings were updated")
         threadLayout.presenter.quickReloadFromMemoryCache()
       }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow
         .onEach { replyLayoutVisibilityEvents ->
-          toolbar?.let { toolbar ->
-            val isInReplyLayoutMode = toolbar.isInReplyLayoutMode
+          kurobaToolbarState?.let { toolbarState ->
+            val isInReplyLayoutMode = toolbarState.isInReplyMode()
             val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.anyOpened() || replyLayoutVisibilityEvents.anyExpanded()
 
             if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
@@ -252,12 +251,18 @@ abstract class ThreadController(
             }
 
             if (anyReplyLayoutOpenedOrExpanded) {
-              toolbar.enterReplyLayoutMode()
+              toolbarState.enterReplyMode(threadLayout.presenter.replyToolbarState)
             } else {
-              toolbar.exitReplyLayoutMode()
+              toolbarState.exitReplyMode()
             }
           }
         }
+        .collect()
+    }
+
+    controllerScope.launch {
+      snapshotFlow { toolbarState.toolbarHeightState.value }
+        .onEach { toolbarHeight -> onToolbarHeightChanged(toolbarHeight) }
         .collect()
     }
 
@@ -280,24 +285,12 @@ abstract class ThreadController(
   override fun onDestroy() {
     super.onDestroy()
 
-    toolbar?.removeToolbarHeightUpdatesCallback(this)
     threadLayout.destroy()
     applicationVisibilityManager.removeListener(this)
     themeEngine.removeListener(this)
   }
 
   override fun onThemeChanged() {
-  }
-
-  override fun onToolbarHeightKnown(heightChanged: Boolean) {
-    val toolbarHeight = toolbar?.toolbarHeight
-      ?: return
-
-    swipeRefreshLayout.setProgressViewOffset(
-      false,
-      toolbarHeight - dp(40f),
-      toolbarHeight + dp(64 - 40.toFloat())
-    )
   }
 
   fun passMotionEventIntoDrawer(event: MotionEvent): Boolean {
@@ -378,22 +371,6 @@ abstract class ThreadController(
     }
 
     openWebViewReportController(post, site)
-  }
-
-  private fun openWebViewReportController(post: ChanPost, site: Site) {
-    val toolbarHeight = toolbar?.toolbarHeight
-      ?: return
-
-    if (!site.siteFeature(Site.SiteFeature.POST_REPORT)) {
-      return
-    }
-
-    if (site.endpoints().report(post) == null) {
-      return
-    }
-
-    val reportController = WebViewReportController(context, post, site, toolbarHeight)
-    requireNavController().pushController(reportController)
   }
 
   fun selectPostImage(postImage: ChanPostImage) {
@@ -585,7 +562,7 @@ abstract class ThreadController(
     }
 
     if (canAutoSelectArchive && supportedArchiveDescriptors.size == 1) {
-      mainScope.launch { onArchiveSelected(supportedArchiveDescriptors.first(), postDescriptor, preview) }
+      controllerScope.launch { onArchiveSelected(supportedArchiveDescriptors.first(), postDescriptor, preview) }
       return
     }
 
@@ -608,7 +585,7 @@ abstract class ThreadController(
       globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
       items,
       itemClickListener = { clickedItem ->
-        mainScope.launch {
+        controllerScope.launch {
           val archiveDescriptor = (clickedItem.key as? ArchiveDescriptor)
             ?: return@launch
 
@@ -618,6 +595,32 @@ abstract class ThreadController(
     )
 
     presentController(floatingListMenuController)
+  }
+
+  private fun onToolbarHeightChanged(toolbarHeightDp: Dp?) {
+    var toolbarHeight = with(appResources.composeDensity) { toolbarHeightDp?.toPx()?.toInt() }
+    if (toolbarHeight == null) {
+      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
+    }
+
+    swipeRefreshLayout.setProgressViewOffset(
+      false,
+      toolbarHeight - dp(40f),
+      toolbarHeight + dp(64 - 40.toFloat())
+    )
+  }
+
+  private fun openWebViewReportController(post: ChanPost, site: Site) {
+    if (!site.siteFeature(Site.SiteFeature.POST_REPORT)) {
+      return
+    }
+
+    if (site.endpoints().report(post) == null) {
+      return
+    }
+
+    val reportController = WebViewReportController(context, post, site)
+    requireNavController().pushController(reportController)
   }
 
   private suspend fun onArchiveSelected(

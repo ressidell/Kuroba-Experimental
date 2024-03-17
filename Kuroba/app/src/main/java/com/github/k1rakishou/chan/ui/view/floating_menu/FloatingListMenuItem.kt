@@ -1,8 +1,5 @@
 package com.github.k1rakishou.chan.ui.view.floating_menu
 
-import com.github.k1rakishou.chan.ui.toolbar.CheckableToolbarMenuSubItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuSubItem
-
 open class FloatingListMenuItem @JvmOverloads constructor(
   val key: Any,
   val name: String,
@@ -38,43 +35,44 @@ open class FloatingListMenuItem @JvmOverloads constructor(
 
   companion object {
 
-    @JvmStatic
-    fun createFromToolbarMenuSubItem(
-      toolbarMenuSubItem: ToolbarMenuSubItem,
-      withNestedItems: Boolean = true
-    ): FloatingListMenuItem {
-      val nestedItems = if (withNestedItems) {
-        toolbarMenuSubItem.moreItems.map { item -> createFromToolbarMenuSubItem(item) }.toMutableList()
-      } else {
-        mutableListOf()
-      }
-
-      when (toolbarMenuSubItem) {
-        is CheckableToolbarMenuSubItem -> {
-          return CheckableFloatingListMenuItem(
-            key = toolbarMenuSubItem.id,
-            name = toolbarMenuSubItem.text!!,
-            value = null,
-            groupId = toolbarMenuSubItem.groupId,
-            visible = toolbarMenuSubItem.visible,
-            enabled = toolbarMenuSubItem.enabled,
-            more = nestedItems,
-            isCurrentlySelected = toolbarMenuSubItem.isChecked
-          )
-        }
-        is ToolbarMenuSubItem -> {
-          return FloatingListMenuItem(
-            key = toolbarMenuSubItem.id,
-            name = toolbarMenuSubItem.text!!,
-            value = null,
-            visible = toolbarMenuSubItem.visible,
-            enabled = toolbarMenuSubItem.enabled,
-            more = nestedItems
-          )
-        }
-        else -> throw NotImplementedError("Not implemented for ${toolbarMenuSubItem::class.java.simpleName}")
-      }
-    }
+    // TODO: New reply layout
+//    @JvmStatic
+//    fun createFromToolbarMenuSubItem(
+//      toolbarMenuSubItem: ToolbarMenuSubItem,
+//      withNestedItems: Boolean = true
+//    ): FloatingListMenuItem {
+//      val nestedItems = if (withNestedItems) {
+//        toolbarMenuSubItem.moreItems.map { item -> createFromToolbarMenuSubItem(item) }.toMutableList()
+//      } else {
+//        mutableListOf()
+//      }
+//
+//      when (toolbarMenuSubItem) {
+//        is CheckableToolbarMenuSubItem -> {
+//          return CheckableFloatingListMenuItem(
+//            key = toolbarMenuSubItem.id,
+//            name = toolbarMenuSubItem.text!!,
+//            value = null,
+//            groupId = toolbarMenuSubItem.groupId,
+//            visible = toolbarMenuSubItem.visible,
+//            enabled = toolbarMenuSubItem.enabled,
+//            more = nestedItems,
+//            isCurrentlySelected = toolbarMenuSubItem.isChecked
+//          )
+//        }
+//        is ToolbarMenuSubItem -> {
+//          return FloatingListMenuItem(
+//            key = toolbarMenuSubItem.id,
+//            name = toolbarMenuSubItem.text!!,
+//            value = null,
+//            visible = toolbarMenuSubItem.visible,
+//            enabled = toolbarMenuSubItem.enabled,
+//            more = nestedItems
+//          )
+//        }
+//        else -> throw NotImplementedError("Not implemented for ${toolbarMenuSubItem::class.java.simpleName}")
+//      }
+//    }
 
   }
 }

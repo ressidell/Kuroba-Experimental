@@ -10,6 +10,9 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.ProxyStorage
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.site.SiteRegistry
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableCheckBox
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableChip
@@ -57,7 +60,7 @@ class ProxyEditorController(
   private lateinit var enableForFullMedia: ColorizableCheckBox
 
   private var isControllerVisible = true
-  private val saveProxyExecutor = RendezvousCoroutineExecutor(mainScope)
+  private val saveProxyExecutor = RendezvousCoroutineExecutor(controllerScope)
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -66,7 +69,17 @@ class ProxyEditorController(
   override fun onCreate() {
     super.onCreate()
 
-    navigation.title = getString(R.string.controller_proxy_editor_title)
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.controller_proxy_editor_title)
+      )
+    )
+
     view = inflate(context, R.layout.controller_proxy_editor)
 
     proxyAddressTIL = view.findViewById(R.id.proxy_address_text_input_layout)

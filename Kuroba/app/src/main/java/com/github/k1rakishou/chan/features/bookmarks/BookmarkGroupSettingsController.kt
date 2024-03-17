@@ -39,6 +39,10 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
@@ -97,13 +101,20 @@ class BookmarkGroupSettingsController(
       R.string.bookmark_groups_controller_title
     }
 
-    navigation.setTitle(titleStringId)
-    navigation.swipeable = false
-
-    navigation
-      .buildMenu(context)
-      .withItem(ACTION_SHOW_HELP, R.drawable.ic_help_outline_white_24dp, { showGroupMatcherHelp() })
-      .build()
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(swipeable = false),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(titleStringId)
+      ),
+      menuBuilder = {
+        withMenuItem(ACTION_SHOW_HELP, R.drawable.ic_help_outline_white_24dp) { showGroupMatcherHelp() }
+      }
+    )
 
     onInsetsChanged()
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
@@ -216,7 +227,7 @@ class BookmarkGroupSettingsController(
                 reoderableState = reoderableState,
                 bookmarkGroupClicked = { groupId -> bookmarkGroupClicked(groupId) },
                 removeBookmarkGroupClicked = { groupId ->
-                  mainScope.launch { viewModel.removeBookmarkGroup(groupId) }
+                  controllerScope.launch { viewModel.removeBookmarkGroup(groupId) }
                 },
                 bookmarkGroupSettingsClicked = { groupId ->
                   val controller = BookmarkGroupPatternSettingsController(
@@ -257,7 +268,7 @@ class BookmarkGroupSettingsController(
       return
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       val allSucceeded = viewModel.moveBookmarksIntoGroup(groupId, bookmarksToMove)
         .toastOnError(longToast = true)
         .safeUnwrap { return@launch }
@@ -277,7 +288,7 @@ class BookmarkGroupSettingsController(
       inputType = DialogFactory.DialogInputType.String,
       defaultValue = prevGroupName,
       onValueEntered = { groupName ->
-        mainScope.launch {
+        controllerScope.launch {
           val groupIdWithName = viewModel.existingGroupIdAndName(groupName)
             .toastOnError(longToast = true)
             .safeUnwrap { error ->

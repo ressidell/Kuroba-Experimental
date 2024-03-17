@@ -425,7 +425,7 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
     if (!isDraggingCatalogOrThreadFastScroller && isCached) {
       loadImage()
     } else {
-      debouncer.post({ loadImage() }, IMAGE_REQUEST_DEBOUNCER_TIMEOUT_MS)
+      debouncer.post(IMAGE_REQUEST_DEBOUNCER_TIMEOUT_MS) { loadImage() }
     }
   }
 

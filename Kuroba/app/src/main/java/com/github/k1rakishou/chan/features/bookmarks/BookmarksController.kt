@@ -43,17 +43,20 @@ import com.github.k1rakishou.chan.features.bookmarks.epoxy.epoxyGridThreadBookma
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.epoxyListThreadBookmarkViewHolder
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.navigation.TabPageController
-import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.settings.RangeSettingUpdaterController
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyExpandableGroupView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
 import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerControllerType
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuSubItem
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
@@ -72,6 +75,8 @@ import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import java.util.concurrent.atomic.AtomicBoolean
@@ -84,7 +89,6 @@ class BookmarksController(
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
 ) : TabPageController(context),
   BookmarksView,
-  ToolbarNavigationController.ToolbarSearchCallback,
   BookmarksSelectionHelper.OnBookmarkMenuItemClicked,
   WindowInsetsListener {
 
@@ -281,7 +285,7 @@ class BookmarksController(
       // The process of reloading bookmarks may not notify us about the results when none of the
       // bookmarks were changed during the update so we need to have this timeout mechanism in
       // such case.
-      mainScope.launch {
+      controllerScope.launch {
         bookmarkForegroundWatcher.restartWatching()
 
         delay(10_000)
@@ -294,15 +298,33 @@ class BookmarksController(
     itemTouchHelper = ItemTouchHelper(touchHelperCallback)
     itemTouchHelper.attachToRecyclerView(epoxyRecyclerView)
 
-    mainScope.launch {
+    controllerScope.launch {
       bookmarksPresenter.listenForStateChanges()
         .asFlow()
         .collect { state -> onStateChanged(state) }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       bookmarksSelectionHelper.listenForSelectionChanges()
         .collect { selectionEvent -> onNewSelectionEvent(selectionEvent) }
+    }
+
+    controllerScope.launch {
+      bookmarksPresenter.searchState.listenForSearchVisibilityUpdates()
+        .onEach { searchVisible ->
+          isInSearchMode = searchVisible
+          bookmarksPresenter.onSearchModeChanged(searchVisible)
+          if (!searchVisible) {
+            needRestoreScrollPosition.set(true)
+          }
+        }
+        .collect()
+    }
+
+    controllerScope.launch {
+      bookmarksPresenter.searchState.listenForSearchQueryUpdates()
+        .onEach { entered -> bookmarksPresenter.onSearchEntered(entered) }
+        .collect()
     }
 
     mainControllerCallbacks.onBottomPanelStateChanged { state -> onInsetsChanged() }
@@ -323,7 +345,6 @@ class BookmarksController(
     cleanupFastScroller()
 
     bookmarksPresenter.updateReorderingMode(enterReorderingMode = false)
-    requireNavController().requireToolbar().exitSelectionMode()
     mainControllerCallbacks.hideBottomPanel()
 
     epoxyRecyclerView.clear()
@@ -357,57 +378,83 @@ class BookmarksController(
     epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
-  override fun rebuildNavigationItem(navigationItem: NavigationItem) {
-    navigationItem.title = getString(R.string.controller_bookmarks)
-    navigationItem.swipeable = false
-    navigationItem.hasDrawer = true
-    navigationItem.hasBack = false
-
-    navigationItem.buildMenu(context)
-      .withMenuItemClickInterceptor {
+  override fun updateToolbarState(): KurobaToolbarState {
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        hasDrawer = true,
+        hasBack = false,
+        swipeable = false
+      ),
+      leftItem = HamburgMenuItem(
+        onClick = { toolbarIcon ->
+          // TODO: New toolbar.
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.controller_bookmarks)
+      ),
+      iconClickInterceptor = {
         exitReorderingModeIfActive()
-        return@withMenuItemClickInterceptor false
+        return@pushOrUpdateDefaultLayer false
+      },
+      menuBuilder = {
+        withMenuItem(
+          id = null,
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = { toolbarState.enterSearchMode(bookmarksPresenter.searchState) }
+        )
+        withMenuItem(
+          id = ACTION_CHANGE_VIEW_BOOKMARK_MODE,
+          drawableId = getBookmarksModeChangeToolbarButtonDrawableId(),
+          onClick =  { onChangeViewModeClicked() }
+        )
+        withMenuItem(
+          id = ACTION_OPEN_SORT_SETTINGS,
+          drawableId = R.drawable.ic_baseline_sort_24,
+          onClick = { requireNavController().presentController(BookmarksSortingController(context, this@BookmarksController)) }
+        )
+
+        withOverflowMenu {
+          withOverflowMenuItem(
+            id = ACTION_RESTART_FILTER_WATCHER,
+            stringId = R.string.controller_bookmarks_restart_filter_watcher,
+            visible = true,
+            onClick = { restartFilterWatcherClicked() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_MARK_ALL_BOOKMARKS_AS_SEEN,
+            stringId = R.string.controller_bookmarks_mark_all_bookmarks_as_seen,
+            visible = true,
+            onClick = { bookmarksPresenter.markAllAsSeen() })
+          withOverflowMenuItem(
+            id = ACTION_PRUNE_NON_ACTIVE_BOOKMARKS,
+            stringId = R.string.controller_bookmarks_prune_inactive_bookmarks,
+            visible = true,
+            onClick = { subItem -> onPruneNonActiveBookmarksClicked(subItem) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_BOOKMARK_GROUPS_SETTINGS,
+            stringId = R.string.controller_bookmarks_bookmark_groups_settings,
+            visible = true,
+            onClick = { bookmarkGroupsSettings() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SET_GRID_BOOKMARK_VIEW_WIDTH,
+            stringId = R.string.controller_bookmarks_set_grid_bookmark_view_width,
+            visible = PersistableChanState.viewThreadBookmarksGridMode.get(),
+            onClick = { onSetGridBookmarkViewWidthClicked() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_CLEAR_ALL_BOOKMARKS,
+            stringId = R.string.controller_bookmarks_clear_all_bookmarks,
+            visible = true,
+            onClick = { subItem -> onClearAllBookmarksClicked(subItem) }
+          )
+        }
       }
-      .withItem(R.drawable.ic_search_white_24dp) { requireToolbarNavController().showSearch() }
-      .withItem(ACTION_CHANGE_VIEW_BOOKMARK_MODE, getBookmarksModeChangeToolbarButtonDrawableId()) {
-        onChangeViewModeClicked()
-      }
-      .withItem(ACTION_OPEN_SORT_SETTINGS, R.drawable.ic_baseline_sort_24) {
-        requireNavController().presentController(BookmarksSortingController(context, this))
-      }
-      .withOverflow(requireNavController())
-      .withSubItem(
-        ACTION_RESTART_FILTER_WATCHER,
-        R.string.controller_bookmarks_restart_filter_watcher,
-        { restartFilterWatcherClicked() }
-      )
-      .withSubItem(
-        ACTION_MARK_ALL_BOOKMARKS_AS_SEEN,
-        R.string.controller_bookmarks_mark_all_bookmarks_as_seen,
-        { bookmarksPresenter.markAllAsSeen() })
-      .withSubItem(
-        ACTION_PRUNE_NON_ACTIVE_BOOKMARKS,
-        R.string.controller_bookmarks_prune_inactive_bookmarks,
-        { subItem -> onPruneNonActiveBookmarksClicked(subItem) }
-      )
-      .withSubItem(
-        ACTION_BOOKMARK_GROUPS_SETTINGS,
-        R.string.controller_bookmarks_bookmark_groups_settings,
-        { bookmarkGroupsSettings() }
-      )
-      .withSubItem(
-        ACTION_SET_GRID_BOOKMARK_VIEW_WIDTH,
-        R.string.controller_bookmarks_set_grid_bookmark_view_width,
-        PersistableChanState.viewThreadBookmarksGridMode.get(),
-        { onSetGridBookmarkViewWidthClicked() }
-      )
-      .withSubItem(
-        ACTION_CLEAR_ALL_BOOKMARKS,
-        R.string.controller_bookmarks_clear_all_bookmarks,
-        { subItem -> onClearAllBookmarksClicked(subItem) }
-      )
-      .build()
-      .build()
+    )
+
+    return toolbarState
   }
 
   override fun onTabFocused() {
@@ -485,7 +532,7 @@ class BookmarksController(
       return
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       coroutineScope {
         if (threadDescriptors.size > 32) {
           // So it doesn't appear "stuck"
@@ -522,19 +569,6 @@ class BookmarksController(
     bookmarksPresenter.reloadBookmarks()
   }
 
-  override fun onSearchVisibilityChanged(visible: Boolean) {
-    isInSearchMode = visible
-    bookmarksPresenter.onSearchModeChanged(visible)
-
-    if (!visible) {
-      needRestoreScrollPosition.set(true)
-    }
-  }
-
-  override fun onSearchEntered(entered: String) {
-    bookmarksPresenter.onSearchEntered(entered)
-  }
-
   override fun onConfigurationChanged(newConfig: Configuration) {
     super.onConfigurationChanged(newConfig)
 
@@ -562,7 +596,7 @@ class BookmarksController(
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
         mainControllerCallbacks.hideBottomPanel()
-        requireNavController().requireToolbar().exitSelectionMode()
+        toolbarState.exitSelectionMode()
       }
     }
   }
@@ -656,7 +690,7 @@ class BookmarksController(
     requireNavController().presentController(rangeSettingUpdaterController)
   }
 
-  private fun onClearAllBookmarksClicked(subItem: ToolbarMenuSubItem) {
+  private fun onClearAllBookmarksClicked(subItem: ToolbarMenuOverflowItem) {
     if (!bookmarksPresenter.hasBookmarks()) {
       return
     }
@@ -671,7 +705,7 @@ class BookmarksController(
     )
   }
 
-  private fun onPruneNonActiveBookmarksClicked(subItem: ToolbarMenuSubItem) {
+  private fun onPruneNonActiveBookmarksClicked(subItem: ToolbarMenuOverflowItem) {
     dialogFactory.createSimpleConfirmationDialog(
       context = context,
       titleTextId = R.string.controller_bookmarks_prune_confirmation_message,
@@ -977,13 +1011,17 @@ class BookmarksController(
   }
 
   private fun updateTitleWithoutStats() {
-    navigation.title = getString(R.string.controller_bookmarks)
-    requireNavController().requireToolbar().updateTitle(navigation)
+    toolbarState.updateTitle(
+      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      newTitle = ToolbarText.String(getString(R.string.controller_bookmarks))
+    )
   }
 
   private fun updateTitleWithStats(state: BookmarksControllerState.Data) {
-    navigation.title = formatTitleWithStats(state)
-    requireNavController().requireToolbar().updateTitle(navigation)
+    toolbarState.updateTitle(
+      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      newTitle = ToolbarText.String(formatTitleWithStats(state))
+    )
   }
 
   private fun formatTitleWithStats(state: BookmarksControllerState.Data): String {
@@ -1007,12 +1045,10 @@ class BookmarksController(
   }
 
   private fun onViewBookmarksModeChanged() {
-    navigation.findItem(ACTION_CHANGE_VIEW_BOOKMARK_MODE)
-      ?.setImage(getBookmarksModeChangeToolbarButtonDrawableId())
-
-    navigation.findSubItem(ACTION_SET_GRID_BOOKMARK_VIEW_WIDTH)?.let { menuSubItem ->
-      menuSubItem.visible = PersistableChanState.viewThreadBookmarksGridMode.get()
-    }
+    toolbarState.findItem(ACTION_CHANGE_VIEW_BOOKMARK_MODE)
+      ?.updateDrawableId(getBookmarksModeChangeToolbarButtonDrawableId())
+    toolbarState.findOverflowItem(ACTION_SET_GRID_BOOKMARK_VIEW_WIDTH)
+      ?.updateVisibility(visible = PersistableChanState.viewThreadBookmarksGridMode.get())
   }
 
   private fun getBookmarksModeChangeToolbarButtonDrawableId(): Int {
@@ -1025,16 +1061,15 @@ class BookmarksController(
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val navController = requireNavController()
-    val toolbar = navController.requireToolbar()
-
-    if (!toolbar.isInSelectionMode) {
-      toolbar.enterSelectionMode(formatSelectionText())
-      return
+    if (!toolbarState.isInSelectionMode()) {
+      toolbarState.enterSelectionMode(bookmarksPresenter.selectionState)
+      bookmarksPresenter.selectionState.updateTitle(ToolbarText.String(formatSelectionText()))
+    } else {
+      toolbarState.updateTitle(
+        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Selection,
+        newTitle = ToolbarText.String(formatSelectionText())
+      )
     }
-
-    navigation.selectionStateText = formatSelectionText()
-    toolbar.updateSelectionTitle(navController.navigation)
   }
 
   private fun formatSelectionText(): String {

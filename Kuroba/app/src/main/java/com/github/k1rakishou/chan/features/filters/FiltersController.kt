@@ -42,7 +42,7 @@ import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -72,6 +72,11 @@ import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.core.usecase.ExportFiltersUseCase
 import com.github.k1rakishou.chan.core.usecase.ImportFiltersUseCase
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.SelectableItem
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
@@ -87,13 +92,9 @@ import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
 import com.github.k1rakishou.chan.ui.compose.reorder.draggedItem
 import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
-import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchState
+import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
-import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
-import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController.ToolbarSearchCallback
 import com.github.k1rakishou.chan.ui.theme.SimpleSquarePainter
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuSubItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.openLink
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -124,7 +125,6 @@ class FiltersController(
   private val mainControllerCallbacks: MainControllerCallbacks
 ) :
   Controller(context),
-  ToolbarSearchCallback,
   WindowInsetsListener {
 
   @Inject
@@ -144,7 +144,7 @@ class FiltersController(
   @Inject
   lateinit var importFiltersUseCase: ImportFiltersUseCase
 
-  private var bottomPadding = mutableStateOf(0)
+  private var bottomPadding = mutableIntStateOf(0)
 
   private val viewModel by lazy {
     requireComponentActivity().viewModelByKey<FiltersControllerViewModel>()
@@ -157,49 +157,72 @@ class FiltersController(
   override fun onCreate() {
     super.onCreate()
 
-    navigation.setTitle(R.string.filters_screen)
-    navigation.swipeable = false
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(swipeable = false),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.filters_screen)
+      ),
+      menuBuilder = {
+        withMenuItem(
+          id = ACTION_SEARCH,
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = { item -> toolbarState.enterSearchMode(viewModel.toolbarSearchState) }
+        )
 
-    navigation
-      .buildMenu(context)
-      .withItem(R.drawable.ic_search_white_24dp) { item -> searchClicked(item) }
-      .withOverflow(requireNavController())
-      .withSubItem(
-        ACTION_ENABLE_OR_DISABLE_ALL_FILTERS,
-        R.string.filters_controller_enable_all_filters,
-        false,
-        { mainScope.launch { viewModel.enableOrDisableAllFilters() } }
-      )
-      .withSubItem(ACTION_EXPORT_FILTERS, R.string.filters_controller_export_action, { item -> exportFilters(item) })
-      .withSubItem(ACTION_IMPORT_FILTERS, R.string.filters_controller_import_action, { item -> importFilters(item) })
-      .withSubItem(ACTION_SHOW_HELP, R.string.filters_controller_show_help, { item -> helpClicked(item) })
-      .build()
-      .build()
+        withOverflowMenu {
+          withOverflowMenuItem(
+            id = ACTION_ENABLE_OR_DISABLE_ALL_FILTERS,
+            stringId = R.string.filters_controller_enable_all_filters,
+            visible = false,
+            onClick = { controllerScope.launch { viewModel.enableOrDisableAllFilters() } }
+          )
+          withOverflowMenuItem(
+            id = ACTION_EXPORT_FILTERS,
+            stringId = R.string.filters_controller_export_action,
+            onClick = { item -> exportFilters(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_IMPORT_FILTERS,
+            stringId = R.string.filters_controller_import_action,
+            onClick = { item -> importFilters(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SHOW_HELP,
+            stringId = R.string.filters_controller_show_help,
+            onClick = { item -> helpClicked(item) }
+          )
+        }
+      }
+    )
 
     onInsetsChanged()
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
-    viewModel.searchQuery.value = ""
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.viewModelSelectionHelper.selectionMode.collect { selectionEvent ->
         onNewSelectionEvent(selectionEvent)
       }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.viewModelSelectionHelper.bottomPanelMenuItemClickEventFlow
         .collect { menuItemClickEvent ->
           onMenuItemClicked(menuItemClickEvent.menuItemType, menuItemClickEvent.items)
         }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.reloadFilters()
 
-      mainScope.launch { viewModel.reloadFilterMatchedPosts() }
+      controllerScope.launch { viewModel.reloadFilterMatchedPosts() }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       viewModel.updateEnableDisableAllFiltersButtonFlow
         .collect { updateEnableDisableAllFiltersButton() }
     }
@@ -207,7 +230,7 @@ class FiltersController(
     mainControllerCallbacks.onBottomPanelStateChanged { onInsetsChanged() }
 
     if (chanFilterMutable != null) {
-      mainScope.launch {
+      controllerScope.launch {
         viewModel.awaitUntilDependenciesInitialized()
         delay(32L)
 
@@ -254,17 +277,7 @@ class FiltersController(
       mainControllerCallbacks = mainControllerCallbacks
     )
 
-    bottomPadding.value = bottomPaddingDp
-  }
-
-  override fun onSearchVisibilityChanged(visible: Boolean) {
-    if (!visible) {
-      viewModel.searchQuery.value = ""
-    }
-  }
-
-  override fun onSearchEntered(entered: String) {
-    viewModel.searchQuery.value = entered
+    bottomPadding.intValue = bottomPaddingDp
   }
 
   @Composable
@@ -276,7 +289,9 @@ class FiltersController(
     val contentPadding = PaddingValues(bottom = bottomPd.dp + FAB_SIZE + (FAB_MARGIN / 2))
     val reoderableState = rememberReorderState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+      modifier = Modifier.fillMaxSize()
+    ) {
       if (filters.isNotEmpty()) {
         BuildFilterList(
           filters = filters,
@@ -323,12 +338,14 @@ class FiltersController(
     contentPadding: PaddingValues,
     coroutineScope: CoroutineScope
   ) {
-    val searchState = rememberSimpleSearchState<FiltersControllerViewModel.ChanFilterInfo>(
-      searchQueryState = viewModel.searchQuery
+    val searchState = rememberSimpleSearchStateV2<FiltersControllerViewModel.ChanFilterInfo>(
+      textFieldState = viewModel.toolbarSearchState.searchQueryState
     )
 
-    LaunchedEffect(key1 = searchState.query, block = {
-      if (searchState.query.isEmpty()) {
+    val searchQuery = searchState.textFieldState.text
+
+    LaunchedEffect(key1 = searchQuery, block = {
+      if (searchQuery.isEmpty()) {
         searchState.results = filters
         return@LaunchedEffect
       }
@@ -337,7 +354,7 @@ class FiltersController(
 
       withContext(Dispatchers.Default) {
         searchState.searching = true
-        searchState.results = processSearchQuery(searchState.query, filters)
+        searchState.results = processSearchQuery(searchQuery, filters)
         searchState.searching = false
       }
     })
@@ -347,7 +364,6 @@ class FiltersController(
       return
     }
 
-    val searchQuery = searchState.query
     val searchResults = searchState.results
 
     if (searchResults.isEmpty()) {
@@ -400,7 +416,7 @@ class FiltersController(
               showCreateNewFilterController(ChanFilterMutable.from(clickedFilter))
             },
             onFilterLongClicked = { clickedFilter ->
-              if (requireToolbarNavController().isSearchOpened) {
+              if (toolbarState.isInSearchMode()) {
                 return@BuildChanFilter
               }
 
@@ -580,7 +596,7 @@ class FiltersController(
     return false
   }
 
-  private fun importFilters(toolbarMenuSubItem: ToolbarMenuSubItem) {
+  private fun importFilters(toolbarMenuOverflowItem: ToolbarMenuOverflowItem) {
     dialogFactory.createSimpleConfirmationDialog(
       context = context,
       titleText = getString(R.string.filters_controller_import_warning),
@@ -594,7 +610,7 @@ class FiltersController(
           }
 
           override fun onResult(uri: Uri) {
-            mainScope.launch {
+            controllerScope.launch {
               val params = ImportFiltersUseCase.Params(uri)
 
               when (val result = importFiltersUseCase.execute(params)) {
@@ -619,7 +635,7 @@ class FiltersController(
     )
   }
 
-  private fun exportFilters(toolbarMenuSubItem: ToolbarMenuSubItem) {
+  private fun exportFilters(toolbarMenuOverflowItem: ToolbarMenuOverflowItem) {
     val dateString = FILTER_DATE_FORMAT.print(DateTime.now())
     val exportFileName = "KurobaEx_exported_filters_($dateString).json"
 
@@ -651,23 +667,19 @@ class FiltersController(
   }
 
   private fun updateEnableDisableAllFiltersButton() {
-    navigation.findSubItem(ACTION_ENABLE_OR_DISABLE_ALL_FILTERS)?.let { menuItem ->
+    toolbarState.findOverflowItem(ACTION_ENABLE_OR_DISABLE_ALL_FILTERS)?.let { menuItem ->
       val text = if (viewModel.allFiltersEnabled()) {
         getString(R.string.filters_controller_disable_all_filters)
       } else {
         getString(R.string.filters_controller_enable_all_filters)
       }
 
-      menuItem.text = text
-      menuItem.visible = viewModel.hasFilters()
+      menuItem.updateMenuText(text)
+      menuItem.updateVisibility(viewModel.hasFilters())
     }
   }
 
-  private fun searchClicked(item: ToolbarMenuItem) {
-    (navigationController as ToolbarNavigationController).showSearch()
-  }
-
-  private fun helpClicked(item: ToolbarMenuSubItem) {
+  private fun helpClicked(item: ToolbarMenuOverflowItem) {
     DialogFactory.Builder.newBuilder(context, dialogFactory)
       .withTitle(R.string.help)
       .withDescription(Html.fromHtml(getString(R.string.filters_controller_help_message)))
@@ -725,7 +737,7 @@ class FiltersController(
 
     when (menuItemType) {
       FiltersControllerViewModel.MenuItemType.Delete -> {
-        mainScope.launch { viewModel.deleteFilters(selectedItems) }
+        controllerScope.launch { viewModel.deleteFilters(selectedItems) }
       }
     }
   }
@@ -739,21 +751,18 @@ class FiltersController(
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
         mainControllerCallbacks.hideBottomPanel()
-        requireNavController().requireToolbar().exitSelectionMode()
+        toolbarState.exitSelectionMode()
       }
       null -> return
     }
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val toolbar = requireNavController().requireToolbar()
-    if (!toolbar.isInSelectionMode) {
-      toolbar.enterSelectionMode(formatSelectionText())
-      return
+    if (!toolbarState.isInSelectionMode()) {
+      toolbarState.enterSelectionMode(viewModel.toolbarSelectionState)
     }
 
-    navigation.selectionStateText = formatSelectionText()
-    toolbar.updateSelectionTitle(navigation)
+    viewModel.toolbarSelectionState.updateTitle(ToolbarText.String(formatSelectionText()))
   }
 
   private fun formatSelectionText(): String {
@@ -766,7 +775,7 @@ class FiltersController(
   }
 
   private fun processSearchQuery(
-    query: String,
+    query: CharSequence,
     filters: List<FiltersControllerViewModel.ChanFilterInfo>
   ): List<FiltersControllerViewModel.ChanFilterInfo> {
     if (query.isEmpty()) {
@@ -787,6 +796,7 @@ class FiltersController(
     private const val ACTION_IMPORT_FILTERS = 1
     private const val ACTION_SHOW_HELP = 2
     private const val ACTION_ENABLE_OR_DISABLE_ALL_FILTERS = 3
+    private const val ACTION_SEARCH = 4
 
     private val FILTER_DATE_FORMAT = DateTimeFormatterBuilder()
       .append(ISODateTimeFormat.date())

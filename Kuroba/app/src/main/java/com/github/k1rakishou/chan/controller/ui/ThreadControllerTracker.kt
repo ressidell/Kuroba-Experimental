@@ -51,13 +51,13 @@ class ThreadControllerTracker(
     }
 
     val navController = navigationController
-    if (navController.top == null) {
+    if (navController.topController == null) {
       return false
     }
 
     val shouldNotInterceptTouchEvent = tracking
       || navController.isBlockingInput
-      || !navController.top!!.navigation.swipeable
+      || !(navController.topController?.toolbarState?.swipeable ?: false)
       || getBelowTop() == null
 
     if (shouldNotInterceptTouchEvent) {
@@ -193,9 +193,13 @@ class ThreadControllerTracker(
     velocityTracker = VelocityTracker.obtain()
     velocityTracker!!.addMovement(startEvent)
 
-    trackingController = navigationController.top
+    trackingController = navigationController.topController
     behindTrackingController = getBelowTop()
-    navigationController.beginSwipeTransition(trackingController, behindTrackingController)
+
+    navigationController.beginSwipeTransition(
+      from = trackingController,
+      to = behindTrackingController
+    )
   }
 
   private fun endTracking(finishTransition: Boolean) {
@@ -205,9 +209,9 @@ class ThreadControllerTracker(
     }
 
     navigationController.endSwipeTransition(
-      trackingController,
-      behindTrackingController,
-      finishTransition
+      from = trackingController,
+      to = behindTrackingController,
+      finish = finishTransition
     )
 
     tracking = false

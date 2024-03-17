@@ -28,14 +28,14 @@ class BoardsSetupPresenter(
   private val siteManager: SiteManager,
   private val boardManager: BoardManager
 ) : BasePresenter<BoardsSetupView>() {
-  private val suspendDebouncer = DebouncingCoroutineExecutor(scope)
+  private val suspendDebouncer = DebouncingCoroutineExecutor(presenterScope)
   private val stateSubject = PublishProcessor.create<BoardsSetupControllerState>()
     .toSerialized()
 
   override fun onCreate(view: BoardsSetupView) {
     super.onCreate(view)
 
-    scope.launch {
+    presenterScope.launch {
       siteManager.awaitUntilInitialized()
       boardManager.awaitUntilInitialized()
 
@@ -63,7 +63,7 @@ class BoardsSetupPresenter(
   }
 
   fun updateBoardsFromServerAndDisplayActive(retrying: Boolean = false) {
-    scope.launch(Dispatchers.Default) {
+    presenterScope.launch(Dispatchers.Default) {
       setState(BoardsSetupControllerState.Loading)
 
       boardManager.awaitUntilInitialized()
@@ -114,7 +114,7 @@ class BoardsSetupPresenter(
   }
 
   fun onBoardRemoved(boardDescriptor: BoardDescriptor) {
-    scope.launch {
+    presenterScope.launch {
       val deactivated = boardManager.activateDeactivateBoards(
         boardDescriptor.siteDescriptor,
         linkedSetOf(boardDescriptor),
@@ -140,7 +140,7 @@ class BoardsSetupPresenter(
         displayActiveBoardsInternal()
       }
     } else {
-      scope.launch {
+      presenterScope.launch {
         boardManager.awaitUntilInitialized()
         siteManager.awaitUntilInitialized()
 
@@ -201,7 +201,7 @@ class BoardsSetupPresenter(
   }
 
   fun deactivateAllBoards() {
-    scope.launch {
+    presenterScope.launch {
       val boardsToDeactivate = mutableSetOf<BoardDescriptor>()
 
       boardManager.viewBoards(siteDescriptor, BoardManager.BoardViewMode.OnlyActiveBoards) { chanBoard ->

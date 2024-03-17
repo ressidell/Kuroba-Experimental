@@ -21,6 +21,9 @@ import com.github.k1rakishou.chan.features.settings.setting.LinkSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.ListSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.MapSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.SettingV2
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
 import com.github.k1rakishou.chan.ui.settings.SettingNotificationType
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
@@ -65,7 +68,16 @@ class SiteSettingsController(
       ?.name()
       ?: siteDescriptor.siteName
 
-    navigation.title = context.getString(R.string.controller_site_settings_title, siteName)
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String(context.getString(R.string.controller_site_settings_title, siteName))
+      )
+    )
 
     view = inflate(context, R.layout.controller_site_settings)
     epoxyRecyclerView = view.findViewById(R.id.epoxy_recycler_view)
@@ -100,7 +112,7 @@ class SiteSettingsController(
   }
 
   private fun rebuildSettings() {
-    mainScope.launch {
+    controllerScope.launch {
       val groups = presenter.showSiteSettings(context, siteDescriptor)
       renderSettingGroups(groups)
     }
@@ -146,7 +158,7 @@ class SiteSettingsController(
           bindNotificationIcon(SettingNotificationType.Default)
 
           clickListener {
-            mainScope.launch { settingV2.callback.invoke() }
+            controllerScope.launch { settingV2.callback.invoke() }
           }
         }
       }

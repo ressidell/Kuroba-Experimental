@@ -131,7 +131,7 @@ class PostSearchPopupController(
     updaterJob?.cancel()
     updaterJob = null
 
-    updaterJob = mainScope.launch {
+    updaterJob = controllerScope.launch {
       onQueryUpdated(chanDescriptor, prevQuery)
       updaterJob = null
     }
@@ -162,7 +162,7 @@ class PostSearchPopupController(
         updaterJob?.cancel()
         updaterJob = null
 
-        updaterJob = mainScope.launch {
+        updaterJob = controllerScope.launch {
           onQueryUpdated(chanDescriptor, query)
           updaterJob = null
         }

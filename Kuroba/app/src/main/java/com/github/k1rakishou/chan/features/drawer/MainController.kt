@@ -250,12 +250,12 @@ class MainController(
       val nav = mainToolbarNavigationController
         ?: return null
 
-      if (nav.top is ThreadController) {
-        return nav.top as ThreadController?
+      if (nav.topController is ThreadController) {
+        return nav.topController as ThreadController?
       }
 
-      if (nav.top is ThreadSlideController) {
-        val slideNav = nav.top as ThreadSlideController?
+      if (nav.topController is ThreadSlideController) {
+        val slideNav = nav.topController as ThreadSlideController?
 
         if (slideNav?.leftController() is ThreadController) {
           return slideNav.leftController() as ThreadController
@@ -268,7 +268,7 @@ class MainController(
   private val mainToolbarNavigationController: ToolbarNavigationController?
     get() {
       var navigationController: ToolbarNavigationController? = null
-      var topController: Controller? = top
+      var topController: Controller? = topController
 
       if (topController is BottomNavBarAwareNavigationController) {
         topController = childControllers.getOrNull(childControllers.lastIndex - 1)
@@ -384,13 +384,13 @@ class MainController(
         .subscribe { onSettingsNotificationChanged() }
     )
 
-    mainScope.launch {
+    controllerScope.launch {
       threadDownloadManager.threadDownloadUpdateFlow
         .debounce(500L)
         .collect { event -> onNewThreadDownloadEvent(event) }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       combine(
         flow = globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
         flow2 = globalUiStateHolder.replyLayout.replyLayoutsBoundsFlow,
@@ -544,18 +544,6 @@ class MainController(
     return true
   }
 
-  fun attachBottomNavViewToToolbar() {
-    val topController = top
-      ?: return
-
-    if (topController is ToolbarNavigationController) {
-      val toolbar = topController.toolbar
-      if (toolbar != null) {
-        navigationViewContract.setToolbar(toolbar)
-      }
-    }
-  }
-
   fun openGlobalSearchController() {
     closeAllNonMainControllers()
 
@@ -609,7 +597,7 @@ class MainController(
   }
 
   fun getViewThreadController(): ViewThreadController? {
-    var topController: Controller? = top
+    var topController: Controller? = topController
 
     if (topController is BottomNavBarAwareNavigationController) {
       topController = childControllers.getOrNull(childControllers.lastIndex - 1)
@@ -626,7 +614,7 @@ class MainController(
     }
 
     if (topController is StyledToolbarNavigationController) {
-      val threadSlideController = topController.top as? ThreadSlideController
+      val threadSlideController = topController.topController as? ThreadSlideController
       if (threadSlideController != null) {
         return threadSlideController.getRightController() as? ViewThreadController
       }
@@ -640,7 +628,7 @@ class MainController(
     closeAllNonMainControllers: Boolean = false,
     animated: Boolean
   ) {
-    mainScope.launch {
+    controllerScope.launch {
       if (closeAllNonMainControllers) {
         closeAllNonMainControllers()
       }
@@ -654,7 +642,7 @@ class MainController(
     closeAllNonMainControllers: Boolean = false,
     animated: Boolean
   ) {
-    mainScope.launch {
+    controllerScope.launch {
       if (closeAllNonMainControllers) {
         closeAllNonMainControllers()
       }
@@ -666,20 +654,20 @@ class MainController(
   fun closeAllNonMainControllers() {
     controllerNavigationManager.onCloseAllNonMainControllers()
 
-    var currentNavController = top
+    var currentNavController = topController
       ?: return
 
     while (true) {
       if (currentNavController is BottomNavBarAwareNavigationController) {
         popChildController(false)
 
-        currentNavController = top
+        currentNavController = topController
           ?: return
 
         continue
       }
 
-      val topController = currentNavController.top
+      val topController = currentNavController.topController
         ?: return
 
       closeAllChildControllers(topController.childControllers)
@@ -701,10 +689,10 @@ class MainController(
   }
 
   fun onMenuClicked() {
-    val topController = mainToolbarNavigationController?.top
+    val topController = mainToolbarNavigationController?.topController
       ?: return
 
-    if (topController.navigation.hasDrawer) {
+    if (topController.toolbarState.hasDrawer) {
       drawerLayout.openDrawer(drawer)
     }
   }
@@ -874,7 +862,7 @@ class MainController(
             onHistoryEntryViewClicked = { navHistoryEntry ->
               onHistoryEntryViewClicked(navHistoryEntry)
 
-              mainScope.launch {
+              controllerScope.launch {
                 delay(100L)
                 searchState.reset()
               }
@@ -1633,7 +1621,7 @@ class MainController(
       constraintLayoutBias = globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
       items = drawerOptions,
       itemClickListener = { item ->
-        mainScope.launch {
+        controllerScope.launch {
           when (item.key) {
             ACTION_GRID_MODE -> {
               val drawerGridMode = ChanSettings.drawerGridMode.toggle()
@@ -1671,7 +1659,7 @@ class MainController(
                 negativeButtonText = getString(R.string.do_not),
                 positiveButtonText = getString(R.string.clear),
                 onPositiveButtonClickListener = {
-                  mainScope.launch { historyNavigationManager.clear() }
+                  controllerScope.launch { historyNavigationManager.clear() }
                 }
               )
             }
@@ -1741,7 +1729,7 @@ class MainController(
       constraintLayoutBias = globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
       items = drawerOptions,
       itemClickListener = { item ->
-        mainScope.launch {
+        controllerScope.launch {
           when (item.key) {
             ACTION_START_SELECTION -> {
               drawerViewModel.toggleSelection(navHistoryEntry)
@@ -1825,7 +1813,7 @@ class MainController(
   }
 
   private fun onNavHistoryDeleteClicked(navHistoryEntry: NavigationHistoryEntry) {
-    mainScope.launch {
+    controllerScope.launch {
       drawerViewModel.deleteNavElement(navHistoryEntry)
 
       val text = getString(
@@ -1842,7 +1830,7 @@ class MainController(
       return
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       drawerViewModel.deleteNavElementsByDescriptors(selected)
 
       val text = getString(
@@ -1855,11 +1843,11 @@ class MainController(
   }
 
   private fun onHistoryEntryViewClicked(navHistoryEntry: NavigationHistoryEntry) {
-    mainScope.launch {
+    controllerScope.launch {
       val currentTopThreadController = topThreadController
         ?: return@launch
 
-      if (top is BottomNavBarAwareNavigationController) {
+      if (topController is BottomNavBarAwareNavigationController) {
         closeAllNonMainControllers()
       }
 
@@ -1893,7 +1881,7 @@ class MainController(
   }
 
   private fun closeBottomNavBarAwareNavigationControllerListener() {
-    val currentNavController = top
+    val currentNavController = topController
       ?: return
 
     if (currentNavController !is BottomNavBarAwareNavigationController) {
@@ -1925,7 +1913,7 @@ class MainController(
         menuItemBadgeInfo = null
       )
 
-      mainToolbarNavigationController?.toolbar?.arrowMenuDrawable?.setBadge(0, false)
+      mainToolbarNavigationController?.toolbarState?.updateBadge(0, false)
     } else {
       navigationViewContract.updateBadge(
         menuItemId = R.id.action_bookmarks,
@@ -1943,7 +1931,7 @@ class MainController(
         )
       )
 
-      mainToolbarNavigationController?.toolbar?.arrowMenuDrawable?.setBadge(
+      toolbarState.updateBadge(
         state.totalUnseenPostsCount,
         state.hasUnreadReplies
       )

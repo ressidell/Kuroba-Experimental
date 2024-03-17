@@ -1,8 +1,5 @@
 package com.github.k1rakishou.chan.features.my_posts
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.chan.R
@@ -13,6 +10,8 @@ import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.SavedReplyManager
+import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItemId
 import com.github.k1rakishou.common.isNotNullNorEmpty
@@ -40,9 +39,8 @@ class SavedPostsViewModel(
   private val searchQueryDebouncer = DebouncingCoroutineExecutor(viewModelScope)
   val viewModelSelectionHelper = ViewModelSelectionHelper<PostDescriptor, MenuItemClickEvent>()
 
-  private var _searchQuery by mutableStateOf<String?>(null)
-  val searchQuery: String?
-    get() = _searchQuery
+  val searchToolbarState = KurobaSearchToolbarState()
+  val selectionToolbarState = KurobaSelectionToolbarState()
 
   val myPostsViewModelState: StateFlow<MyPostsViewModelState>
     get() = _myPostsViewModelState.asStateFlow()
@@ -119,8 +117,6 @@ class SavedPostsViewModel(
   }
 
   fun updateQueryAndReload(newQuery: String?) {
-    this._searchQuery = newQuery
-
     searchQueryDebouncer.post(125L, { reloadSavedReplies() })
   }
 
@@ -196,14 +192,15 @@ class SavedPostsViewModel(
 
         val comment = savedReply.comment ?: "<Empty comment>"
 
-        if (_searchQuery.isNotNullNorEmpty()) {
+        val searchQuery = searchToolbarState.searchQueryState.text
+        if (searchQuery.isNotNullNorEmpty()) {
           var matches = false
 
-          if (!matches && postHeader.contains(_searchQuery!!, ignoreCase = true)) {
+          if (!matches && postHeader.contains(searchQuery, ignoreCase = true)) {
             matches = true
           }
 
-          if (!matches && comment.contains(_searchQuery!!, ignoreCase = true)) {
+          if (!matches && comment.contains(searchQuery, ignoreCase = true)) {
             matches = true
           }
 

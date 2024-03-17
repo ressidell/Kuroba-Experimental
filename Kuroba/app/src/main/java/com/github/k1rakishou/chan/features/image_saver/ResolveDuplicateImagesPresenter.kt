@@ -47,7 +47,7 @@ internal class ResolveDuplicateImagesPresenter(
 
   private val cachedState = AtomicReference<ResolveDuplicateImagesState>(null)
 
-  private val serializedCoroutineExecutor = SerializedCoroutineExecutor(scope)
+  private val serializedCoroutineExecutor = SerializedCoroutineExecutor(presenterScope)
 
   fun listenForStateUpdates(): SharedFlow<ResolveDuplicateImagesState> {
     return stateUpdates.asSharedFlow()
@@ -56,7 +56,7 @@ internal class ResolveDuplicateImagesPresenter(
   override fun onCreate(view: ResolveDuplicateImagesView) {
     super.onCreate(view)
 
-    scope.launch(Dispatchers.IO) {
+    presenterScope.launch(Dispatchers.IO) {
       delay(50)
       updateState(ResolveDuplicateImagesState.Loading)
 

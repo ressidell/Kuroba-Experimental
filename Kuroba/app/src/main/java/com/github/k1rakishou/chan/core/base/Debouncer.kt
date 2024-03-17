@@ -10,7 +10,7 @@ open class Debouncer(
   private val eagerlyInitialized = AtomicBoolean(!eagerInitialization)
   private val handler: Handler = Handler(Looper.getMainLooper())
 
-  open fun post(runnable: Runnable, delayMs: Long) {
+  open fun post(delayMs: Long, runnable: Runnable) {
     if (eagerInitialization && !eagerlyInitialized.get()) {
       handler.post {
         if (eagerlyInitialized.compareAndSet(false, true)) {

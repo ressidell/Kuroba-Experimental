@@ -14,9 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
-import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -64,12 +67,18 @@ abstract class BaseComposeController<VM : ViewModel>(
     }
 
     open fun setupNavigation() {
-        navigation.setTitle(titleStringId)
-        navigation.swipeable = false
-
-        navigation
-            .buildMenu(context)
-            .build()
+        toolbarState.pushOrUpdateDefaultLayer(
+            navigationFlags = DeprecatedNavigationFlags(swipeable = false),
+            leftItem = BackArrowMenuItem(
+                onClick = {
+                    // TODO: New toolbar
+                }
+            ),
+            middleContent = ToolbarMiddleContent.Title(
+                title = ToolbarText.Id(titleStringId),
+                subtitle = null
+            )
+        )
     }
 
     @CallSuper
@@ -80,8 +89,10 @@ abstract class BaseComposeController<VM : ViewModel>(
     }
 
     override fun onInsetsChanged() {
-        val toolbarHeight = requireToolbarNavController().toolbar?.toolbarHeight
-            ?: AppModuleAndroidUtils.getDimen(R.dimen.toolbar_height)
+        var toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeight?.toPx()?.toInt() }
+        if (toolbarHeight == null) {
+            toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
+        }
 
         val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
             globalWindowInsetsManager = globalWindowInsetsManager,

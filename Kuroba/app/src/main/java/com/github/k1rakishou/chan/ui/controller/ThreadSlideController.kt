@@ -30,13 +30,13 @@ import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.controller.transition.ControllerTransition
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutBoundsStates
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.layout.ThreadSlidingPaneLayout
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
 import com.github.k1rakishou.chan.ui.widget.SlidingPaneLayoutEx
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -79,8 +79,15 @@ class ThreadSlideController(
     super.onCreate()
 
     doubleNavigationController = this
-    navigation.swipeable = false
-    navigation.hasDrawer = true
+
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        swipeable = false,
+        hasDrawer = true
+      ),
+      leftItem = null,
+      middleContent = null
+    )
 
     view = AppModuleAndroidUtils.inflate(context, R.layout.controller_thread_slide)
     slidingPaneLayout = view.findViewById<ThreadSlidingPaneLayout>(R.id.sliding_pane_layout).also { slidingPane ->
@@ -88,14 +95,16 @@ class ThreadSlideController(
       slidingPane.setPanelSlideListener(this)
       slidingPane.setParallaxDistance(AppModuleAndroidUtils.dp(100f))
       slidingPane.allowedToSlide(ChanSettings.viewThreadControllerSwipeable.get())
+
       if (ChanSettings.isSlideLayoutMode()) {
         slidingPane.setShadowResourceLeft(R.drawable.panel_shadow)
       }
+
       slidingPane.openPane()
     }
 
-    setLeftController(null, false)
-    setRightController(null, false)
+    setLeftController(leftController = null, animated = false)
+    setRightController(rightController = null, animated = false)
 
     val textView = emptyView.findViewById<TextView>(R.id.select_thread_text)
     textView?.setTextColor(themeEngine.chanTheme.textColorSecondary)
@@ -103,7 +112,7 @@ class ThreadSlideController(
     themeEngine.addListener(this)
     onThemeChanged()
 
-    mainScope.launch {
+    controllerScope.launch {
       combine(
         flow = globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
         flow2 = globalUiStateHolder.replyLayout.replyLayoutsBoundsFlow,
@@ -180,10 +189,7 @@ class ThreadSlideController(
         slidingPaneLayout?.closePane()
       }
 
-      requireNavController().requireToolbar().processScrollCollapse(
-        Toolbar.TOOLBAR_COLLAPSE_SHOW,
-        true
-      )
+      toolbarState.showToolbar()
 
       leftOpen = leftController
       slideStateChanged(animated)
@@ -255,8 +261,8 @@ class ThreadSlideController(
     return navigationController?.pushController(to, animated) ?: false
   }
 
-  override fun pushController(to: Controller, controllerTransition: ControllerTransition): Boolean {
-    return navigationController?.pushController(to, controllerTransition) ?: false
+  override fun pushController(to: Controller, transition: ControllerTransition?): Boolean {
+    return navigationController?.pushController(to, transition) ?: false
   }
 
   override fun popController(): Boolean {
@@ -267,8 +273,8 @@ class ThreadSlideController(
     return navigationController?.popController(animated) ?: false
   }
 
-  override fun popController(controllerTransition: ControllerTransition): Boolean {
-    return navigationController?.popController(controllerTransition) ?: false
+  override fun popController(transition: ControllerTransition?): Boolean {
+    return navigationController?.popController(transition) ?: false
   }
 
   override fun onBack(): Boolean {
@@ -341,24 +347,17 @@ class ThreadSlideController(
   }
 
   private fun setParentNavigationItem(left: Boolean, animate: Boolean) {
-    val toolbar = requireNavController().requireToolbar()
-
-    // default, blank navigation item with no menus or titles, so other layouts don't mess up
-    var item = NavigationItem()
-    if (left) {
-      if (leftController != null) {
-        item = leftController!!.navigation
-      }
+    var kurobaToolbarState = if (left) {
+      leftController?.toolbarState
     } else {
-      if (rightController != null) {
-        item = rightController!!.navigation
-      }
+      rightController?.toolbarState
     }
 
-    navigation = item
-    navigation.swipeable = false
-    navigation.hasDrawer = true
-    toolbar.setNavigationItem(animate, true, navigation, null)
+    if (kurobaToolbarState == null) {
+      kurobaToolbarState = KurobaToolbarState()
+    }
+
+    toolbarState.updateFromState(kurobaToolbarState)
   }
 
   fun passMotionEventIntoSlidingPaneLayout(event: MotionEvent): Boolean {

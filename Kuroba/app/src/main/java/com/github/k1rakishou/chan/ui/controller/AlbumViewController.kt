@@ -17,11 +17,10 @@
 package com.github.k1rakishou.chan.ui.controller
 
 import android.content.Context
-import android.graphics.Color
 import android.view.View
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
+import androidx.compose.runtime.snapshotFlow
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -43,11 +42,14 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToPo
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenThreadHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen.Companion.clampColumnsCount
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.cell.AlbumViewCell
 import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerControllerType
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar.ToolbarHeightUpdatesCallback
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.FixedLinearLayoutManager
@@ -64,6 +66,8 @@ import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.util.ChanPostUtils
 import com.github.k1rakishou.persist_state.PersistableChanState.albumLayoutGridMode
 import com.github.k1rakishou.persist_state.PersistableChanState.showAlbumViewsImageDetails
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import javax.inject.Inject
@@ -72,7 +76,7 @@ class AlbumViewController(
   context: Context,
   private val chanDescriptor: ChanDescriptor,
   private val displayingPostDescriptors: List<PostDescriptor>
-) : Controller(context), RequiresNoBottomNavBar, WindowInsetsListener, ToolbarHeightUpdatesCallback {
+) : Controller(context), RequiresNoBottomNavBar, WindowInsetsListener {
   private lateinit var recyclerView: ColorizableGridRecyclerView
 
   private val postImages = mutableListOf<ChanPostImage>()
@@ -123,7 +127,7 @@ class AlbumViewController(
   override fun onCreate() {
     super.onCreate()
 
-    navigation.title = when (chanDescriptor) {
+    val toolbarTitle = when (chanDescriptor) {
       is ChanDescriptor.CompositeCatalogDescriptor,
       is ChanDescriptor.CatalogDescriptor -> {
         ChanPostUtils.getTitle(null, chanDescriptor)
@@ -135,7 +139,47 @@ class AlbumViewController(
         )
       }
     }
-    navigation.subtitle = AppModuleAndroidUtils.getQuantityString(R.plurals.image, postImages.size, postImages.size)
+    val toolbarSubTitle = AppModuleAndroidUtils.getQuantityString(R.plurals.image, postImages.size, postImages.size)
+
+    val downloadDrawableId = if (albumLayoutGridMode.get()) {
+      R.drawable.ic_baseline_view_quilt_24
+    } else {
+      R.drawable.ic_baseline_view_comfy_24
+    }
+
+    toolbarState.pushOrUpdateDefaultLayer(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String(toolbarTitle),
+        subtitle = ToolbarText.String(toolbarSubTitle)
+      ),
+      menuBuilder = {
+        withMenuItem(
+          id = ACTION_TOGGLE_LAYOUT_MODE,
+          drawableId = downloadDrawableId,
+          onClick = { item -> toggleLayoutModeClicked(item) }
+        )
+        withMenuItem(
+          id = ACTION_DOWNLOAD,
+          drawableId = R.drawable.ic_file_download_white_24dp,
+          onClick = { item -> downloadAlbumClicked(item) }
+        )
+
+        withOverflowMenu {
+          withCheckableOverflowMenuItem(
+            id = ACTION_TOGGLE_IMAGE_DETAILS,
+            stringId = R.string.action_album_show_image_details,
+            visible = true,
+            checked = showAlbumViewsImageDetails.get(),
+            onClick = { onToggleAlbumViewsImageInfoToggled() }
+          )
+        }
+      }
+    )
 
     // View setup
     view = AppModuleAndroidUtils.inflate(context, R.layout.controller_album_view)
@@ -145,39 +189,13 @@ class AlbumViewController(
     recyclerView.adapter = albumAdapter
     updateRecyclerView(false)
 
-    // Navigation
-    val downloadDrawable = ContextCompat.getDrawable(context, R.drawable.ic_file_download_white_24dp)!!
-    downloadDrawable.setTint(Color.WHITE)
-
-    val gridDrawable = if (albumLayoutGridMode.get()) {
-      ContextCompat.getDrawable(context, R.drawable.ic_baseline_view_quilt_24)!!
-    } else {
-      ContextCompat.getDrawable(context, R.drawable.ic_baseline_view_comfy_24)!!
-    }
-
-    gridDrawable.setTint(Color.WHITE)
-
-    navigation
-      .buildMenu(context)
-      .withItem(ACTION_TOGGLE_LAYOUT_MODE, gridDrawable) { item -> toggleLayoutModeClicked(item) }
-      .withItem(ACTION_DOWNLOAD, downloadDrawable) { item -> downloadAlbumClicked(item) }
-      .withOverflow(navigationController)
-      .withCheckableSubItem(
-        ACTION_TOGGLE_IMAGE_DETAILS,
-        R.string.action_album_show_image_details,
-        true,
-        showAlbumViewsImageDetails.get()
-      ) { onToggleAlbumViewsImageInfoToggled() }
-      .build()
-      .build()
-
     fastScroller = FastScrollerHelper.create(
       FastScrollerControllerType.Album,
       recyclerView,
       null
     )
 
-    mainScope.launch {
+    controllerScope.launch {
       mediaViewerScrollerHelper.mediaViewerScrollEventsFlow
         .collect { scrollToImageEvent ->
           val descriptor = scrollToImageEvent.chanDescriptor
@@ -194,7 +212,7 @@ class AlbumViewController(
         }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       mediaViewerGoToImagePostHelper.mediaViewerGoToPostEventsFlow
         .collect { goToPostEvent ->
           val postImage = goToPostEvent.chanPostImage
@@ -206,7 +224,7 @@ class AlbumViewController(
         }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       mediaViewerGoToPostHelper.mediaViewerGoToPostEventsFlow
         .collect { postDescriptor ->
           if (postDescriptor.descriptor != chanDescriptor) {
@@ -217,19 +235,26 @@ class AlbumViewController(
         }
     }
 
+    controllerScope.launch {
+      snapshotFlow { toolbarState.toolbarHeightState.value }
+        .onEach { onInsetsChanged() }
+        .collect()
+    }
+
     if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
-      mainScope.launch {
+      controllerScope.launch {
         val compositeCatalogName = compositeCatalogManager.byCompositeCatalogDescriptor(chanDescriptor)
           ?.name
 
         if (compositeCatalogName.isNotNullNorBlank()) {
-          navigation.title = compositeCatalogName
-          requireNavController().requireToolbar().updateTitle(navigation)
+          toolbarState.updateTitle(
+            toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+            newTitle = ToolbarText.String(compositeCatalogName)
+          )
         }
       }
     }
 
-    requireNavController().requireToolbar().addToolbarHeightUpdatesCallback(this)
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
     onInsetsChanged()
   }
@@ -274,7 +299,6 @@ class AlbumViewController(
 
   override fun onDestroy() {
     super.onDestroy()
-    requireNavController().requireToolbar().removeToolbarHeightUpdatesCallback(this)
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
 
     fastScroller?.onCleanup()
@@ -283,15 +307,12 @@ class AlbumViewController(
     recyclerView.swapAdapter(null, true)
   }
 
-  override fun onToolbarHeightKnown(heightChanged: Boolean) {
-    if (!heightChanged) {
-      return
+  override fun onInsetsChanged() {
+    var toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeight?.toPx()?.toInt() }
+    if (toolbarHeight == null) {
+      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
     }
 
-    onInsetsChanged()
-  }
-
-  override fun onInsetsChanged() {
     val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
       globalWindowInsetsManager = globalWindowInsetsManager,
       mainControllerCallbacks = null
@@ -300,7 +321,7 @@ class AlbumViewController(
     recyclerView.updatePaddings(
       left = null,
       right = FastScrollerHelper.FAST_SCROLLER_WIDTH,
-      top = requireNavController().requireToolbar().toolbarHeight,
+      top = toolbarHeight,
       bottom = dp(bottomPaddingDp.toFloat())
     )
   }
@@ -389,11 +410,8 @@ class AlbumViewController(
   }
 
   private fun onToggleAlbumViewsImageInfoToggled() {
-    val nowChecked = showAlbumViewsImageDetails.toggle()
-
-    navigation.findCheckableSubItem(ACTION_TOGGLE_IMAGE_DETAILS)?.let { subItem ->
-      subItem.isChecked = nowChecked
-    }
+    toolbarState.findCheckableOverflowItem(ACTION_TOGGLE_IMAGE_DETAILS)
+      ?.updateChecked(showAlbumViewsImageDetails.toggle())
 
     albumAdapter?.refresh()
   }
@@ -407,16 +425,16 @@ class AlbumViewController(
   private fun toggleLayoutModeClicked(item: ToolbarMenuItem) {
     albumLayoutGridMode.toggle()
     updateRecyclerView(true)
-    val menuItem = navigation.findItem(ACTION_TOGGLE_LAYOUT_MODE)
 
-    val gridDrawable = if (albumLayoutGridMode.get()) {
-      ContextCompat.getDrawable(context, R.drawable.ic_baseline_view_quilt_24)!!
-    } else {
-      ContextCompat.getDrawable(context, R.drawable.ic_baseline_view_comfy_24)!!
+    toolbarState.findItem(ACTION_TOGGLE_LAYOUT_MODE)?.let { toolbarMenuItem ->
+      val drawableId = if (albumLayoutGridMode.get()) {
+        R.drawable.ic_baseline_view_quilt_24
+      } else {
+        R.drawable.ic_baseline_view_comfy_24
+      }
+
+      toolbarMenuItem.updateDrawableId(drawableId)
     }
-
-    gridDrawable.setTint(Color.WHITE)
-    menuItem.setImage(gridDrawable)
   }
 
   private fun openImage(postImage: ChanPostImage) {

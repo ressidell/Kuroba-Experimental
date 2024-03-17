@@ -25,6 +25,7 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
+import androidx.compose.runtime.snapshotFlow
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -49,6 +50,7 @@ import com.github.k1rakishou.chan.features.reply.ReplyLayoutView
 import com.github.k1rakishou.chan.features.reply.ReplyLayoutViewModel
 import com.github.k1rakishou.chan.features.reply.data.ReplyFileAttachable
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutVisibility
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.adapter.PostAdapter
 import com.github.k1rakishou.chan.ui.adapter.PostAdapter.PostAdapterCallback
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
@@ -64,7 +66,6 @@ import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerControllerType
 import com.github.k1rakishou.chan.ui.helper.AppResources
-import com.github.k1rakishou.chan.ui.toolbar.Toolbar
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.FixedLinearLayoutManager
@@ -112,8 +113,11 @@ import kotlin.time.Duration
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
-class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs),
-  Toolbar.ToolbarHeightUpdatesCallback,
+class ThreadListLayout @JvmOverloads constructor(
+  context: Context,
+  attrs: AttributeSet? = null,
+  defAttrStyle: Int = 0
+) : FrameLayout(context, attrs, defAttrStyle),
   ThemeEngine.ThemeChangesListener,
   FastScroller.ThumbDragListener,
   ReplyLayoutViewModel.ThreadListLayoutCallbacks {
@@ -126,46 +130,46 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
   lateinit var globalUiStateHolder: GlobalUiStateHolder
 
   @Inject
-  lateinit var _themeEngine: Lazy<ThemeEngine>
+  lateinit var themeEngineLazy: Lazy<ThemeEngine>
   @Inject
-  lateinit var _bottomNavBarVisibilityStateManager: Lazy<BottomNavBarVisibilityStateManager>
+  lateinit var bottomNavBarVisibilityStateManagerLazy: Lazy<BottomNavBarVisibilityStateManager>
   @Inject
-  lateinit var _extractPostMapInfoHolderUseCase: Lazy<ExtractPostMapInfoHolderUseCase>
+  lateinit var extractPostMapInfoHolderUseCaseLazy: Lazy<ExtractPostMapInfoHolderUseCase>
   @Inject
-  lateinit var _lastViewedPostNoInfoHolder: Lazy<LastViewedPostNoInfoHolder>
+  lateinit var lastViewedPostNoInfoHolderLazy: Lazy<LastViewedPostNoInfoHolder>
   @Inject
-  lateinit var _chanThreadViewableInfoManager: Lazy<ChanThreadViewableInfoManager>
+  lateinit var chanThreadViewableInfoManagerLazy: Lazy<ChanThreadViewableInfoManager>
   @Inject
-  lateinit var _globalWindowInsetsManager: Lazy<GlobalWindowInsetsManager>
+  lateinit var globalWindowInsetsManagerLazy: Lazy<GlobalWindowInsetsManager>
   @Inject
-  lateinit var _chanThreadManager: Lazy<ChanThreadManager>
+  lateinit var chanThreadManagerLazy: Lazy<ChanThreadManager>
   @Inject
-  lateinit var _chanCatalogSnapshotCache: Lazy<ChanCatalogSnapshotCache>
+  lateinit var chanCatalogSnapshotCacheLazy: Lazy<ChanCatalogSnapshotCache>
   @Inject
-  lateinit var _chanLoadProgressNotifier: Lazy<ChanLoadProgressNotifier>
+  lateinit var chanLoadProgressNotifierLazy: Lazy<ChanLoadProgressNotifier>
   @Inject
-  lateinit var _postHighlightManager: Lazy<PostHighlightManager>
+  lateinit var postHighlightManagerLazy: Lazy<PostHighlightManager>
 
   private val themeEngine: ThemeEngine
-    get() = _themeEngine.get()
+    get() = themeEngineLazy.get()
   private val bottomNavBarVisibilityStateManager: BottomNavBarVisibilityStateManager
-    get() = _bottomNavBarVisibilityStateManager.get()
+    get() = bottomNavBarVisibilityStateManagerLazy.get()
   private val extractPostMapInfoHolderUseCase: ExtractPostMapInfoHolderUseCase
-    get() = _extractPostMapInfoHolderUseCase.get()
+    get() = extractPostMapInfoHolderUseCaseLazy.get()
   private val lastViewedPostNoInfoHolder: LastViewedPostNoInfoHolder
-    get() = _lastViewedPostNoInfoHolder.get()
+    get() = lastViewedPostNoInfoHolderLazy.get()
   private val chanThreadViewableInfoManager: ChanThreadViewableInfoManager
-    get() = _chanThreadViewableInfoManager.get()
+    get() = chanThreadViewableInfoManagerLazy.get()
   private val globalWindowInsetsManager: GlobalWindowInsetsManager
-    get() = _globalWindowInsetsManager.get()
+    get() = globalWindowInsetsManagerLazy.get()
   private val chanThreadManager: ChanThreadManager
-    get() = _chanThreadManager.get()
+    get() = chanThreadManagerLazy.get()
   private val chanCatalogSnapshotCache: ChanCatalogSnapshotCache
-    get() = _chanCatalogSnapshotCache.get()
+    get() = chanCatalogSnapshotCacheLazy.get()
   private val chanLoadProgressNotifier: ChanLoadProgressNotifier
-    get() = _chanLoadProgressNotifier.get()
+    get() = chanLoadProgressNotifierLazy.get()
   private val postHighlightManager: PostHighlightManager
-    get() = _postHighlightManager.get()
+    get() = postHighlightManagerLazy.get()
 
   private val chan4BirthdayDecoration = object : ItemDecoration() {
     private val paint by lazy {
@@ -374,10 +378,6 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
     setBackgroundColorFast(themeEngine.chanTheme.backColor)
   }
 
-  override fun onToolbarHeightKnown(heightChanged: Boolean) {
-    setRecyclerViewPadding()
-  }
-
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
     super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
@@ -401,11 +401,12 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
       return
     }
 
-    val toolbar = threadListLayoutCallback?.toolbar
-      ?: return
-
-    toolbar.detachRecyclerViewScrollStateListener(recyclerView)
-    toolbar.collapseHide(true)
+    // TODO: New toolbar.
+//    val toolbar = threadListLayoutCallback?.toolbar
+//      ?: return
+//
+//    toolbar.detachRecyclerViewScrollStateListener(recyclerView)
+//    toolbar.collapseHide(true)
   }
 
   override fun onDragEnded() {
@@ -417,11 +418,12 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
       return
     }
 
-    val toolbar = threadListLayoutCallback?.toolbar
-      ?: return
-
-    toolbar.attachRecyclerViewScrollStateListener(recyclerView)
-    toolbar.collapseShow(true)
+    // TODO: New toolbar.
+//    val toolbar = threadListLayoutCallback?.toolbar
+//      ?: return
+//
+//    toolbar.attachRecyclerViewScrollStateListener(recyclerView)
+//    toolbar.collapseShow(true)
   }
 
   override fun onPresolveCaptchaButtonClicked() {
@@ -513,8 +515,6 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
     runBlocking { setFastScroll(false, emptyList()) }
     attachToolbarScroll(attach = true)
 
-    threadListLayoutCallback.toolbar?.addToolbarHeightUpdatesCallback(this)
-
     coroutineScope.launch {
       globalUiStateHolder.replyLayout.state(threadControllerType).height
         .onEach { setRecyclerViewPadding() }
@@ -551,6 +551,12 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
         }
         .collect()
     }
+
+    coroutineScope.launch {
+      snapshotFlow { threadListLayoutCallback.kurobaToolbarState.toolbarHeightState.value }
+        .onEach { setRecyclerViewPadding() }
+        .collect()
+    }
   }
 
   fun onDestroy() {
@@ -558,7 +564,6 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
     job.cancelChildren()
 
     recyclerView.removeOnScrollListener(scrollListener)
-    threadListLayoutCallback?.toolbar?.removeToolbarHeightUpdatesCallback(this)
     runBlocking { setFastScroll(false, emptyList()) }
 
     forceRecycleAllPostViews()
@@ -571,7 +576,7 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
   fun onBack(): Boolean {
     return when {
       replyLayoutView.onBack() -> true
-      else -> threadListLayoutCallback!!.threadBackPressed()
+      else -> (threadListLayoutCallback?.threadBackPressed() ?: false)
     }
   }
 
@@ -954,7 +959,14 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
   }
 
   fun toolbarHeight(): Int {
-    return threadListLayoutCallback?.toolbar?.toolbarHeight ?: 0
+    val toolbarHeightDp = threadListLayoutCallback?.kurobaToolbarState?.toolbarHeight
+
+    var toolbarHeight = with(appResources.composeDensity) { toolbarHeightDp?.toPx()?.toInt() }
+    if (toolbarHeight == null) {
+      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
+    }
+
+    return toolbarHeight
   }
 
   suspend fun onPostsWithDescriptorsUpdated(updatedPostDescriptors: Collection<PostDescriptor>) {
@@ -1066,15 +1078,16 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
       return
     }
 
-    val toolbar = threadListLayoutCallback?.toolbar
-      ?: return
-
-    if (attach && replyLayoutView.isCollapsed()) {
-      toolbar.attachRecyclerViewScrollStateListener(recyclerView)
-    } else {
-      toolbar.detachRecyclerViewScrollStateListener(recyclerView)
-      toolbar.collapseShow(true)
-    }
+    // TODO: New toolbar.
+//    val toolbar = threadListLayoutCallback?.toolbar
+//      ?: return
+//
+//    if (attach && replyLayoutView.isCollapsed()) {
+//      toolbar.attachRecyclerViewScrollStateListener(recyclerView)
+//    } else {
+//      toolbar.detachRecyclerViewScrollStateListener(recyclerView)
+//      toolbar.collapseShow(true)
+//    }
   }
 
   private fun showToolbarIfNeeded() {
@@ -1086,16 +1099,18 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
     // check if we should show the toolbar again (after the other controller made it hide).
     // It should show if the search or reply is open, or if the thread was scrolled at the
     // top showing an empty space.
-    val toolbar = threadListLayoutCallback?.toolbar
-      ?: return
 
-    if (replyLayoutView.isOpenedOrExpanded()) {
-      // force toolbar to show
-      toolbar.collapseShow(true)
-    } else {
-      // check if it should show if it was scrolled at the top
-      toolbar.checkToolbarCollapseState(recyclerView, true)
-    }
+    // TODO: New toolbar.
+//    val toolbar = threadListLayoutCallback?.toolbar
+//      ?: return
+//
+//    if (replyLayoutView.isOpenedOrExpanded()) {
+//      // force toolbar to show
+//      toolbar.collapseShow(true)
+//    } else {
+//      // check if it should show if it was scrolled at the top
+//      toolbar.checkToolbarCollapseState(recyclerView, true)
+//    }
   }
 
   private fun canToolbarCollapse(): Boolean {
@@ -1414,7 +1429,7 @@ class ThreadListLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
   }
 
   interface ThreadListLayoutCallback {
-    val toolbar: Toolbar?
+    val kurobaToolbarState: KurobaToolbarState
     val chanDescriptor: ChanDescriptor?
 
     fun showToolbar()

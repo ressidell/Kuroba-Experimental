@@ -1,27 +1,9 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.ui.controller
 
 import android.Manifest
 import android.content.Context
 import android.os.Build
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.RotateAnimation
 import android.widget.Toast
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.ChanSettings.BoardPostViewMode
@@ -46,6 +28,15 @@ import com.github.k1rakishou.chan.features.setup.BoardSelectionController
 import com.github.k1rakishou.chan.features.setup.SiteSettingsController
 import com.github.k1rakishou.chan.features.setup.SitesSetupController
 import com.github.k1rakishou.chan.features.site_archive.BoardArchiveController
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarOverflowMenuBuilder
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
@@ -53,10 +44,6 @@ import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationContro
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.helper.RuntimePermissionsHelper
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
-import com.github.k1rakishou.chan.ui.toolbar.CheckableToolbarMenuSubItem
-import com.github.k1rakishou.chan.ui.toolbar.NavigationItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuItem
-import com.github.k1rakishou.chan.ui.toolbar.ToolbarMenuSubItem
 import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -120,8 +107,7 @@ class BrowseController(
 
   private lateinit var serializedCoroutineExecutor: SerializedCoroutineExecutor
 
-  private var initialized = false
-  private var menuBuiltOnce = false
+  private var toolbarUpdatedAfterFirstCatalogLoad = false
   private var updateCompositeCatalogNavigationSubtitleJob: Job? = null
 
   override val threadControllerType: ThreadControllerType
@@ -141,10 +127,13 @@ class BrowseController(
     view = container
 
     // Navigation
-    initNavigation()
+    buildMenu(catalogLoaded = false)
+
+    // Presenter
+    presenter.create(controllerScope, this)
 
     // Initialization
-    serializedCoroutineExecutor = SerializedCoroutineExecutor(mainScope)
+    serializedCoroutineExecutor = SerializedCoroutineExecutor(controllerScope)
 
     threadLayout.setBoardPostViewMode(ChanSettings.boardPostViewMode.get())
 
@@ -154,7 +143,7 @@ class BrowseController(
       threadLayout.presenter.setOrder(order, isManuallyChangedOrder = false)
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       firewallBypassManager.showFirewallControllerEvents.collect { showFirewallControllerInfo ->
         val alreadyPresenting = isAlreadyPresenting { controller ->
           controller is SiteFirewallBypassController && controller.alive
@@ -178,7 +167,7 @@ class BrowseController(
       }
     }
 
-    mainScope.launch {
+    controllerScope.launch {
       requestApi33NotificationsPermissionOnce()
     }
   }
@@ -205,56 +194,27 @@ class BrowseController(
   override suspend fun showSitesNotSetup() {
     super.showSitesNotSetup()
 
-    // this controller is used for catalog views; displaying things on two rows for them middle
-    // menu is how we want it done these need to be setup before the view is rendered,
-    // otherwise the subtitle view is removed
-    navigation.title = getString(R.string.browse_controller_title_app_setup)
-    navigation.subtitle = getString(R.string.browse_controller_subtitle)
-    buildMenu()
+    toolbarState.updateTitle(
+      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      newTitle = ToolbarText.Id(R.string.browse_controller_title_app_setup)
+    )
 
-    initialized = true
+    toolbarState.updateSubtitle(
+      toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+      newSubTitle = ToolbarText.Id(R.string.browse_controller_subtitle)
+    )
   }
 
   suspend fun setCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
     Logger.d(TAG, "setCatalog($catalogDescriptor)")
 
     presenter.loadCatalog(catalogDescriptor)
-    initialized = true
   }
 
   suspend fun loadWithDefaultBoard() {
     Logger.d(TAG, "loadWithDefaultBoard()")
 
     presenter.loadWithDefaultBoard()
-    initialized = true
-  }
-
-  private fun initNavigation() {
-    // Navigation item
-    navigation.hasDrawer = true
-    navigation.setMiddleMenu {
-      if (!initialized) {
-        return@setMiddleMenu
-      }
-
-      if (!siteManager.areSitesSetup()) {
-        openSitesSetupController()
-      } else {
-        openBoardSelectionController()
-      }
-    }
-
-    // Toolbar menu
-    navigation.hasBack = false
-
-    // this controller is used for catalog views; displaying things on two rows for them middle
-    // menu is how we want it done these need to be setup before the view is rendered,
-    // otherwise the subtitle view is removed
-    navigation.title = getString(R.string.loading)
-    requireNavController().requireToolbar().updateTitle(navigation)
-
-    // Presenter
-    presenter.create(mainScope, this)
   }
 
   private fun openBoardSelectionController() {
@@ -282,7 +242,7 @@ class BrowseController(
             return
           }
 
-          mainScope.launch(Dispatchers.Main.immediate) { loadCatalog(catalogDescriptor) }
+          controllerScope.launch(Dispatchers.Main.immediate) { loadCatalog(catalogDescriptor) }
         }
       })
 
@@ -312,16 +272,7 @@ class BrowseController(
   }
 
   @Suppress("MoveLambdaOutsideParentheses")
-  private fun buildMenu() {
-    val menuBuilder = navigation.buildMenu(context)
-      .withItem(R.drawable.ic_search_white_24dp) { item -> searchClicked(item) }
-      .withItem(R.drawable.ic_refresh_white_24dp) { item -> reloadClicked(item) }
-
-    val overflowBuilder = menuBuilder.withOverflow(requireNavController())
-    if (!ChanSettings.enableReplyFab.get()) {
-      overflowBuilder.withSubItem(ACTION_REPLY, R.string.action_reply) { item -> replyClicked(item) }
-    }
-
+  private fun buildMenu(catalogLoaded: Boolean) {
     val modeStringId = when (ChanSettings.boardPostViewMode.get()) {
       BoardPostViewMode.LIST -> R.string.action_switch_catalog_grid
       BoardPostViewMode.GRID -> R.string.action_switch_catalog_stagger
@@ -332,163 +283,211 @@ class BrowseController(
     val isCompositeCatalog = threadLayout.presenter.currentChanDescriptor is ChanDescriptor.CompositeCatalogDescriptor
     val isUnlimitedCatalog = threadLayout.presenter.isUnlimitedCatalog && !isCompositeCatalog
 
-    overflowBuilder
-      .withSubItem(ACTION_CHANGE_VIEW_MODE, modeStringId) { item -> viewModeClicked(item) }
-      .addSortMenu()
-      .addDevMenu()
-      .withSubItem(
-        ACTION_LOAD_WHOLE_COMPOSITE_CATALOG,
-        R.string.action_rest_composite_catalog,
-        isCompositeCatalog,
-        { mainScope.launch { threadLayout.presenter.loadWholeCompositeCatalog() } }
-      )
-      .withSubItem(ACTION_CATALOG_ALBUM, R.string.action_catalog_album, { threadLayout.presenter.showAlbum() })
-      .withSubItem(ACTION_OPEN_BROWSER, R.string.action_open_browser, !isCompositeCatalog, { item -> openBrowserClicked(item) })
-      .withSubItem(ACTION_OPEN_CATALOG_OR_THREAD_BY_IDENTIFIER, R.string.action_open_catalog_or_thread_by_identifier, { item -> openCatalogOrThreadByIdentifier(item) })
-      .withSubItem(ACTION_OPEN_MEDIA_BY_URL, R.string.action_open_media_by_url, { item -> openMediaByUrl(item) })
-      .withSubItem(ACTION_OPEN_UNLIMITED_CATALOG_PAGE, R.string.action_open_catalog_page, isUnlimitedCatalog, { openCatalogPageClicked() })
-      .withSubItem(ACTION_SHARE, R.string.action_share, { item -> shareClicked(item) })
-      .withSubItem(ACTION_BOARD_ARCHIVE, R.string.action_board_archive, supportsArchive, { viewBoardArchiveClicked() })
-      .withSubItem(ACTION_VIEW_REMOVED_THREADS, R.string.action_view_removed_threads, { threadLayout.presenter.showRemovedPostsDialog() })
-      .withSubItem(ACTION_SCROLL_TO_TOP, R.string.action_scroll_to_top, { item -> upClicked(item) })
-      .withSubItem(ACTION_SCROLL_TO_BOTTOM, R.string.action_scroll_to_bottom, { item -> downClicked(item) })
-      .build()
-      .build()
+    // TODO: New toolbar
+    if (catalogLoaded) {
+//      if (!initialized) {
+//        return@setMiddleMenu
+//      }
+//
+//      if (!siteManager.areSitesSetup()) {
+//        openSitesSetupController()
+//      } else {
+//        openBoardSelectionController()
+//      }
+    }
 
-    requireNavController().requireToolbar().setNavigationItem(
-      false,
-      true,
-      navigation,
-      themeEngine.chanTheme
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        hasBack = false,
+        hasDrawer = true
+      ),
+      leftItem = HamburgMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.loading)
+      ),
+      menuBuilder = {
+        withMenuItem(drawableId = R.drawable.ic_search_white_24dp, onClick = { item -> searchClicked(item) })
+        withMenuItem(drawableId = R.drawable.ic_refresh_white_24dp, onClick = { item -> reloadClicked(item) })
+
+        withOverflowMenu {
+          withOverflowMenuItem(id = ACTION_REPLY, stringId = R.string.action_reply, onClick = { item -> replyClicked(item) })
+          withOverflowMenuItem(id = ACTION_CHANGE_VIEW_MODE, stringId = modeStringId, onClick = { item -> viewModeClicked(item) })
+
+          addSortMenu()
+          addDevMenu()
+
+          withOverflowMenuItem(
+            id = ACTION_LOAD_WHOLE_COMPOSITE_CATALOG,
+            stringId = R.string.action_rest_composite_catalog,
+            visible = isCompositeCatalog,
+            onClick = { controllerScope.launch { threadLayout.presenter.loadWholeCompositeCatalog() } }
+          )
+          withOverflowMenuItem(
+            id = ACTION_CATALOG_ALBUM,
+            stringId = R.string.action_catalog_album,
+            onClick = { threadLayout.presenter.showAlbum() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_OPEN_BROWSER,
+            stringId = R.string.action_open_browser,
+            visible = !isCompositeCatalog,
+            onClick = { item -> openBrowserClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_OPEN_CATALOG_OR_THREAD_BY_IDENTIFIER,
+            stringId = R.string.action_open_catalog_or_thread_by_identifier,
+            onClick = { item -> openCatalogOrThreadByIdentifier(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_OPEN_MEDIA_BY_URL,
+            stringId = R.string.action_open_media_by_url,
+            onClick = { item -> openMediaByUrl(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_OPEN_UNLIMITED_CATALOG_PAGE,
+            stringId = R.string.action_open_catalog_page,
+            visible = isUnlimitedCatalog,
+            onClick = { openCatalogPageClicked() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SHARE,
+            stringId = R.string.action_share,
+            onClick = { item -> shareClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_BOARD_ARCHIVE,
+            stringId = R.string.action_board_archive,
+            visible = supportsArchive,
+            onClick = { viewBoardArchiveClicked() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_VIEW_REMOVED_THREADS,
+            stringId = R.string.action_view_removed_threads,
+            onClick = { threadLayout.presenter.showRemovedPostsDialog() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SCROLL_TO_TOP,
+            stringId = R.string.action_scroll_to_top,
+            onClick = { item -> upClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SCROLL_TO_BOTTOM,
+            stringId = R.string.action_scroll_to_bottom,
+            onClick = { item -> downClicked(item) }
+          )
+        }
+      }
     )
   }
 
   @Suppress("MoveLambdaOutsideParentheses")
-  private fun NavigationItem.MenuOverflowBuilder.addDevMenu(): NavigationItem.MenuOverflowBuilder {
-    withNestedOverflow(
-      ACTION_DEV_MENU,
-      R.string.action_browse_dev_menu,
-      isDevBuild()
+  private fun ToolbarOverflowMenuBuilder.addDevMenu() {
+    withOverflowMenuItem(
+      id = ACTION_DEV_MENU,
+      stringId = R.string.action_browse_dev_menu,
+      visible = isDevBuild(),
+      builder = {
+        withOverflowMenuItem(
+          id = DEV_BOOKMARK_EVERY_THREAD,
+          stringId = R.string.dev_bookmark_every_thread,
+          onClick = {
+            controllerScope.launch {
+              presenter.bookmarkEveryThread(threadLayout.presenter.currentChanDescriptor)
+            }
+          }
+        )
+        withOverflowMenuItem(
+          id = DEV_CACHE_EVERY_THREAD,
+          stringId = R.string.dev_cache_every_thread,
+          onClick = { presenter.cacheEveryThreadClicked(threadLayout.presenter.currentChanDescriptor) }
+        )
+      }
     )
-      .addNestedItem(
-        DEV_BOOKMARK_EVERY_THREAD,
-        R.string.dev_bookmark_every_thread,
-        true,
-        DEV_BOOKMARK_EVERY_THREAD,
-        { mainScope.launch { presenter.bookmarkEveryThread(threadLayout.presenter.currentChanDescriptor) } }
-      )
-      .addNestedItem(
-        DEV_CACHE_EVERY_THREAD,
-        R.string.dev_cache_every_thread,
-        true,
-        DEV_CACHE_EVERY_THREAD,
-        { presenter.cacheEveryThreadClicked(threadLayout.presenter.currentChanDescriptor) }
-      )
-      .build()
-
-    return this
   }
 
   @Suppress("MoveLambdaOutsideParentheses")
-  private fun NavigationItem.MenuOverflowBuilder.addSortMenu(): NavigationItem.MenuOverflowBuilder {
+  private fun ToolbarOverflowMenuBuilder.addSortMenu() {
     val currentOrder = PostsFilter.Order.find(ChanSettings.boardOrder.get())
-    val groupId = "catalog_sort"
 
-    withNestedOverflow(ACTION_SORT, R.string.action_sort, true)
-      .addNestedCheckableItem(
-        SORT_MODE_BUMP,
-        R.string.order_bump,
-        true,
-        currentOrder == PostsFilter.Order.BUMP,
-        PostsFilter.Order.BUMP,
-        groupId,
-        { subItem -> onSortItemClicked(subItem) }
-      )
-      .addNestedCheckableItem(
-        SORT_MODE_REPLY,
-        R.string.order_reply,
-        true,
-        currentOrder == PostsFilter.Order.REPLY,
-        PostsFilter.Order.REPLY,
-        groupId,
-        { subItem -> onSortItemClicked(subItem) }
-      )
-      .addNestedCheckableItem(
-        SORT_MODE_IMAGE,
-        R.string.order_image,
-        true,
-        currentOrder == PostsFilter.Order.IMAGE,
-        PostsFilter.Order.IMAGE,
-        groupId,
-        { subItem -> onSortItemClicked(subItem) }
-      )
-      .addNestedCheckableItem(
-        SORT_MODE_NEWEST,
-        R.string.order_newest,
-        true,
-        currentOrder == PostsFilter.Order.NEWEST,
-        PostsFilter.Order.NEWEST,
-        groupId,
-        { subItem -> onSortItemClicked(subItem) }
-      )
-      .addNestedCheckableItem(
-        SORT_MODE_OLDEST,
-        R.string.order_oldest,
-        true,
-        currentOrder == PostsFilter.Order.OLDEST,
-        PostsFilter.Order.OLDEST,
-        groupId,
-        { subItem -> onSortItemClicked(subItem) }
-      )
-      .addNestedCheckableItem(
-        SORT_MODE_MODIFIED,
-        R.string.order_modified,
-        true,
-        currentOrder == PostsFilter.Order.MODIFIED,
-        PostsFilter.Order.MODIFIED,
-        groupId,
-        { subItem -> onSortItemClicked(subItem) }
-      )
-      .addNestedCheckableItem(
-        SORT_MODE_ACTIVITY,
-        R.string.order_activity,
-        true,
-        currentOrder == PostsFilter.Order.ACTIVITY,
-        PostsFilter.Order.ACTIVITY,
-        groupId,
-        { subItem -> onSortItemClicked(subItem) }
-      )
-      .build()
-
-    return this
+    withOverflowMenuItem(
+      id = ACTION_SORT,
+      stringId = R.string.action_sort,
+      groupId = "catalog_sort",
+      builder = {
+        withCheckableOverflowMenuItem(
+          id = SORT_MODE_BUMP,
+          stringId = R.string.order_bump,
+          visible = true,
+          checked = currentOrder == PostsFilter.Order.BUMP,
+          value = PostsFilter.Order.BUMP,
+          onClick = { subItem -> onSortItemClicked(subItem) }
+        )
+        withCheckableOverflowMenuItem(
+          id = SORT_MODE_REPLY,
+          stringId = R.string.order_reply,
+          visible = true,
+          checked = currentOrder == PostsFilter.Order.REPLY,
+          value = PostsFilter.Order.REPLY,
+          onClick = { subItem -> onSortItemClicked(subItem) }
+        )
+        withCheckableOverflowMenuItem(
+          id = SORT_MODE_IMAGE,
+          stringId = R.string.order_image,
+          visible = true,
+          checked = currentOrder == PostsFilter.Order.IMAGE,
+          value = PostsFilter.Order.IMAGE,
+          onClick = { subItem -> onSortItemClicked(subItem) }
+        )
+        withCheckableOverflowMenuItem(
+          id = SORT_MODE_NEWEST,
+          stringId = R.string.order_newest,
+          visible = true,
+          checked = currentOrder == PostsFilter.Order.NEWEST,
+          value = PostsFilter.Order.NEWEST,
+          onClick = { subItem -> onSortItemClicked(subItem) }
+        )
+        withCheckableOverflowMenuItem(
+          id = SORT_MODE_OLDEST,
+          stringId = R.string.order_oldest,
+          visible = true,
+          checked = currentOrder == PostsFilter.Order.OLDEST,
+          value = PostsFilter.Order.OLDEST,
+          onClick = { subItem -> onSortItemClicked(subItem) }
+        )
+        withCheckableOverflowMenuItem(
+          id = SORT_MODE_MODIFIED,
+          stringId = R.string.order_modified,
+          visible = true,
+          checked = currentOrder == PostsFilter.Order.MODIFIED,
+          value = PostsFilter.Order.MODIFIED,
+          onClick = { subItem -> onSortItemClicked(subItem) }
+        )
+        withCheckableOverflowMenuItem(
+          id = SORT_MODE_ACTIVITY,
+          stringId = R.string.order_activity,
+          visible = true,
+          checked = currentOrder == PostsFilter.Order.ACTIVITY,
+          value = PostsFilter.Order.ACTIVITY,
+          onClick = { subItem -> onSortItemClicked(subItem) }
+        )
+      }
+    )
   }
 
-  private fun onSortItemClicked(subItem: ToolbarMenuSubItem) {
+  private fun onSortItemClicked(subItem: ToolbarMenuCheckableOverflowItem) {
     serializedCoroutineExecutor.post {
       val order = subItem.value as? PostsFilter.Order
         ?: return@post
 
       ChanSettings.boardOrder.set(order.orderName)
-
-      navigation.findSubItem(ACTION_SORT)?.let { sortSubItem ->
-        resetSelectedSortOrderItem(sortSubItem)
-      }
-
-      subItem as CheckableToolbarMenuSubItem
-      subItem.isChecked = true
+      toolbarState.checkOrUncheckItem(subItem, true)
 
       val presenter = threadLayout.presenter
       presenter.setOrder(order, isManuallyChangedOrder = true)
-    }
-  }
-
-  private fun resetSelectedSortOrderItem(item: ToolbarMenuSubItem) {
-    if (item is CheckableToolbarMenuSubItem) {
-      item.isChecked = false
-    }
-
-    for (nestedItem in item.moreItems) {
-      resetSelectedSortOrderItem(nestedItem as CheckableToolbarMenuSubItem)
     }
   }
 
@@ -512,38 +511,14 @@ class BrowseController(
       chanCacheUpdateOptions = ChanCacheUpdateOptions.UpdateCache
     )
 
-    // Give the rotation menu item view a spin.
-    val refreshView: View = item.view
-    // Disable the ripple effect until the animation ends, but turn it back on so tap/hold ripple works
-    refreshView.setBackgroundResource(0)
-
-    val animation: Animation = RotateAnimation(
-      0f,
-      360f,
-      RotateAnimation.RELATIVE_TO_SELF,
-      0.5f,
-      RotateAnimation.RELATIVE_TO_SELF,
-      0.5f
-    )
-
-    animation.duration = 500L
-    animation.setAnimationListener(object : Animation.AnimationListener {
-      override fun onAnimationStart(animation: Animation) {}
-      override fun onAnimationEnd(animation: Animation) {
-        refreshView.setBackgroundResource(R.drawable.item_background)
-      }
-
-      override fun onAnimationRepeat(animation: Animation) {}
-    })
-
-    refreshView.startAnimation(animation)
+    item.spinItemOnce()
   }
 
-  private fun replyClicked(item: ToolbarMenuSubItem) {
+  private fun replyClicked(item: ToolbarMenuOverflowItem) {
     threadLayout.openReply(true)
   }
 
-  private fun viewModeClicked(item: ToolbarMenuSubItem) {
+  private fun viewModeClicked(item: ToolbarMenuOverflowItem) {
     var postViewMode = ChanSettings.boardPostViewMode.get()
 
     postViewMode = when (postViewMode) {
@@ -560,15 +535,15 @@ class BrowseController(
       BoardPostViewMode.STAGGER -> R.string.action_switch_board
     }
 
-    item.text = getString(viewModeText)
+    item.updateMenuText(getString(viewModeText))
     threadLayout.setBoardPostViewMode(postViewMode)
   }
 
-  private fun openBrowserClicked(item: ToolbarMenuSubItem) {
+  private fun openBrowserClicked(item: ToolbarMenuOverflowItem) {
     handleShareOrOpenInBrowser(false)
   }
 
-  private fun openCatalogOrThreadByIdentifier(item: ToolbarMenuSubItem) {
+  private fun openCatalogOrThreadByIdentifier(item: ToolbarMenuOverflowItem) {
     if (chanDescriptor == null) {
       return
     }
@@ -582,7 +557,7 @@ class BrowseController(
     )
   }
 
-  private fun openMediaByUrl(item: ToolbarMenuSubItem) {
+  private fun openMediaByUrl(item: ToolbarMenuOverflowItem) {
     if (chanDescriptor == null) {
       return
     }
@@ -604,7 +579,7 @@ class BrowseController(
   }
 
   private fun openCatalogOrThreadByIdentifierInternal(input: String) {
-    mainScope.launch {
+    controllerScope.launch {
       val chanDescriptorResult = siteResolver.resolveChanDescriptorForUrl(input)
       if (chanDescriptorResult == null) {
         if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
@@ -672,7 +647,7 @@ class BrowseController(
   }
 
   private fun openThreadByIdInternal(input: String) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       val threadNo = input.toLong()
       if (threadNo <= 0) {
         showToast(getString(R.string.browse_controller_error_thread_id_negative_or_zero))
@@ -693,7 +668,7 @@ class BrowseController(
     }
   }
 
-  private fun shareClicked(item: ToolbarMenuSubItem) {
+  private fun shareClicked(item: ToolbarMenuOverflowItem) {
     handleShareOrOpenInBrowser(true)
   }
 
@@ -702,7 +677,7 @@ class BrowseController(
       context = context,
       catalogDescriptor = chanDescriptor!! as CatalogDescriptor,
       onThreadClicked = { threadDescriptor ->
-        mainScope.launch { showThread(threadDescriptor, animated = true) }
+        controllerScope.launch { showThread(threadDescriptor, animated = true) }
       }
     )
 
@@ -726,16 +701,16 @@ class BrowseController(
     )
   }
 
-  private fun upClicked(item: ToolbarMenuSubItem) {
+  private fun upClicked(item: ToolbarMenuOverflowItem) {
     threadLayout.presenter.scrollTo(0, false)
   }
 
-  private fun downClicked(item: ToolbarMenuSubItem) {
+  private fun downClicked(item: ToolbarMenuOverflowItem) {
     threadLayout.presenter.scrollTo(-1, false)
   }
 
   override fun onReplyViewShouldClose() {
-    toolbar?.exitReplyLayoutMode()
+    toolbarState.exitReplyMode()
     threadLayout.openReply(false)
   }
 
@@ -775,15 +750,15 @@ class BrowseController(
   }
 
   override suspend fun loadCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "loadCatalog($catalogDescriptor)")
 
       updateToolbarTitle(catalogDescriptor)
       threadLayout.presenter.bindChanDescriptor(catalogDescriptor as ChanDescriptor)
 
-      if (!menuBuiltOnce) {
-        menuBuiltOnce = true
-        buildMenu()
+      if (!toolbarUpdatedAfterFirstCatalogLoad) {
+        toolbarUpdatedAfterFirstCatalogLoad = true
+        buildMenu(catalogLoaded = true)
       }
 
       updateMenuItems()
@@ -802,24 +777,38 @@ class BrowseController(
       val board = boardManager.byBoardDescriptor(boardDescriptor)
         ?: return
 
-      navigation.title = "/" + boardDescriptor.boardCode + "/"
-      navigation.subtitle = board.name ?: ""
+      toolbarState.updateTitle(
+        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+        newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/")
+      )
 
-      requireNavController().requireToolbar().updateTitle(navigation)
+      toolbarState.updateSubtitle(
+        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+        newSubTitle = ToolbarText.String(board.name ?: "")
+      )
     } else {
       catalogDescriptor as ChanDescriptor.CompositeCatalogDescriptor
 
-      navigation.title = getString(R.string.composite_catalog)
-      navigation.subtitle = getString(R.string.browse_controller_composite_catalog_subtitle_loading)
-      requireNavController().requireToolbar().updateTitle(navigation)
+      toolbarState.updateTitle(
+        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+        newTitle = ToolbarText.Id(R.string.composite_catalog)
+      )
 
-      updateCompositeCatalogNavigationSubtitleJob = mainScope.launch {
+      toolbarState.updateSubtitle(
+        toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+        newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
+      )
+
+      updateCompositeCatalogNavigationSubtitleJob = controllerScope.launch {
         val newTitle = presenter.getCompositeCatalogNavigationTitle(catalogDescriptor)
         if (newTitle.isNotNullNorEmpty()) {
-          navigation.title = newTitle
+          toolbarState.updateTitle(
+            toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+            newTitle = ToolbarText.String(newTitle)
+          )
         }
 
-        navigation.subtitle = SpannableHelper.getCompositeCatalogNavigationSubtitle(
+        val compositeCatalogSubTitle = SpannableHelper.getCompositeCatalogNavigationSubtitle(
           siteManager = siteManager,
           coroutineScope = this,
           context = context,
@@ -827,13 +816,16 @@ class BrowseController(
           compositeCatalogDescriptor = catalogDescriptor
         )
 
-        requireNavController().requireToolbar().updateTitle(navigation)
+        toolbarState.updateSubtitle(
+          toolbarLayerId = KurobaToolbarState.ToolbarLayerId.Default,
+          newSubTitle = ToolbarText.Spanned(compositeCatalogSubTitle)
+        )
       }
     }
   }
 
   override suspend fun showCatalogWithoutFocusing(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "showCatalogWithoutFocusing($catalogDescriptor, $animated)")
 
       showCatalogInternal(
@@ -843,13 +835,11 @@ class BrowseController(
           withAnimation = animated
         )
       )
-
-      initialized = true
     }
   }
 
   override suspend fun showCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "showBoard($catalogDescriptor, $animated)")
 
       showCatalogInternal(
@@ -859,17 +849,14 @@ class BrowseController(
           withAnimation = animated
         )
       )
-
-      initialized = true
     }
   }
 
   override suspend fun setCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    mainScope.launch(Dispatchers.Main.immediate) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "setCatalog($catalogDescriptor, $animated)")
 
       setCatalog(catalogDescriptor)
-      initialized = true
     }
   }
 
@@ -889,7 +876,7 @@ class BrowseController(
       postDescriptor = postDescriptor,
       scrollToPost = scrollToPost
     ) { threadDescriptor ->
-      mainScope.launch { showThread(descriptor = threadDescriptor, animated = true) }
+      controllerScope.launch { showThread(descriptor = threadDescriptor, animated = true) }
     }
   }
 
@@ -908,7 +895,7 @@ class BrowseController(
     return when {
       splitNav != null -> {
         val navigationController = splitNav.getRightController() as StyledToolbarNavigationController?
-        navigationController?.top as? ViewThreadController
+        navigationController?.topController as? ViewThreadController
       }
       slideNav != null -> {
         slideNav.getRightController() as? ViewThreadController
@@ -963,8 +950,8 @@ class BrowseController(
         // Create a threadview inside a toolbarnav in the right part of the split layout
         if (splitNav.getRightController() is StyledToolbarNavigationController) {
           val navigationController = splitNav.getRightController() as StyledToolbarNavigationController
-          if (navigationController.top is ViewThreadController) {
-            val viewThreadController = navigationController.top as ViewThreadController
+          if (navigationController.topController is ViewThreadController) {
+            val viewThreadController = navigationController.topController as ViewThreadController
             viewThreadController.loadThread(descriptor)
             viewThreadController.onShow()
             viewThreadController.onGainedFocus(ThreadControllerType.Thread)
@@ -1022,8 +1009,6 @@ class BrowseController(
         )
       }
     }
-
-    initialized = true
   }
 
   private suspend fun showCatalogInternal(
@@ -1058,7 +1043,7 @@ class BrowseController(
       } else {
         if (navigationController != null) {
           // We wouldn't want to pop BrowseController when opening a board
-          if (navigationController!!.top !is BrowseController) {
+          if (navigationController!!.topController !is BrowseController) {
             navigationController!!.popController(showCatalogOptions.withAnimation)
           }
         }
@@ -1069,37 +1054,37 @@ class BrowseController(
   }
 
   private fun updateMenuItems() {
-    navigation.findSubItem(ACTION_BOARD_ARCHIVE)?.let { menuItem ->
+    toolbarState.findOverflowItem(ACTION_BOARD_ARCHIVE)?.let { menuItem ->
       val supportsArchive = siteSupportsBuiltInBoardArchive()
-      menuItem.visible = supportsArchive
+      menuItem.updateVisibility(supportsArchive)
     }
 
-    navigation.findSubItem(ACTION_LOAD_WHOLE_COMPOSITE_CATALOG)?.let { menuItem ->
+    toolbarState.findOverflowItem(ACTION_LOAD_WHOLE_COMPOSITE_CATALOG)?.let { menuItem ->
       val isCompositeCatalog =
         threadLayout.presenter.currentChanDescriptor is ChanDescriptor.CompositeCatalogDescriptor
 
-      menuItem.visible = isCompositeCatalog
+      menuItem.updateVisibility(isCompositeCatalog)
     }
 
-    navigation.findSubItem(ACTION_OPEN_BROWSER)?.let { menuItem ->
+    toolbarState.findOverflowItem(ACTION_OPEN_BROWSER)?.let { menuItem ->
       val isNotCompositeCatalog =
         threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
 
-      menuItem.visible = isNotCompositeCatalog
+      menuItem.updateVisibility(isNotCompositeCatalog)
     }
 
-    navigation.findSubItem(ACTION_OPEN_UNLIMITED_CATALOG_PAGE)?.let { menuItem ->
+    toolbarState.findOverflowItem(ACTION_OPEN_UNLIMITED_CATALOG_PAGE)?.let { menuItem ->
       val isUnlimitedCatalog = threadLayout.presenter.isUnlimitedOrCompositeCatalog
         && threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
 
-      menuItem.visible = isUnlimitedCatalog
+      menuItem.updateVisibility(isUnlimitedCatalog)
     }
 
-    navigation.findSubItem(ACTION_SHARE)?.let { menuItem ->
+    toolbarState.findOverflowItem(ACTION_SHARE)?.let { menuItem ->
       val isNotCompositeCatalog =
         threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
 
-      menuItem.visible = isNotCompositeCatalog
+      menuItem.updateVisibility(isNotCompositeCatalog)
     }
   }
 
@@ -1114,7 +1099,7 @@ class BrowseController(
 
     if (chanDescriptor != null && historyNavigationManager.isInitialized) {
       if (threadLayout.presenter.chanThreadLoadingState == ThreadPresenter.ChanThreadLoadingState.Loaded) {
-        mainScope.launch { historyNavigationManager.moveNavElementToTop(chanDescriptor!!) }
+        controllerScope.launch { historyNavigationManager.moveNavElementToTop(chanDescriptor!!) }
       }
     }
 

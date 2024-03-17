@@ -3,7 +3,6 @@ package com.github.k1rakishou.chan.features.filters
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -19,6 +18,8 @@ import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.ChanFilterManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.site.parser.CommentParserHelper
+import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
 import com.github.k1rakishou.chan.ui.compose.reorder.move
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItemId
@@ -49,8 +50,8 @@ class FiltersControllerViewModel(
   private val boardManager: BoardManager,
   private val themeEngine: ThemeEngine,
 ) : BaseViewModel() {
-
-  var searchQuery = mutableStateOf<String>("")
+  val toolbarSearchState = KurobaSearchToolbarState()
+  val toolbarSelectionState = KurobaSelectionToolbarState()
 
   private val _filters = mutableStateListOf<ChanFilterInfo>()
   val filters: List<ChanFilterInfo>
@@ -430,10 +431,10 @@ class FiltersControllerViewModel(
     val itemsList = mutableListOf<BottomMenuPanelItem>()
 
     itemsList += BottomMenuPanelItem(
-      FilterMenuItemId(MenuItemType.Delete),
-      R.drawable.ic_baseline_delete_outline_24,
-      R.string.bottom_menu_item_delete,
-      {
+      menuItemId = FilterMenuItemId(MenuItemType.Delete),
+      iconResId = R.drawable.ic_baseline_delete_outline_24,
+      textResId = R.string.bottom_menu_item_delete,
+      onClickListener = {
         val clickEvent = MenuItemClickEvent(
           menuItemType = MenuItemType.Delete,
           items = viewModelSelectionHelper.getCurrentlySelectedItems()

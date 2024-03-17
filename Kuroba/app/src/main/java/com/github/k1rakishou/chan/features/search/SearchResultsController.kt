@@ -22,6 +22,10 @@ import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchErrorView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchLoadingView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchPostDividerView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchPostView
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
@@ -68,8 +72,6 @@ class SearchResultsController(
     super.onCreate()
 
     updateTitle(null)
-    navigation.swipeable = false
-    navigation.scrollableTitle = true
 
     view = inflate(context, R.layout.controller_search_results)
     epoxyRecyclerView = view.findViewById(R.id.epoxy_recycler_view)
@@ -203,23 +205,23 @@ class SearchResultsController(
   }
 
   private fun updateTitle(totalFound: Int?) {
-    when (totalFound) {
+    val title = when (totalFound) {
       null -> {
-        navigation.title = getString(
+        getString(
           R.string.controller_search_searching,
           siteDescriptor.siteName,
           searchParameters.getCurrentQuery()
         )
       }
       Int.MAX_VALUE -> {
-        navigation.title = getString(
+        getString(
           R.string.controller_search_results_unknown,
           siteDescriptor.siteName,
           searchParameters.getCurrentQuery()
         )
       }
       else -> {
-        navigation.title = getString(
+        getString(
           R.string.controller_search_results,
           siteDescriptor.siteName,
           searchParameters.getCurrentQuery(),
@@ -228,7 +230,20 @@ class SearchResultsController(
       }
     }
 
-    requireNavController().requireToolbar().updateTitle(navigation)
+    toolbarState.pushOrUpdateDefaultLayer(
+      navigationFlags = DeprecatedNavigationFlags(
+        swipeable = false,
+        scrollableTitle = true
+      ),
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar
+        }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.String(title)
+      )
+    )
   }
 
   companion object {
