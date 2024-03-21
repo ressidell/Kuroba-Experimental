@@ -52,9 +52,9 @@ import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.compose.verticalScrollbar
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.core_logger.LogStorage
@@ -117,7 +117,7 @@ class LogsController(context: Context) : Controller(context) {
     view = ComposeView(context)
       .also { composeView ->
         composeView.setContent {
-          ProvideEverythingForCompose {
+          ComposeEntrypoint {
             ControllerContent()
           }
         }

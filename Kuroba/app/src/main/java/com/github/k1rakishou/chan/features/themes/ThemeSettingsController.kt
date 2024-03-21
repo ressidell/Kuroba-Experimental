@@ -29,6 +29,7 @@ import androidx.viewpager.widget.ViewPager
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.controller.ControllerKey
 import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
@@ -455,7 +456,11 @@ class ThemeSettingsController(context: Context) : Controller(context) {
       theme: ChanTheme,
       postCellDataWidthNoPaddings: Int
     ): CoordinatorLayout {
-      val kurobaToolbarState = KurobaToolbarState()
+      val kurobaToolbarState = KurobaToolbarState(
+        controllerKey = ControllerKey("${controllerKey.key}_${theme.name}"),
+        globalUiStateHolder = globalUiStateHolder
+      )
+
       kurobaToolbarState.enterDefaultMode(
         leftItem = BackArrowMenuItem(onClick = {  }),
         middleContent = ToolbarMiddleContent.Title(

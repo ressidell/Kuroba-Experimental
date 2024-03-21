@@ -44,6 +44,13 @@ class KurobaSearchToolbarState(
     TODO("Not yet implemented")
   }
 
+  override fun updateFromState(toolbarState: IKurobaToolbarState) {
+    toolbarState as KurobaSearchToolbarState
+
+    _toolbarMenu.value = toolbarState._toolbarMenu.value
+    _searchVisible.value = toolbarState._searchVisible.value
+  }
+
   override fun onPushed() {
     _searchVisible.value = true
   }

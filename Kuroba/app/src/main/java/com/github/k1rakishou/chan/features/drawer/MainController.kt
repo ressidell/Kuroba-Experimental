@@ -115,8 +115,8 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.compose.search.SimpleSearchState
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchState
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
@@ -131,7 +131,6 @@ import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationContro
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.TabHostController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
-import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground
@@ -193,8 +192,6 @@ class MainController(
   lateinit var imageLoaderV2Lazy: Lazy<ImageLoaderV2>
   @Inject
   lateinit var threadDownloadManagerLazy: Lazy<ThreadDownloadManager>
-  @Inject
-  lateinit var globalUiStateHolderLazy: Lazy<GlobalUiStateHolder>
 
   private val themeEngine: ThemeEngine
     get() = themeEngineLazy.get()
@@ -214,8 +211,6 @@ class MainController(
     get() = imageLoaderV2Lazy.get()
   private val threadDownloadManager: ThreadDownloadManager
     get() = threadDownloadManagerLazy.get()
-  private val globalUiStateHolder: GlobalUiStateHolder
-    get() = globalUiStateHolderLazy.get()
 
   private lateinit var rootLayout: TouchBlockingFrameLayout
   private lateinit var container: TouchBlockingFrameLayoutNoBackground
@@ -346,7 +341,7 @@ class MainController(
 
     val drawerComposeView = view.findViewById<ComposeView>(R.id.drawer_compose_view)
     drawerComposeView.setContent {
-      ProvideEverythingForCompose {
+      ComposeEntrypoint {
         val chanTheme = LocalChanTheme.current
         val bgColor = chanTheme.backColorCompose
 

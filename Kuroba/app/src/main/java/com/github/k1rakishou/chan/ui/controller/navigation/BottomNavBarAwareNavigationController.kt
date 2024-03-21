@@ -39,13 +39,12 @@ class BottomNavBarAwareNavigationController(
   override fun onCreate() {
     super.onCreate()
 
-    kurobaToolbarStateManager.enableControllerToolbar(controllerKey)
-
     view = inflate(context, R.layout.controller_navigation_bottom_nav_bar_aware)
     container = view.findViewById<NavigationControllerContainerLayout>(R.id.bottom_bar_aware_controller_container)
 
     val toolbar = view.findViewById<KurobaToolbarView>(R.id.toolbar)
     toolbar.init(this)
+    toolbarState.enterContainerMode()
 
     // Wait a little bit so that GlobalWindowInsetsManager have time to get initialized so we can
     // use the insets
@@ -65,7 +64,6 @@ class BottomNavBarAwareNavigationController(
     super.onDestroy()
 
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-    kurobaToolbarStateManager.disableControllerToolbar(controllerKey)
   }
 
   override fun onInsetsChanged() {

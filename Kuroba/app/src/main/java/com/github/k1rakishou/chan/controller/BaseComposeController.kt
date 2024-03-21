@@ -19,8 +19,8 @@ import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.core_themes.ThemeEngine
 import javax.inject.Inject
@@ -50,7 +50,7 @@ abstract class BaseComposeController<VM : ViewModel>(
 
         view = ComposeView(context).apply {
             setContent {
-                ProvideEverythingForCompose {
+                ComposeEntrypoint {
                     val chanTheme = LocalChanTheme.current
 
                     Box(

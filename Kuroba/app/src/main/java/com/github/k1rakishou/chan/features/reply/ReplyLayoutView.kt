@@ -24,7 +24,7 @@ import com.github.k1rakishou.chan.core.usecase.LoadBoardFlagsUseCase
 import com.github.k1rakishou.chan.features.reply.data.ReplyFileAttachable
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutVisibility
 import com.github.k1rakishou.chan.features.reply_image_search.ImageSearchController
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.OpenUrlInWebViewController
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
@@ -98,10 +98,10 @@ class ReplyLayoutView @JvmOverloads constructor(
     addView(composeView)
 
     composeView.setContent {
-      ProvideEverythingForCompose {
+      ComposeEntrypoint {
         val ready by readyState
         if (!ready) {
-          return@ProvideEverythingForCompose
+          return@ComposeEntrypoint
         }
 
         ReplyLayout(

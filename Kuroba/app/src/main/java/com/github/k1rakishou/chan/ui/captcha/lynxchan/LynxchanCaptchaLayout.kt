@@ -47,13 +47,13 @@ import com.github.k1rakishou.chan.ui.captcha.AuthenticationLayoutInterface
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
 import com.github.k1rakishou.chan.ui.captcha.CaptchaSolution
 import com.github.k1rakishou.chan.ui.captcha.chan4.Chan4CaptchaLayout
-import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextField
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
+import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -106,7 +106,7 @@ class LynxchanCaptchaLayout(
 
     val view = ComposeView(context).apply {
       setContent {
-        ProvideEverythingForCompose {
+        ComposeEntrypoint {
           val chanTheme = LocalChanTheme.current
 
           Box(

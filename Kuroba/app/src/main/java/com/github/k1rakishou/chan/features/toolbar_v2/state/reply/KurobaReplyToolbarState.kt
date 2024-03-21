@@ -33,6 +33,12 @@ class KurobaReplyToolbarState(
     TODO("Not yet implemented")
   }
 
+  override fun updateFromState(toolbarState: IKurobaToolbarState) {
+    toolbarState as KurobaReplyToolbarState
+
+    _toolbarMenu.value = toolbarState._toolbarMenu.value
+  }
+
   override fun onPushed() {
     TODO("Not yet implemented")
   }

@@ -17,6 +17,20 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 
 class StyledToolbarNavigationController(context: Context) : ToolbarNavigationController(context) {
 
+  private val mainController: MainController?
+    get() {
+      if (parentController is MainController) {
+        return parentController as MainController?
+      } else if (doubleNavigationController != null) {
+        val doubleNav = doubleNavigationController as Controller
+        if (doubleNav.parentController is MainController) {
+          return doubleNav.parentController as MainController?
+        }
+      }
+
+      return null
+    }
+
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
   }
@@ -24,19 +38,14 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
   override fun onCreate() {
     super.onCreate()
 
-    kurobaToolbarStateManager.enableControllerToolbar(controllerKey)
     view = AppModuleAndroidUtils.inflate(context, R.layout.controller_navigation_toolbar)
     container = view.findViewById<ViewGroup>(R.id.toolbar_navigation_controller_container)
 
     val toolbar = view.findViewById<KurobaToolbarView>(R.id.toolbar)
     toolbar.init(this)
+    toolbarState.enterContainerMode()
 
     reloadControllerTracking()
-  }
-
-  override fun onDestroy() {
-    super.onDestroy()
-    kurobaToolbarStateManager.disableControllerToolbar(controllerKey)
   }
 
   override fun popController(transition: ControllerTransition?): Boolean {
@@ -156,17 +165,4 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
     return false
   }
 
-  private val mainController: MainController?
-    private get() {
-      if (parentController is MainController) {
-        return parentController as MainController?
-      } else if (doubleNavigationController != null) {
-        val doubleNav = doubleNavigationController as Controller
-        if (doubleNav.parentController is MainController) {
-          return doubleNav.parentController as MainController?
-        }
-      }
-
-      return null
-    }
 }

@@ -190,6 +190,7 @@ import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FloatingMenu
 import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.InsetAwareLinearLayout
+import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.ui.view.OptionalSwipeViewPager
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
 import com.github.k1rakishou.chan.ui.view.attach.AttachNewFileButton
@@ -410,6 +411,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(postPopupContainer: PostPopupContainer)
   fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
   fun inject(replyLayoutView: ReplyLayoutView)
+  fun inject(kurobaBottomNavigationView: KurobaBottomNavigationView)
 
   @Subcomponent.Builder
   interface Builder {

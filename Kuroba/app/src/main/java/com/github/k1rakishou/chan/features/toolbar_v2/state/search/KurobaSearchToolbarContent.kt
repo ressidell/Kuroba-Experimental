@@ -27,7 +27,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun KurobaSearchToolbarContent(state: KurobaSearchToolbarState) {
+fun KurobaSearchToolbarContent(
+  modifier: Modifier,
+  state: KurobaSearchToolbarState
+) {
   val chanTheme = LocalChanTheme.current
   val focusRequester = remember { FocusRequester() }
   val coroutineScope = rememberCoroutineScope()
@@ -49,7 +52,9 @@ fun KurobaSearchToolbarContent(state: KurobaSearchToolbarState) {
     }
   )
 
-  Row {
+  Row(
+    modifier = modifier
+  ) {
     KurobaComposeTextFieldV2(
       modifier = Modifier
         .weight(1f)

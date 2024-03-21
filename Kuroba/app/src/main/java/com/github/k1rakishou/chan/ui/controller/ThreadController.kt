@@ -50,7 +50,6 @@ import com.github.k1rakishou.chan.features.report.Chan4ReportPostController
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
-import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.ui.helper.OpenExternalThreadHelper
 import com.github.k1rakishou.chan.ui.helper.ShowPostsInExternalThreadHelper
@@ -116,8 +115,6 @@ abstract class ThreadController(
   lateinit var dialogFactoryLazy: Lazy<DialogFactory>
   @Inject
   lateinit var currentOpenedDescriptorStateManagerLazy: Lazy<CurrentOpenedDescriptorStateManager>
-  @Inject
-  lateinit var globalUiStateHolderLazy: Lazy<GlobalUiStateHolder>
 
   protected val siteManager: SiteManager
     get() = siteManagerLazy.get()
@@ -135,8 +132,6 @@ abstract class ThreadController(
     get() = threadFollowHistoryManagerLazy.get()
   protected val currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager
     get() = currentOpenedDescriptorStateManagerLazy.get()
-  protected val globalUiStateHolder: GlobalUiStateHolder
-    get() = globalUiStateHolderLazy.get()
 
   private val applicationVisibilityManager: ApplicationVisibilityManager
     get() = applicationVisibilityManagerLazy.get()

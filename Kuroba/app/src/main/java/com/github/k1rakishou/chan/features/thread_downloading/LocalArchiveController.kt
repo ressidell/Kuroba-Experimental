@@ -83,8 +83,8 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessag
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
@@ -218,7 +218,7 @@ class LocalArchiveController(
 
     view = ComposeView(context).apply {
       setContent {
-        ProvideEverythingForCompose {
+        ComposeEntrypoint {
           Box(modifier = Modifier.fillMaxSize()) {
             BuildContent()
           }

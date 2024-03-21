@@ -77,8 +77,8 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButt
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextField
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
@@ -171,7 +171,7 @@ class Chan4CaptchaLayout(
 
     val view = ComposeView(context).apply {
       setContent {
-        ProvideEverythingForCompose {
+        ComposeEntrypoint {
           val chanTheme = LocalChanTheme.current
 
           Box(

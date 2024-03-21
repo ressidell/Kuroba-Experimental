@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.controller.ControllerKey
 import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
@@ -150,7 +151,11 @@ class ThemeGalleryController(
   inner class ThemeViewHolder(itemView: FrameLayout) : RecyclerView.ViewHolder(itemView) {
 
     fun onBind(chanTheme: ChanTheme, postCellDataWidthNoPaddings: Int) {
-      val kurobaToolbarState = KurobaToolbarState()
+      val kurobaToolbarState = KurobaToolbarState(
+        controllerKey = ControllerKey("${controllerKey.key}_${chanTheme.name}"),
+        globalUiStateHolder = globalUiStateHolder
+      )
+
       kurobaToolbarState.enterDefaultMode(
         leftItem = BackArrowMenuItem(onClick = {  }),
         middleContent = ToolbarMiddleContent.Title(

@@ -49,8 +49,8 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressInd
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
 import com.github.k1rakishou.chan.ui.compose.reorder.draggedItem
@@ -125,7 +125,7 @@ class BookmarkGroupSettingsController(
 
     view = ComposeView(context).apply {
       setContent {
-        ProvideEverythingForCompose {
+        ComposeEntrypoint {
           val chanTheme = LocalChanTheme.current
 
           Box(

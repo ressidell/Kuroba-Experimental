@@ -7,9 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
+import com.github.k1rakishou.chan.controller.ControllerKey
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
+import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarParams
+import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarParams
@@ -18,39 +21,45 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchT
 import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
 import com.github.k1rakishou.core_logger.Logger
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 @Stable
-class KurobaToolbarState {
+class KurobaToolbarState(
+  private val controllerKey: ControllerKey,
+  private val globalUiStateHolder: GlobalUiStateHolder
+) {
   private val _toolbarLayerEventFlow = MutableSharedFlow<KurobaToolbarStateEvent>(extraBufferCapacity = Channel.UNLIMITED)
   val toolbarLayerEventFlow: SharedFlow<KurobaToolbarStateEvent>
     get() = _toolbarLayerEventFlow.asSharedFlow()
 
   private val _toolbarStates = mutableStateListOf<IKurobaToolbarState>()
-  val topToolbar: IKurobaToolbarState
-    get() = requireNotNull(_toolbarStates.lastOrNull()) { "Toolbar has not states!" }
+  val topToolbar: IKurobaToolbarState?
+    get() = _toolbarStates.lastOrNull()
 
+  val container by lazy(LazyThreadSafetyMode.NONE) { KurobaContainerToolbarState() }
   val default by lazy(LazyThreadSafetyMode.NONE) { KurobaDefaultToolbarState() }
   val search by lazy(LazyThreadSafetyMode.NONE) { KurobaSearchToolbarState() }
   val selection by lazy(LazyThreadSafetyMode.NONE) { KurobaSelectionToolbarState() }
   val reply by lazy(LazyThreadSafetyMode.NONE) { KurobaReplyToolbarState() }
 
-  private val _enabledState = mutableStateOf(false)
-  val enabledState: State<Boolean>
-    get() = _enabledState
-  val enabled: Boolean
-    get() = _enabledState.value
+  val toolbarVisibleState: Flow<Boolean>
+    get() = globalUiStateHolder.toolbarState.toolbarVisibilityStateFlow()
 
   private val _toolbarHeightState = mutableStateOf<Dp?>(null)
   val toolbarHeightState: State<Dp?>
     get() = _toolbarHeightState
   val toolbarHeight: Dp?
     get() = _toolbarHeightState.value
+
+  val toolbarKey: String
+    get() = "Toolbar_${controllerKey.key}"
 
   fun onToolbarHeightChanged(totalToolbarHeight: Dp) {
     if (totalToolbarHeight.isSpecified && totalToolbarHeight > 0.dp) {
@@ -60,12 +69,11 @@ class KurobaToolbarState {
     }
   }
 
-  fun enable() {
-    _enabledState.value = true
-  }
-
-  fun disable() {
-    _enabledState.value = false
+  fun enterContainerMode() {
+    enterToolbarMode(
+      params = KurobaContainerToolbarParams(),
+      state = container
+    )
   }
 
   fun enterDefaultMode(
@@ -115,7 +123,7 @@ class KurobaToolbarState {
   }
 
   fun exitSearchMode() {
-    if (topToolbar.kind == ToolbarStateKind.Search) {
+    if (topToolbar?.kind == ToolbarStateKind.Search) {
       pop()
     }
   }
@@ -141,7 +149,7 @@ class KurobaToolbarState {
   }
 
   fun exitSelectionMode() {
-    if (topToolbar.kind == ToolbarStateKind.Selection) {
+    if (topToolbar?.kind == ToolbarStateKind.Selection) {
       pop()
     }
   }
@@ -165,7 +173,7 @@ class KurobaToolbarState {
   }
 
   fun exitReplyMode() {
-    if (topToolbar.kind == ToolbarStateKind.Reply) {
+    if (topToolbar?.kind == ToolbarStateKind.Reply) {
       pop()
     }
   }
@@ -195,7 +203,9 @@ class KurobaToolbarState {
   }
 
   fun showToolbar() {
-    TODO("TODO: New toolbar")
+    globalUiStateHolder.updateToolbarState { toolbarState ->
+      toolbarState.updateToolbarVisibilityState(visible = true)
+    }
   }
 
   fun onTransitionStart(other: KurobaToolbarState) {
@@ -210,8 +220,17 @@ class KurobaToolbarState {
     TODO("TODO: New toolbar")
   }
 
-  fun updateFromState(childControllerToolbarState: KurobaToolbarState) {
-    TODO("TODO: New toolbar")
+  fun updateFromState(toolbarState: KurobaToolbarState) {
+    _toolbarStates.clear()
+    _toolbarStates.addAll(toolbarState._toolbarStates)
+
+    container.updateFromState(toolbarState.container)
+    default.updateFromState(toolbarState.default)
+    search.updateFromState(toolbarState.search)
+    selection.updateFromState(toolbarState.selection)
+    reply.updateFromState(toolbarState.reply)
+
+    _toolbarHeightState.value = toolbarState._toolbarHeightState.value
   }
 
   fun findItem(id: Int): ToolbarMenuItem? {
@@ -271,6 +290,8 @@ class KurobaToolbarState {
     params: IKurobaToolbarParams,
     state: IKurobaToolbarState
   ) {
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' entering state ${state.kind}" }
+
     val indexOfState = _toolbarStates.indexOfFirst { prevLayer -> prevLayer.kind == params.kind }
     if (indexOfState != _toolbarStates.lastIndex) {
       if (isDevBuild()) {
@@ -300,7 +321,9 @@ class KurobaToolbarState {
   }
 
   fun exitToolbarMode(kind: ToolbarStateKind) {
-    if (topToolbar.kind == kind) {
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' exiting state ${kind}" }
+
+    if (topToolbar?.kind == kind) {
       pop()
     }
   }

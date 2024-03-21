@@ -43,8 +43,8 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.providers.ProvideEverythingForCompose
 import com.github.k1rakishou.chan.ui.helper.PinHelper
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -122,7 +122,7 @@ class KurobaComposeIconPanel(
 
   @Composable
   fun BuildPanel(onMenuItemClicked: (Int) -> Unit) {
-    ProvideEverythingForCompose {
+    ComposeEntrypoint {
       BuildPanelInternal(onMenuItemClicked)
     }
   }

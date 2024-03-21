@@ -18,6 +18,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.widget.SimpleAnimatorListener
+import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.setAlphaFast
 import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.core_themes.ChanTheme
@@ -69,7 +70,11 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     set(value) { kurobaComposeIconPanel.setMenuItemSelected(value) }
 
   init {
-    // TODO: New toolbar. Injection.
+    if (!isInEditMode) {
+      AppModuleAndroidUtils.extractActivityComponent(context)
+        .inject(this)
+    }
+
     setOnApplyWindowInsetsListener(null)
 
     if (!isBottomNavViewEnabled) {
@@ -188,7 +193,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     }
 
     coroutineScope.launch {
-      globalUiStateHolder.toolbarState.toolbarAppearanceFlow()
+      globalUiStateHolder.toolbarState.toolbarVisibilityStateFlow()
         .onEach { toolbarVisible ->
           if (!isBottomNavViewEnabled) {
             completelyDisableBottomNavigationView()

@@ -97,6 +97,7 @@ import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingC
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingDelegate
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.AppConstants
@@ -988,9 +989,9 @@ class ManagerModule {
 
   @Singleton
   @Provides
-  fun provideKurobaToolbarStateManager(): KurobaToolbarStateManager {
+  fun provideKurobaToolbarStateManager(globalUiStateHolder: GlobalUiStateHolder): KurobaToolbarStateManager {
     Logger.deps("KurobaToolbarStateManager")
-    return KurobaToolbarStateManager()
+    return KurobaToolbarStateManager(globalUiStateHolder)
   }
 
 }

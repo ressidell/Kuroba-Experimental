@@ -17,7 +17,10 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 
 @Composable
-fun KurobaDefaultToolbarContent(state: KurobaDefaultToolbarState) {
+fun KurobaDefaultToolbarContent(
+  modifier: Modifier,
+  state: KurobaDefaultToolbarState
+) {
   val leftIconMut by state.leftItem
   val leftIcon = leftIconMut
 
@@ -28,7 +31,7 @@ fun KurobaDefaultToolbarContent(state: KurobaDefaultToolbarState) {
   val toolbarMenu = toolbarMenuMut
 
   Row(
-    modifier = Modifier.fillMaxSize(),
+    modifier = modifier,
     verticalAlignment = Alignment.CenterVertically
   ) {
     if (leftIcon != null) {

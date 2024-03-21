@@ -6,7 +6,7 @@ import com.github.k1rakishou.chan.utils.activityComponent
 import com.github.k1rakishou.chan.utils.applicationComponent
 
 @Composable
-fun ProvideEverythingForCompose(
+fun ComposeEntrypoint(
   content: @Composable () -> Unit
 ) {
   val context = LocalContext.current

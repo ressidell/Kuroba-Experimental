@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 
 
 class KurobaToolbarView @JvmOverloads constructor(
@@ -16,14 +17,16 @@ class KurobaToolbarView @JvmOverloads constructor(
   defAttrStyle: Int = 0
 ) : FrameLayout(context, attrSet, defAttrStyle) {
   private val _kurobaToolbarState = mutableStateOf<KurobaToolbarState?>(null)
-  
+
   init {
     addView(
-      ComposeView(context).also { composeView -> 
+      ComposeView(context).also { composeView ->
         composeView.setContent {
-          val kurobaToolbarState by _kurobaToolbarState
-          KurobaToolbar(kurobaToolbarState = kurobaToolbarState)
-        } 
+          ComposeEntrypoint {
+            val kurobaToolbarState by _kurobaToolbarState
+            KurobaToolbar(kurobaToolbarState = kurobaToolbarState)
+          }
+        }
       }
     )
   }

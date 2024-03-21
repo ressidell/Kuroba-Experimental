@@ -31,9 +31,7 @@ import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.controller.transition.ControllerTransition
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
-import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutBoundsStates
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.layout.ThreadSlidingPaneLayout
@@ -58,8 +56,6 @@ class ThreadSlideController(
 
   @Inject
   lateinit var themeEngine: ThemeEngine
-  @Inject
-  lateinit var globalUiStateHolder: GlobalUiStateHolder
 
   private var leftController: BrowseController? = null
   private var rightController: ViewThreadController? = null
@@ -350,17 +346,15 @@ class ThreadSlideController(
   }
 
   private fun setParentNavigationItem(left: Boolean, animate: Boolean) {
-    var kurobaToolbarState = if (left) {
-      leftController?.toolbarState
+    val kurobaToolbarState = if (left) {
+      val controller = checkNotNull(leftController) { "leftController is null" }
+      controller.toolbarState
     } else {
-      rightController?.toolbarState
+      val controller = checkNotNull(rightController) { "rightController is null" }
+      controller.toolbarState
     }
 
-    if (kurobaToolbarState == null) {
-      kurobaToolbarState = KurobaToolbarState()
-    }
-
-    toolbarState.updateFromState(kurobaToolbarState)
+    requireToolbarNavController().toolbarState.updateFromState(kurobaToolbarState)
   }
 
   fun passMotionEventIntoSlidingPaneLayout(event: MotionEvent): Boolean {
