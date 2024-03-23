@@ -40,7 +40,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
   private var attachedToWindow = false
   private var attachedToToolbar = false
   private var animating = false
-  private var lastScrollTransitionProgress = 0f
+  private var lastScrollTransitionProgress = 1f
   private var isTranslationLocked = false
   private var isCollapseLocked = false
   private var isBottomNavViewEnabled = ChanSettings.isNavigationViewEnabled()
@@ -306,7 +306,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
       return
     }
 
-    val newAlpha = 1f - lastScrollTransitionProgress
+    val newAlpha = lastScrollTransitionProgress
     if (newAlpha == alpha) {
       return
     }
