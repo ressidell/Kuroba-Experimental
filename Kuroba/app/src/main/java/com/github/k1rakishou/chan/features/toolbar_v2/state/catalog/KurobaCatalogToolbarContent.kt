@@ -17,8 +17,8 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.toolbar_v2.MoreVerticalMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarTitleWithSubtitle
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 
@@ -51,7 +51,7 @@ fun KurobaCatalogToolbarContent(
       Spacer(modifier = Modifier.width(12.dp))
 
       val iconDrawableId by leftIcon.drawableIdState
-      KurobaComposeClickableIcon(
+      ToolbarClickableIcon(
         drawableId = iconDrawableId,
         onClick = {
           val iconClickInterceptor = state.iconClickInterceptor
@@ -95,7 +95,7 @@ fun KurobaCatalogToolbarContent(
 
           Spacer(modifier = Modifier.width(12.dp))
 
-          KurobaComposeClickableIcon(
+          ToolbarClickableIcon(
             drawableId = iconDrawableId,
             onClick = {
               val iconClickInterceptor = state.iconClickInterceptor
@@ -115,7 +115,7 @@ fun KurobaCatalogToolbarContent(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        KurobaComposeClickableIcon(
+        ToolbarClickableIcon(
           drawableId = drawableId,
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor

@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         android:layout_height="match_parent"
         android:paddingBottom="@dimen/navigation_view_size"/>
 
-    <com.github.k1rakishou.chan.ui.toolbar.Toolbar
+    <com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/toolbar_height" />
+        android:layout_height="wrap_content" />
 
 </com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout>

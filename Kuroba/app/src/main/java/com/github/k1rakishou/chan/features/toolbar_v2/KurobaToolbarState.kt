@@ -23,7 +23,6 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSele
 import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarState
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
 import com.github.k1rakishou.core_logger.Logger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -334,18 +333,6 @@ class KurobaToolbarState(
     Logger.debug(TAG) { "Toolbar '${toolbarKey}' entering state ${state.kind}" }
 
     val indexOfState = _toolbarStates.indexOfFirst { prevLayer -> prevLayer.kind == params.kind }
-    if (indexOfState >= 0 && indexOfState != _toolbarStates.lastIndex) {
-      if (isDevBuild()) {
-        error("Can only update top toolbar. indexOfState: ${indexOfState}, lastIndex: ${_toolbarStates.lastIndex}")
-      } else {
-        Logger.error(TAG) {
-          "Can only update top toolbar. indexOfState: ${indexOfState}, lastIndex: ${_toolbarStates.lastIndex}"
-        }
-      }
-
-      return
-    }
-
     if (indexOfState >= 0) {
       val prevToolbarLayer = _toolbarStates[indexOfState]
       Snapshot.withMutableSnapshot { prevToolbarLayer.update(params) }

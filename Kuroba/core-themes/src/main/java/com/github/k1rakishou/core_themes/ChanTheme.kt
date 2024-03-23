@@ -94,7 +94,7 @@ abstract class ChanTheme {
     }
 
   val toolbarBackgroundComposeColor: Color
-    get() = backColorSecondaryCompose
+    get() = primaryColorCompose
 
   val onToolbarBackgroundComposeColor: Color
     get() {

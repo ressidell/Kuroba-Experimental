@@ -19,7 +19,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     super.transition(from, to, pushing, controllerTransition)
 
     if (to != null) {
-      requireNavController().toolbarState.showToolbar()
+      requireToolbarNavController().toolbarState.showToolbar()
     }
   }
 
@@ -32,10 +32,10 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
       return false
     }
 
-    requireNavController().toolbarState.showToolbar()
+    requireToolbarNavController().toolbarState.showToolbar()
 
     if (to != null) {
-      requireNavController().toolbarState.onTransitionStart(to.toolbarState)
+      requireToolbarNavController().toolbarState.onTransitionStart(to.toolbarState)
     }
 
     return true
@@ -44,7 +44,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
   override fun swipeTransitionProgress(progress: Float) {
     super.swipeTransitionProgress(progress)
 
-    requireNavController().toolbarState.onTransitionProgress(progress)
+    requireToolbarNavController().toolbarState.onTransitionProgress(progress)
   }
 
   override fun endSwipeTransition(from: Controller?, to: Controller?, finish: Boolean) {
@@ -54,17 +54,17 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
 
     super.endSwipeTransition(from, to, finish)
 
-    requireNavController().toolbarState.showToolbar()
+    requireToolbarNavController().toolbarState.showToolbar()
 
     if (finish && to != null) {
-      requireNavController().toolbarState.onTransitionFinished(to.toolbarState)
+      requireToolbarNavController().toolbarState.onTransitionFinished(to.toolbarState)
     } else if (!finish && from != null) {
-      requireNavController().toolbarState.onTransitionFinished(from.toolbarState)
+      requireToolbarNavController().toolbarState.onTransitionFinished(from.toolbarState)
     }
   }
 
   override fun onBack(): Boolean {
-    return requireNavController().toolbarState.onBack() || super.onBack()
+    return requireToolbarNavController().toolbarState.onBack() || super.onBack()
   }
 
 }

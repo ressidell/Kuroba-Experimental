@@ -279,8 +279,6 @@ class MainController(
         if (topController.leftController() is StyledToolbarNavigationController) {
           navigationController = topController.leftController() as StyledToolbarNavigationController
         }
-      } else if (topController is ThreadSlideController) {
-        navigationController = topController.leftController() as StyledToolbarNavigationController
       }
 
       if (navigationController == null) {

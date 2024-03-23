@@ -40,7 +40,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
   private var attachedToWindow = false
   private var attachedToToolbar = false
   private var animating = false
-  private var lastCollapseTranslationOffset = 0f
+  private var lastScrollTransitionProgress = 0f
   private var isTranslationLocked = false
   private var isCollapseLocked = false
   private var isBottomNavViewEnabled = ChanSettings.isNavigationViewEnabled()
@@ -209,14 +209,13 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     }
 
     coroutineScope.launch {
-      snapshotFlow { globalUiStateHolder.scrollState.scrollTransitionProgress }
-        .onEach { scrollTransitionProgressState ->
+      snapshotFlow { globalUiStateHolder.scrollState.scrollTransitionProgress.floatValue }
+        .onEach { scrollTransitionProgress ->
           if (!isBottomNavViewEnabled) {
             completelyDisableBottomNavigationView()
             return@onEach
           }
 
-          val scrollTransitionProgress = scrollTransitionProgressState.floatValue
           onCollapseTranslation(scrollTransitionProgress)
         }
         .collect()
@@ -234,14 +233,14 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     coroutineScope.cancelChildren()
   }
 
-  private fun onCollapseTranslation(offset: Float) {
-    lastCollapseTranslationOffset = offset
+  private fun onCollapseTranslation(scrollTransitionProgress: Float) {
+    lastScrollTransitionProgress = scrollTransitionProgress
 
     if (isCollapseLocked) {
       return
     }
 
-    val newAlpha = 1f - offset
+    val newAlpha = scrollTransitionProgress
     if (newAlpha == alpha) {
       return
     }
@@ -250,7 +249,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
       return
     }
 
-    this.alpha = newAlpha
+    setAlphaFast(newAlpha)
   }
 
   override fun setOnNavigationItemSelectedListener(listener: (Int) -> Boolean) {
@@ -259,7 +258,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
 
   private fun onCollapseAnimationInternal(collapse: Boolean, isFromToolbarCallbacks: Boolean) {
     if (isFromToolbarCallbacks) {
-      lastCollapseTranslationOffset = if (collapse) {
+      lastScrollTransitionProgress = if (collapse) {
         1f
       } else {
         0f
@@ -307,7 +306,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
       return
     }
 
-    val newAlpha = 1f - lastCollapseTranslationOffset
+    val newAlpha = 1f - lastScrollTransitionProgress
     if (newAlpha == alpha) {
       return
     }
@@ -329,7 +328,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     visibility = View.GONE
     isTranslationLocked = true
     isCollapseLocked = true
-    this.setAlphaFast(0f)
+    setAlphaFast(0f)
   }
 
   companion object {

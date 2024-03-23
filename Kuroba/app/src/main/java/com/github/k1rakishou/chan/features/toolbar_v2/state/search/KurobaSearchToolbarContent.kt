@@ -16,7 +16,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
+import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextFieldV2
 import com.github.k1rakishou.chan.ui.compose.components.KurobaLabelText
 import com.github.k1rakishou.chan.ui.compose.freeFocusSafe
@@ -75,7 +75,7 @@ fun KurobaSearchToolbarContent(
 
     Spacer(modifier = Modifier.width(8.dp))
 
-    KurobaComposeClickableIcon(
+    ToolbarClickableIcon(
       drawableId = R.drawable.ic_baseline_clear_24,
       onClick = { state.clearSearchQuery() }
     )
