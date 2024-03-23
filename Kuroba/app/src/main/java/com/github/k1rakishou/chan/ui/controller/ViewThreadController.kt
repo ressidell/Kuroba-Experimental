@@ -59,18 +59,18 @@ open class ViewThreadController(
   ReplyAutoCloseListener {
 
   @Inject
-  lateinit var _historyNavigationManager: Lazy<HistoryNavigationManager>
+  lateinit var historyNavigationManagerLazy: Lazy<HistoryNavigationManager>
   @Inject
-  lateinit var _bookmarksManager: Lazy<BookmarksManager>
+  lateinit var bookmarksManagerLazy: Lazy<BookmarksManager>
   @Inject
-  lateinit var _threadDownloadManager: Lazy<ThreadDownloadManager>
+  lateinit var threadDownloadManagerLazy: Lazy<ThreadDownloadManager>
 
   private val historyNavigationManager: HistoryNavigationManager
-    get() = _historyNavigationManager.get()
+    get() = historyNavigationManagerLazy.get()
   private val bookmarksManager: BookmarksManager
-    get() = _bookmarksManager.get()
+    get() = bookmarksManagerLazy.get()
   private val threadDownloadManager: ThreadDownloadManager
-    get() = _threadDownloadManager.get()
+    get() = threadDownloadManagerLazy.get()
 
   private var pinItemPinned = false
   private var threadDescriptor: ThreadDescriptor = startingThreadDescriptor
