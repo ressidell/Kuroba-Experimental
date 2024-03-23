@@ -164,7 +164,11 @@ class ProxySetupController(
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
         drawerCallbacks?.hideBottomPanel()
-        toolbarState.exitSelectionMode()
+
+        if (toolbarState.isInSelectionMode()) {
+          toolbarState.pop()
+        }
+
         addProxyButton.show()
       }
     }

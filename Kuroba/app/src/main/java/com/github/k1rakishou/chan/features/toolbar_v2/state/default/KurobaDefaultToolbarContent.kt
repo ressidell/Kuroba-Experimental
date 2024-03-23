@@ -36,9 +36,8 @@ fun KurobaDefaultToolbarContent(
     if (leftIcon != null) {
       Spacer(modifier = Modifier.width(12.dp))
 
-      val iconDrawableId by leftIcon.drawableIdState
       ToolbarClickableIcon(
-        drawableId = iconDrawableId,
+        toolbarMenuItem = leftIcon,
         onClick = {
           val iconClickInterceptor = state.iconClickInterceptor
 
@@ -73,9 +72,7 @@ fun KurobaDefaultToolbarContent(
         Spacer(modifier = Modifier.width(8.dp))
 
         for (rightIcon in menuItems) {
-          val iconDrawableId by rightIcon.drawableIdState
           val visible by rightIcon.visibleState
-
           if (!visible) {
             continue
           }
@@ -83,7 +80,7 @@ fun KurobaDefaultToolbarContent(
           Spacer(modifier = Modifier.width(12.dp))
 
           ToolbarClickableIcon(
-            drawableId = iconDrawableId,
+            toolbarMenuItem = rightIcon,
             onClick = {
               val iconClickInterceptor = state.iconClickInterceptor
 
@@ -101,12 +98,10 @@ fun KurobaDefaultToolbarContent(
           MoreVerticalMenuItem(onClick = { /**no-op*/ })
         }
 
-        val drawableId by overflowIcon.drawableIdState
-
         Spacer(modifier = Modifier.width(12.dp))
 
         ToolbarClickableIcon(
-          drawableId = drawableId,
+          toolbarMenuItem = overflowIcon,
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor
 

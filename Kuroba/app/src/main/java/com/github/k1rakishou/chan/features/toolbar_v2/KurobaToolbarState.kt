@@ -134,14 +134,6 @@ class KurobaToolbarState(
     )
   }
 
-  fun isInDefaultMode(): Boolean {
-    return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Default
-  }
-
-  fun exitDefaultMode() {
-    exitToolbarMode(ToolbarStateKind.Default)
-  }
-
   fun enterSearchMode(
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
   ) {
@@ -158,12 +150,6 @@ class KurobaToolbarState(
 
   fun isInSearchMode(): Boolean {
     return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Search
-  }
-
-  fun exitSearchMode() {
-    if (topToolbar?.kind == ToolbarStateKind.Search) {
-      pop()
-    }
   }
 
   fun enterSelectionMode(
@@ -186,12 +172,6 @@ class KurobaToolbarState(
     return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Selection
   }
 
-  fun exitSelectionMode() {
-    if (topToolbar?.kind == ToolbarStateKind.Selection) {
-      pop()
-    }
-  }
-
   fun enterReplyMode(
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
   ) {
@@ -208,12 +188,6 @@ class KurobaToolbarState(
 
   fun isInReplyMode(): Boolean {
     return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Reply
-  }
-
-  fun exitReplyMode() {
-    if (topToolbar?.kind == ToolbarStateKind.Reply) {
-      pop()
-    }
   }
 
   fun pop(): Boolean {
@@ -345,14 +319,6 @@ class KurobaToolbarState(
       state.onPushed()
 
       _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Pushed(state.kind))
-    }
-  }
-
-  fun exitToolbarMode(kind: ToolbarStateKind) {
-    Logger.debug(TAG) { "Toolbar '${toolbarKey}' exiting state ${kind}" }
-
-    if (topToolbar?.kind == kind) {
-      pop()
     }
   }
 

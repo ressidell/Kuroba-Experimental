@@ -38,7 +38,6 @@ open class ToolbarMenuItem(
   val visibleState: State<Boolean>
     get() = _visibleState
 
-  // TODO: New toolbar.
   private val _spinEventsFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
   val spinEventsFlow: SharedFlow<Unit>
     get() = _spinEventsFlow.asSharedFlow()

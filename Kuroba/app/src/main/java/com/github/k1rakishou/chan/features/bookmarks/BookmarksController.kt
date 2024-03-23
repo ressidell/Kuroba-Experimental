@@ -599,7 +599,10 @@ class BookmarksController(
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
         mainControllerCallbacks.hideBottomPanel()
-        toolbarState.exitSelectionMode()
+
+        if (toolbarState.isInSelectionMode()) {
+          toolbarState.pop()
+        }
       }
     }
   }

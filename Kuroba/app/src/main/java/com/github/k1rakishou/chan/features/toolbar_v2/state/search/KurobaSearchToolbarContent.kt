@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.features.toolbar_v2.SearchMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextFieldV2
 import com.github.k1rakishou.chan.ui.compose.components.KurobaLabelText
@@ -75,8 +76,12 @@ fun KurobaSearchToolbarContent(
 
     Spacer(modifier = Modifier.width(8.dp))
 
+    val searchIcon = remember {
+      SearchMenuItem(onClick = { state.clearSearchQuery() })
+    }
+
     ToolbarClickableIcon(
-      drawableId = R.drawable.ic_baseline_clear_24,
+      toolbarMenuItem = searchIcon,
       onClick = { state.clearSearchQuery() }
     )
   }

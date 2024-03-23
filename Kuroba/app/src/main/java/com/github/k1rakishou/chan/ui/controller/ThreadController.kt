@@ -246,7 +246,9 @@ abstract class ThreadController(
           if (anyReplyLayoutOpenedOrExpanded) {
             kurobaToolbarState.enterReplyMode()
           } else {
-            kurobaToolbarState.exitReplyMode()
+            if (toolbarState.isInReplyMode()) {
+              toolbarState.pop()
+            }
           }
         }
         .collect()

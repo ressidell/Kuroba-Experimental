@@ -1191,7 +1191,10 @@ class BrowseController(
   }
 
   override fun onReplyViewShouldClose() {
-    toolbarState.exitReplyMode()
+    if (toolbarState.isInReplyMode()) {
+      toolbarState.pop()
+    }
+
     threadLayout.openReply(false)
   }
 
