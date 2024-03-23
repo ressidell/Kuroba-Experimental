@@ -8,6 +8,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarParams
+import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarParams
 
 data class KurobaReplyToolbarParams(
   val toolbarMenu: ToolbarMenu? = null
@@ -22,7 +23,7 @@ class KurobaReplyToolbarState(
   val toolbarMenu: State<ToolbarMenu?>
     get() = _toolbarMenu
 
-  override val kind: ToolbarStateKind = ToolbarStateKind.Reply
+  override val kind: ToolbarStateKind = params.kind
 
   override val leftMenuItem: ToolbarMenuItem? = null
 
@@ -30,7 +31,9 @@ class KurobaReplyToolbarState(
     get() = _toolbarMenu.value
 
   override fun update(params: IKurobaToolbarParams) {
-    TODO("Not yet implemented")
+    params as KurobaSelectionToolbarParams
+
+    _toolbarMenu.value = params.toolbarMenu
   }
 
   override fun updateFromState(toolbarState: IKurobaToolbarState) {
@@ -40,10 +43,8 @@ class KurobaReplyToolbarState(
   }
 
   override fun onPushed() {
-    TODO("Not yet implemented")
   }
 
   override fun onPopped() {
-    TODO("Not yet implemented")
   }
 }

@@ -8,6 +8,8 @@ import com.github.k1rakishou.chan.controller.ControllerKey
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
+import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarParams
+import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarParams
@@ -18,6 +20,8 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchT
 import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarParams
+import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarState
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
 import com.github.k1rakishou.core_logger.Logger
@@ -42,6 +46,8 @@ class KurobaToolbarState(
     get() = _toolbarStates.lastOrNull()
 
   val container by lazy(LazyThreadSafetyMode.NONE) { KurobaContainerToolbarState() }
+  val catalog by lazy(LazyThreadSafetyMode.NONE) { KurobaCatalogToolbarState() }
+  val thread by lazy(LazyThreadSafetyMode.NONE) { KurobaThreadToolbarState() }
   val default by lazy(LazyThreadSafetyMode.NONE) { KurobaDefaultToolbarState() }
   val search by lazy(LazyThreadSafetyMode.NONE) { KurobaSearchToolbarState() }
   val selection by lazy(LazyThreadSafetyMode.NONE) { KurobaSelectionToolbarState() }
@@ -71,11 +77,47 @@ class KurobaToolbarState(
     )
   }
 
+  fun enterCatalogMode(
+    leftItem: ToolbarMenuItem?,
+    menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
+    iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
+  ) {
+    val toolbarMenuBuilder = ToolbarMenuBuilder()
+    menuBuilder?.invoke(toolbarMenuBuilder)
+
+    enterToolbarMode(
+      params = KurobaCatalogToolbarParams(
+        leftItem = leftItem,
+        toolbarMenu = toolbarMenuBuilder.build(),
+        iconClickInterceptor = iconClickInterceptor
+      ),
+      state = catalog
+    )
+  }
+
+  fun enterThreadMode(
+    leftItem: ToolbarMenuItem?,
+    menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
+    iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
+  ) {
+    val toolbarMenuBuilder = ToolbarMenuBuilder()
+    menuBuilder?.invoke(toolbarMenuBuilder)
+
+    enterToolbarMode(
+      params = KurobaThreadToolbarParams(
+        leftItem = leftItem,
+        toolbarMenu = toolbarMenuBuilder.build(),
+        iconClickInterceptor = iconClickInterceptor
+      ),
+      state = thread
+    )
+  }
+
   fun enterDefaultMode(
     leftItem: ToolbarMenuItem?,
     middleContent: ToolbarMiddleContent? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
-    iconClickInterceptor: (ToolbarMenuItem) -> Boolean = { false }
+    iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
   ) {
     val toolbarMenuBuilder = ToolbarMenuBuilder()
     menuBuilder?.invoke(toolbarMenuBuilder)
@@ -302,11 +344,11 @@ class KurobaToolbarState(
 
     if (indexOfState >= 0) {
       val prevToolbarLayer = _toolbarStates[indexOfState]
-      prevToolbarLayer.update(params)
+      Snapshot.withMutableSnapshot { prevToolbarLayer.update(params) }
 
       _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Updated(prevToolbarLayer.kind))
     } else {
-      state.update(params)
+      Snapshot.withMutableSnapshot { state.update(params) }
 
       _toolbarStates += state
       state.onPushed()

@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.ui.compose.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -10,7 +11,10 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.common.errorMessageOrClassName
 
 @Composable
-fun KurobaComposeErrorMessage(error: Throwable, modifier: Modifier = DefaultFillMaxSizeModifier) {
+fun KurobaComposeErrorMessage(
+  modifier: Modifier = Modifier.fillMaxSize(),
+  error: Throwable
+) {
   val errorMessage = remember(key1 = error) { error.errorMessageOrClassName() }
 
   KurobaComposeErrorMessage(
@@ -20,7 +24,10 @@ fun KurobaComposeErrorMessage(error: Throwable, modifier: Modifier = DefaultFill
 }
 
 @Composable
-fun KurobaComposeErrorMessage(errorMessage: String, modifier: Modifier = DefaultFillMaxSizeModifier) {
+fun KurobaComposeErrorMessage(
+  modifier: Modifier = Modifier.fillMaxSize(),
+  errorMessage: String
+) {
   val windowInsets = LocalWindowInsets.current
 
   Box(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenu
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
@@ -12,8 +13,6 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.compose.clearText
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
 data class KurobaSearchToolbarParams(
@@ -30,10 +29,13 @@ class KurobaSearchToolbarState(
   val toolbarMenu: State<ToolbarMenu?>
     get() = _toolbarMenu
 
-  private val _searchVisible = MutableStateFlow(false)
+  private val _searchVisible = mutableStateOf(false)
+  val searchVisible: State<Boolean>
+    get() = _searchVisible
+
   val searchQueryState = TextFieldState()
 
-  override val kind: ToolbarStateKind = ToolbarStateKind.Search
+  override val kind: ToolbarStateKind = params.kind
 
   override val leftMenuItem: ToolbarMenuItem? = null
 
@@ -41,14 +43,16 @@ class KurobaSearchToolbarState(
     get() = _toolbarMenu.value
 
   override fun update(params: IKurobaToolbarParams) {
-    TODO("Not yet implemented")
+    params as KurobaSearchToolbarParams
+
+    _toolbarMenu.value = params.toolbarMenu
   }
 
   override fun updateFromState(toolbarState: IKurobaToolbarState) {
     toolbarState as KurobaSearchToolbarState
 
     _toolbarMenu.value = toolbarState._toolbarMenu.value
-    _searchVisible.value = toolbarState._searchVisible.value
+    // Do not update current state's `_searchVisible` from `toolbarState`
   }
 
   override fun onPushed() {
@@ -66,7 +70,7 @@ class KurobaSearchToolbarState(
   }
 
   fun listenForSearchVisibilityUpdates(): Flow<Boolean> {
-    return _searchVisible.asStateFlow()
+    return snapshotFlow { _searchVisible.value }
   }
 
   fun isInSearchMode(): Boolean {

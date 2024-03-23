@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarContent
+import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarContent
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarContent
@@ -15,6 +17,8 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchT
 import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarContent
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarContent
+import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarState
 
 @Composable
 fun KurobaToolbar(
@@ -33,6 +37,18 @@ fun KurobaToolbar(
     when (childToolbarState) {
       is KurobaContainerToolbarState -> {
         error("Must be a toolbar container")
+      }
+      is KurobaCatalogToolbarState -> {
+        KurobaCatalogToolbarContent(
+          modifier = Modifier.fillMaxSize(),
+          state = childToolbarState
+        )
+      }
+      is KurobaThreadToolbarState -> {
+        KurobaThreadToolbarContent(
+          modifier = Modifier.fillMaxSize(),
+          state = childToolbarState
+        )
       }
       is KurobaDefaultToolbarState -> {
         KurobaDefaultToolbarContent(

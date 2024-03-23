@@ -33,7 +33,6 @@ import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
@@ -199,7 +198,7 @@ class BrowseController(
   override suspend fun showSitesNotSetup() {
     super.showSitesNotSetup()
 
-    toolbarState.default.updateTitle(
+    toolbarState.catalog.updateTitle(
       newTitle = ToolbarText.Id(R.string.browse_controller_title_app_setup),
       newSubTitle = ToolbarText.Id(R.string.browse_controller_subtitle)
     )
@@ -296,14 +295,11 @@ class BrowseController(
 //      }
     }
 
-    toolbarState.enterDefaultMode(
+    toolbarState.enterCatalogMode(
       leftItem = HamburgMenuItem(
         onClick = {
           // TODO: New toolbar
         }
-      ),
-      middleContent = ToolbarMiddleContent.Title(
-        title = ToolbarText.Id(R.string.loading)
       ),
       menuBuilder = {
         withMenuItem(drawableId = R.drawable.ic_search_white_24dp, onClick = { item -> searchClicked(item) })
@@ -773,14 +769,14 @@ class BrowseController(
       val board = boardManager.byBoardDescriptor(boardDescriptor)
         ?: return
 
-      toolbarState.default.updateTitle(
+      toolbarState.catalog.updateTitle(
         newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/"),
         newSubTitle = ToolbarText.String(board.name ?: "")
       )
     } else {
       catalogDescriptor as ChanDescriptor.CompositeCatalogDescriptor
 
-      toolbarState.default.updateTitle(
+      toolbarState.catalog.updateTitle(
         newTitle = ToolbarText.Id(R.string.composite_catalog),
         newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
       )
@@ -796,7 +792,7 @@ class BrowseController(
           compositeCatalogDescriptor = catalogDescriptor
         )
 
-        toolbarState.default.updateTitle(
+        toolbarState.catalog.updateTitle(
           newTitle = ToolbarText.String(newTitle ?: ""),
           newSubTitle = ToolbarText.Spanned(compositeCatalogSubTitle)
         )

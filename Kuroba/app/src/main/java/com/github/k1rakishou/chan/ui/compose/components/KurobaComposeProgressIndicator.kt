@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.ui.compose.components
 
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.CircularProgressIndicator
@@ -17,7 +18,7 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 
 @Composable
 fun KurobaComposeProgressIndicator(
-  modifier: Modifier = DefaultFillMaxSizeModifier,
+  modifier: Modifier = Modifier.fillMaxSize(),
   overrideColor: Color? = null
 ) {
   val windowInsets = LocalWindowInsets.current
@@ -46,7 +47,7 @@ fun KurobaComposeProgressIndicator(
 
 @Composable
 fun KurobaComposeProgressIndicator(
-  modifier: Modifier = DefaultFillMaxSizeModifier,
+  modifier: Modifier = Modifier.fillMaxSize(),
   @FloatRange(from = 0.0, to = 1.0) progress: Float,
   overrideColor: Color? = null,
   indicatorSize: Dp = 42.dp

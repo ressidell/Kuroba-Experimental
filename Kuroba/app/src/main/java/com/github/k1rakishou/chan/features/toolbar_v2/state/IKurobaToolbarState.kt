@@ -99,6 +99,8 @@ interface IKurobaToolbarState {
 
 enum class ToolbarStateKind {
   Container,
+  Catalog,
+  Thread,
   Default,
   Search,
   Selection,

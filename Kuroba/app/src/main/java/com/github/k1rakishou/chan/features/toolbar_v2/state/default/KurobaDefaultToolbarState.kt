@@ -42,7 +42,7 @@ class KurobaDefaultToolbarState(
   val iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)?
     get() = _iconClickInterceptor
 
-  override val kind: ToolbarStateKind = ToolbarStateKind.Default
+  override val kind: ToolbarStateKind = params.kind
 
   override val leftMenuItem: ToolbarMenuItem?
     get() = _leftItem.value

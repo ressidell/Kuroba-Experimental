@@ -27,7 +27,7 @@ class KurobaSelectionToolbarState(
   val title: State<ToolbarText?>
     get() = _title
 
-  override val kind: ToolbarStateKind = ToolbarStateKind.Selection
+  override val kind: ToolbarStateKind = params.kind
 
   override val leftMenuItem: ToolbarMenuItem? = null
 
@@ -43,14 +43,15 @@ class KurobaSelectionToolbarState(
   override fun update(params: IKurobaToolbarParams) {
     params as KurobaSelectionToolbarParams
 
+    _title.value = params.title
     _toolbarMenu.value = params.toolbarMenu
   }
 
   override fun updateFromState(toolbarState: IKurobaToolbarState) {
     toolbarState as KurobaSelectionToolbarState
 
-    _toolbarMenu.value = toolbarState._toolbarMenu.value
     _title.value = toolbarState._title.value
+    _toolbarMenu.value = toolbarState._toolbarMenu.value
   }
 
   fun updateTitle(text: ToolbarText) {

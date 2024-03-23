@@ -22,7 +22,6 @@ import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
@@ -148,14 +147,11 @@ open class ViewThreadController(
   }
 
   private fun buildToolbar() {
-    toolbarState.enterDefaultMode(
+    toolbarState.enterThreadMode(
       leftItem = BackArrowMenuItem(
         onClick = {
           // TODO: New toolbar
         }
-      ),
-      middleContent = ToolbarMiddleContent.Title(
-        title = ToolbarText.String("")
       ),
       menuBuilder = {
         withMenuItem(
@@ -653,7 +649,7 @@ open class ViewThreadController(
     if (oldThreadDescriptor == newThreadDescriptor) {
       setNavigationTitleFromDescriptor(newThreadDescriptor)
     } else {
-      toolbarState.default.updateTitle(
+      toolbarState.thread.updateTitle(
         newTitle = ToolbarText.String(getString(R.string.loading))
       )
     }
@@ -663,7 +659,7 @@ open class ViewThreadController(
     val originalPost = chanThreadManager.getChanThread(threadDescriptor)
       ?.getOriginalPost()
 
-    toolbarState.default.updateTitle(
+    toolbarState.thread.updateTitle(
       newTitle = ToolbarText.String(ChanPostUtils.getTitle(originalPost, threadDescriptor))
     )
   }
@@ -707,7 +703,7 @@ open class ViewThreadController(
   override fun onShowError() {
     super.onShowError()
 
-    toolbarState.default.updateTitle(
+    toolbarState.thread.updateTitle(
       newTitle = ToolbarText.Id(R.string.thread_loading_error_title)
     )
   }

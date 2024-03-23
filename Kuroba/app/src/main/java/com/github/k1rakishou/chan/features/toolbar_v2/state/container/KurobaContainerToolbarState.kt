@@ -10,15 +10,17 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 
 @Immutable
 class KurobaContainerToolbarParams : IKurobaToolbarParams {
-  override val kind: ToolbarStateKind = ToolbarStateKind.Default
+  override val kind: ToolbarStateKind = ToolbarStateKind.Container
 }
 
 @Stable
 class KurobaContainerToolbarState(
   params: KurobaContainerToolbarParams = KurobaContainerToolbarParams()
 ) : IKurobaToolbarState {
-  override val kind: ToolbarStateKind = ToolbarStateKind.Container
+  override val kind: ToolbarStateKind = params.kind
+
   override val leftMenuItem: ToolbarMenuItem? = null
+
   override val rightToolbarMenu: ToolbarMenu? = null
 
   override fun update(params: IKurobaToolbarParams) {
