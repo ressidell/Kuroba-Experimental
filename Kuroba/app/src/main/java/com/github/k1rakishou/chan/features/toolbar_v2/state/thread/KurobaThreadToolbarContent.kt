@@ -25,6 +25,11 @@ fun KurobaThreadToolbarContent(
   val toolbarMenuMut by state.toolbarMenu
   val toolbarMenu = toolbarMenuMut
 
+  val titleMut by state.title
+  val title = titleMut
+
+  val scrollableTitle by state.scrollableTitle
+
   Row(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically
@@ -45,9 +50,6 @@ fun KurobaThreadToolbarContent(
       )
     }
 
-    val titleMut by state.title
-    val title = titleMut
-
     if (title != null) {
       ToolbarTitleWithSubtitle(
         modifier = Modifier
@@ -55,7 +57,7 @@ fun KurobaThreadToolbarContent(
           .padding(start = 12.dp),
         title = title,
         subtitle = null,
-        scrollableTitle = false
+        scrollableTitle = scrollableTitle
       )
     }
 

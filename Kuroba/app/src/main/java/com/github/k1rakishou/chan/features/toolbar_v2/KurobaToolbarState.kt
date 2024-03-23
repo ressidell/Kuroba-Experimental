@@ -97,6 +97,7 @@ class KurobaToolbarState(
 
   fun enterThreadMode(
     leftItem: ToolbarMenuItem?,
+    scrollableTitle: Boolean = false,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
     iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
   ) {
@@ -106,6 +107,7 @@ class KurobaToolbarState(
     enterToolbarMode(
       params = KurobaThreadToolbarParams(
         leftItem = leftItem,
+        scrollableTitle = scrollableTitle,
         toolbarMenu = toolbarMenuBuilder.build(),
         iconClickInterceptor = iconClickInterceptor
       ),

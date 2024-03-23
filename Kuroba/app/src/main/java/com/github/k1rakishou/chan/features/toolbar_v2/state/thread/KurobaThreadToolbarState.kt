@@ -15,6 +15,7 @@ data class KurobaThreadToolbarParams(
   val leftItem: ToolbarMenuItem? = null,
   val title: ToolbarText? = null,
   val subtitle: ToolbarText? = null,
+  val scrollableTitle: Boolean = false,
   val toolbarMenu: ToolbarMenu? = null,
   val iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
 ) : IKurobaToolbarParams {
@@ -35,6 +36,10 @@ class KurobaThreadToolbarState(
   private val _subtitle = mutableStateOf<ToolbarText?>(params.subtitle)
   val subtitle: State<ToolbarText?>
     get() = _subtitle
+
+  private val _scrollableTitle = mutableStateOf<Boolean>(params.scrollableTitle)
+  val scrollableTitle: State<Boolean>
+    get() = _scrollableTitle
 
   private val _toolbarMenu = mutableStateOf<ToolbarMenu?>(params.toolbarMenu)
   val toolbarMenu: State<ToolbarMenu?>
@@ -58,6 +63,7 @@ class KurobaThreadToolbarState(
     _leftItem.value = params.leftItem
     _title.value = params.title
     _subtitle.value = params.subtitle
+    _scrollableTitle.value = params.scrollableTitle
     _toolbarMenu.value = params.toolbarMenu
     _iconClickInterceptor = params.iconClickInterceptor
   }
@@ -68,6 +74,7 @@ class KurobaThreadToolbarState(
     _leftItem.value = toolbarState._leftItem.value
     _title.value = toolbarState._title.value
     _subtitle.value = toolbarState._subtitle.value
+    _scrollableTitle.value = toolbarState._scrollableTitle.value
     _toolbarMenu.value = toolbarState._toolbarMenu.value
     _iconClickInterceptor = toolbarState._iconClickInterceptor
   }

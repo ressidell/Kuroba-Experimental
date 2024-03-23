@@ -37,7 +37,6 @@ fun KurobaCatalogToolbarContent(
   val title = titleMut
 
   val subtitle by state.subtitle
-  val scrollableTitle by state.scrollableTitle
 
   val chanTheme = LocalChanTheme.current
   val textColor = chanTheme.onToolbarBackgroundComposeColor
@@ -77,7 +76,7 @@ fun KurobaCatalogToolbarContent(
           .padding(start = 12.dp, end = 28.dp),
         title = title,
         subtitle = subtitle,
-        scrollableTitle = scrollableTitle
+        scrollableTitle = false
       )
     }
 

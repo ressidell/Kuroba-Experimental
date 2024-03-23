@@ -107,6 +107,164 @@ open class ViewThreadController(
     controllerScope.launch(Dispatchers.Main) { loadThread(threadDescriptor) }
   }
 
+  override fun onShow() {
+    super.onShow()
+    setPinIconState(false)
+
+    mainControllerCallbacks.resetBottomNavViewCheckState()
+
+    if (KurobaBottomNavigationView.isBottomNavViewEnabled()) {
+      mainControllerCallbacks.showBottomNavBar(unlockTranslation = false, unlockCollapse = false)
+    }
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    updateLeftPaneHighlighting(null)
+  }
+
+  override fun onReplyViewShouldClose() {
+    toolbarState.exitReplyMode()
+    threadLayout.openReply(false)
+  }
+
+  override suspend fun showThreadWithoutFocusing(descriptor: ThreadDescriptor, animated: Boolean) {
+    Logger.d(TAG, "showThreadWithoutFocusing($descriptor, $animated)")
+    showThread(descriptor, animated)
+  }
+
+  override suspend fun showThread(descriptor: ThreadDescriptor, animated: Boolean) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      Logger.d(TAG, "showThread($descriptor, $animated)")
+      loadThread(descriptor)
+    }
+  }
+
+  override suspend fun showCatalogWithoutFocusing(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      Logger.d(TAG, "showCatalog($catalogDescriptor, $animated)")
+
+      showCatalogInternal(
+        catalogDescriptor = catalogDescriptor,
+        showCatalogOptions = ShowCatalogOptions(
+          switchToCatalogController = false,
+          withAnimation = animated
+        )
+      )
+    }
+  }
+
+  override suspend fun showCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      Logger.d(TAG, "showCatalog($catalogDescriptor, $animated)")
+
+      showCatalogInternal(
+        catalogDescriptor = catalogDescriptor,
+        showCatalogOptions = ShowCatalogOptions(
+          switchToCatalogController = true,
+          withAnimation = animated
+        )
+      )
+    }
+  }
+
+  override suspend fun setCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      Logger.d(TAG, "setCatalog($catalogDescriptor, $animated)")
+
+      showCatalogInternal(
+        catalogDescriptor = catalogDescriptor,
+        showCatalogOptions = ShowCatalogOptions(
+          switchToCatalogController = true,
+          withAnimation = animated
+        )
+      )
+    }
+  }
+
+  suspend fun loadThread(
+    threadDescriptor: ThreadDescriptor,
+    openingExternalThread: Boolean = false,
+    openingPreviousThread: Boolean = false
+  ) {
+    Logger.d(TAG, "loadThread($threadDescriptor)")
+
+    val presenter = threadLayout.presenter
+    if (threadDescriptor != presenter.currentChanDescriptor) {
+      loadThreadInternal(threadDescriptor, openingExternalThread, openingPreviousThread)
+    }
+  }
+
+  override suspend fun openExternalThread(postDescriptor: PostDescriptor, scrollToPost: Boolean) {
+    val descriptor = chanDescriptor
+      ?: return
+
+    openExternalThreadHelper.openExternalThread(
+      currentChanDescriptor = descriptor,
+      postDescriptor = postDescriptor,
+      scrollToPost = scrollToPost
+    ) { threadDescriptor ->
+      controllerScope.launch { loadThread(threadDescriptor = threadDescriptor, openingExternalThread = true) }
+    }
+  }
+
+  override suspend fun showPostsInExternalThread(
+    postDescriptor: PostDescriptor,
+    isPreviewingCatalogThread: Boolean
+  ) {
+    showPostsInExternalThreadHelper.showPostsInExternalThread(postDescriptor, isPreviewingCatalogThread)
+  }
+
+  override fun onShowPosts() {
+    super.onShowPosts()
+
+    setNavigationTitleFromDescriptor(threadDescriptor)
+    setPinIconState(false)
+  }
+
+  override fun onShowError() {
+    super.onShowError()
+
+    toolbarState.thread.updateTitle(
+      newTitle = ToolbarText.Id(R.string.thread_loading_error_title)
+    )
+  }
+
+  override fun threadBackPressed(): Boolean {
+    val threadDescriptor = threadFollowHistoryManager.removeTop()
+      ?: return false
+
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      loadThread(threadDescriptor, openingPreviousThread = true)
+    }
+
+    return true
+  }
+
+  override fun threadBackLongPressed() {
+    threadFollowHistoryManager.clearAllExcept(threadDescriptor)
+    showToast(R.string.thread_follow_history_has_been_cleared)
+  }
+
+  override fun onLostFocus(wasFocused: ThreadControllerType) {
+    super.onLostFocus(wasFocused)
+    check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
+  }
+
+  override fun onGainedFocus(nowFocused: ThreadControllerType) {
+    super.onGainedFocus(nowFocused)
+    check(nowFocused == threadControllerType) { "Unexpected controllerType: $nowFocused" }
+
+    if (historyNavigationManager.isInitialized) {
+      if (threadLayout.presenter.chanThreadLoadingState == ThreadPresenter.ChanThreadLoadingState.Loaded) {
+        controllerScope.launch { historyNavigationManager.moveNavElementToTop(threadDescriptor) }
+      }
+    }
+
+    currentOpenedDescriptorStateManager.updateCurrentFocusedController(ThreadPresenter.CurrentFocusedController.Thread)
+    updateLeftPaneHighlighting(threadDescriptor)
+  }
+
   private fun updatePinIconStateIfNeeded(bookmarkChange: BookmarkChange) {
     val currentThreadDescriptor = threadLayout.presenter.threadDescriptorOrNull()
       ?: return
@@ -130,20 +288,179 @@ open class ViewThreadController(
     }
   }
 
-  override fun onShow() {
-    super.onShow()
-    setPinIconState(false)
+  private suspend fun showCatalogInternal(
+    catalogDescriptor: ChanDescriptor.ICatalogDescriptor,
+    showCatalogOptions: ShowCatalogOptions
+  ) {
+    Logger.d(TAG, "showCatalogInternal($catalogDescriptor, $showCatalogOptions)")
 
-    mainControllerCallbacks.resetBottomNavViewCheckState()
+    if (doubleNavigationController != null && doubleNavigationController?.getLeftController() is BrowseController) {
+      val browseController = doubleNavigationController!!.getLeftController() as BrowseController
+      browseController.setCatalog(catalogDescriptor)
 
-    if (KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-      mainControllerCallbacks.showBottomNavBar(unlockTranslation = false, unlockCollapse = false)
+      if (showCatalogOptions.switchToCatalogController) {
+        // slide layout
+        doubleNavigationController!!.switchToController(true, showCatalogOptions.withAnimation)
+      }
+
+      return
+    }
+
+    if (doubleNavigationController != null
+      && doubleNavigationController?.getLeftController() is StyledToolbarNavigationController) {
+      // split layout
+      val browseController =
+        doubleNavigationController!!.getLeftController()!!.childControllers[0] as BrowseController
+      browseController.setCatalog(catalogDescriptor)
+      return
+    }
+
+    // phone layout
+    var browseController: BrowseController? = null
+    for (controller in requireNavController().childControllers) {
+      if (controller is BrowseController) {
+        browseController = controller
+        break
+      }
+    }
+
+    if (browseController != null) {
+      browseController.setCatalog(catalogDescriptor)
+      requireNavController().popController(showCatalogOptions.withAnimation)
     }
   }
 
-  override fun onDestroy() {
-    super.onDestroy()
-    updateLeftPaneHighlighting(null)
+  private suspend fun loadThreadInternal(
+    newThreadDescriptor: ThreadDescriptor,
+    openingExternalThread: Boolean,
+    openingPreviousThread: Boolean
+  ) {
+    if (!openingExternalThread && !openingPreviousThread) {
+      threadFollowHistoryManager.clear()
+    }
+
+    val presenter = threadLayout.presenter
+    val oldThreadDescriptor = threadLayout.presenter.currentChanDescriptor as? ThreadDescriptor
+
+    presenter.bindChanDescriptor(newThreadDescriptor)
+    this.threadDescriptor = newThreadDescriptor
+
+    updateMenuItems()
+    updateNavigationTitle(oldThreadDescriptor, newThreadDescriptor)
+
+    setPinIconState(false)
+    updateLeftPaneHighlighting(newThreadDescriptor)
+  }
+
+  private fun updateNavigationTitle(
+    oldThreadDescriptor: ThreadDescriptor?,
+    newThreadDescriptor: ThreadDescriptor?
+  ) {
+    if (oldThreadDescriptor == null && newThreadDescriptor == null) {
+      return
+    }
+
+    if (oldThreadDescriptor == newThreadDescriptor) {
+      setNavigationTitleFromDescriptor(newThreadDescriptor)
+    } else {
+      toolbarState.thread.updateTitle(
+        newTitle = ToolbarText.String(getString(R.string.loading))
+      )
+    }
+  }
+
+  private fun setNavigationTitleFromDescriptor(threadDescriptor: ThreadDescriptor?) {
+    val originalPost = chanThreadManager.getChanThread(threadDescriptor)
+      ?.getOriginalPost()
+
+    toolbarState.thread.updateTitle(
+      newTitle = ToolbarText.String(ChanPostUtils.getTitle(originalPost, threadDescriptor))
+    )
+  }
+
+  private suspend fun updateMenuItems() {
+    toolbarState.findOverflowItem(ACTION_PREVIEW_THREAD_IN_ARCHIVE)
+      ?.updateVisibility(archivesManager.supports(threadDescriptor))
+    toolbarState.findOverflowItem(ACTION_OPEN_THREAD_IN_ARCHIVE)
+      ?.updateVisibility(archivesManager.supports(threadDescriptor))
+
+    updateThreadDownloadItem()
+  }
+
+  private suspend fun updateThreadDownloadItem() {
+    toolbarState.findOverflowItem(ACTION_DOWNLOAD_THREAD)?.let { downloadThreadItem ->
+      val status = threadDownloadManager.getStatus(threadDescriptor)
+      downloadThreadItem.updateVisibility(status != ThreadDownload.Status.Completed)
+
+      when (status) {
+        null,
+        ThreadDownload.Status.Stopped -> {
+          downloadThreadItem.updateMenuText(getString(R.string.action_start_thread_download))
+        }
+        ThreadDownload.Status.Running -> {
+          downloadThreadItem.updateMenuText(getString(R.string.action_stop_thread_download))
+        }
+        ThreadDownload.Status.Completed -> {
+          downloadThreadItem.updateVisibility(false)
+        }
+      }
+    }
+  }
+
+  private fun updateLeftPaneHighlighting(chanDescriptor: ChanDescriptor?) {
+    if (doubleNavigationController == null) {
+      return
+    }
+
+    var threadController: ThreadController? = null
+    val leftController = doubleNavigationController?.getLeftController()
+
+    if (leftController is ThreadController) {
+      threadController = leftController
+    } else if (leftController is NavigationController) {
+      for (controller in leftController.childControllers) {
+        if (controller is ThreadController) {
+          threadController = controller
+          break
+        }
+      }
+    }
+
+    if (threadController == null) {
+      return
+    }
+
+    if (chanDescriptor is ThreadDescriptor) {
+      threadController.highlightPost(postDescriptor = chanDescriptor.toOriginalPostDescriptor(), blink = false)
+    } else if (chanDescriptor == null) {
+      threadController.highlightPost(postDescriptor = null, blink = false)
+    }
+  }
+
+  private fun setPinIconState(animated: Boolean) {
+    val presenter = threadLayout.presenterOrNull
+    if (presenter != null) {
+      setPinIconStateDrawable(presenter.isPinned, animated)
+    }
+  }
+
+  private fun setPinIconStateDrawable(pinned: Boolean, animated: Boolean) {
+    if (pinned == pinItemPinned) {
+      return
+    }
+
+    val menuItem = toolbarState.findItem(ACTION_PIN)
+      ?: return
+
+    pinItemPinned = pinned
+
+    val drawableId = if (pinned) {
+      R.drawable.ic_bookmark_white_24dp
+    } else {
+      R.drawable.ic_bookmark_border_white_24dp
+    }
+
+    menuItem.updateDrawableId(drawableId)
   }
 
   private fun buildToolbar() {
@@ -153,6 +470,7 @@ open class ViewThreadController(
           // TODO: New toolbar
         }
       ),
+      scrollableTitle = ChanSettings.scrollingTextForThreadTitles.get(),
       menuBuilder = {
         withMenuItem(
           id = ACTION_ALBUM,
@@ -296,6 +614,10 @@ open class ViewThreadController(
     )
   }
 
+  private fun replyClicked(item: ToolbarMenuOverflowItem) {
+    threadLayout.openReply(true)
+  }
+
   private fun albumClicked(item: ToolbarMenuItem) {
     threadLayout.presenter.showAlbum()
   }
@@ -314,15 +636,6 @@ open class ViewThreadController(
     }
 
     threadLayout.popupHelper.showSearchPopup(chanDescriptor!!)
-  }
-
-  private fun replyClicked(item: ToolbarMenuOverflowItem) {
-    threadLayout.openReply(true)
-  }
-
-  override fun onReplyViewShouldClose() {
-    toolbarState.exitReplyMode()
-    threadLayout.openReply(false)
   }
 
   private fun reloadClicked(item: ToolbarMenuOverflowItem) {
@@ -485,318 +798,6 @@ open class ViewThreadController(
 
   private fun downClicked(item: ToolbarMenuOverflowItem) {
     threadLayout.scrollTo(-1, false)
-  }
-
-  override suspend fun showThreadWithoutFocusing(descriptor: ThreadDescriptor, animated: Boolean) {
-    Logger.d(TAG, "showThreadWithoutFocusing($descriptor, $animated)")
-    showThread(descriptor, animated)
-  }
-
-  override suspend fun showThread(descriptor: ThreadDescriptor, animated: Boolean) {
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      Logger.d(TAG, "showThread($descriptor, $animated)")
-      loadThread(descriptor)
-    }
-  }
-
-  override suspend fun showCatalogWithoutFocusing(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      Logger.d(TAG, "showCatalog($catalogDescriptor, $animated)")
-
-      showCatalogInternal(
-        catalogDescriptor = catalogDescriptor,
-        showCatalogOptions = ShowCatalogOptions(
-          switchToCatalogController = false,
-          withAnimation = animated
-        )
-      )
-    }
-  }
-
-  override suspend fun showCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      Logger.d(TAG, "showCatalog($catalogDescriptor, $animated)")
-
-      showCatalogInternal(
-        catalogDescriptor = catalogDescriptor,
-        showCatalogOptions = ShowCatalogOptions(
-          switchToCatalogController = true,
-          withAnimation = animated
-        )
-      )
-    }
-  }
-
-  override suspend fun setCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      Logger.d(TAG, "setCatalog($catalogDescriptor, $animated)")
-
-      showCatalogInternal(
-        catalogDescriptor = catalogDescriptor,
-        showCatalogOptions = ShowCatalogOptions(
-          switchToCatalogController = true,
-          withAnimation = animated
-        )
-      )
-    }
-  }
-
-  private suspend fun showCatalogInternal(
-    catalogDescriptor: ChanDescriptor.ICatalogDescriptor,
-    showCatalogOptions: ShowCatalogOptions
-  ) {
-    Logger.d(TAG, "showCatalogInternal($catalogDescriptor, $showCatalogOptions)")
-
-    if (doubleNavigationController != null && doubleNavigationController?.getLeftController() is BrowseController) {
-      val browseController = doubleNavigationController!!.getLeftController() as BrowseController
-      browseController.setCatalog(catalogDescriptor)
-
-      if (showCatalogOptions.switchToCatalogController) {
-        // slide layout
-        doubleNavigationController!!.switchToController(true, showCatalogOptions.withAnimation)
-      }
-
-      return
-    }
-
-    if (doubleNavigationController != null
-      && doubleNavigationController?.getLeftController() is StyledToolbarNavigationController) {
-      // split layout
-      val browseController =
-        doubleNavigationController!!.getLeftController()!!.childControllers[0] as BrowseController
-      browseController.setCatalog(catalogDescriptor)
-      return
-    }
-
-    // phone layout
-    var browseController: BrowseController? = null
-    for (controller in requireNavController().childControllers) {
-      if (controller is BrowseController) {
-        browseController = controller
-        break
-      }
-    }
-
-    if (browseController != null) {
-      browseController.setCatalog(catalogDescriptor)
-      requireNavController().popController(showCatalogOptions.withAnimation)
-    }
-  }
-
-  suspend fun loadThread(
-    threadDescriptor: ThreadDescriptor,
-    openingExternalThread: Boolean = false,
-    openingPreviousThread: Boolean = false
-  ) {
-    Logger.d(TAG, "loadThread($threadDescriptor)")
-
-    val presenter = threadLayout.presenter
-    if (threadDescriptor != presenter.currentChanDescriptor) {
-      loadThreadInternal(threadDescriptor, openingExternalThread, openingPreviousThread)
-    }
-  }
-
-  private suspend fun loadThreadInternal(
-    newThreadDescriptor: ThreadDescriptor,
-    openingExternalThread: Boolean,
-    openingPreviousThread: Boolean
-  ) {
-    if (!openingExternalThread && !openingPreviousThread) {
-      threadFollowHistoryManager.clear()
-    }
-
-    val presenter = threadLayout.presenter
-    val oldThreadDescriptor = threadLayout.presenter.currentChanDescriptor as? ThreadDescriptor
-
-    presenter.bindChanDescriptor(newThreadDescriptor)
-    this.threadDescriptor = newThreadDescriptor
-
-    updateMenuItems()
-    updateNavigationTitle(oldThreadDescriptor, newThreadDescriptor)
-
-    setPinIconState(false)
-    updateLeftPaneHighlighting(newThreadDescriptor)
-  }
-
-  override suspend fun openExternalThread(postDescriptor: PostDescriptor, scrollToPost: Boolean) {
-    val descriptor = chanDescriptor
-      ?: return
-
-    openExternalThreadHelper.openExternalThread(
-      currentChanDescriptor = descriptor,
-      postDescriptor = postDescriptor,
-      scrollToPost = scrollToPost
-    ) { threadDescriptor ->
-      controllerScope.launch { loadThread(threadDescriptor = threadDescriptor, openingExternalThread = true) }
-    }
-  }
-
-  override suspend fun showPostsInExternalThread(
-    postDescriptor: PostDescriptor,
-    isPreviewingCatalogThread: Boolean
-  ) {
-    showPostsInExternalThreadHelper.showPostsInExternalThread(postDescriptor, isPreviewingCatalogThread)
-  }
-
-  private fun updateNavigationTitle(
-    oldThreadDescriptor: ThreadDescriptor?,
-    newThreadDescriptor: ThreadDescriptor?
-  ) {
-    if (oldThreadDescriptor == null && newThreadDescriptor == null) {
-      return
-    }
-
-    if (oldThreadDescriptor == newThreadDescriptor) {
-      setNavigationTitleFromDescriptor(newThreadDescriptor)
-    } else {
-      toolbarState.thread.updateTitle(
-        newTitle = ToolbarText.String(getString(R.string.loading))
-      )
-    }
-  }
-
-  private fun setNavigationTitleFromDescriptor(threadDescriptor: ThreadDescriptor?) {
-    val originalPost = chanThreadManager.getChanThread(threadDescriptor)
-      ?.getOriginalPost()
-
-    toolbarState.thread.updateTitle(
-      newTitle = ToolbarText.String(ChanPostUtils.getTitle(originalPost, threadDescriptor))
-    )
-  }
-
-  private suspend fun updateMenuItems() {
-    toolbarState.findOverflowItem(ACTION_PREVIEW_THREAD_IN_ARCHIVE)
-      ?.updateVisibility(archivesManager.supports(threadDescriptor))
-    toolbarState.findOverflowItem(ACTION_OPEN_THREAD_IN_ARCHIVE)
-      ?.updateVisibility(archivesManager.supports(threadDescriptor))
-
-    updateThreadDownloadItem()
-  }
-
-  private suspend fun updateThreadDownloadItem() {
-    toolbarState.findOverflowItem(ACTION_DOWNLOAD_THREAD)?.let { downloadThreadItem ->
-      val status = threadDownloadManager.getStatus(threadDescriptor)
-      downloadThreadItem.updateVisibility(status != ThreadDownload.Status.Completed)
-
-      when (status) {
-        null,
-        ThreadDownload.Status.Stopped -> {
-          downloadThreadItem.updateMenuText(getString(R.string.action_start_thread_download))
-        }
-        ThreadDownload.Status.Running -> {
-          downloadThreadItem.updateMenuText(getString(R.string.action_stop_thread_download))
-        }
-        ThreadDownload.Status.Completed -> {
-          downloadThreadItem.updateVisibility(false)
-        }
-      }
-    }
-  }
-
-  override fun onShowPosts() {
-    super.onShowPosts()
-
-    setNavigationTitleFromDescriptor(threadDescriptor)
-    setPinIconState(false)
-  }
-
-  override fun onShowError() {
-    super.onShowError()
-
-    toolbarState.thread.updateTitle(
-      newTitle = ToolbarText.Id(R.string.thread_loading_error_title)
-    )
-  }
-
-  private fun updateLeftPaneHighlighting(chanDescriptor: ChanDescriptor?) {
-    if (doubleNavigationController == null) {
-      return
-    }
-
-    var threadController: ThreadController? = null
-    val leftController = doubleNavigationController?.getLeftController()
-
-    if (leftController is ThreadController) {
-      threadController = leftController
-    } else if (leftController is NavigationController) {
-      for (controller in leftController.childControllers) {
-        if (controller is ThreadController) {
-          threadController = controller
-          break
-        }
-      }
-    }
-
-    if (threadController == null) {
-      return
-    }
-
-    if (chanDescriptor is ThreadDescriptor) {
-      threadController.highlightPost(postDescriptor = chanDescriptor.toOriginalPostDescriptor(), blink = false)
-    } else if (chanDescriptor == null) {
-      threadController.highlightPost(postDescriptor = null, blink = false)
-    }
-  }
-
-  private fun setPinIconState(animated: Boolean) {
-    val presenter = threadLayout.presenterOrNull
-    if (presenter != null) {
-      setPinIconStateDrawable(presenter.isPinned, animated)
-    }
-  }
-
-  private fun setPinIconStateDrawable(pinned: Boolean, animated: Boolean) {
-    if (pinned == pinItemPinned) {
-      return
-    }
-
-    val menuItem = toolbarState.findItem(ACTION_PIN)
-      ?: return
-
-    pinItemPinned = pinned
-
-    val drawableId = if (pinned) {
-      R.drawable.ic_bookmark_white_24dp
-    } else {
-      R.drawable.ic_bookmark_border_white_24dp
-    }
-
-    menuItem.updateDrawableId(drawableId)
-  }
-
-  override fun threadBackPressed(): Boolean {
-    val threadDescriptor = threadFollowHistoryManager.removeTop()
-      ?: return false
-
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      loadThread(threadDescriptor, openingPreviousThread = true)
-    }
-
-    return true
-  }
-
-  override fun threadBackLongPressed() {
-    threadFollowHistoryManager.clearAllExcept(threadDescriptor)
-    showToast(R.string.thread_follow_history_has_been_cleared)
-  }
-
-  override fun onLostFocus(wasFocused: ThreadControllerType) {
-    super.onLostFocus(wasFocused)
-    check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
-  }
-
-  override fun onGainedFocus(nowFocused: ThreadControllerType) {
-    super.onGainedFocus(nowFocused)
-    check(nowFocused == threadControllerType) { "Unexpected controllerType: $nowFocused" }
-
-    if (historyNavigationManager.isInitialized) {
-      if (threadLayout.presenter.chanThreadLoadingState == ThreadPresenter.ChanThreadLoadingState.Loaded) {
-        controllerScope.launch { historyNavigationManager.moveNavElementToTop(threadDescriptor) }
-      }
-    }
-
-    currentOpenedDescriptorStateManager.updateCurrentFocusedController(ThreadPresenter.CurrentFocusedController.Thread)
-    updateLeftPaneHighlighting(threadDescriptor)
   }
 
   companion object {

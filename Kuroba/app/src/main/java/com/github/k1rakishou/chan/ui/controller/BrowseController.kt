@@ -3,7 +3,6 @@ package com.github.k1rakishou.chan.ui.controller
 import android.Manifest
 import android.content.Context
 import android.os.Build
-import android.view.View
 import android.widget.Toast
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.ChanSettings.BoardPostViewMode
@@ -81,26 +80,26 @@ class BrowseController(
   @Inject
   lateinit var presenter: BrowsePresenter
   @Inject
-  lateinit var _boardManager: Lazy<BoardManager>
+  lateinit var boardManagerLazy: Lazy<BoardManager>
   @Inject
-  lateinit var _historyNavigationManager: Lazy<HistoryNavigationManager>
+  lateinit var historyNavigationManagerLazy: Lazy<HistoryNavigationManager>
   @Inject
-  lateinit var _siteResolver: Lazy<SiteResolver>
+  lateinit var siteResolverLazy: Lazy<SiteResolver>
   @Inject
-  lateinit var _firewallBypassManager: Lazy<FirewallBypassManager>
+  lateinit var firewallBypassManagerLazy: Lazy<FirewallBypassManager>
   @Inject
   lateinit var runtimePermissionsHelper: RuntimePermissionsHelper
   @Inject
   lateinit var sitesSetupControllerOpenNotifier: SitesSetupControllerOpenNotifier
 
   private val boardManager: BoardManager
-    get() = _boardManager.get()
+    get() = boardManagerLazy.get()
   private val historyNavigationManager: HistoryNavigationManager
-    get() = _historyNavigationManager.get()
+    get() = historyNavigationManagerLazy.get()
   private val siteResolver: SiteResolver
-    get() = _siteResolver.get()
+    get() = siteResolverLazy.get()
   private val firewallBypassManager: FirewallBypassManager
-    get() = _firewallBypassManager.get()
+    get() = firewallBypassManagerLazy.get()
 
   private lateinit var serializedCoroutineExecutor: SerializedCoroutineExecutor
 
@@ -118,8 +117,8 @@ class BrowseController(
     super.onCreate()
 
     val navControllerContainerLayout = inflate(context, R.layout.controller_browse)
-    val container = navControllerContainerLayout.findViewById<View>(R.id.browse_controller_container) as NavigationControllerContainerLayout
-    container.initBrowseControllerTracker(this, navigationController!!)
+    val container = navControllerContainerLayout.findViewById<NavigationControllerContainerLayout>(R.id.browse_controller_container)
+    container.initBrowseControllerTracker(this, requireNavController())
     container.addView(view)
     view = container
 
@@ -215,6 +214,496 @@ class BrowseController(
 
     presenter.loadWithDefaultBoard()
   }
+
+  override suspend fun loadCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      Logger.d(TAG, "loadCatalog($catalogDescriptor)")
+
+      updateToolbarTitle(catalogDescriptor)
+      threadLayout.presenter.bindChanDescriptor(catalogDescriptor as ChanDescriptor)
+
+      if (!toolbarUpdatedAfterFirstCatalogLoad) {
+        toolbarUpdatedAfterFirstCatalogLoad = true
+        buildMenu(catalogLoaded = true)
+      }
+
+      updateMenuItems()
+    }
+  }
+
+  override suspend fun updateToolbarTitle(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
+    boardManager.awaitUntilInitialized()
+
+    updateCompositeCatalogNavigationSubtitleJob?.cancel()
+    updateCompositeCatalogNavigationSubtitleJob = null
+
+    if (catalogDescriptor is CatalogDescriptor) {
+      val boardDescriptor = catalogDescriptor.boardDescriptor
+
+      val board = boardManager.byBoardDescriptor(boardDescriptor)
+        ?: return
+
+      toolbarState.catalog.updateTitle(
+        newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/"),
+        newSubTitle = ToolbarText.String(board.name ?: "")
+      )
+    } else {
+      catalogDescriptor as ChanDescriptor.CompositeCatalogDescriptor
+
+      toolbarState.catalog.updateTitle(
+        newTitle = ToolbarText.Id(R.string.composite_catalog),
+        newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
+      )
+
+      updateCompositeCatalogNavigationSubtitleJob = controllerScope.launch {
+        val newTitle = presenter.getCompositeCatalogNavigationTitle(catalogDescriptor)
+
+        val compositeCatalogSubTitle = SpannableHelper.getCompositeCatalogNavigationSubtitle(
+          siteManager = siteManager,
+          coroutineScope = this,
+          context = context,
+          fontSizePx = sp(12f),
+          compositeCatalogDescriptor = catalogDescriptor
+        )
+
+        toolbarState.catalog.updateTitle(
+          newTitle = ToolbarText.String(newTitle ?: ""),
+          newSubTitle = ToolbarText.Spanned(compositeCatalogSubTitle)
+        )
+      }
+    }
+  }
+
+  override suspend fun showCatalogWithoutFocusing(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      Logger.d(TAG, "showCatalogWithoutFocusing($catalogDescriptor, $animated)")
+
+      showCatalogInternal(
+        catalogDescriptor = catalogDescriptor,
+        showCatalogOptions = ShowCatalogOptions(
+          switchToCatalogController = false,
+          withAnimation = animated
+        )
+      )
+    }
+  }
+
+  override suspend fun showCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      Logger.d(TAG, "showBoard($catalogDescriptor, $animated)")
+
+      showCatalogInternal(
+        catalogDescriptor = catalogDescriptor,
+        showCatalogOptions = ShowCatalogOptions(
+          switchToCatalogController = true,
+          withAnimation = animated
+        )
+      )
+    }
+  }
+
+  override suspend fun setCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
+    controllerScope.launch(Dispatchers.Main.immediate) {
+      Logger.d(TAG, "setCatalog($catalogDescriptor, $animated)")
+
+      setCatalog(catalogDescriptor)
+    }
+  }
+
+  override suspend fun showPostsInExternalThread(
+    postDescriptor: PostDescriptor,
+    isPreviewingCatalogThread: Boolean
+  ) {
+    showPostsInExternalThreadHelper.showPostsInExternalThread(postDescriptor, isPreviewingCatalogThread)
+  }
+
+  override suspend fun openExternalThread(postDescriptor: PostDescriptor, scrollToPost: Boolean) {
+    val descriptor = chanDescriptor
+      ?: return
+
+    openExternalThreadHelper.openExternalThread(
+      currentChanDescriptor = descriptor,
+      postDescriptor = postDescriptor,
+      scrollToPost = scrollToPost
+    ) { threadDescriptor ->
+      controllerScope.launch { showThread(descriptor = threadDescriptor, animated = true) }
+    }
+  }
+
+  fun getViewThreadController(): ViewThreadController? {
+    var splitNav: SplitNavigationController? = null
+    var slideNav: ThreadSlideController? = null
+
+    if (doubleNavigationController is SplitNavigationController) {
+      splitNav = doubleNavigationController as SplitNavigationController?
+    }
+
+    if (doubleNavigationController is ThreadSlideController) {
+      slideNav = doubleNavigationController as ThreadSlideController?
+    }
+
+    return when {
+      splitNav != null -> {
+        val navigationController = splitNav.getRightController() as StyledToolbarNavigationController?
+        navigationController?.topController as? ViewThreadController
+      }
+      slideNav != null -> {
+        slideNav.getRightController() as? ViewThreadController
+      }
+      else -> null
+    }
+  }
+
+  // Creates or updates the target ThreadViewController
+  // This controller can be in various places depending on the layout
+  // We dynamically search for it
+  override suspend fun showThread(descriptor: ThreadDescriptor, animated: Boolean) {
+    showThreadInternal(
+      descriptor = descriptor,
+      showThreadOptions = ShowThreadOptions(
+        switchToThreadController = true,
+        pushControllerWithAnimation = animated
+      )
+    )
+  }
+
+  override suspend fun showThreadWithoutFocusing(descriptor: ThreadDescriptor, animated: Boolean) {
+    showThreadInternal(
+      descriptor = descriptor,
+      showThreadOptions = ShowThreadOptions(
+        switchToThreadController = false,
+        pushControllerWithAnimation = animated
+      )
+    )
+  }
+
+  override fun onLostFocus(wasFocused: ThreadControllerType) {
+    super.onLostFocus(wasFocused)
+    check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
+  }
+
+  override fun onGainedFocus(nowFocused: ThreadControllerType) {
+    super.onGainedFocus(nowFocused)
+    check(nowFocused == threadControllerType) { "Unexpected controllerType: $nowFocused" }
+
+    if (chanDescriptor != null && historyNavigationManager.isInitialized) {
+      if (threadLayout.presenter.chanThreadLoadingState == ThreadPresenter.ChanThreadLoadingState.Loaded) {
+        controllerScope.launch { historyNavigationManager.moveNavElementToTop(chanDescriptor!!) }
+      }
+    }
+
+    currentOpenedDescriptorStateManager.updateCurrentFocusedController(
+      ThreadPresenter.CurrentFocusedController.Catalog
+    )
+  }
+
+  private suspend fun showThreadInternal(descriptor: ThreadDescriptor, showThreadOptions: ShowThreadOptions) {
+    Logger.d(TAG, "showThread($descriptor, $showThreadOptions)")
+
+    // The target ThreadViewController is in a split nav
+    // (BrowseController -> ToolbarNavigationController -> SplitNavigationController)
+    var splitNav: SplitNavigationController? = null
+
+    // The target ThreadViewController is in a slide nav
+    // (BrowseController -> SlideController -> ToolbarNavigationController)
+    var slideNav: ThreadSlideController? = null
+    if (doubleNavigationController is SplitNavigationController) {
+      splitNav = doubleNavigationController as SplitNavigationController?
+    }
+
+    if (doubleNavigationController is ThreadSlideController) {
+      slideNav = doubleNavigationController as ThreadSlideController?
+    }
+
+    when {
+      splitNav != null -> {
+        // Create a threadview inside a toolbarnav in the right part of the split layout
+        if (splitNav.getRightController() is StyledToolbarNavigationController) {
+          val navigationController = splitNav.getRightController() as StyledToolbarNavigationController
+          if (navigationController.topController is ViewThreadController) {
+            val viewThreadController = navigationController.topController as ViewThreadController
+            viewThreadController.loadThread(descriptor)
+            viewThreadController.onShow()
+            viewThreadController.onGainedFocus(ThreadControllerType.Thread)
+          }
+        } else {
+          val navigationController = StyledToolbarNavigationController(context)
+          splitNav.setRightController(navigationController, showThreadOptions.pushControllerWithAnimation)
+          val viewThreadController = ViewThreadController(context, mainControllerCallbacks, descriptor)
+          navigationController.pushController(viewThreadController, false)
+          viewThreadController.onGainedFocus(ThreadControllerType.Thread)
+        }
+
+        splitNav.switchToController(
+          false,
+          showThreadOptions.pushControllerWithAnimation
+        )
+      }
+      slideNav != null -> {
+        // Create a threadview in the right part of the slide nav *without* a toolbar
+        if (slideNav.getRightController() is ViewThreadController) {
+          (slideNav.getRightController() as ViewThreadController).loadThread(descriptor)
+          (slideNav.getRightController() as ViewThreadController).onShow()
+        } else {
+          val viewThreadController = ViewThreadController(
+            context,
+            mainControllerCallbacks,
+            descriptor
+          )
+
+          slideNav.setRightController(
+            viewThreadController,
+            showThreadOptions.pushControllerWithAnimation
+          )
+        }
+
+        if (showThreadOptions.switchToThreadController) {
+          slideNav.switchToController(
+            false,
+            showThreadOptions.pushControllerWithAnimation
+          )
+        }
+      }
+      else -> {
+        // the target ThreadNav must be pushed to the parent nav controller
+        // (BrowseController -> ToolbarNavigationController)
+        val viewThreadController = ViewThreadController(
+          context,
+          mainControllerCallbacks,
+          descriptor
+        )
+
+        navigationController!!.pushController(
+          viewThreadController,
+          showThreadOptions.pushControllerWithAnimation
+        )
+      }
+    }
+  }
+
+  private suspend fun showCatalogInternal(
+    catalogDescriptor: ChanDescriptor.ICatalogDescriptor,
+    showCatalogOptions: ShowCatalogOptions
+  ) {
+    Logger.d(TAG, "showCatalogInternal($catalogDescriptor, $showCatalogOptions)")
+
+    // The target ThreadViewController is in a split nav
+    // (BrowseController -> ToolbarNavigationController -> SplitNavigationController)
+    val splitNav = if (doubleNavigationController is SplitNavigationController) {
+      doubleNavigationController as SplitNavigationController?
+    } else {
+      null
+    }
+
+    // The target ThreadViewController is in a slide nav
+    // (BrowseController -> SlideController -> ToolbarNavigationController)
+    val slideNav = if (doubleNavigationController is ThreadSlideController) {
+      doubleNavigationController as ThreadSlideController?
+    } else {
+      null
+    }
+
+    // Do nothing when split navigation is enabled because both controllers are always visible
+    // so we don't need to switch between left and right controllers
+    if (splitNav == null) {
+      if (slideNav != null) {
+        if (showCatalogOptions.switchToCatalogController) {
+          slideNav.switchToController(true, showCatalogOptions.withAnimation)
+        }
+      } else {
+        if (navigationController != null) {
+          // We wouldn't want to pop BrowseController when opening a board
+          if (navigationController!!.topController !is BrowseController) {
+            navigationController!!.popController(showCatalogOptions.withAnimation)
+          }
+        }
+      }
+    }
+
+    setCatalog(catalogDescriptor)
+  }
+
+  private fun updateMenuItems() {
+    toolbarState.findOverflowItem(ACTION_BOARD_ARCHIVE)?.let { menuItem ->
+      val supportsArchive = siteSupportsBuiltInBoardArchive()
+      menuItem.updateVisibility(supportsArchive)
+    }
+
+    toolbarState.findOverflowItem(ACTION_LOAD_WHOLE_COMPOSITE_CATALOG)?.let { menuItem ->
+      val isCompositeCatalog =
+        threadLayout.presenter.currentChanDescriptor is ChanDescriptor.CompositeCatalogDescriptor
+
+      menuItem.updateVisibility(isCompositeCatalog)
+    }
+
+    toolbarState.findOverflowItem(ACTION_OPEN_BROWSER)?.let { menuItem ->
+      val isNotCompositeCatalog =
+        threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
+
+      menuItem.updateVisibility(isNotCompositeCatalog)
+    }
+
+    toolbarState.findOverflowItem(ACTION_OPEN_UNLIMITED_CATALOG_PAGE)?.let { menuItem ->
+      val isUnlimitedCatalog = threadLayout.presenter.isUnlimitedOrCompositeCatalog
+        && threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
+
+      menuItem.updateVisibility(isUnlimitedCatalog)
+    }
+
+    toolbarState.findOverflowItem(ACTION_SHARE)?.let { menuItem ->
+      val isNotCompositeCatalog =
+        threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
+
+      menuItem.updateVisibility(isNotCompositeCatalog)
+    }
+  }
+
+  private fun siteSupportsBuiltInBoardArchive(): Boolean {
+    val chanDescriptor = threadLayout.presenter.currentChanDescriptor
+    if (chanDescriptor == null) {
+      return false
+    }
+
+    if (chanDescriptor !is CatalogDescriptor) {
+      return false
+    }
+
+    return chanDescriptor.siteDescriptor().is4chan() || chanDescriptor.siteDescriptor().isDvach()
+  }
+
+  private suspend fun showSiteFirewallBypassController(
+    firewallType: FirewallType,
+    urlToOpen: HttpUrl,
+    siteDescriptor: SiteDescriptor,
+    onBypassControllerClosed: (Boolean) -> Unit
+  ) {
+    val cookieResult = suspendCancellableCoroutine<CookieResult> { continuation ->
+      val controller = SiteFirewallBypassController(
+        context = context,
+        firewallType = firewallType,
+        headerTitleText = getString(R.string.firewall_check_header_title, firewallType.name),
+        urlToOpen = urlToOpen.toString(),
+        onResult = { cookieResult ->
+          continuation.resumeValueSafe(cookieResult)
+          onBypassControllerClosed(cookieResult is CookieResult.CookieValue)
+        }
+      )
+
+      Logger.d(TAG, "presentController SiteFirewallBypassController (firewallType: ${firewallType}, urlToOpen: ${urlToOpen})")
+      presentController(controller)
+
+      continuation.invokeOnCancellation {
+        Logger.d(TAG, "stopPresenting SiteFirewallBypassController (firewallType: ${firewallType}, urlToOpen: ${urlToOpen})")
+
+        if (controller.alive) {
+          controller.stopPresenting()
+        }
+      }
+    }
+
+    when (firewallType) {
+      FirewallType.Cloudflare -> {
+        when (cookieResult) {
+          CookieResult.Canceled -> {
+            AppModuleAndroidUtils.showToast(
+              context,
+              getString(R.string.firewall_check_canceled, firewallType),
+              Toast.LENGTH_LONG
+            )
+          }
+          CookieResult.NotSupported -> {
+            AppModuleAndroidUtils.showToast(
+              context,
+              getString(R.string.firewall_check_not_supported, firewallType, siteDescriptor.siteName),
+              Toast.LENGTH_LONG
+            )
+          }
+          is CookieResult.Error -> {
+            val errorMsg = cookieResult.exception.errorMessageOrClassName()
+            AppModuleAndroidUtils.showToast(
+              context,
+              getString(R.string.firewall_check_failure, firewallType, errorMsg),
+              Toast.LENGTH_LONG
+            )
+          }
+          is CookieResult.CookieValue -> {
+            AppModuleAndroidUtils.showToast(
+              context,
+              getString(R.string.firewall_check_success, firewallType),
+              Toast.LENGTH_LONG
+            )
+          }
+        }
+      }
+      FirewallType.DvachAntiSpam -> {
+        when (cookieResult) {
+          CookieResult.Canceled -> {
+            AppModuleAndroidUtils.showToast(
+              context,
+              R.string.dvach_antispam_result_canceled,
+              Toast.LENGTH_LONG
+            )
+          }
+          CookieResult.NotSupported -> {
+            AppModuleAndroidUtils.showToast(
+              context,
+              getString(R.string.firewall_check_not_supported, firewallType, siteDescriptor.siteName),
+              Toast.LENGTH_LONG
+            )
+          }
+          is CookieResult.Error -> {
+            val errorMsg = cookieResult.exception.errorMessageOrClassName()
+            AppModuleAndroidUtils.showToast(
+              context,
+              getString(R.string.dvach_antispam_result_error, errorMsg),
+              Toast.LENGTH_LONG
+            )
+          }
+          is CookieResult.CookieValue -> {
+            AppModuleAndroidUtils.showToast(
+              context,
+              getString(R.string.dvach_antispam_result_success),
+              Toast.LENGTH_LONG
+            )
+          }
+        }
+      }
+      FirewallType.YandexSmartCaptcha -> {
+        // No-op. We only handle Yandex's captcha in one place (ImageSearchController)
+      }
+    }
+  }
+
+  private fun requestApi33NotificationsPermissionOnce() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+      return
+    }
+
+    if (ChanSettings.api33NotificationPermissionRequested.get()) {
+      return
+    }
+
+    if (runtimePermissionsHelper.hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
+      return
+    }
+
+    runtimePermissionsHelper.requestPermission(
+      Manifest.permission.POST_NOTIFICATIONS
+    ) { granted ->
+      ChanSettings.api33NotificationPermissionRequested.set(true)
+
+      if (granted) {
+        return@requestPermission
+      }
+
+      dialogFactory.createSimpleInformationDialog(
+        context = context,
+        titleText = context.getString(R.string.api_33_android_13_notifications_permission_title),
+        descriptionText = context.getString(R.string.api_33_android_13_notifications_permission_descriptor),
+      )
+    }
+  }
+
 
   private fun openBoardSelectionController() {
     val siteDescriptor = if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
@@ -738,495 +1227,6 @@ class BrowseController(
       AppModuleAndroidUtils.shareLink(link)
     } else {
       AppModuleAndroidUtils.openLink(link)
-    }
-  }
-
-  override suspend fun loadCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      Logger.d(TAG, "loadCatalog($catalogDescriptor)")
-
-      updateToolbarTitle(catalogDescriptor)
-      threadLayout.presenter.bindChanDescriptor(catalogDescriptor as ChanDescriptor)
-
-      if (!toolbarUpdatedAfterFirstCatalogLoad) {
-        toolbarUpdatedAfterFirstCatalogLoad = true
-        buildMenu(catalogLoaded = true)
-      }
-
-      updateMenuItems()
-    }
-  }
-
-  override suspend fun updateToolbarTitle(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
-    boardManager.awaitUntilInitialized()
-
-    updateCompositeCatalogNavigationSubtitleJob?.cancel()
-    updateCompositeCatalogNavigationSubtitleJob = null
-
-    if (catalogDescriptor is CatalogDescriptor) {
-      val boardDescriptor = catalogDescriptor.boardDescriptor
-
-      val board = boardManager.byBoardDescriptor(boardDescriptor)
-        ?: return
-
-      toolbarState.catalog.updateTitle(
-        newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/"),
-        newSubTitle = ToolbarText.String(board.name ?: "")
-      )
-    } else {
-      catalogDescriptor as ChanDescriptor.CompositeCatalogDescriptor
-
-      toolbarState.catalog.updateTitle(
-        newTitle = ToolbarText.Id(R.string.composite_catalog),
-        newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
-      )
-
-      updateCompositeCatalogNavigationSubtitleJob = controllerScope.launch {
-        val newTitle = presenter.getCompositeCatalogNavigationTitle(catalogDescriptor)
-
-        val compositeCatalogSubTitle = SpannableHelper.getCompositeCatalogNavigationSubtitle(
-          siteManager = siteManager,
-          coroutineScope = this,
-          context = context,
-          fontSizePx = sp(12f),
-          compositeCatalogDescriptor = catalogDescriptor
-        )
-
-        toolbarState.catalog.updateTitle(
-          newTitle = ToolbarText.String(newTitle ?: ""),
-          newSubTitle = ToolbarText.Spanned(compositeCatalogSubTitle)
-        )
-      }
-    }
-  }
-
-  override suspend fun showCatalogWithoutFocusing(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      Logger.d(TAG, "showCatalogWithoutFocusing($catalogDescriptor, $animated)")
-
-      showCatalogInternal(
-        catalogDescriptor = catalogDescriptor,
-        showCatalogOptions = ShowCatalogOptions(
-          switchToCatalogController = false,
-          withAnimation = animated
-        )
-      )
-    }
-  }
-
-  override suspend fun showCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      Logger.d(TAG, "showBoard($catalogDescriptor, $animated)")
-
-      showCatalogInternal(
-        catalogDescriptor = catalogDescriptor,
-        showCatalogOptions = ShowCatalogOptions(
-          switchToCatalogController = true,
-          withAnimation = animated
-        )
-      )
-    }
-  }
-
-  override suspend fun setCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor, animated: Boolean) {
-    controllerScope.launch(Dispatchers.Main.immediate) {
-      Logger.d(TAG, "setCatalog($catalogDescriptor, $animated)")
-
-      setCatalog(catalogDescriptor)
-    }
-  }
-
-  override suspend fun showPostsInExternalThread(
-    postDescriptor: PostDescriptor,
-    isPreviewingCatalogThread: Boolean
-  ) {
-    showPostsInExternalThreadHelper.showPostsInExternalThread(postDescriptor, isPreviewingCatalogThread)
-  }
-
-  override suspend fun openExternalThread(postDescriptor: PostDescriptor, scrollToPost: Boolean) {
-    val descriptor = chanDescriptor
-      ?: return
-
-    openExternalThreadHelper.openExternalThread(
-      currentChanDescriptor = descriptor,
-      postDescriptor = postDescriptor,
-      scrollToPost = scrollToPost
-    ) { threadDescriptor ->
-      controllerScope.launch { showThread(descriptor = threadDescriptor, animated = true) }
-    }
-  }
-
-  fun getViewThreadController(): ViewThreadController? {
-    var splitNav: SplitNavigationController? = null
-    var slideNav: ThreadSlideController? = null
-
-    if (doubleNavigationController is SplitNavigationController) {
-      splitNav = doubleNavigationController as SplitNavigationController?
-    }
-
-    if (doubleNavigationController is ThreadSlideController) {
-      slideNav = doubleNavigationController as ThreadSlideController?
-    }
-
-    return when {
-      splitNav != null -> {
-        val navigationController = splitNav.getRightController() as StyledToolbarNavigationController?
-        navigationController?.topController as? ViewThreadController
-      }
-      slideNav != null -> {
-        slideNav.getRightController() as? ViewThreadController
-      }
-      else -> null
-    }
-  }
-
-  // Creates or updates the target ThreadViewController
-  // This controller can be in various places depending on the layout
-  // We dynamically search for it
-  override suspend fun showThread(descriptor: ThreadDescriptor, animated: Boolean) {
-    showThreadInternal(
-      descriptor = descriptor,
-      showThreadOptions = ShowThreadOptions(
-        switchToThreadController = true,
-        pushControllerWithAnimation = animated
-      )
-    )
-  }
-
-  override suspend fun showThreadWithoutFocusing(descriptor: ThreadDescriptor, animated: Boolean) {
-    showThreadInternal(
-      descriptor = descriptor,
-      showThreadOptions = ShowThreadOptions(
-        switchToThreadController = false,
-        pushControllerWithAnimation = animated
-      )
-    )
-  }
-
-  private suspend fun showThreadInternal(descriptor: ThreadDescriptor, showThreadOptions: ShowThreadOptions) {
-    Logger.d(TAG, "showThread($descriptor, $showThreadOptions)")
-
-    // The target ThreadViewController is in a split nav
-    // (BrowseController -> ToolbarNavigationController -> SplitNavigationController)
-    var splitNav: SplitNavigationController? = null
-
-    // The target ThreadViewController is in a slide nav
-    // (BrowseController -> SlideController -> ToolbarNavigationController)
-    var slideNav: ThreadSlideController? = null
-    if (doubleNavigationController is SplitNavigationController) {
-      splitNav = doubleNavigationController as SplitNavigationController?
-    }
-
-    if (doubleNavigationController is ThreadSlideController) {
-      slideNav = doubleNavigationController as ThreadSlideController?
-    }
-
-    when {
-      splitNav != null -> {
-        // Create a threadview inside a toolbarnav in the right part of the split layout
-        if (splitNav.getRightController() is StyledToolbarNavigationController) {
-          val navigationController = splitNav.getRightController() as StyledToolbarNavigationController
-          if (navigationController.topController is ViewThreadController) {
-            val viewThreadController = navigationController.topController as ViewThreadController
-            viewThreadController.loadThread(descriptor)
-            viewThreadController.onShow()
-            viewThreadController.onGainedFocus(ThreadControllerType.Thread)
-          }
-        } else {
-          val navigationController = StyledToolbarNavigationController(context)
-          splitNav.setRightController(navigationController, showThreadOptions.pushControllerWithAnimation)
-          val viewThreadController = ViewThreadController(context, mainControllerCallbacks, descriptor)
-          navigationController.pushController(viewThreadController, false)
-          viewThreadController.onGainedFocus(ThreadControllerType.Thread)
-        }
-
-        splitNav.switchToController(
-          false,
-          showThreadOptions.pushControllerWithAnimation
-        )
-      }
-      slideNav != null -> {
-        // Create a threadview in the right part of the slide nav *without* a toolbar
-        if (slideNav.getRightController() is ViewThreadController) {
-          (slideNav.getRightController() as ViewThreadController).loadThread(descriptor)
-          (slideNav.getRightController() as ViewThreadController).onShow()
-        } else {
-          val viewThreadController = ViewThreadController(
-            context,
-            mainControllerCallbacks,
-            descriptor
-          )
-
-          slideNav.setRightController(
-            viewThreadController,
-            showThreadOptions.pushControllerWithAnimation
-          )
-        }
-
-        if (showThreadOptions.switchToThreadController) {
-          slideNav.switchToController(
-            false,
-            showThreadOptions.pushControllerWithAnimation
-          )
-        }
-      }
-      else -> {
-        // the target ThreadNav must be pushed to the parent nav controller
-        // (BrowseController -> ToolbarNavigationController)
-        val viewThreadController = ViewThreadController(
-          context,
-          mainControllerCallbacks,
-          descriptor
-        )
-
-        navigationController!!.pushController(
-          viewThreadController,
-          showThreadOptions.pushControllerWithAnimation
-        )
-      }
-    }
-  }
-
-  private suspend fun showCatalogInternal(
-    catalogDescriptor: ChanDescriptor.ICatalogDescriptor,
-    showCatalogOptions: ShowCatalogOptions
-  ) {
-    Logger.d(TAG, "showCatalogInternal($catalogDescriptor, $showCatalogOptions)")
-
-    // The target ThreadViewController is in a split nav
-    // (BrowseController -> ToolbarNavigationController -> SplitNavigationController)
-    val splitNav = if (doubleNavigationController is SplitNavigationController) {
-      doubleNavigationController as SplitNavigationController?
-    } else {
-      null
-    }
-
-    // The target ThreadViewController is in a slide nav
-    // (BrowseController -> SlideController -> ToolbarNavigationController)
-    val slideNav = if (doubleNavigationController is ThreadSlideController) {
-      doubleNavigationController as ThreadSlideController?
-    } else {
-      null
-    }
-
-    // Do nothing when split navigation is enabled because both controllers are always visible
-    // so we don't need to switch between left and right controllers
-    if (splitNav == null) {
-      if (slideNav != null) {
-        if (showCatalogOptions.switchToCatalogController) {
-          slideNav.switchToController(true, showCatalogOptions.withAnimation)
-        }
-      } else {
-        if (navigationController != null) {
-          // We wouldn't want to pop BrowseController when opening a board
-          if (navigationController!!.topController !is BrowseController) {
-            navigationController!!.popController(showCatalogOptions.withAnimation)
-          }
-        }
-      }
-    }
-
-    setCatalog(catalogDescriptor)
-  }
-
-  private fun updateMenuItems() {
-    toolbarState.findOverflowItem(ACTION_BOARD_ARCHIVE)?.let { menuItem ->
-      val supportsArchive = siteSupportsBuiltInBoardArchive()
-      menuItem.updateVisibility(supportsArchive)
-    }
-
-    toolbarState.findOverflowItem(ACTION_LOAD_WHOLE_COMPOSITE_CATALOG)?.let { menuItem ->
-      val isCompositeCatalog =
-        threadLayout.presenter.currentChanDescriptor is ChanDescriptor.CompositeCatalogDescriptor
-
-      menuItem.updateVisibility(isCompositeCatalog)
-    }
-
-    toolbarState.findOverflowItem(ACTION_OPEN_BROWSER)?.let { menuItem ->
-      val isNotCompositeCatalog =
-        threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
-
-      menuItem.updateVisibility(isNotCompositeCatalog)
-    }
-
-    toolbarState.findOverflowItem(ACTION_OPEN_UNLIMITED_CATALOG_PAGE)?.let { menuItem ->
-      val isUnlimitedCatalog = threadLayout.presenter.isUnlimitedOrCompositeCatalog
-        && threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
-
-      menuItem.updateVisibility(isUnlimitedCatalog)
-    }
-
-    toolbarState.findOverflowItem(ACTION_SHARE)?.let { menuItem ->
-      val isNotCompositeCatalog =
-        threadLayout.presenter.currentChanDescriptor !is ChanDescriptor.CompositeCatalogDescriptor
-
-      menuItem.updateVisibility(isNotCompositeCatalog)
-    }
-  }
-
-  override fun onLostFocus(wasFocused: ThreadControllerType) {
-    super.onLostFocus(wasFocused)
-    check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
-  }
-
-  override fun onGainedFocus(nowFocused: ThreadControllerType) {
-    super.onGainedFocus(nowFocused)
-    check(nowFocused == threadControllerType) { "Unexpected controllerType: $nowFocused" }
-
-    if (chanDescriptor != null && historyNavigationManager.isInitialized) {
-      if (threadLayout.presenter.chanThreadLoadingState == ThreadPresenter.ChanThreadLoadingState.Loaded) {
-        controllerScope.launch { historyNavigationManager.moveNavElementToTop(chanDescriptor!!) }
-      }
-    }
-
-    currentOpenedDescriptorStateManager.updateCurrentFocusedController(
-      ThreadPresenter.CurrentFocusedController.Catalog
-    )
-  }
-
-  private fun siteSupportsBuiltInBoardArchive(): Boolean {
-    val chanDescriptor = threadLayout.presenter.currentChanDescriptor
-    if (chanDescriptor == null) {
-      return false
-    }
-
-    if (chanDescriptor !is CatalogDescriptor) {
-      return false
-    }
-
-    return chanDescriptor.siteDescriptor().is4chan() || chanDescriptor.siteDescriptor().isDvach()
-  }
-
-  private suspend fun showSiteFirewallBypassController(
-    firewallType: FirewallType,
-    urlToOpen: HttpUrl,
-    siteDescriptor: SiteDescriptor,
-    onBypassControllerClosed: (Boolean) -> Unit
-  ) {
-    val cookieResult = suspendCancellableCoroutine<CookieResult> { continuation ->
-      val controller = SiteFirewallBypassController(
-        context = context,
-        firewallType = firewallType,
-        headerTitleText = getString(R.string.firewall_check_header_title, firewallType.name),
-        urlToOpen = urlToOpen.toString(),
-        onResult = { cookieResult ->
-          continuation.resumeValueSafe(cookieResult)
-          onBypassControllerClosed(cookieResult is CookieResult.CookieValue)
-        }
-      )
-
-      Logger.d(TAG, "presentController SiteFirewallBypassController (firewallType: ${firewallType}, urlToOpen: ${urlToOpen})")
-      presentController(controller)
-
-      continuation.invokeOnCancellation {
-        Logger.d(TAG, "stopPresenting SiteFirewallBypassController (firewallType: ${firewallType}, urlToOpen: ${urlToOpen})")
-
-        if (controller.alive) {
-          controller.stopPresenting()
-        }
-      }
-    }
-
-    when (firewallType) {
-      FirewallType.Cloudflare -> {
-        when (cookieResult) {
-          CookieResult.Canceled -> {
-            AppModuleAndroidUtils.showToast(
-              context,
-              getString(R.string.firewall_check_canceled, firewallType),
-              Toast.LENGTH_LONG
-            )
-          }
-          CookieResult.NotSupported -> {
-            AppModuleAndroidUtils.showToast(
-              context,
-              getString(R.string.firewall_check_not_supported, firewallType, siteDescriptor.siteName),
-              Toast.LENGTH_LONG
-            )
-          }
-          is CookieResult.Error -> {
-            val errorMsg = cookieResult.exception.errorMessageOrClassName()
-            AppModuleAndroidUtils.showToast(
-              context,
-              getString(R.string.firewall_check_failure, firewallType, errorMsg),
-              Toast.LENGTH_LONG
-            )
-          }
-          is CookieResult.CookieValue -> {
-            AppModuleAndroidUtils.showToast(
-              context,
-              getString(R.string.firewall_check_success, firewallType),
-              Toast.LENGTH_LONG
-            )
-          }
-        }
-      }
-      FirewallType.DvachAntiSpam -> {
-        when (cookieResult) {
-          CookieResult.Canceled -> {
-            AppModuleAndroidUtils.showToast(
-              context,
-              R.string.dvach_antispam_result_canceled,
-              Toast.LENGTH_LONG
-            )
-          }
-          CookieResult.NotSupported -> {
-            AppModuleAndroidUtils.showToast(
-              context,
-              getString(R.string.firewall_check_not_supported, firewallType, siteDescriptor.siteName),
-              Toast.LENGTH_LONG
-            )
-          }
-          is CookieResult.Error -> {
-            val errorMsg = cookieResult.exception.errorMessageOrClassName()
-            AppModuleAndroidUtils.showToast(
-              context,
-              getString(R.string.dvach_antispam_result_error, errorMsg),
-              Toast.LENGTH_LONG
-            )
-          }
-          is CookieResult.CookieValue -> {
-            AppModuleAndroidUtils.showToast(
-              context,
-              getString(R.string.dvach_antispam_result_success),
-              Toast.LENGTH_LONG
-            )
-          }
-        }
-      }
-      FirewallType.YandexSmartCaptcha -> {
-        // No-op. We only handle Yandex's captcha in one place (ImageSearchController)
-      }
-    }
-  }
-
-  private fun requestApi33NotificationsPermissionOnce() {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-      return
-    }
-
-    if (ChanSettings.api33NotificationPermissionRequested.get()) {
-      return
-    }
-
-    if (runtimePermissionsHelper.hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
-      return
-    }
-
-    runtimePermissionsHelper.requestPermission(
-      Manifest.permission.POST_NOTIFICATIONS
-    ) { granted ->
-      ChanSettings.api33NotificationPermissionRequested.set(true)
-
-      if (granted) {
-        return@requestPermission
-      }
-
-      dialogFactory.createSimpleInformationDialog(
-        context = context,
-        titleText = context.getString(R.string.api_33_android_13_notifications_permission_title),
-        descriptionText = context.getString(R.string.api_33_android_13_notifications_permission_descriptor),
-      )
     }
   }
 
