@@ -73,7 +73,7 @@ abstract class Controller(
 
   open val controllerKey: ControllerKey
     get() = ControllerKey(this::class.java.name)
-  val toolbarState: KurobaToolbarState
+  open val toolbarState: KurobaToolbarState
     get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
 
   @JvmField
@@ -145,6 +145,10 @@ abstract class Controller(
   }
 
   fun requireToolbarNavController(): ToolbarNavigationController {
+    if (this is ToolbarNavigationController) {
+      return this
+    }
+
     val navController = requireNavController()
     check(navController is ToolbarNavigationController) {
       "Expected navController to be 'ToolbarNavigationController' but got '${navController::class.java.name}'"
@@ -153,12 +157,12 @@ abstract class Controller(
     return navController
   }
 
-  fun toolbarNavControllerOrNull(): ToolbarNavigationController? {
-    return navigationController as? ToolbarNavigationController
-  }
+  fun requireNavController(): NavigationController {
+    if (this is NavigationController) {
+      return this
+    }
 
-  fun requireNavController(): NavigationController = requireNotNull(navigationController) {
-    "navigationController was not set"
+    return requireNotNull(navigationController) { "navigationController was not set" }
   }
 
   fun requireStartActivity(): StartActivityCallbacks {
@@ -317,7 +321,11 @@ abstract class Controller(
     newController.onShow()
   }
 
-  fun removeChildController(controller: Controller) {
+  fun removeChildController(controller: Controller?) {
+    if (controller == null) {
+      return
+    }
+
     controller.onDestroy()
     childControllers.remove(controller)
 
@@ -475,12 +483,12 @@ abstract class Controller(
       val doubleNav = previousSiblingController as DoubleNavigationController
       if (doubleNav is ThreadSlideController) {
         if (doubleNav.leftOpen()) {
-          threadController = doubleNav.getLeftController() as ThreadController
+          threadController = doubleNav.leftController() as ThreadController
         } else {
-          threadController = doubleNav.getRightController() as ThreadController
+          threadController = doubleNav.rightController() as ThreadController
         }
-      } else if (doubleNav.getRightController() is ThreadController) {
-        threadController = doubleNav.getRightController() as ThreadController
+      } else if (doubleNav.rightController() is ThreadController) {
+        threadController = doubleNav.rightController() as ThreadController
       }
     } else if (previousSiblingController == null) {
       // split nav has no "sibling" to look at, so we go WAY back to find the view thread controller
@@ -488,10 +496,10 @@ abstract class Controller(
 
       threadController = when (chanDescriptor) {
         is ChanDescriptor.ICatalogDescriptor -> {
-          splitNav?.leftController?.childControllers?.get(0) as ThreadController?
+          splitNav?.leftController()?.childControllers?.get(0) as ThreadController?
         }
         is ChanDescriptor.ThreadDescriptor -> {
-          splitNav?.rightController?.childControllers?.get(0) as ThreadController?
+          splitNav?.rightController()?.childControllers?.get(0) as ThreadController?
         }
       }
 

@@ -294,29 +294,37 @@ open class ViewThreadController(
   ) {
     Logger.d(TAG, "showCatalogInternal($catalogDescriptor, $showCatalogOptions)")
 
-    if (doubleNavigationController != null && doubleNavigationController?.getLeftController() is BrowseController) {
-      val browseController = doubleNavigationController!!.getLeftController() as BrowseController
-      browseController.setCatalog(catalogDescriptor)
+    if (doubleNavigationController != null && doubleNavigationController?.leftController() is BrowseController) {
+      val browseController = doubleNavigationController?.leftController() as? BrowseController
+      if (browseController != null) {
+        browseController.setCatalog(catalogDescriptor)
 
-      if (showCatalogOptions.switchToCatalogController) {
-        // slide layout
-        doubleNavigationController!!.switchToController(true, showCatalogOptions.withAnimation)
+        if (showCatalogOptions.switchToCatalogController) {
+          // slide layout
+          doubleNavigationController?.switchToController(true, showCatalogOptions.withAnimation)
+        }
       }
 
       return
     }
 
-    if (doubleNavigationController != null
-      && doubleNavigationController?.getLeftController() is StyledToolbarNavigationController) {
+    if (doubleNavigationController?.leftController() is StyledToolbarNavigationController) {
       // split layout
-      val browseController =
-        doubleNavigationController!!.getLeftController()!!.childControllers[0] as BrowseController
-      browseController.setCatalog(catalogDescriptor)
+      val browseController = doubleNavigationController
+        ?.leftController()
+        ?.childControllers
+        ?.getOrNull(0) as? BrowseController
+
+      if (browseController != null) {
+        browseController.setCatalog(catalogDescriptor)
+      }
+
       return
     }
 
     // phone layout
     var browseController: BrowseController? = null
+
     for (controller in requireNavController().childControllers) {
       if (controller is BrowseController) {
         browseController = controller
@@ -413,7 +421,7 @@ open class ViewThreadController(
     }
 
     var threadController: ThreadController? = null
-    val leftController = doubleNavigationController?.getLeftController()
+    val leftController = doubleNavigationController?.leftController()
 
     if (leftController is ThreadController) {
       threadController = leftController

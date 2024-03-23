@@ -344,11 +344,11 @@ class BrowseController(
 
     return when {
       splitNav != null -> {
-        val navigationController = splitNav.getRightController() as StyledToolbarNavigationController?
+        val navigationController = splitNav.rightController() as StyledToolbarNavigationController?
         navigationController?.topController as? ViewThreadController
       }
       slideNav != null -> {
-        slideNav.getRightController() as? ViewThreadController
+        slideNav.rightController()
       }
       else -> null
     }
@@ -418,8 +418,8 @@ class BrowseController(
     when {
       splitNav != null -> {
         // Create a threadview inside a toolbarnav in the right part of the split layout
-        if (splitNav.getRightController() is StyledToolbarNavigationController) {
-          val navigationController = splitNav.getRightController() as StyledToolbarNavigationController
+        if (splitNav.rightController() is StyledToolbarNavigationController) {
+          val navigationController = splitNav.rightController() as StyledToolbarNavigationController
           if (navigationController.topController is ViewThreadController) {
             val viewThreadController = navigationController.topController as ViewThreadController
             viewThreadController.loadThread(descriptor)
@@ -428,7 +428,7 @@ class BrowseController(
           }
         } else {
           val navigationController = StyledToolbarNavigationController(context)
-          splitNav.setRightController(navigationController, showThreadOptions.pushControllerWithAnimation)
+          splitNav.updateRightController(navigationController, showThreadOptions.pushControllerWithAnimation)
           val viewThreadController = ViewThreadController(context, mainControllerCallbacks, descriptor)
           navigationController.pushController(viewThreadController, false)
           viewThreadController.onGainedFocus(ThreadControllerType.Thread)
@@ -441,9 +441,9 @@ class BrowseController(
       }
       slideNav != null -> {
         // Create a threadview in the right part of the slide nav *without* a toolbar
-        if (slideNav.getRightController() is ViewThreadController) {
-          (slideNav.getRightController() as ViewThreadController).loadThread(descriptor)
-          (slideNav.getRightController() as ViewThreadController).onShow()
+        if (slideNav.rightController() is ViewThreadController) {
+          (slideNav.rightController() as ViewThreadController).loadThread(descriptor)
+          (slideNav.rightController() as ViewThreadController).onShow()
         } else {
           val viewThreadController = ViewThreadController(
             context,
@@ -451,7 +451,7 @@ class BrowseController(
             descriptor
           )
 
-          slideNav.setRightController(
+          slideNav.updateRightController(
             viewThreadController,
             showThreadOptions.pushControllerWithAnimation
           )

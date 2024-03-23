@@ -411,7 +411,7 @@ class StartActivity : ControllerHostActivity(),
         )
 
         mainController.pushChildController(split)
-        split.setLeftController(mainNavigationController, false)
+        split.updateLeftController(mainNavigationController, false)
       }
       ChanSettings.LayoutMode.PHONE,
       ChanSettings.LayoutMode.SLIDE -> {
@@ -430,7 +430,7 @@ class StartActivity : ControllerHostActivity(),
       )
 
       mainNavigationController.pushController(slideController, false)
-      slideController.setLeftController(browseController, false)
+      slideController.updateLeftController(browseController, false)
     } else {
       mainNavigationController.pushController(browseController!!, false)
     }
@@ -482,10 +482,10 @@ class StartActivity : ControllerHostActivity(),
     var threadDescriptor: ChanDescriptor? = null
 
     if (mainController.childControllers[0] is SplitNavigationController) {
-      val dblNav = mainController.childControllers[0] as SplitNavigationController
+      val splitNavigationController = mainController.childControllers[0] as SplitNavigationController
 
-      if (dblNav.getRightController() is NavigationController) {
-        val rightNavigationController = dblNav.getRightController() as NavigationController
+      if (splitNavigationController.rightController() is NavigationController) {
+        val rightNavigationController = splitNavigationController.rightController() as NavigationController
 
         for (controller in rightNavigationController.childControllers) {
           if (controller is ViewThreadController) {
@@ -502,8 +502,8 @@ class StartActivity : ControllerHostActivity(),
           threadDescriptor = controller.chanDescriptor
           break
         } else if (controller is ThreadSlideController) {
-          if (controller.getRightController() is ViewThreadController) {
-            threadDescriptor = (controller.getRightController() as ViewThreadController).chanDescriptor
+          if (controller.rightController() is ViewThreadController) {
+            threadDescriptor = (controller.rightController() as ViewThreadController).chanDescriptor
             break
           }
         }

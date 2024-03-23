@@ -248,15 +248,17 @@ class KurobaToolbarState(
   }
 
   fun onTransitionStart(other: KurobaToolbarState) {
-    TODO("TODO: New toolbar")
+    // TODO: New toolbar.
+    updateFromState(other)
   }
 
   fun onTransitionProgress(progress: Float) {
-    TODO("TODO: New toolbar")
+    // TODO: New toolbar.
   }
 
-  fun onTransitionFinished(finish: Boolean, other: KurobaToolbarState) {
-    TODO("TODO: New toolbar")
+  fun onTransitionFinished(other: KurobaToolbarState) {
+    // TODO: New toolbar.
+    updateFromState(other)
   }
 
   fun updateFromState(toolbarState: KurobaToolbarState) {

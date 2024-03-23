@@ -56,6 +56,9 @@ class ThreadSlideController(
     this.mainControllerCallbacks = mainControllerCallbacks
   }
 
+  override val toolbarState: KurobaToolbarState
+    get() = getToolbarState(leftOpen)
+
   override fun onCreate() {
     super.onCreate()
 
@@ -87,8 +90,8 @@ class ThreadSlideController(
       slidingPane.openPane()
     }
 
-    setLeftController(leftController = null, animated = false)
-    setRightController(rightController = null, animated = false)
+    updateLeftController(leftController = null, animated = false)
+    updateRightController(rightController = null, animated = false)
 
     val textView = emptyView.findViewById<TextView>(R.id.select_thread_text)
     textView?.setTextColor(themeEngine.chanTheme.textColorSecondary)
@@ -129,9 +132,6 @@ class ThreadSlideController(
     super.onShow()
     mainControllerCallbacks?.resetBottomNavViewCheckState()
   }
-
-  fun leftController(): BrowseController? = leftController
-  fun rightController(): ViewThreadController? = rightController
 
   fun onSlidingPaneLayoutStateRestored() {
     val restoredOpen = slidingPaneLayout?.preservedOpenState
@@ -180,7 +180,7 @@ class ThreadSlideController(
     }
   }
 
-  override fun setLeftController(leftController: Controller?, animated: Boolean) {
+  override fun updateLeftController(leftController: Controller?, animated: Boolean) {
     this.leftController?.let { left ->
       left.onHide()
       removeChildController(left)
@@ -198,7 +198,7 @@ class ThreadSlideController(
     }
   }
 
-  override fun setRightController(rightController: Controller?, animated: Boolean) {
+  override fun updateRightController(rightController: Controller?, animated: Boolean) {
     if (this.rightController != null) {
       this.rightController!!.onHide()
       removeChildController(this.rightController!!)
@@ -223,11 +223,11 @@ class ThreadSlideController(
     }
   }
 
-  override fun getLeftController(): Controller? {
+  override fun leftController(): BrowseController? {
     return leftController
   }
 
-  override fun getRightController(): Controller? {
+  override fun rightController(): ViewThreadController? {
     return rightController
   }
 
@@ -331,7 +331,11 @@ class ThreadSlideController(
   }
 
   private fun setParentNavigationItem(left: Boolean, animate: Boolean) {
-    var kurobaToolbarState = if (left) {
+    requireToolbarNavController().toolbarState.updateFromState(getToolbarState(left))
+  }
+
+  private fun getToolbarState(leftOpen: Boolean): KurobaToolbarState {
+    var kurobaToolbarState = if (leftOpen) {
       leftController?.toolbarState
     } else {
       rightController?.toolbarState
@@ -344,7 +348,7 @@ class ThreadSlideController(
       )
     }
 
-    requireToolbarNavController().toolbarState.updateFromState(kurobaToolbarState)
+    return kurobaToolbarState
   }
 
   fun passMotionEventIntoSlidingPaneLayout(event: MotionEvent): Boolean {

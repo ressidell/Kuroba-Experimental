@@ -183,8 +183,10 @@ abstract class NavigationController(context: Context) : Controller(context), Con
 
     if (pushing && to != null) {
       controllerNavigationManager.onControllerPushed(to)
+      requireNavController().toolbarState.updateFromState(to.toolbarState)
     } else if (!pushing && from != null) {
       controllerNavigationManager.onControllerPopped(from)
+      requireNavController().toolbarState.updateFromState(from.toolbarState)
     }
   }
 

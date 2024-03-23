@@ -12,7 +12,6 @@ import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.controller.PopupController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
-import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 
 class StyledToolbarNavigationController(context: Context) : ToolbarNavigationController(context) {
@@ -77,7 +76,7 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
     val threadSlideController = threadSlideControllerOrNull()
 
     if (topController == null || threadSlideController != null) {
-      val viewThreadController = viewThreadControllerOrNull(threadSlideController)
+      val viewThreadController = threadSlideController?.rightController()
       if (viewThreadController != null) {
         if (ChanSettings.viewThreadControllerSwipeable.get()) {
           nav.initThreadControllerTracking(this)
@@ -96,12 +95,6 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
     } else {
       nav.initThreadDrawerOpenGestureControllerTracker(this)
     }
-  }
-
-  private fun viewThreadControllerOrNull(
-    threadSlideController: ThreadSlideController?
-  ): ViewThreadController? {
-    return threadSlideController?.rightController()
   }
 
   private fun threadSlideControllerOrNull(): ThreadSlideController? {
@@ -155,8 +148,8 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
     }
 
     if (doubleNavigationController != null && childControllers.size == 1) {
-      if (doubleNavigationController!!.getRightController() === this) {
-        doubleNavigationController!!.setRightController(null, false)
+      if (doubleNavigationController!!.rightController() === this) {
+        doubleNavigationController!!.updateRightController(null, false)
         return true
       }
       return false

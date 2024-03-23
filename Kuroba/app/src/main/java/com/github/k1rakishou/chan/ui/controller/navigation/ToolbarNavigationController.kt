@@ -19,7 +19,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     super.transition(from, to, pushing, controllerTransition)
 
     if (to != null) {
-      toolbarState.showToolbar()
+      requireNavController().toolbarState.showToolbar()
     }
   }
 
@@ -32,10 +32,10 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
       return false
     }
 
-    toolbarState.showToolbar()
+    requireNavController().toolbarState.showToolbar()
 
     if (to != null) {
-      toolbarState.onTransitionStart(to.toolbarState)
+      requireNavController().toolbarState.onTransitionStart(to.toolbarState)
     }
 
     return true
@@ -44,7 +44,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
   override fun swipeTransitionProgress(progress: Float) {
     super.swipeTransitionProgress(progress)
 
-    toolbarState.onTransitionProgress(progress)
+    requireNavController().toolbarState.onTransitionProgress(progress)
   }
 
   override fun endSwipeTransition(from: Controller?, to: Controller?, finish: Boolean) {
@@ -54,15 +54,17 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
 
     super.endSwipeTransition(from, to, finish)
 
-    toolbarState.showToolbar()
+    requireNavController().toolbarState.showToolbar()
 
-    if (to != null) {
-      toolbarState.onTransitionFinished(finish, to.toolbarState)
+    if (finish && to != null) {
+      requireNavController().toolbarState.onTransitionFinished(to.toolbarState)
+    } else if (!finish && from != null) {
+      requireNavController().toolbarState.onTransitionFinished(from.toolbarState)
     }
   }
 
   override fun onBack(): Boolean {
-    return toolbarState.onBack() || super.onBack()
+    return requireNavController().toolbarState.onBack() || super.onBack()
   }
 
 }

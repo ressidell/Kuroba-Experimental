@@ -276,11 +276,11 @@ class MainController(
       if (topController is StyledToolbarNavigationController) {
         navigationController = topController
       } else if (topController is SplitNavigationController) {
-        if (topController.getLeftController() is StyledToolbarNavigationController) {
-          navigationController = topController.getLeftController() as StyledToolbarNavigationController
+        if (topController.leftController() is StyledToolbarNavigationController) {
+          navigationController = topController.leftController() as StyledToolbarNavigationController
         }
       } else if (topController is ThreadSlideController) {
-        navigationController = topController.getLeftController() as StyledToolbarNavigationController
+        navigationController = topController.leftController() as StyledToolbarNavigationController
       }
 
       if (navigationController == null) {
@@ -611,7 +611,7 @@ class MainController(
     if (topController is StyledToolbarNavigationController) {
       val threadSlideController = topController.topController as? ThreadSlideController
       if (threadSlideController != null) {
-        return threadSlideController.getRightController() as? ViewThreadController
+        return threadSlideController.rightController()
       }
     }
 
