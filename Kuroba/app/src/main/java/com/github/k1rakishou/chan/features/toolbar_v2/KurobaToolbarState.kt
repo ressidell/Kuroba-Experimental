@@ -1,12 +1,9 @@
 package com.github.k1rakishou.chan.features.toolbar_v2
 
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.isSpecified
 import com.github.k1rakishou.chan.controller.ControllerKey
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
@@ -28,6 +25,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 @Stable
@@ -52,20 +50,17 @@ class KurobaToolbarState(
   val toolbarVisibleState: Flow<Boolean>
     get() = globalUiStateHolder.toolbarState.toolbarVisibilityStateFlow()
 
-  private val _toolbarHeightState = mutableStateOf<Dp?>(null)
-  val toolbarHeightState: State<Dp?>
-    get() = _toolbarHeightState
+  val toolbarHeightState: StateFlow<Dp?>
+    get() = globalUiStateHolder.toolbarState.toolbarHeightStateFlow()
   val toolbarHeight: Dp?
-    get() = _toolbarHeightState.value
+    get() = toolbarHeightState.value
 
   val toolbarKey: String
     get() = "Toolbar_${controllerKey.key}"
 
   fun onToolbarHeightChanged(totalToolbarHeight: Dp) {
-    if (totalToolbarHeight.isSpecified && totalToolbarHeight > 0.dp) {
-      _toolbarHeightState.value = totalToolbarHeight
-    } else {
-      _toolbarHeightState.value = null
+    globalUiStateHolder.updateToolbarState {
+      updateToolbarHeightState(totalToolbarHeight)
     }
   }
 
@@ -203,8 +198,8 @@ class KurobaToolbarState(
   }
 
   fun showToolbar() {
-    globalUiStateHolder.updateToolbarState { toolbarState ->
-      toolbarState.updateToolbarVisibilityState(visible = true)
+    globalUiStateHolder.updateToolbarState {
+      updateToolbarVisibilityState(visible = true)
     }
   }
 
@@ -216,21 +211,21 @@ class KurobaToolbarState(
     TODO("TODO: New toolbar")
   }
 
-  fun onTransitionFinished(finish: Boolean) {
+  fun onTransitionFinished(finish: Boolean, other: KurobaToolbarState) {
     TODO("TODO: New toolbar")
   }
 
   fun updateFromState(toolbarState: KurobaToolbarState) {
-    _toolbarStates.clear()
-    _toolbarStates.addAll(toolbarState._toolbarStates)
+    Snapshot.withMutableSnapshot {
+      _toolbarStates.clear()
+      _toolbarStates.addAll(toolbarState._toolbarStates)
 
-    container.updateFromState(toolbarState.container)
-    default.updateFromState(toolbarState.default)
-    search.updateFromState(toolbarState.search)
-    selection.updateFromState(toolbarState.selection)
-    reply.updateFromState(toolbarState.reply)
-
-    _toolbarHeightState.value = toolbarState._toolbarHeightState.value
+      container.updateFromState(toolbarState.container)
+      default.updateFromState(toolbarState.default)
+      search.updateFromState(toolbarState.search)
+      selection.updateFromState(toolbarState.selection)
+      reply.updateFromState(toolbarState.reply)
+    }
   }
 
   fun findItem(id: Int): ToolbarMenuItem? {
@@ -293,7 +288,7 @@ class KurobaToolbarState(
     Logger.debug(TAG) { "Toolbar '${toolbarKey}' entering state ${state.kind}" }
 
     val indexOfState = _toolbarStates.indexOfFirst { prevLayer -> prevLayer.kind == params.kind }
-    if (indexOfState != _toolbarStates.lastIndex) {
+    if (indexOfState >= 0 && indexOfState != _toolbarStates.lastIndex) {
       if (isDevBuild()) {
         error("Can only update top toolbar. indexOfState: ${indexOfState}, lastIndex: ${_toolbarStates.lastIndex}")
       } else {
@@ -326,6 +321,23 @@ class KurobaToolbarState(
     if (topToolbar?.kind == kind) {
       pop()
     }
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as KurobaToolbarState
+
+    return controllerKey == other.controllerKey
+  }
+
+  override fun hashCode(): Int {
+    return controllerKey.hashCode()
+  }
+
+  override fun toString(): String {
+    return "KurobaToolbarState(controllerKey=$controllerKey)"
   }
 
   companion object {

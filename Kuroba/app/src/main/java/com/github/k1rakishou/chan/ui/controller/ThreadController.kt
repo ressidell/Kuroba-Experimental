@@ -20,7 +20,6 @@ import android.content.Context
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.widget.Toast
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.Dp
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
@@ -254,7 +253,7 @@ abstract class ThreadController(
     }
 
     controllerScope.launch {
-      snapshotFlow { kurobaToolbarState.toolbarHeightState.value }
+      toolbarState.toolbarHeightState
         .onEach { toolbarHeight -> onToolbarHeightChanged(toolbarHeight) }
         .collect()
     }

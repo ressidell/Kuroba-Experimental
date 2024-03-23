@@ -151,10 +151,6 @@ sealed interface ToolbarMiddleContent {
     val subtitle: ToolbarText? = null
   ) : ToolbarMiddleContent
 
-  data class Custom(
-    val content: @Composable () -> Unit
-  ) : ToolbarMiddleContent
-
 }
 
 @Immutable

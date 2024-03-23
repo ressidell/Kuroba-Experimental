@@ -13,26 +13,26 @@ class KotlinExtensionsKtTest {
             .get()
 
         requestBuilder
-            .addOrReplaceCookieHeader("tttaaa=abc")
+            .addOrReplaceCookieHeader("aaabbb=abc")
             .addOrReplaceCookieHeader("test_cookie=123")
 
-        assertEquals("tttaaa=abc; test_cookie=123", requestBuilder.build().header("Cookie"))
+        assertEquals("aaabbb=abc; test_cookie=123", requestBuilder.build().header("Cookie"))
 
         requestBuilder
             .addOrReplaceCookieHeader("test_cookie=124")
 
-        assertEquals("tttaaa=abc; test_cookie=124", requestBuilder.build().header("Cookie"))
+        assertEquals("aaabbb=abc; test_cookie=124", requestBuilder.build().header("Cookie"))
 
         requestBuilder
-            .addOrReplaceCookieHeader("tttaaa=aaa")
+            .addOrReplaceCookieHeader("aaabbb=aaa")
 
-        assertEquals("tttaaa=aaa; test_cookie=124", requestBuilder.build().header("Cookie"))
+        assertEquals("aaabbb=aaa; test_cookie=124", requestBuilder.build().header("Cookie"))
 
         requestBuilder
             .addOrReplaceCookieHeader("test_cookie=125")
-            .addOrReplaceCookieHeader("tttaaa=bbb")
+            .addOrReplaceCookieHeader("aaabbb=bbb")
 
-        assertEquals("tttaaa=bbb; test_cookie=125", requestBuilder.build().header("Cookie"))
+        assertEquals("aaabbb=bbb; test_cookie=125", requestBuilder.build().header("Cookie"))
     }
 
 }

@@ -28,7 +28,6 @@ abstract class NavigationController(context: Context) : Controller(context), Con
 
   override fun pushController(to: Controller, transition: ControllerTransition?): Boolean {
     val from = topController
-    controllerTransition = transition
 
     if (isBlockingInput) {
       Logger.error(TAG) { "pushController() to: ${to.controllerKey}, from: ${from?.controllerKey} isBlockingInput is true" }

@@ -1,7 +1,6 @@
 package com.github.k1rakishou.chan.ui.controller.navigation
 
 import android.content.Context
-import androidx.compose.runtime.snapshotFlow
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.ui.NavigationControllerContainerLayout
@@ -54,7 +53,7 @@ class BottomNavBarAwareNavigationController(
     }
 
     controllerScope.launch {
-      snapshotFlow { toolbarState.toolbarHeightState.value }
+      toolbarState.toolbarHeightState
         .onEach { onInsetsChanged() }
         .collect()
     }

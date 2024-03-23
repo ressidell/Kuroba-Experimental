@@ -582,9 +582,9 @@ public class FastScroller
                 requestRedraw();
 
                 if (thumbDragListener != null) {
-                    globalUiStateHolder.updateFastScrollerState(fastScrollerGlobalState -> {
-                      fastScrollerGlobalState.updateIsDraggingFastScroller(fastScrollerControllerType, true);
-                      return Unit.INSTANCE;
+                    globalUiStateHolder.updateFastScrollerState(fastScrollerState -> {
+                        fastScrollerState.updateIsDraggingFastScroller(fastScrollerControllerType, true);
+                        return Unit.INSTANCE;
                     });
 
                     thumbDragListener.onDragStarted();
@@ -599,8 +599,8 @@ public class FastScroller
             requestRedraw();
 
             if (thumbDragListener != null) {
-                globalUiStateHolder.updateFastScrollerState(fastScrollerGlobalState -> {
-                    fastScrollerGlobalState.updateIsDraggingFastScroller(fastScrollerControllerType, false);
+                globalUiStateHolder.updateFastScrollerState(fastScrollerState -> {
+                    fastScrollerState.updateIsDraggingFastScroller(fastScrollerControllerType, false);
                     return Unit.INSTANCE;
                 });
 

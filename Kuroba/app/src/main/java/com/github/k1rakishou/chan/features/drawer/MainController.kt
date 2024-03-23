@@ -474,8 +474,8 @@ class MainController(
   override fun onDrawerOpened(drawerView: View) {
     drawerOpenedState.value = true
 
-    globalUiStateHolder.updateDrawerState { drawerState ->
-      drawerState.onDrawerAppearanceChanged(opened = true)
+    globalUiStateHolder.updateDrawerState {
+      onDrawerAppearanceChanged(opened = true)
     }
   }
 
@@ -483,8 +483,8 @@ class MainController(
     drawerViewModel.clearSelection()
     drawerOpenedState.value = false
 
-    globalUiStateHolder.updateDrawerState { drawerState ->
-      drawerState.onDrawerAppearanceChanged(opened = false)
+    globalUiStateHolder.updateDrawerState {
+      onDrawerAppearanceChanged(opened = false)
     }
   }
 
@@ -1908,7 +1908,10 @@ class MainController(
         menuItemBadgeInfo = null
       )
 
-      mainToolbarNavigationController?.toolbarState?.updateBadge(0, false)
+      mainToolbarNavigationController?.toolbarState?.updateBadge(
+        count = 0,
+        highImportance = false
+      )
     } else {
       navigationViewContract.updateBadge(
         menuItemId = R.id.action_bookmarks,
@@ -1926,9 +1929,9 @@ class MainController(
         )
       )
 
-      toolbarState.updateBadge(
-        state.totalUnseenPostsCount,
-        state.hasUnreadReplies
+      mainToolbarNavigationController?.toolbarState?.updateBadge(
+        count = state.totalUnseenPostsCount,
+        highImportance = state.hasUnreadReplies
       )
     }
   }

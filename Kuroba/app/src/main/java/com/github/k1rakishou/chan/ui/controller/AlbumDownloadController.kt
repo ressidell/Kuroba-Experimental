@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
-import androidx.compose.runtime.snapshotFlow
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -127,7 +126,7 @@ class AlbumDownloadController(context: Context) : Controller(context),
     onInsetsChanged()
 
     controllerScope.launch {
-      snapshotFlow { toolbarState.toolbarHeightState.value }
+      toolbarState.toolbarHeightState
         .onEach { onInsetsChanged() }
         .collect()
     }

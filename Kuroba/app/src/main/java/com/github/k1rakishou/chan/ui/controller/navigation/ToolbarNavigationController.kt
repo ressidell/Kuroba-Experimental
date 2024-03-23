@@ -57,7 +57,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     toolbarState.showToolbar()
 
     if (to != null) {
-      toolbarState.onTransitionFinished(finish)
+      toolbarState.onTransitionFinished(finish, to.toolbarState)
     }
   }
 

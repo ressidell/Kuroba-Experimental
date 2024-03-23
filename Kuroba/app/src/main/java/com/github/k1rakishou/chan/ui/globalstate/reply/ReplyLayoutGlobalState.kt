@@ -17,7 +17,7 @@ interface IReplyLayoutGlobalState {
   }
 
   interface Writable {
-    fun update(threadControllerType: ThreadControllerType, updater: (IIndividualReplyLayoutGlobalState.Writable) -> Unit)
+    fun updateReplyLayoutForController(threadControllerType: ThreadControllerType, updater: (IIndividualReplyLayoutGlobalState.Writable) -> Unit)
   }
 }
 
@@ -55,7 +55,7 @@ internal class ReplyLayoutGlobalState : IReplyLayoutGlobalState.Readable, IReply
     }
   }
 
-  override fun update(threadControllerType: ThreadControllerType, updater: (IIndividualReplyLayoutGlobalState.Writable) -> Unit) {
+  override fun updateReplyLayoutForController(threadControllerType: ThreadControllerType, updater: (IIndividualReplyLayoutGlobalState.Writable) -> Unit) {
     when (threadControllerType) {
       ThreadControllerType.Catalog -> updater(catalogReplyLayoutState)
       ThreadControllerType.Thread -> updater(threadReplyLayoutState)

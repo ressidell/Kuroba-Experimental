@@ -43,7 +43,7 @@ fun KurobaContainerToolbarContent(
   Column(
     modifier = Modifier
       .height(totalToolbarHeight)
-      .background(chanTheme.backColorSecondaryCompose),
+      .background(chanTheme.toolbarBackgroundComposeColor),
   ) {
     Spacer(modifier = Modifier.height(windowInsets.top))
 

@@ -7,7 +7,6 @@ import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.compose.runtime.snapshotFlow
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
@@ -51,7 +50,7 @@ class WebViewReportController(
     )
 
     controllerScope.launch {
-      snapshotFlow { toolbarState.toolbarHeightState.value }
+      toolbarState.toolbarHeightState
         .onEach { updatePaddings() }
         .collect()
     }

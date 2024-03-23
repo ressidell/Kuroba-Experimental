@@ -38,27 +38,27 @@ class GlobalUiStateHolder {
   val toolbarState: IToolbarGlobalState.Readable
     get() = _toolbarState
 
-  fun updateMainUiState(updater: (IMainUiState.Writeable) -> Unit) {
+  fun updateMainUiState(updater: IMainUiState.Writeable.() -> Unit) {
     updater(_mainUiState)
   }
 
-  fun updateReplyLayoutState(updater: (IReplyLayoutGlobalState.Writable) -> Unit) {
+  fun updateReplyLayoutState(updater: IReplyLayoutGlobalState.Writable.() -> Unit) {
     updater(_replyLayout)
   }
 
-  fun updateFastScrollerState(updater: (IFastScrollerGlobalState.Writeable) -> Unit) {
+  fun updateFastScrollerState(updater: IFastScrollerGlobalState.Writeable.() -> Unit) {
     updater(_fastScroller)
   }
 
-  fun updateDrawerState(updater: (IDrawerGlobalState.Writable) -> Unit) {
+  fun updateDrawerState(updater: IDrawerGlobalState.Writable.() -> Unit) {
     updater(_drawer)
   }
 
-  fun updateScrollState(updater: (IScrollGlobalState.Writable) -> Unit) {
+  fun updateScrollState(updater: IScrollGlobalState.Writable.() -> Unit) {
     updater(_scrollState)
   }
 
-  fun updateToolbarState(updater: (IToolbarGlobalState.Writable) -> Unit) {
+  fun updateToolbarState(updater: IToolbarGlobalState.Writable.() -> Unit) {
     updater(_toolbarState)
   }
 

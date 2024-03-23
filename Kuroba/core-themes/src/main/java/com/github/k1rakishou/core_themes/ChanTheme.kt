@@ -93,6 +93,18 @@ abstract class ChanTheme {
       }
     }
 
+  val toolbarBackgroundComposeColor: Color
+    get() = backColorSecondaryCompose
+
+  val textColorBasedOnToolbarBackgroundColor: Color
+    get() {
+      return if (ThemeEngine.isDarkColor(toolbarBackgroundComposeColor)) {
+        Color.White
+      } else {
+        Color.Black
+      }
+    }
+
   val colorError = Color.Red
   val colorWarning = Color(0xFFFFA500L)
   val colorInfo = Color.White

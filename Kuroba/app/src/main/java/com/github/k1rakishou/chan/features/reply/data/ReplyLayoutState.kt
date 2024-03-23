@@ -756,8 +756,8 @@ class ReplyLayoutState(
   }
 
   fun onReplyLayoutPositionChanged(boundsInRoot: Rect) {
-    globalUiStateHolder.updateReplyLayoutState { replyLayoutWritable ->
-      replyLayoutWritable.update(threadControllerType) { individualReplyLayoutWritable ->
+    globalUiStateHolder.updateReplyLayoutState {
+      updateReplyLayoutForController(threadControllerType) { individualReplyLayoutWritable ->
         individualReplyLayoutWritable.onReplyLayoutPositionChanged(boundsInRoot)
       }
     }
@@ -960,16 +960,16 @@ class ReplyLayoutState(
   private fun onHeightChangedInternal(
     newHeight: Int
   ) {
-    globalUiStateHolder.updateReplyLayoutState { replyLayoutGlobalState ->
-      replyLayoutGlobalState.update(threadControllerType) { individualReplyLayoutGlobalState ->
+    globalUiStateHolder.updateReplyLayoutState {
+      updateReplyLayoutForController(threadControllerType) { individualReplyLayoutGlobalState ->
         individualReplyLayoutGlobalState.updateCurrentReplyLayoutHeight(newHeight)
       }
     }
   }
 
   private fun onReplyLayoutVisibilityChangedInternal(replyLayoutVisibility: ReplyLayoutVisibility) {
-    globalUiStateHolder.updateReplyLayoutState { replyLayoutGlobalState ->
-      replyLayoutGlobalState.update(threadControllerType) { individualReplyLayoutGlobalState ->
+    globalUiStateHolder.updateReplyLayoutState {
+      updateReplyLayoutForController(threadControllerType) { individualReplyLayoutGlobalState ->
         individualReplyLayoutGlobalState.updateReplyLayoutVisibility(replyLayoutVisibility)
       }
     }

@@ -1,20 +1,27 @@
 package com.github.k1rakishou.chan.features.toolbar_v2.state.default
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.github.k1rakishou.chan.features.toolbar_v2.MoreVerticalMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 
 @Composable
 fun KurobaDefaultToolbarContent(
@@ -35,7 +42,7 @@ fun KurobaDefaultToolbarContent(
     verticalAlignment = Alignment.CenterVertically
   ) {
     if (leftIcon != null) {
-      Spacer(modifier = Modifier.width(8.dp))
+      Spacer(modifier = Modifier.width(12.dp))
 
       val iconDrawableId by leftIcon.drawableIdState
       KurobaComposeClickableIcon(
@@ -48,24 +55,18 @@ fun KurobaDefaultToolbarContent(
           }
         }
       )
-
-      Spacer(modifier = Modifier.width(12.dp))
     }
 
     when (middleContent) {
-      is ToolbarMiddleContent.Custom -> middleContent.content()
       is ToolbarMiddleContent.Title -> {
-        if (middleContent.subtitle == null) {
-          if (middleContent.title != null) {
-            ToolbarTitle(title = middleContent.title)
-          }
-        } else {
-          if (middleContent.title != null) {
-            ToolbarTitleWithSubtitle(
-              title = middleContent.title,
-              subtitle = middleContent.subtitle
-            )
-          }
+        if (middleContent.title != null) {
+          Spacer(modifier = Modifier.width(12.dp))
+
+          ToolbarTitleWithSubtitle(
+            modifier = Modifier.weight(1f),
+            title = middleContent.title,
+            subtitle = middleContent.subtitle
+          )
         }
       }
       null -> {
@@ -80,7 +81,7 @@ fun KurobaDefaultToolbarContent(
       if (menuItems.isNotEmpty()) {
         Spacer(modifier = Modifier.width(12.dp))
 
-        for ((index, rightIcon) in menuItems.withIndex()) {
+        for (rightIcon in menuItems) {
           val iconDrawableId by rightIcon.drawableIdState
           val visible by rightIcon.visibleState
 
@@ -88,49 +89,78 @@ fun KurobaDefaultToolbarContent(
             continue
           }
 
+          Spacer(modifier = Modifier.width(12.dp))
+
           KurobaComposeClickableIcon(
             drawableId = iconDrawableId,
             onClick = {
               val iconClickInterceptor = state.iconClickInterceptor
 
-              if (iconClickInterceptor == null || iconClickInterceptor(rightIcon)) {
+              if (iconClickInterceptor == null || !iconClickInterceptor(rightIcon)) {
                 rightIcon.onClick(rightIcon)
               }
             }
           )
-
-          if (index != menuItems.lastIndex) {
-            Spacer(modifier = Modifier.width(12.dp))
-          } else {
-            Spacer(modifier = Modifier.width(8.dp))
-          }
         }
       }
+
+      val overflowMenuItems = toolbarMenu.overflowMenuItems
+      if (overflowMenuItems.isNotEmpty()) {
+        val overflowIcon = remember {
+          MoreVerticalMenuItem(onClick = { /**no-op*/ })
+        }
+
+        val drawableId by overflowIcon.drawableIdState
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        KurobaComposeClickableIcon(
+          drawableId = drawableId,
+          onClick = {
+            val iconClickInterceptor = state.iconClickInterceptor
+
+            if (iconClickInterceptor == null || iconClickInterceptor(overflowIcon)) {
+              // TODO: New toolbar. Show overflow menu.
+            }
+          }
+        )
+      }
+
+      Spacer(modifier = Modifier.width(12.dp))
     }
   }
 }
 
 @Composable
-private fun ToolbarTitle(title: ToolbarText) {
-  KurobaComposeText(
-    text = title.resolve(),
-    fontSize = 18.ktu
-  )
-}
+private fun ToolbarTitleWithSubtitle(modifier: Modifier, title: ToolbarText, subtitle: ToolbarText?) {
+  val chanTheme = LocalChanTheme.current
+  val textColor = chanTheme.textColorBasedOnToolbarBackgroundColor
 
-@Composable
-private fun ToolbarTitleWithSubtitle(title: ToolbarText, subtitle: ToolbarText) {
-  Column(modifier = Modifier.fillMaxSize()) {
+  Column(
+    modifier = modifier,
+    verticalArrangement = Arrangement.Center
+  ) {
     KurobaComposeText(
-      modifier = Modifier.weight(0.7f),
       text = title.resolve(),
-      fontSize = 16.ktu
+      fontSize = 18.ktu,
+      color = textColor,
+      fontWeight = FontWeight.SemiBold,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis
     )
 
-    KurobaComposeText(
-      modifier = Modifier.weight(0.3f),
-      text = subtitle.resolve(),
-      fontSize = 14.ktu
-    )
+    if (subtitle != null) {
+      Spacer(modifier = Modifier.height(2.dp))
+
+      KurobaComposeText(
+        modifier = Modifier.wrapContentHeight(),
+        text = subtitle.resolve(),
+        fontSize = 14.ktu,
+        color = textColor,
+        fontWeight = FontWeight.Light,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+      )
+    }
   }
 }

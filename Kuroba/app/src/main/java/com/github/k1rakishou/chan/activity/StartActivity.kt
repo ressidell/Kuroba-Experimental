@@ -453,16 +453,16 @@ class StartActivity : ControllerHostActivity(),
   }
 
   override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
-    globalUiStateHolder.updateMainUiState { updater ->
+    globalUiStateHolder.updateMainUiState {
       if (
         event == null ||
         event.pointerCount != 1 ||
         event.actionMasked == MotionEvent.ACTION_UP ||
         event.actionMasked == MotionEvent.ACTION_CANCEL
       ) {
-        updater.updateTouchPosition(Offset.Unspecified, event?.actionMasked)
+        updateTouchPosition(Offset.Unspecified, event?.actionMasked)
       } else {
-        updater.updateTouchPosition(Offset(event.rawX, event.rawY), event.actionMasked)
+        updateTouchPosition(Offset(event.rawX, event.rawY), event.actionMasked)
       }
     }
 

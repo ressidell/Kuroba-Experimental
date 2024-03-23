@@ -25,7 +25,6 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
-import androidx.compose.runtime.snapshotFlow
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -553,7 +552,7 @@ class ThreadListLayout @JvmOverloads constructor(
     }
 
     coroutineScope.launch {
-      snapshotFlow { threadListLayoutCallback.kurobaToolbarState.toolbarHeightState.value }
+      threadListLayoutCallback.kurobaToolbarState.toolbarHeightState
         .onEach { setRecyclerViewPadding() }
         .collect()
     }

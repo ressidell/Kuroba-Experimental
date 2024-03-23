@@ -20,7 +20,6 @@ import android.content.Context
 import android.view.View
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
-import androidx.compose.runtime.snapshotFlow
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -235,7 +234,7 @@ class AlbumViewController(
     }
 
     controllerScope.launch {
-      snapshotFlow { toolbarState.toolbarHeightState.value }
+      toolbarState.toolbarHeightState
         .onEach { onInsetsChanged() }
         .collect()
     }
