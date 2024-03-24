@@ -12,6 +12,7 @@ import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.features.bookmarks.BookmarksController
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.my_posts.SavedPostsController
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableTabLayout
 import com.github.k1rakishou.chan.ui.widget.DisableableLayout
 import com.github.k1rakishou.chan.ui.widget.KurobaViewPager
@@ -37,6 +38,17 @@ class TabHostController(
   private val simpleOnPageChangeListener = SimpleOnPageChangeListener { tabType -> onScrolledToTab(tabType) }
 
   private val viewPagerAdapter = ControllerAdapter()
+
+  override val toolbarState: KurobaToolbarState
+    get() {
+      val controller = when (currentPageType) {
+        PageType.SavedPosts -> childControllers.firstOrNull { controller -> controller is SavedPostsController }
+        PageType.Bookmarks -> childControllers.firstOrNull { controller -> controller is BookmarksController }
+        null -> null
+      }
+
+      return controller?.toolbarState ?: super.toolbarState
+    }
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
