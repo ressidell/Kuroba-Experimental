@@ -19,6 +19,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.util.lerp
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarTransition
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
@@ -49,8 +50,8 @@ fun KurobaContainerToolbarContent(
   val transitionToolbarMut by kurobaToolbarState.transitionToolbarState
   val transitionToolbar = transitionToolbarMut
 
-  val childToolbarMovable = remember(topToolbarState) {
-    movableContentOf {
+  val childToolbarMovable = remember {
+    movableContentOf { topToolbarState: IKurobaToolbarState? ->
       childToolbar(topToolbarState)
     }
   }
@@ -63,11 +64,12 @@ fun KurobaContainerToolbarContent(
     Spacer(modifier = Modifier.height(windowInsets.top))
 
     if (transitionToolbar == null) {
-      childToolbarMovable()
+      childToolbarMovable(topToolbarState)
     } else {
       ToolbarTransitionContainer(
         toolbarHeight = toolbarHeight,
-        transitionState = transitionToolbar,
+        transitionToolbarState = transitionToolbar,
+        topToolbarState = topToolbarState,
         childToolbarMovable = childToolbarMovable,
         childToolbar = childToolbar
       )
@@ -79,8 +81,9 @@ fun KurobaContainerToolbarContent(
 @Composable
 private fun ToolbarTransitionContainer(
   toolbarHeight: Dp,
-  transitionState: KurobaToolbarTransition,
-  childToolbarMovable: @Composable () -> Unit,
+  transitionToolbarState: KurobaToolbarTransition,
+  topToolbarState: IKurobaToolbarState?,
+  childToolbarMovable: @Composable (IKurobaToolbarState?) -> Unit,
   childToolbar: @Composable (IKurobaToolbarState?) -> Unit
 ) {
   val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.toPx() }
@@ -94,48 +97,34 @@ private fun ToolbarTransitionContainer(
       modifier = Modifier
         .fillMaxSize()
         .graphicsLayer {
-          when (transitionState) {
-            is KurobaToolbarTransition.Instance -> {
-              // TODO: New toolbar
-            }
-            is KurobaToolbarTransition.Progress -> {
-              animateTransitionProgress(
-                transitionToolbar = transitionState,
-                toolbarHeightPx = toolbarHeightPx,
-                isOldToolbar = true
-              )
-            }
-          }
+          animateTransitionProgress(
+            transitionToolbarState = transitionToolbarState,
+            toolbarHeightPx = toolbarHeightPx,
+            isOldToolbar = true
+          )
         }
     ) {
-      childToolbarMovable()
+      childToolbarMovable(topToolbarState)
     }
 
     Box(
       modifier = Modifier
         .fillMaxSize()
         .graphicsLayer {
-          when (transitionState) {
-            is KurobaToolbarTransition.Instance -> {
-              // TODO: New toolbar
-            }
-            is KurobaToolbarTransition.Progress -> {
-              animateTransitionProgress(
-                transitionToolbar = transitionState,
-                toolbarHeightPx = toolbarHeightPx,
-                isOldToolbar = false
-              )
-            }
-          }
+          animateTransitionProgress(
+            transitionToolbarState = transitionToolbarState,
+            toolbarHeightPx = toolbarHeightPx,
+            isOldToolbar = false
+          )
         }
     ) {
-      childToolbar(transitionState.transitionToolbarState)
+      childToolbar(transitionToolbarState.transitionToolbarState)
     }
   }
 }
 
 private fun GraphicsLayerScope.animateTransitionProgress(
-  transitionToolbar: KurobaToolbarTransition.Progress,
+  transitionToolbarState: KurobaToolbarTransition,
   toolbarHeightPx: Float,
   isOldToolbar: Boolean
 ) {
@@ -156,30 +145,30 @@ private fun GraphicsLayerScope.animateTransitionProgress(
     translationY = lerp((toolbarHeightPx / 2f), 0f, progress)
   }
 
-  when (transitionToolbar.transitionMode) {
-    KurobaToolbarTransition.TransitionMode.In -> {
+  when (transitionToolbarState.transitionMode) {
+    TransitionMode.In -> {
       if (isOldToolbar) {
         animateToolbarIn(
           toolbarHeightPx = toolbarHeightPx,
-          progress = transitionToolbar.progress
+          progress = transitionToolbarState.progress
         )
       } else {
         animateToolbarOut(
           toolbarHeightPx = toolbarHeightPx,
-          progress = transitionToolbar.progress
+          progress = transitionToolbarState.progress
         )
       }
     }
-    KurobaToolbarTransition.TransitionMode.Out -> {
+    TransitionMode.Out -> {
       if (isOldToolbar) {
         animateToolbarOut(
           toolbarHeightPx = toolbarHeightPx,
-          progress = transitionToolbar.progress
+          progress = transitionToolbarState.progress
         )
       } else {
         animateToolbarIn(
           toolbarHeightPx = toolbarHeightPx,
-          progress = transitionToolbar.progress
+          progress = transitionToolbarState.progress
         )
       }
     }

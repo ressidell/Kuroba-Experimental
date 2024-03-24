@@ -47,4 +47,9 @@ class KurobaReplyToolbarState(
 
   override fun onPopped() {
   }
+
+  override fun toString(): String {
+    return "KurobaReplyToolbarState()"
+  }
+
 }

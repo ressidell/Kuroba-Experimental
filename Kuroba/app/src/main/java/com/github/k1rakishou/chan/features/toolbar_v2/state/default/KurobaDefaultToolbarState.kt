@@ -88,4 +88,9 @@ class KurobaDefaultToolbarState(
     )
   }
 
+  override fun toString(): String {
+    val middleContentToolbarTitle = _middleContent.value as? ToolbarMiddleContent.Title
+    return "KurobaDefaultToolbarState(middleContent: ${middleContentToolbarTitle})"
+  }
+
 }

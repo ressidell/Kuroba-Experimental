@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.unit.Dp
 import com.github.k1rakishou.chan.controller.ControllerKey
+import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
@@ -25,6 +26,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSele
 import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarState
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
+import com.github.k1rakishou.common.quantize
 import com.github.k1rakishou.core_logger.Logger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -83,7 +85,7 @@ class KurobaToolbarState(
 
   fun onTransitionProgressStart(
     other: KurobaToolbarState,
-    transitionMode: KurobaToolbarTransition.TransitionMode
+    transitionMode: TransitionMode
   ) {
     check(_transitionToolbarState.value == null) {
       "Attempt to perform more than one transition at the same time! " +
@@ -94,7 +96,7 @@ class KurobaToolbarState(
       "Attempt to perform a transition with a non-initialized toolbar! toolbar: ${other}"
     }
 
-    _transitionToolbarState.value = KurobaToolbarTransition.Progress(
+    _transitionToolbarState.value = KurobaToolbarTransition(
       transitionToolbarState = topToolbar,
       transitionMode = transitionMode,
       progress = 0f
@@ -105,11 +107,12 @@ class KurobaToolbarState(
     val transitionState = _transitionToolbarState.value
       ?: return
 
-    if (transitionState !is KurobaToolbarTransition.Progress) {
+    if (transitionState.progress == progress) {
       return
     }
 
-    _transitionToolbarState.value = transitionState.copy(progress = progress)
+    val quantizedProgress = progress.quantize(precision = 0.033f)
+    _transitionToolbarState.value = transitionState.copy(progress = quantizedProgress)
   }
 
   fun onTransitionProgressFinished(other: KurobaToolbarState) {

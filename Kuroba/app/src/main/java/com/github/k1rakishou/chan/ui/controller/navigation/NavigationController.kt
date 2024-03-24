@@ -30,17 +30,24 @@ abstract class NavigationController(context: Context) : Controller(context), Con
     val from = topController
 
     if (isBlockingInput) {
-      Logger.error(TAG) { "pushController() to: ${to.controllerKey}, from: ${from?.controllerKey} isBlockingInput is true" }
+      Logger.error(TAG) {
+        "pushController() to: ${to.controllerKey}, from: ${from?.controllerKey} isBlockingInput is true"
+      }
+
       return false
     }
 
+    var currentTransition = transition
     if (from == null) {
       // can't animate push if from is null, just disable the animation
-      controllerTransition = null
+      currentTransition = null
     }
 
-    Logger.verbose(TAG) { "pushController() to: ${to.controllerKey}, from: ${from?.controllerKey} " }
-    transition(from, to, true, controllerTransition)
+    Logger.verbose(TAG) {
+      "pushController() to: ${to.controllerKey}, from: ${from?.controllerKey} with transition: ${transition}"
+    }
+
+    transition(from, to, true, currentTransition)
     return true
   }
 
@@ -66,7 +73,10 @@ abstract class NavigationController(context: Context) : Controller(context), Con
 
     val to = childControllers.getOrNull(childControllers.size - 2)
 
-    Logger.verbose(TAG) { "popController() to: ${to?.controllerKey}, from: ${from.controllerKey} " }
+    Logger.verbose(TAG) {
+      "popController() to: ${to?.controllerKey}, from: ${from.controllerKey}  with transition: ${transition}"
+    }
+
     transition(from, to, false, controllerTransition)
     return true
   }
@@ -84,7 +94,9 @@ abstract class NavigationController(context: Context) : Controller(context), Con
       "popController() Cannot transition while another transition is in progress."
     }
 
-    Logger.verbose(TAG) { "beginSwipeTransition() to: ${to?.controllerKey}, from: ${from?.controllerKey} " }
+    Logger.verbose(TAG) {
+      "beginSwipeTransition() to: ${to?.controllerKey}, from: ${from?.controllerKey} "
+    }
 
     isBlockingInput = true
     to?.onShow()
@@ -100,7 +112,9 @@ abstract class NavigationController(context: Context) : Controller(context), Con
       return
     }
 
-    Logger.verbose(TAG) { "beginSwipeTransition() to: ${to?.controllerKey}, from: ${from?.controllerKey}, finish: ${finish}" }
+    Logger.verbose(TAG) {
+      "beginSwipeTransition() to: ${to?.controllerKey}, from: ${from?.controllerKey}, finish: ${finish}"
+    }
 
     if (finish && from != null) {
       from.onHide()
@@ -133,6 +147,11 @@ abstract class NavigationController(context: Context) : Controller(context), Con
       error("Cannot pop with no controllers left")
     }
 
+    Logger.verbose(TAG) {
+      "transition() from: ${from?.controllerKey}, to: ${to?.controllerKey}, " +
+        "pushing: ${pushing}, controllerTransition: ${controllerTransition}"
+    }
+
     if (to != null) {
       to.navigationController = this
       to.previousSiblingController = from
@@ -146,13 +165,14 @@ abstract class NavigationController(context: Context) : Controller(context), Con
     to?.onShow()
 
     if (controllerTransition != null) {
+      controllerTransition.navigationController = this
       controllerTransition.from = from
       controllerTransition.to = to
 
       isBlockingInput = true
       this.controllerTransition = controllerTransition
 
-      controllerTransition.setCallback {
+      controllerTransition.onTransitionFinished {
         finishTransition(
           from = from,
           to = to,
@@ -168,6 +188,10 @@ abstract class NavigationController(context: Context) : Controller(context), Con
   }
 
   private fun finishTransition(from: Controller?, to: Controller?, pushing: Boolean) {
+    Logger.verbose(TAG) {
+      "finishTransition() from: ${from?.controllerKey}, to: ${to?.controllerKey}, pushing: ${pushing}"
+    }
+
     if (from == null && to == null) {
       return
     }

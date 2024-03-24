@@ -13,8 +13,8 @@ import androidx.compose.runtime.mutableStateOf
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.activity.StartActivityCallbacks
-import com.github.k1rakishou.chan.controller.transition.FadeInTransition
-import com.github.k1rakishou.chan.controller.transition.FadeOutTransition
+import com.github.k1rakishou.chan.controller.transition.FadeTransition
+import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.core.base.ControllerHostActivity
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.ControllerNavigationManager
@@ -392,9 +392,9 @@ abstract class Controller(
     controller.onShow()
 
     if (animated) {
-      val transition = FadeInTransition()
+      val transition = FadeTransition(transitionMode = TransitionMode.In)
       transition.to = controller
-      transition.setCallback {
+      transition.onTransitionFinished {
         controllerNavigationManager.onControllerPresented(controller)
       }
       transition.perform()
@@ -424,9 +424,9 @@ abstract class Controller(
     }
 
     if (animated) {
-      val transition = FadeOutTransition()
+      val transition = FadeTransition(transitionMode = TransitionMode.Out)
       transition.from = this
-      transition.setCallback { finishPresenting() }
+      transition.onTransitionFinished { finishPresenting() }
       transition.perform()
     } else {
       finishPresenting()

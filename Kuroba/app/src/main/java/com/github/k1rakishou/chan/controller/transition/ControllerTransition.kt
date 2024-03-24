@@ -2,41 +2,76 @@ package com.github.k1rakishou.chan.controller.transition
 
 import android.animation.AnimatorSet
 import com.github.k1rakishou.chan.controller.Controller
-import java.util.*
+import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 
-abstract class ControllerTransition  {
+abstract class ControllerTransition(
+  protected val transitionMode: TransitionMode
+)  {
   protected val animatorSet = AnimatorSet()
-  private var callback: Callback? = null
 
+  private var listener: TransitionFinishListener? = null
+  private var transitionStarted = false
+
+  @JvmField
+  var navigationController: NavigationController? = null
   @JvmField
   var from: Controller? = null
   @JvmField
   var to: Controller? = null
 
-  fun onCompleted() {
-    if (callback == null) {
-      throw NullPointerException("Callback cannot be null here!")
+  fun onStarted() {
+    val navController = navigationController
+      ?: return
+
+    val controllerToolbarState = when (transitionMode) {
+      TransitionMode.In -> to?.toolbarState
+      TransitionMode.Out -> from?.toolbarState
     }
 
-    callback!!.onControllerTransitionCompleted(this)
+    if (controllerToolbarState == null) {
+      return
+    }
+
+    transitionStarted = true
+    navController.toolbarState.onTransitionProgressStart(controllerToolbarState, transitionMode)
   }
 
-  fun setCallback(callback: Callback?) {
-    this.callback = callback
+  fun onProgress(progress: Float) {
+    val navController = navigationController
+
+    if (transitionStarted && navController != null) {
+      navController.toolbarState.onTransitionProgress(progress)
+    }
   }
 
-  fun debugInfo(): String {
-    return String.format(
-      Locale.ENGLISH,
-      "callback=" + callback?.javaClass?.simpleName + ", " +
-        "from=" + from?.javaClass?.simpleName + ", " +
-        "to=" + to?.javaClass?.simpleName
-    )
+  fun onCompleted() {
+    val navController = navigationController
+
+    val controllerToolbarState = when (transitionMode) {
+      TransitionMode.In -> to?.toolbarState
+      TransitionMode.Out -> from?.toolbarState
+    }
+
+    if (transitionStarted && navController != null && controllerToolbarState != null) {
+      navController.toolbarState.onTransitionProgressFinished(controllerToolbarState)
+    }
+
+    listener?.onControllerTransitionCompleted(this)
+    transitionStarted = false
   }
 
-  fun interface Callback {
+  fun onTransitionFinished(transitionFinishListener: TransitionFinishListener?) {
+    listener = transitionFinishListener
+  }
+
+  fun interface TransitionFinishListener {
     fun onControllerTransitionCompleted(transition: ControllerTransition?)
   }
 
   abstract fun perform()
+
+  override fun toString(): String {
+    return "ControllerTransition(transition: ${this::class.java.simpleName}, transitionMode: $transitionMode)"
+  }
+
 }

@@ -7,7 +7,9 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.view.doOnPreDraw
 
-class PushControllerTransition : ControllerTransition() {
+// TODO: New toolbar. Right now Push animation has a bug where the new toolbar is first animated out and then it pops
+//  back in when animation finishes.
+class PushControllerTransition : ControllerTransition(TransitionMode.In) {
 
   override fun perform() {
     to!!.view.doOnPreDraw {
@@ -21,17 +23,30 @@ class PushControllerTransition : ControllerTransition() {
       toY.duration = 350
       toY.interpolator = DecelerateInterpolator(2.5f)
 
-      toY.addListener(object : AnimatorListenerAdapter() {
-        override fun onAnimationCancel(animation: Animator) {
-          onCompleted()
-        }
+      val progress = ObjectAnimator.ofFloat(0f, 1f)
+      progress.interpolator = DecelerateInterpolator(2.5f)
+      progress.duration = 350
+      progress.addUpdateListener { animator ->
+        onProgress(animator.animatedValue as Float)
+      }
 
-        override fun onAnimationEnd(animation: Animator) {
-          onCompleted()
-        }
-      })
+      progress.addListener(
+        object : AnimatorListenerAdapter() {
+          override fun onAnimationStart(animation: Animator, isReverse: Boolean) {
+            onStarted()
+          }
 
-      animatorSet.playTogether(toAlpha, toY)
+          override fun onAnimationCancel(animation: Animator) {
+            onCompleted()
+          }
+
+          override fun onAnimationEnd(animation: Animator) {
+            onCompleted()
+          }
+        }
+      )
+
+      animatorSet.playTogether(toAlpha, toY, progress)
       animatorSet.start()
     }
   }

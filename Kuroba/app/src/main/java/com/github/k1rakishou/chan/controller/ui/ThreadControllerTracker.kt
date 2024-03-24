@@ -257,7 +257,7 @@ class ThreadControllerTracker(
   private fun setTopControllerTranslation(translationX: Int) {
     shadowPosition = translationX
     trackingController!!.view.translationX = translationX.toFloat()
-    navigationController.swipeTransitionProgress(translationX / getWidthFunc().toFloat())
+    navigationController.swipeTransitionProgress(1f - (translationX / getWidthFunc().toFloat()))
     invalidateFunc()
   }
 

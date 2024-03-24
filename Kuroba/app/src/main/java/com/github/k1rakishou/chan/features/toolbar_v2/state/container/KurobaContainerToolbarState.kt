@@ -38,4 +38,9 @@ class KurobaContainerToolbarState(
   override fun onPopped() {
     // no-op
   }
+
+  override fun toString(): String {
+    return "KurobaContainerToolbarState()"
+  }
+
 }

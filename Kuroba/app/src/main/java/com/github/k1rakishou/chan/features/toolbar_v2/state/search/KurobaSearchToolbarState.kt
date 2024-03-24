@@ -81,4 +81,8 @@ class KurobaSearchToolbarState(
     searchQueryState.edit { clearText() }
   }
 
+  override fun toString(): String {
+    return "KurobaSearchToolbarState(searchVisible: ${_searchVisible.value}, searchQuery: ${searchQueryState.text})"
+  }
+
 }

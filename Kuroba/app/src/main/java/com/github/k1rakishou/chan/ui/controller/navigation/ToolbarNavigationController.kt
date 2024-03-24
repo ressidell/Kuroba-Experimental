@@ -3,7 +3,7 @@ package com.github.k1rakishou.chan.ui.controller.navigation
 import android.content.Context
 import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.controller.transition.ControllerTransition
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarTransition
+import com.github.k1rakishou.chan.controller.transition.TransitionMode
 
 abstract class ToolbarNavigationController(context: Context) : NavigationController(context) {
 
@@ -35,10 +35,10 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
 
     requireToolbarNavController().toolbarState.showToolbar()
 
-    if (to != null) {
+    if (from != null) {
       requireToolbarNavController().toolbarState.onTransitionProgressStart(
-        other = to.toolbarState,
-        transitionMode = KurobaToolbarTransition.TransitionMode.Out
+        other = from.toolbarState,
+        transitionMode = TransitionMode.Out
       )
     }
 
