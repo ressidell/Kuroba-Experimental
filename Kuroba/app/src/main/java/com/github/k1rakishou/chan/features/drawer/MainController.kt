@@ -1553,55 +1553,55 @@ class MainController(
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_GRID_MODE,
       name = getString(R.string.drawer_controller_grid_mode),
-      isCurrentlySelected = ChanSettings.drawerGridMode.get()
+      checked = ChanSettings.drawerGridMode.get()
     )
 
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_MOVE_LAST_ACCESSED_THREAD_TO_TOP,
       name = getString(R.string.drawer_controller_move_last_accessed_thread_to_top),
-      isCurrentlySelected = ChanSettings.drawerMoveLastAccessedThreadToTop.get()
+      checked = ChanSettings.drawerMoveLastAccessedThreadToTop.get()
     )
 
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_SHOW_BOOKMARKS,
       name = getString(R.string.drawer_controller_show_bookmarks),
-      isCurrentlySelected = ChanSettings.drawerShowBookmarkedThreads.get()
+      checked = ChanSettings.drawerShowBookmarkedThreads.get()
     )
 
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_SHOW_NAV_HISTORY,
       name = getString(R.string.drawer_controller_show_navigation_history),
-      isCurrentlySelected = ChanSettings.drawerShowNavigationHistory.get()
+      checked = ChanSettings.drawerShowNavigationHistory.get()
     )
 
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_SHOW_DELETE_SHORTCUT,
       name = getString(R.string.drawer_controller_delete_shortcut),
-      isCurrentlySelected = ChanSettings.drawerShowDeleteButtonShortcut.get()
+      checked = ChanSettings.drawerShowDeleteButtonShortcut.get()
     )
 
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_DELETE_BOOKMARK_WHEN_DELETING_NAV_HISTORY,
       name = getString(R.string.drawer_controller_delete_bookmark_on_history_delete),
-      isCurrentlySelected = ChanSettings.drawerDeleteBookmarksWhenDeletingNavHistory.get()
+      checked = ChanSettings.drawerDeleteBookmarksWhenDeletingNavHistory.get()
     )
 
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_DELETE_NAV_HISTORY_WHEN_BOOKMARK_DELETED,
       name = getString(R.string.drawer_controller_delete_nav_history_on_bookmark_delete),
-      isCurrentlySelected = ChanSettings.drawerDeleteNavHistoryWhenBookmarkDeleted.get()
+      checked = ChanSettings.drawerDeleteNavHistoryWhenBookmarkDeleted.get()
     )
 
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_RESTORE_LAST_VISITED_CATALOG,
       name = getString(R.string.setting_load_last_opened_board_upon_app_start_title),
-      isCurrentlySelected = ChanSettings.loadLastOpenedBoardUponAppStart.get()
+      checked = ChanSettings.loadLastOpenedBoardUponAppStart.get()
     )
 
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_RESTORE_LAST_VISITED_THREAD,
       name = getString(R.string.setting_load_last_opened_thread_upon_app_start_title),
-      isCurrentlySelected = ChanSettings.loadLastOpenedThreadUponAppStart.get()
+      checked = ChanSettings.loadLastOpenedThreadUponAppStart.get()
     )
 
     drawerOptions += FloatingListMenuItem(

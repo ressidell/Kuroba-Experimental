@@ -51,67 +51,67 @@ class MediaViewerMenuHelper(
     options += CheckableFloatingListMenuItem(
       key = ACTION_DRAW_BEHIND_NOTCH,
       name = getString(R.string.action_draw_behind_notch),
-      isCurrentlySelected = ChanSettings.mediaViewerDrawBehindNotch.get()
+      checked = ChanSettings.mediaViewerDrawBehindNotch.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_ALLOW_IMAGE_TRANSPARENCY,
       name = getString(R.string.action_allow_image_transparency),
-      isCurrentlySelected = ChanSettings.transparencyOn.get()
+      checked = ChanSettings.transparencyOn.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_AUTO_REVEAL_SPOILERS,
       name = getString(R.string.settings_reveal_image_spoilers),
-      isCurrentlySelected = ChanSettings.mediaViewerRevealImageSpoilers.get()
+      checked = ChanSettings.mediaViewerRevealImageSpoilers.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_VIDEO_AUTO_LOOP,
       name = getString(R.string.setting_video_auto_loop),
-      isCurrentlySelected = ChanSettings.videoAutoLoop.get()
+      checked = ChanSettings.videoAutoLoop.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_VIDEO_START_MUTED,
       name = getString(R.string.setting_video_default_muted),
-      isCurrentlySelected = ChanSettings.videoDefaultMuted.get()
+      checked = ChanSettings.videoDefaultMuted.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_VIDEO_START_MUTED_WITH_HEADSET,
       name = getString(R.string.setting_headset_default_muted),
-      isCurrentlySelected = ChanSettings.headsetDefaultMuted.get()
+      checked = ChanSettings.headsetDefaultMuted.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_VIDEO_ALWAYS_RESET_TO_START,
       name = getString(R.string.setting_video_always_reset_to_start),
-      isCurrentlySelected = ChanSettings.videoAlwaysResetToStart.get()
+      checked = ChanSettings.videoAlwaysResetToStart.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_AUTO_SWIPE_AFTER_DOWNLOAD,
       name = getString(R.string.setting_auto_swipe_after_download),
-      isCurrentlySelected = ChanSettings.mediaViewerAutoSwipeAfterDownload.get()
+      checked = ChanSettings.mediaViewerAutoSwipeAfterDownload.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_PAUSE_PLAYERS_WHEN_IN_BG,
       name = getString(R.string.setting_pause_players_when_in_bg),
-      isCurrentlySelected = ChanSettings.mediaViewerPausePlayersWhenInBackground.get()
+      checked = ChanSettings.mediaViewerPausePlayersWhenInBackground.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_ENABLE_SOUND_POSTS,
       name = getString(R.string.setting_enable_sound_posts),
-      isCurrentlySelected = ChanSettings.mediaViewerSoundPostsEnabled.get()
+      checked = ChanSettings.mediaViewerSoundPostsEnabled.get()
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_USE_MPV,
       name = getString(R.string.settings_plugins_use_mpv),
-      isCurrentlySelected = ChanSettings.useMpvVideoPlayer.get()
+      checked = ChanSettings.useMpvVideoPlayer.get()
     )
 
     options += FloatingListMenuItem(
@@ -227,14 +227,14 @@ class MediaViewerMenuHelper(
       key = ACTION_MEDIA_VIEWER_ONE_OFFSCREEN_PAGE,
       name = getString(R.string.setting_media_viewer_one_offscreen_page),
       groupId = groupId,
-      isCurrentlySelected = ChanSettings.mediaViewerOffscreenPagesCount() == 1
+      checked = ChanSettings.mediaViewerOffscreenPagesCount() == 1
     )
 
     options += CheckableFloatingListMenuItem(
       key = ACTION_MEDIA_VIEWER_TWO_OFFSCREEN_PAGES,
       name = getString(R.string.setting_media_viewer_two_offscreen_page),
       groupId = groupId,
-      isCurrentlySelected = ChanSettings.mediaViewerOffscreenPagesCount() == 2
+      checked = ChanSettings.mediaViewerOffscreenPagesCount() == 2
     )
 
     val floatingListMenuController = FloatingListMenuController(

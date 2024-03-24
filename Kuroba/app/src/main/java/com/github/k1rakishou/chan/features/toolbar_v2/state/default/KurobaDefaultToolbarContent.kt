@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.github.k1rakishou.chan.features.toolbar_v2.AbstractToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.MoreVerticalMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarClickableIcon
@@ -18,7 +19,8 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarTitleWithSubt
 @Composable
 fun KurobaDefaultToolbarContent(
   modifier: Modifier,
-  state: KurobaDefaultToolbarState
+  state: KurobaDefaultToolbarState,
+  showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
   val leftIconMut by state.leftItem
   val leftIcon = leftIconMut
@@ -105,8 +107,8 @@ fun KurobaDefaultToolbarContent(
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor
 
-            if (iconClickInterceptor == null || iconClickInterceptor(overflowIcon)) {
-              // TODO: New toolbar. Show overflow menu.
+            if (iconClickInterceptor == null || !iconClickInterceptor(overflowIcon)) {
+              showFloatingMenu(overflowMenuItems)
             }
           }
         )

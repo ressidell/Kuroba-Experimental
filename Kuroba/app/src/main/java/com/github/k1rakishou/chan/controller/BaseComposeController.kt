@@ -70,9 +70,7 @@ abstract class BaseComposeController<VM : ViewModel>(
 
         toolbarState.enterDefaultMode(
             leftItem = BackArrowMenuItem(
-                onClick = {
-                    // TODO: New toolbar
-                }
+                onClick = { requireNavController().popController() }
             ),
             middleContent = ToolbarMiddleContent.Title(
                 title = ToolbarText.Id(titleStringId),

@@ -107,9 +107,7 @@ class BookmarkGroupSettingsController(
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.Id(titleStringId)
@@ -280,7 +278,7 @@ class BookmarkGroupSettingsController(
         showToast("Not all bookmarks were moved into the group '${groupId}'")
       }
 
-      navigationController?.popController()
+      requireNavController().popController()
     }
   }
 

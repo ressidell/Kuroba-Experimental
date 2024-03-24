@@ -7,6 +7,12 @@ class CheckableFloatingListMenuItem(
   val groupId: Any? = null,
   visible: Boolean = true,
   enabled: Boolean = true,
-  more: MutableList<FloatingListMenuItem> = mutableListOf(),
-  val isCurrentlySelected: Boolean = false
-) : FloatingListMenuItem(key, name, value, visible, enabled, more)
+  more: List<FloatingListMenuItem> = listOf(),
+  val checked: Boolean = false
+) : FloatingListMenuItem(key, name, value, visible, enabled, more) {
+
+  override fun toString(): String {
+    return "CheckableFloatingListMenuItem(key=$key, name='$name', value=$value, visible=$visible, enabled=$enabled, moreItemsCount=${more.size}, groupId=$groupId, checked=$checked)"
+  }
+
+}

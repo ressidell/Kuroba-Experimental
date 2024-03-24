@@ -101,6 +101,7 @@ import com.github.k1rakishou.chan.features.thirdeye.AddOrEditBooruController
 import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.thread_downloading.LocalArchiveController
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.adapter.PostAdapter
 import com.github.k1rakishou.chan.ui.captcha.CaptchaLayout
 import com.github.k1rakishou.chan.ui.captcha.GenericWebViewAuthenticationLayout
@@ -412,6 +413,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
   fun inject(replyLayoutView: ReplyLayoutView)
   fun inject(kurobaBottomNavigationView: KurobaBottomNavigationView)
+  fun inject(kurobaToolbarView: KurobaToolbarView)
 
   @Subcomponent.Builder
   interface Builder {

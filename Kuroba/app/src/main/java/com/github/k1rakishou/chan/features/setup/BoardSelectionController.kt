@@ -158,7 +158,7 @@ class BoardSelectionController(
     drawerOptions += CheckableFloatingListMenuItem(
       key = ACTION_TOGGLE_LAYOUT_MODE,
       name = AppModuleAndroidUtils.getString(R.string.board_selection_controller_grid_layout_mode),
-      isCurrentlySelected = PersistableChanState.boardSelectionGridMode.get()
+      checked = PersistableChanState.boardSelectionGridMode.get()
     )
 
     val floatingListMenuController = FloatingListMenuController(

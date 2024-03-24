@@ -651,7 +651,7 @@ class CreateOrUpdateFilterController(
         key = filterAction.id,
         name = FilterAction.filterActionName(filterAction),
         groupId = groupId,
-        isCurrentlySelected = chanFilterMutableState.action.value == filterAction.id
+        checked = chanFilterMutableState.action.value == filterAction.id
       )
     }
 

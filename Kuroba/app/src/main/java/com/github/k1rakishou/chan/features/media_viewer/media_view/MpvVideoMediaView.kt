@@ -736,7 +736,7 @@ class MpvVideoMediaView(
     menuItems += CheckableFloatingListMenuItem(
       key = ACTION_VIDEO_FAST_DECODE,
       name = getString(R.string.mpv_fast_video_decoding),
-      isCurrentlySelected = MpvSettings.videoFastCode.get()
+      checked = MpvSettings.videoFastCode.get()
     )
 
     val controller = FloatingListMenuController(

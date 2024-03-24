@@ -409,7 +409,7 @@ class BookmarksController(
         withMenuItem(
           id = ACTION_CHANGE_VIEW_BOOKMARK_MODE,
           drawableId = getBookmarksModeChangeToolbarButtonDrawableId(),
-          onClick =  { onChangeViewModeClicked() }
+          onClick = { onChangeViewModeClicked() }
         )
         withMenuItem(
           id = ACTION_OPEN_SORT_SETTINGS,

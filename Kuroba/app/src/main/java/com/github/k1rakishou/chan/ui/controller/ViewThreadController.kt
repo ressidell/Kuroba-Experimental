@@ -549,7 +549,12 @@ open class ViewThreadController(
             id = ACTION_GO_TO_POST,
             stringId = R.string.action_go_to_post,
             visible = isDevBuild(),
-            onClick = { item -> onGoToPostClicked(item) },
+            onClick = { item -> onGoToPostClicked(item) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_THREAD_MORE_OPTIONS,
+            stringId = R.string.action_thread_options,
+            visible = isDevBuild(),
             builder = { withMoreThreadOptions() }
           )
           withOverflowMenuItem(

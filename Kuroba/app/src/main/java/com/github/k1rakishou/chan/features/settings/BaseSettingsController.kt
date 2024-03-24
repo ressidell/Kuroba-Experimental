@@ -31,7 +31,7 @@ abstract class BaseSettingsController(
         name = settingV2.itemNameMapper(item),
         value = item,
         groupId = settingV2.groupId,
-        isCurrentlySelected = settingV2.isCurrent(item)
+        checked = settingV2.isCurrent(item)
       )
     }
 

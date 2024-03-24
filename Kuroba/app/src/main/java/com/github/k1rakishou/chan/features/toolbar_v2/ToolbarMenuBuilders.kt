@@ -64,6 +64,7 @@ class ToolbarOverflowMenuBuilder {
     id: Int,
     stringId: Int,
     visible: Boolean = true,
+    enabled: Boolean = true,
     groupId: String? = null,
     value: Any? = null,
     onClick: ((ToolbarMenuOverflowItem) -> Unit)? = null,
@@ -78,6 +79,7 @@ class ToolbarOverflowMenuBuilder {
       // TODO: New toolbar
       text = getString(stringId),
       visible = visible,
+      enabled = enabled,
       groupId = groupId,
       value = value,
       subItems = subItems,
@@ -111,6 +113,7 @@ class ToolbarOverflowMenuBuilder {
     id: Int,
     text: String,
     visible: Boolean = true,
+    enabled: Boolean = true,
     checked: Boolean = false,
     groupId: String? = null,
     value: Any? = null,
@@ -126,6 +129,7 @@ class ToolbarOverflowMenuBuilder {
       // TODO: New toolbar
       text = text,
       visible = visible,
+      enabled = enabled,
       checked = checked,
       groupId = groupId,
       value = value,

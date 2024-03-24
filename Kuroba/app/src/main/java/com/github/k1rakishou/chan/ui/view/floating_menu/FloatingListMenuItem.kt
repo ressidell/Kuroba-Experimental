@@ -6,7 +6,7 @@ open class FloatingListMenuItem @JvmOverloads constructor(
   val value: Any? = null,
   val visible: Boolean = true,
   val enabled: Boolean = true,
-  val more: MutableList<FloatingListMenuItem> = mutableListOf()
+  val more: List<FloatingListMenuItem> = listOf()
 ) {
 
   override fun equals(other: Any?): Boolean {
@@ -20,6 +20,7 @@ open class FloatingListMenuItem @JvmOverloads constructor(
     if (value != other.value) return false
     if (visible != other.visible) return false
     if (enabled != other.enabled) return false
+    if (more != other.more) return false
 
     return true
   }
@@ -30,49 +31,13 @@ open class FloatingListMenuItem @JvmOverloads constructor(
     result = 31 * result + visible.hashCode()
     result = 31 * result + enabled.hashCode()
     result = 31 * result + (value?.hashCode() ?: 0)
+    result = 31 * result + more.hashCode()
     return result
   }
 
-  companion object {
-
-    // TODO: New reply layout
-//    @JvmStatic
-//    fun createFromToolbarMenuSubItem(
-//      toolbarMenuSubItem: ToolbarMenuSubItem,
-//      withNestedItems: Boolean = true
-//    ): FloatingListMenuItem {
-//      val nestedItems = if (withNestedItems) {
-//        toolbarMenuSubItem.moreItems.map { item -> createFromToolbarMenuSubItem(item) }.toMutableList()
-//      } else {
-//        mutableListOf()
-//      }
-//
-//      when (toolbarMenuSubItem) {
-//        is CheckableToolbarMenuSubItem -> {
-//          return CheckableFloatingListMenuItem(
-//            key = toolbarMenuSubItem.id,
-//            name = toolbarMenuSubItem.text!!,
-//            value = null,
-//            groupId = toolbarMenuSubItem.groupId,
-//            visible = toolbarMenuSubItem.visible,
-//            enabled = toolbarMenuSubItem.enabled,
-//            more = nestedItems,
-//            isCurrentlySelected = toolbarMenuSubItem.isChecked
-//          )
-//        }
-//        is ToolbarMenuSubItem -> {
-//          return FloatingListMenuItem(
-//            key = toolbarMenuSubItem.id,
-//            name = toolbarMenuSubItem.text!!,
-//            value = null,
-//            visible = toolbarMenuSubItem.visible,
-//            enabled = toolbarMenuSubItem.enabled,
-//            more = nestedItems
-//          )
-//        }
-//        else -> throw NotImplementedError("Not implemented for ${toolbarMenuSubItem::class.java.simpleName}")
-//      }
-//    }
-
+  override fun toString(): String {
+    return "FloatingListMenuItem(key=$key, name='$name', value=$value, visible=$visible, " +
+      "enabled=$enabled, moreItemsCount=${more.size})"
   }
+
 }

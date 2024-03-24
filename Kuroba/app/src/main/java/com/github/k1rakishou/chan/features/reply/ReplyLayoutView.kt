@@ -588,7 +588,7 @@ class ReplyLayoutView @JvmOverloads constructor(
     menuItems += CheckableFloatingListMenuItem(
       key = ACTION_IGNORE_REPLY_COOLDOWNS,
       name = context.getString(R.string.reply_layout_ignore_reply_cooldowns),
-      isCurrentlySelected = ignoreReplyCooldowns?.get() == true
+      checked = ignoreReplyCooldowns?.get() == true
     )
 
     if (chanDescriptor.siteDescriptor().is4chan()) {
@@ -596,7 +596,7 @@ class ReplyLayoutView @JvmOverloads constructor(
         menuItems += CheckableFloatingListMenuItem(
           key = ACTION_CHECK_4CHAN_POST_ACKNOWLEDGED,
           name = context.getString(R.string.reply_layout_check_if_post_was_actually_acknowledged_by_4chan),
-          isCurrentlySelected = check4chanPostAcknowledged
+          checked = check4chanPostAcknowledged
         )
       }
     }
@@ -645,7 +645,7 @@ class ReplyLayoutView @JvmOverloads constructor(
         key = ReplyMode.ReplyModeSolveCaptchaManually,
         name = appResources.string(R.string.reply_mode_solve_captcha_and_post),
         groupId = groupId,
-        isCurrentlySelected = prevReplyMode == ReplyMode.ReplyModeSolveCaptchaManually
+        checked = prevReplyMode == ReplyMode.ReplyModeSolveCaptchaManually
       )
     }
 
@@ -653,7 +653,7 @@ class ReplyLayoutView @JvmOverloads constructor(
       key = ReplyMode.ReplyModeSendWithoutCaptcha,
       name = appResources.string(R.string.reply_mode_attempt_post_without_captcha),
       groupId = groupId,
-      isCurrentlySelected = prevReplyMode == ReplyMode.ReplyModeSendWithoutCaptcha
+      checked = prevReplyMode == ReplyMode.ReplyModeSendWithoutCaptcha
     )
 
     if (replyLayoutViewModel.paidCaptchaSolversSupportedAndEnabled(chanDescriptor)) {
@@ -661,7 +661,7 @@ class ReplyLayoutView @JvmOverloads constructor(
         key = ReplyMode.ReplyModeSolveCaptchaAuto,
         name = appResources.string(R.string.reply_mode_post_with_captcha_solver),
         groupId = groupId,
-        isCurrentlySelected = prevReplyMode == ReplyMode.ReplyModeSolveCaptchaAuto
+        checked = prevReplyMode == ReplyMode.ReplyModeSolveCaptchaAuto
       )
     }
 
@@ -670,7 +670,7 @@ class ReplyLayoutView @JvmOverloads constructor(
         key = ReplyMode.ReplyModeUsePasscode,
         name = appResources.string(R.string.reply_mode_post_with_passcode),
         groupId = groupId,
-        isCurrentlySelected = prevReplyMode == ReplyMode.ReplyModeUsePasscode
+        checked = prevReplyMode == ReplyMode.ReplyModeUsePasscode
       )
     }
 

@@ -22,7 +22,8 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadT
 
 @Composable
 fun KurobaToolbar(
-  kurobaToolbarState: KurobaToolbarState?
+  kurobaToolbarState: KurobaToolbarState?,
+  showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
   if (kurobaToolbarState == null) {
     return
@@ -41,19 +42,22 @@ fun KurobaToolbar(
       is KurobaCatalogToolbarState -> {
         KurobaCatalogToolbarContent(
           modifier = Modifier.fillMaxSize(),
-          state = childToolbarState
+          state = childToolbarState,
+          showFloatingMenu = showFloatingMenu
         )
       }
       is KurobaThreadToolbarState -> {
         KurobaThreadToolbarContent(
           modifier = Modifier.fillMaxSize(),
-          state = childToolbarState
+          state = childToolbarState,
+          showFloatingMenu = showFloatingMenu
         )
       }
       is KurobaDefaultToolbarState -> {
         KurobaDefaultToolbarContent(
           modifier = Modifier.fillMaxSize(),
-          state = childToolbarState
+          state = childToolbarState,
+          showFloatingMenu = showFloatingMenu
         )
       }
       is KurobaSearchToolbarState -> {

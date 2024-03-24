@@ -513,8 +513,8 @@ class BrowseController(
       } else {
         if (navigationController != null) {
           // We wouldn't want to pop BrowseController when opening a board
-          if (navigationController!!.topController !is BrowseController) {
-            navigationController!!.popController(showCatalogOptions.withAnimation)
+          if (requireNavController().topController !is BrowseController) {
+            requireNavController().popController(showCatalogOptions.withAnimation)
           }
         }
       }

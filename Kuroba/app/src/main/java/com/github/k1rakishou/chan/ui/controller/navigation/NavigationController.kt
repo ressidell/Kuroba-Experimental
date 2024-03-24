@@ -77,7 +77,7 @@ abstract class NavigationController(context: Context) : Controller(context), Con
       "popController() to: ${to?.controllerKey}, from: ${from.controllerKey}  with transition: ${transition}"
     }
 
-    transition(from, to, false, controllerTransition)
+    transition(from, to, false, transition)
     return true
   }
 
@@ -207,10 +207,12 @@ abstract class NavigationController(context: Context) : Controller(context), Con
 
     if (pushing && to != null) {
       controllerNavigationManager.onControllerPushed(to)
-      requireToolbarNavController().toolbarState.updateFromState(to.toolbarState)
     } else if (!pushing && from != null) {
       controllerNavigationManager.onControllerPopped(from)
-      requireToolbarNavController().toolbarState.updateFromState(from.toolbarState)
+    }
+
+    if (to != null) {
+      requireToolbarNavController().toolbarState.updateFromState(to.toolbarState)
     }
   }
 

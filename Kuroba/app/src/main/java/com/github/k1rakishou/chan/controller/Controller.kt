@@ -61,7 +61,6 @@ abstract class Controller(
 ) {
   lateinit var view: ViewGroup
 
-  // TODO: New toolbar. Lazy injection.
   @Inject
   lateinit var controllerNavigationManager: ControllerNavigationManager
   @Inject

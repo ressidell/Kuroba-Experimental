@@ -54,12 +54,27 @@ open class ToolbarMenuItem(
     _spinEventsFlow.tryEmit(Unit)
   }
 
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as ToolbarMenuItem
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int {
+    return id ?: 0
+  }
+
 }
 
 abstract class AbstractToolbarMenuOverflowItem(
   val id: Int,
   text: String,
-  visible: Boolean
+  visible: Boolean,
+  enabled: Boolean,
+  val subItems: ImmutableList<AbstractToolbarMenuOverflowItem>
 ) {
   private val _menuTextState = mutableStateOf(text)
   val menuTextState: State<String>
@@ -69,6 +84,10 @@ abstract class AbstractToolbarMenuOverflowItem(
   val visibleState: State<Boolean>
     get() = _visibleState
 
+  private val _enabledState = mutableStateOf(enabled)
+  val enabledState: State<Boolean>
+    get() = _enabledState
+
   fun updateMenuText(text: String) {
     _menuTextState.value = text
   }
@@ -76,35 +95,68 @@ abstract class AbstractToolbarMenuOverflowItem(
   fun updateVisibility(visible: Boolean) {
     _visibleState.value = visible
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as AbstractToolbarMenuOverflowItem
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int {
+    return id
+  }
+
+  override fun toString(): String {
+    return "AbstractToolbarMenuOverflowItem(id=$id, menuTextState=${_menuTextState.value}, " +
+      "visibleState=${_visibleState.value}, enabledState=${_enabledState.value})"
+  }
+
 }
 
 class ToolbarMenuOverflowItem(
   id: Int,
   text: String,
   visible: Boolean,
+  enabled: Boolean,
   val groupId: String?,
   val value: Any?,
-  val subItems: ImmutableList<AbstractToolbarMenuOverflowItem>,
+  subItems: ImmutableList<AbstractToolbarMenuOverflowItem>,
   val onClick: ((ToolbarMenuOverflowItem) -> Unit)?
 ) : AbstractToolbarMenuOverflowItem(
   id = id,
   text = text,
-  visible = visible
-)
+  visible = visible,
+  enabled = enabled,
+  subItems = subItems
+) {
+
+  override fun toString(): String {
+    return "ToolbarMenuOverflowItem(id=$id, menuTextState=${menuTextState.value}, " +
+      "visibleState=${visibleState.value}, enabledState=${enabledState.value}, " +
+      "groupId=$groupId, value=$value, subItemsCount=${subItems.size})"
+  }
+
+}
 
 class ToolbarMenuCheckableOverflowItem(
   id: Int,
   text: String,
   visible: Boolean,
+  enabled: Boolean,
   checked: Boolean,
   val groupId: String?,
   val value: Any?,
-  val subItems: ImmutableList<AbstractToolbarMenuOverflowItem>,
+  subItems: ImmutableList<AbstractToolbarMenuOverflowItem>,
   val onClick: (ToolbarMenuCheckableOverflowItem) -> Unit
 ) : AbstractToolbarMenuOverflowItem(
   id = id,
   text = text,
-  visible = visible
+  visible = visible,
+  enabled = enabled,
+  subItems = subItems
 ) {
 
   private val _checkedState = mutableStateOf(checked)
@@ -113,6 +165,12 @@ class ToolbarMenuCheckableOverflowItem(
 
   fun updateChecked(checked: Boolean) {
     _checkedState.value = checked
+  }
+
+  override fun toString(): String {
+    return "ToolbarMenuCheckableOverflowItem(id=$id, menuTextState=${menuTextState.value}, " +
+      "visibleState=${visibleState.value}, enabledState=${enabledState.value}, checkedState=${checkedState.value}, " +
+      "groupId=$groupId, value=$value, subItemsCount=${subItems.size})"
   }
 
 }

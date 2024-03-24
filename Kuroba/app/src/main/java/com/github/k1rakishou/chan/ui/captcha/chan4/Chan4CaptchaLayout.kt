@@ -728,26 +728,26 @@ class Chan4CaptchaLayout(
     val items = mutableListOf<FloatingListMenuItem>()
 
     items += CheckableFloatingListMenuItem(
-      ACTION_USE_CONTRAST_BACKGROUND,
-      getString(R.string.captcha_layout_contrast_bg_slider_captcha),
-      isCurrentlySelected = chan4CaptchaSettings.sliderCaptchaUseContrastBackground
+      key = ACTION_USE_CONTRAST_BACKGROUND,
+      name = getString(R.string.captcha_layout_contrast_bg_slider_captcha),
+      checked = chan4CaptchaSettings.sliderCaptchaUseContrastBackground
     )
 
     items += CheckableFloatingListMenuItem(
-      ACTION_REMEMBER_CAPTCHA_COOKIES,
-      getString(R.string.captcha_layout_remember_captcha_cookies),
-      isCurrentlySelected = chan4CaptchaSettings.rememberCaptchaCookies
+      key = ACTION_REMEMBER_CAPTCHA_COOKIES,
+      name = getString(R.string.captcha_layout_remember_captcha_cookies),
+      checked = chan4CaptchaSettings.rememberCaptchaCookies
     )
 
     items += CheckableFloatingListMenuItem(
-      ACTION_USE_CAPTCHA_SOLVER,
-      getString(R.string.captcha_layout_use_captcha_solver),
-      isCurrentlySelected = chan4CaptchaSettings.useCaptchaSolver
+      key = ACTION_USE_CAPTCHA_SOLVER,
+      name = getString(R.string.captcha_layout_use_captcha_solver),
+      checked = chan4CaptchaSettings.useCaptchaSolver
     )
 
     items += FloatingListMenuItem(
-      ACTION_SHOW_CAPTCHA_HELP,
-      getString(R.string.captcha_layout_show_captcha_help)
+      key = ACTION_SHOW_CAPTCHA_HELP,
+      name = getString(R.string.captcha_layout_show_captcha_help)
     )
 
     val floatingListMenuController = FloatingListMenuController(
