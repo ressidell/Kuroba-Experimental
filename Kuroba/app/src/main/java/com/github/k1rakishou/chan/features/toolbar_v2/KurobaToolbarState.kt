@@ -1,7 +1,9 @@
 package com.github.k1rakishou.chan.features.toolbar_v2
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.unit.Dp
 import com.github.k1rakishou.chan.controller.ControllerKey
@@ -44,6 +46,10 @@ class KurobaToolbarState(
   val topToolbar: IKurobaToolbarState?
     get() = _toolbarStates.lastOrNull()
 
+  private val _transitionToolbarState = mutableStateOf<KurobaToolbarTransition?>(null)
+  val transitionToolbarState: State<KurobaToolbarTransition?>
+    get() = _transitionToolbarState
+
   val container by lazy(LazyThreadSafetyMode.NONE) { KurobaContainerToolbarState() }
   val catalog by lazy(LazyThreadSafetyMode.NONE) { KurobaCatalogToolbarState() }
   val thread by lazy(LazyThreadSafetyMode.NONE) { KurobaThreadToolbarState() }
@@ -66,6 +72,62 @@ class KurobaToolbarState(
   fun onToolbarHeightChanged(totalToolbarHeight: Dp) {
     globalUiStateHolder.updateToolbarState {
       updateToolbarHeightState(totalToolbarHeight)
+    }
+  }
+
+  fun showToolbar() {
+    globalUiStateHolder.updateToolbarState {
+      updateToolbarVisibilityState(visible = true)
+    }
+  }
+
+  fun onTransitionProgressStart(
+    other: KurobaToolbarState,
+    transitionMode: KurobaToolbarTransition.TransitionMode
+  ) {
+    check(_transitionToolbarState.value == null) {
+      "Attempt to perform more than one transition at the same time! " +
+        "transitionState: ${transitionToolbarState.value}"
+    }
+
+    val topToolbar = checkNotNull(other.topToolbar) {
+      "Attempt to perform a transition with a non-initialized toolbar! toolbar: ${other}"
+    }
+
+    _transitionToolbarState.value = KurobaToolbarTransition.Progress(
+      transitionToolbarState = topToolbar,
+      transitionMode = transitionMode,
+      progress = 0f
+    )
+  }
+
+  fun onTransitionProgress(progress: Float) {
+    val transitionState = _transitionToolbarState.value
+      ?: return
+
+    if (transitionState !is KurobaToolbarTransition.Progress) {
+      return
+    }
+
+    _transitionToolbarState.value = transitionState.copy(progress = progress)
+  }
+
+  fun onTransitionProgressFinished(other: KurobaToolbarState) {
+    _transitionToolbarState.value = null
+
+    updateFromState(other)
+  }
+
+  fun updateFromState(toolbarState: KurobaToolbarState) {
+    Snapshot.withMutableSnapshot {
+      _toolbarStates.clear()
+      _toolbarStates.addAll(toolbarState._toolbarStates)
+
+      container.updateFromState(toolbarState.container)
+      default.updateFromState(toolbarState.default)
+      search.updateFromState(toolbarState.search)
+      selection.updateFromState(toolbarState.selection)
+      reply.updateFromState(toolbarState.reply)
     }
   }
 
@@ -214,39 +276,6 @@ class KurobaToolbarState(
     return pop()
   }
 
-  fun showToolbar() {
-    globalUiStateHolder.updateToolbarState {
-      updateToolbarVisibilityState(visible = true)
-    }
-  }
-
-  fun onTransitionStart(other: KurobaToolbarState) {
-    // TODO: New toolbar.
-    updateFromState(other)
-  }
-
-  fun onTransitionProgress(progress: Float) {
-    // TODO: New toolbar.
-  }
-
-  fun onTransitionFinished(other: KurobaToolbarState) {
-    // TODO: New toolbar.
-    updateFromState(other)
-  }
-
-  fun updateFromState(toolbarState: KurobaToolbarState) {
-    Snapshot.withMutableSnapshot {
-      _toolbarStates.clear()
-      _toolbarStates.addAll(toolbarState._toolbarStates)
-
-      container.updateFromState(toolbarState.container)
-      default.updateFromState(toolbarState.default)
-      search.updateFromState(toolbarState.search)
-      selection.updateFromState(toolbarState.selection)
-      reply.updateFromState(toolbarState.reply)
-    }
-  }
-
   fun findItem(id: Int): ToolbarMenuItem? {
     for (toolbarState in _toolbarStates) {
       val toolbarMenuItem = toolbarState.findItem(id)
@@ -336,7 +365,7 @@ class KurobaToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaToolbarState(controllerKey=$controllerKey)"
+    return "KurobaToolbarState(controllerKey: $controllerKey)"
   }
 
   companion object {

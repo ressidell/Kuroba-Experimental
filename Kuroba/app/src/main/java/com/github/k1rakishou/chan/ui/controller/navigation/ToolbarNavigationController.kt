@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.ui.controller.navigation
 import android.content.Context
 import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.controller.transition.ControllerTransition
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarTransition
 
 abstract class ToolbarNavigationController(context: Context) : NavigationController(context) {
 
@@ -35,7 +36,10 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     requireToolbarNavController().toolbarState.showToolbar()
 
     if (to != null) {
-      requireToolbarNavController().toolbarState.onTransitionStart(to.toolbarState)
+      requireToolbarNavController().toolbarState.onTransitionProgressStart(
+        other = to.toolbarState,
+        transitionMode = KurobaToolbarTransition.TransitionMode.Out
+      )
     }
 
     return true
@@ -57,9 +61,9 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     requireToolbarNavController().toolbarState.showToolbar()
 
     if (finish && to != null) {
-      requireToolbarNavController().toolbarState.onTransitionFinished(to.toolbarState)
+      requireToolbarNavController().toolbarState.onTransitionProgressFinished(to.toolbarState)
     } else if (!finish && from != null) {
-      requireToolbarNavController().toolbarState.onTransitionFinished(from.toolbarState)
+      requireToolbarNavController().toolbarState.onTransitionProgressFinished(from.toolbarState)
     }
   }
 
