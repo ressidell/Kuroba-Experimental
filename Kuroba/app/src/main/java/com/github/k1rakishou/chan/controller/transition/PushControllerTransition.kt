@@ -7,8 +7,6 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.view.doOnPreDraw
 
-// TODO: New toolbar. Right now Push animation has a bug where the new toolbar is first animated out and then it pops
-//  back in when animation finishes.
 class PushControllerTransition : ControllerTransition(TransitionMode.In) {
 
   override fun perform() {

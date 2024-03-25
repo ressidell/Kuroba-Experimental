@@ -35,9 +35,9 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
 
     requireToolbarNavController().toolbarState.showToolbar()
 
-    if (from != null) {
+    if (to != null) {
       requireToolbarNavController().toolbarState.onTransitionProgressStart(
-        other = from.toolbarState,
+        other = to.toolbarState,
         transitionMode = TransitionMode.Out
       )
     }

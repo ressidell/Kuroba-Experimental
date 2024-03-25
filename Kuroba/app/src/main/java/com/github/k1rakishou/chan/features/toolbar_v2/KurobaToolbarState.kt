@@ -89,7 +89,7 @@ class KurobaToolbarState(
   ) {
     check(_transitionToolbarState.value == null) {
       "Attempt to perform more than one transition at the same time! " +
-        "transitionState: ${transitionToolbarState.value}"
+        "transitionState: ${transitionToolbarState.value}, other: ${other}, transitionMode: ${transitionMode}"
     }
 
     val topToolbar = checkNotNull(other.topToolbar) {
