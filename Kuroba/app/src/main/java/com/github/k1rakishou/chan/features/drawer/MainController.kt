@@ -1070,7 +1070,7 @@ class MainController(
             modifier = Modifier
               .align(Alignment.CenterVertically)
               .kurobaClickable(onClick = onSwitchDayNightThemeIconClick),
-            colorTint = IconTint.TintWithColor(backgroundColor)
+            iconTint = IconTint.TintWithColor(ThemeEngine.resolveDrawableTintColorCompose(backgroundColor))
           )
 
           Spacer(modifier = Modifier.width(16.dp))
@@ -1080,7 +1080,7 @@ class MainController(
             modifier = Modifier
               .align(Alignment.CenterVertically)
               .kurobaClickable(onClick = onShowDrawerOptionsIconClick),
-            colorTint = IconTint.TintWithColor(backgroundColor)
+            iconTint = IconTint.TintWithColor(ThemeEngine.resolveDrawableTintColorCompose(backgroundColor))
           )
         }
       }
