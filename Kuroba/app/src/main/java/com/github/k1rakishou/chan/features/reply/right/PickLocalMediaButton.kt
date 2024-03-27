@@ -13,6 +13,7 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 internal fun PickLocalMediaButton(
   iconSize: Dp,
   padding: Dp,
+  newReplyLayoutTutorialFinished: Boolean,
   onPickLocalMediaButtonClicked: () -> Unit,
   onPickLocalMediaButtonLongClicked: () -> Unit,
 ) {
@@ -22,6 +23,7 @@ internal fun PickLocalMediaButton(
       .padding(padding)
       .kurobaClickable(
         bounded = false,
+        enabled = newReplyLayoutTutorialFinished,
         onClick = onPickLocalMediaButtonClicked,
         onLongClick = onPickLocalMediaButtonLongClicked
       ),

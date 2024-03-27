@@ -42,6 +42,10 @@ public abstract class Setting<T> {
     }
 
     public Flowable<T> listenForChanges() {
+        if (!settingState.hasValue()) {
+            settingState.onNext(get());
+        }
+
         return settingState
           .onBackpressureLatest()
           .hide()

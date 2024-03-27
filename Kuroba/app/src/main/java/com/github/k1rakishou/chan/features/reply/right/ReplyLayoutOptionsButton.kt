@@ -13,6 +13,7 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 internal fun ReplyLayoutOptionsButton(
   iconSize: Dp,
   padding: Dp,
+  newReplyLayoutTutorialFinished: Boolean,
   onReplyLayoutOptionsButtonClicked: () -> Unit
 ) {
   KurobaComposeIcon(
@@ -21,6 +22,7 @@ internal fun ReplyLayoutOptionsButton(
       .padding(padding)
       .kurobaClickable(
         bounded = false,
+        enabled = newReplyLayoutTutorialFinished,
         onClick = onReplyLayoutOptionsButtonClicked
       ),
     drawableId = R.drawable.ic_more_vert_white_24dp

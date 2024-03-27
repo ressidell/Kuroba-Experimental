@@ -13,6 +13,7 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 internal fun SearchRemoteMediaButton(
   iconSize: Dp,
   padding: Dp,
+  newReplyLayoutTutorialFinished: Boolean,
   onSearchRemoteMediaButtonClicked: () -> Unit
 ) {
   KurobaComposeIcon(
@@ -21,6 +22,7 @@ internal fun SearchRemoteMediaButton(
       .padding(padding)
       .kurobaClickable(
         bounded = false,
+        enabled = newReplyLayoutTutorialFinished,
         onClick = onSearchRemoteMediaButtonClicked
       ),
     drawableId = R.drawable.ic_search_white_24dp

@@ -79,6 +79,8 @@ object PersistableChanState {
   lateinit var dontKeepActivitiesWarningShown: BooleanSetting
   @JvmStatic
   lateinit var remoteImageSearchSettings: GsonJsonSetting<RemoteImageSearchSettings>
+  @JvmStatic
+  lateinit var newReplyLayoutTutorialFinished: BooleanSetting
 
   fun init(persistableChanStateInfo: PersistableChanStateInfo) {
     PersistableChanState.persistableChanStateInfo = persistableChanStateInfo
@@ -176,6 +178,7 @@ object PersistableChanState {
         "remote_image_search_settings",
         RemoteImageSearchSettings.defaults()
       )
+      newReplyLayoutTutorialFinished = BooleanSetting(provider, "new_reply_layout_tutorial_finished", false)
     } catch (e: Exception) {
       Logger.e(TAG, "Error while initializing the state", e)
       throw e

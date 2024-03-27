@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -56,6 +57,8 @@ internal fun ReplyInputRightPart(
   val attachables by replyLayoutState.attachables
   val syntheticAttachables = replyLayoutState.syntheticAttachables
 
+  val newReplyLayoutTutorialFinished by replyLayoutViewModel.newReplyLayoutTutorialFinished.collectAsState()
+
   var buttonCounter = 0
   val maxButtonsCount = when {
     replyLayoutVisibility == ReplyLayoutVisibility.Expanded -> Int.MAX_VALUE
@@ -84,7 +87,11 @@ internal fun ReplyInputRightPart(
           alpha = 0.6f,
           cornerRadius = cornerRadius
         )
-      },
+      }
+      .replyLayoutDragTutorial(
+        enabled = !newReplyLayoutTutorialFinished,
+        cornerRadius = cornerRadius
+      ),
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
     // TODO: implement a custom layout and add buttons based on the current height of ReplyInputRightPart?
@@ -94,6 +101,7 @@ internal fun ReplyInputRightPart(
       SendReplyButton(
         iconSize = iconSize,
         padding = 4.dp,
+        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
         chanDescriptor = chanDescriptor,
         replyLayoutState = replyLayoutState,
         onCancelReplySendClicked = onCancelReplySendClicked,
@@ -108,6 +116,7 @@ internal fun ReplyInputRightPart(
         PresolveCaptchaButton(
           iconSize = iconSize,
           padding = 4.dp,
+          newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
           replyLayoutViewModel = replyLayoutViewModel,
           onPresolveCaptchaButtonClicked = onPresolveCaptchaButtonClicked
         )
@@ -120,6 +129,7 @@ internal fun ReplyInputRightPart(
       PickLocalMediaButton(
         iconSize = iconSize,
         padding = 4.dp,
+        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
         onPickLocalMediaButtonClicked = onPickLocalMediaButtonClicked,
         onPickLocalMediaButtonLongClicked = onPickLocalMediaButtonLongClicked
       )
@@ -131,6 +141,7 @@ internal fun ReplyInputRightPart(
       SearchRemoteMediaButton(
         iconSize = iconSize,
         padding = 4.dp,
+        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
         onSearchRemoteMediaButtonClicked = onSearchRemoteMediaButtonClicked
       )
     }
@@ -141,6 +152,7 @@ internal fun ReplyInputRightPart(
       PickRemoteMediaButton(
         iconSize = iconSize,
         padding = 4.dp,
+        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
         onPickRemoteMediaButtonClicked = onPickRemoteMediaButtonClicked
       )
     }
@@ -151,6 +163,7 @@ internal fun ReplyInputRightPart(
       ReplyLayoutOptionsButton(
         iconSize = iconSize,
         padding = 4.dp,
+        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
         onReplyLayoutOptionsButtonClicked = onReplyLayoutOptionsButtonClicked
       )
     }

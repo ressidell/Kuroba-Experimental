@@ -25,6 +25,7 @@ import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 internal fun SendReplyButton(
   iconSize: Dp,
   padding: Dp,
+  newReplyLayoutTutorialFinished: Boolean,
   chanDescriptor: ChanDescriptor,
   replyLayoutState: ReplyLayoutState,
   onCancelReplySendClicked: () -> Unit,
@@ -47,6 +48,7 @@ internal fun SendReplyButton(
         .padding(padding)
         .kurobaClickable(
           bounded = false,
+          enabled = newReplyLayoutTutorialFinished,
           onClick = {
             if (sendReplyState.canCancel) {
               onCancelReplySendClicked()

@@ -51,6 +51,7 @@ import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanPost
+import com.github.k1rakishou.persist_state.PersistableChanState
 import com.github.k1rakishou.persist_state.ReplyMode
 import com.github.k1rakishou.prefs.OptionsSetting
 import com.github.k1rakishou.prefs.StringSetting
@@ -58,12 +59,15 @@ import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -125,6 +129,13 @@ class ReplyLayoutViewModel(
 
   val drawerAppearanceEventFlow: StateFlow<DrawerAppearanceEvent>
     get() = globalUiStateHolder.drawer.drawerAppearanceEventFlow
+  val newReplyLayoutTutorialFinished: StateFlow<Boolean> = PersistableChanState.newReplyLayoutTutorialFinished.listenForChanges()
+    .asFlow()
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.Eagerly,
+      initialValue = false
+    )
 
   private val threadControllerType by lazy {
     requireNotNull(savedStateHandle.get<ThreadControllerType>(ThreadControllerTypeParam)) {

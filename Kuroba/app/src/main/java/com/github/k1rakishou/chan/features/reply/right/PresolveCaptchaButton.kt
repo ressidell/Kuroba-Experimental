@@ -26,6 +26,7 @@ import com.github.k1rakishou.chan.ui.compose.ktu
 internal fun PresolveCaptchaButton(
   iconSize: Dp,
   padding: Dp,
+  newReplyLayoutTutorialFinished: Boolean,
   replyLayoutViewModel: ReplyLayoutViewModel,
   onPresolveCaptchaButtonClicked: () -> Unit
 ) {
@@ -38,6 +39,7 @@ internal fun PresolveCaptchaButton(
         .padding(padding)
         .kurobaClickable(
           bounded = false,
+          enabled = newReplyLayoutTutorialFinished,
           onClick = onPresolveCaptchaButtonClicked
         ),
       drawableId = R.drawable.ic_captcha_24dp,

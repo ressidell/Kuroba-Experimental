@@ -57,6 +57,7 @@ import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanPost
+import com.github.k1rakishou.persist_state.PersistableChanState
 import com.github.k1rakishou.persist_state.ReplyMode
 import com.github.k1rakishou.prefs.OptionsSetting
 import dagger.Lazy
@@ -977,6 +978,12 @@ class ReplyLayoutState(
     globalUiStateHolder.updateReplyLayoutState {
       updateReplyLayoutForController(threadControllerType) { individualReplyLayoutGlobalState ->
         individualReplyLayoutGlobalState.updateReplyLayoutVisibility(replyLayoutVisibility)
+      }
+    }
+
+    if (replyLayoutVisibility is ReplyLayoutVisibility.Expanded) {
+      if (!PersistableChanState.newReplyLayoutTutorialFinished.get()) {
+        PersistableChanState.newReplyLayoutTutorialFinished.set(true)
       }
     }
   }

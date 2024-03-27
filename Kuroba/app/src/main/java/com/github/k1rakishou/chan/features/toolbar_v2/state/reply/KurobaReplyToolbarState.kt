@@ -8,7 +8,6 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarParams
 
 data class KurobaReplyToolbarParams(
   val toolbarMenu: ToolbarMenu? = null
@@ -31,7 +30,7 @@ class KurobaReplyToolbarState(
     get() = _toolbarMenu.value
 
   override fun update(params: IKurobaToolbarParams) {
-    params as KurobaSelectionToolbarParams
+    params as KurobaReplyToolbarParams
 
     _toolbarMenu.value = params.toolbarMenu
   }

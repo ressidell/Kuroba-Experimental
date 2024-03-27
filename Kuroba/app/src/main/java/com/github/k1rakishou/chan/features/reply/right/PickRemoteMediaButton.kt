@@ -13,6 +13,7 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 internal fun PickRemoteMediaButton(
   iconSize: Dp,
   padding: Dp,
+  newReplyLayoutTutorialFinished: Boolean,
   onPickRemoteMediaButtonClicked: () -> Unit
 ) {
   KurobaComposeIcon(
@@ -21,6 +22,7 @@ internal fun PickRemoteMediaButton(
       .padding(padding)
       .kurobaClickable(
         bounded = false,
+        enabled = newReplyLayoutTutorialFinished,
         onClick = onPickRemoteMediaButtonClicked
       ),
     drawableId = R.drawable.ic_baseline_cloud_download_24
