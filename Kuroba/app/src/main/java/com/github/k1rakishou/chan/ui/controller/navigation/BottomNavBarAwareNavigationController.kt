@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.ui.controller.navigation
 import android.content.Context
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.controller.transition.ControllerTransition
 import com.github.k1rakishou.chan.controller.ui.NavigationControllerContainerLayout
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
@@ -80,25 +81,15 @@ class BottomNavBarAwareNavigationController(
     )
   }
 
-  // TODO: New toolbar
-//  override fun onMenuOrBackClicked(isArrow: Boolean) {
-//    if (isArrow) {
-//      if (toolbar?.isSearchOpened == true) {
-//        toolbar?.closeSearch()
-//        return
-//      }
-//
-//      if (childControllers.size > 1) {
-//        childControllers.last().navigationController?.popController()
-//        return
-//      }
-//
-//      listener.onCloseController()
-//      return
-//    }
-//
-//    listener.onShowMenu()
-//  }
+  override fun popController(transition: ControllerTransition?): Boolean {
+    if (childControllers.size > 1) {
+      return super.popController(transition)
+    }
+
+    // TODO: New toolbar. This has a bug where the toolbar is not updated after closing the BottomNavBarAwareNavigationController
+    listener.onCloseController()
+    return true
+  }
 
   interface CloseBottomNavBarAwareNavigationControllerListener {
     fun onCloseController()

@@ -37,8 +37,12 @@ open class AppConstants(
     }
 
     try {
+      // TODO: cache this value in sharedprefs. For some reason, sometimes, when accessing this thing it deadlocks.
+      //  Not sure if it only happens on an emulator (emulator bug or whatever).
+
+      Logger.d(TAG, "userAgent() WebSettings.getDefaultUserAgent() start...")
       val webViewUserAgent = WebSettings.getDefaultUserAgent(context)
-      Logger.d(TAG, "userAgent() Using default WebView user agent: \'${webViewUserAgent}\'")
+      Logger.d(TAG, "userAgent() WebSettings.getDefaultUserAgent() end. Using default WebView user agent: '${webViewUserAgent}'")
 
       return@lazy webViewUserAgent
     } catch (error: Throwable) {

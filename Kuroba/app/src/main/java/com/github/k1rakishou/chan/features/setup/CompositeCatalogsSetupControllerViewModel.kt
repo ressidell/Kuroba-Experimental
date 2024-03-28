@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.chan.core.base.BaseViewModel
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
+import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.ui.compose.reorder.move
 import com.github.k1rakishou.common.ModularResult
@@ -12,6 +13,7 @@ import com.github.k1rakishou.common.removeIfKt
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.catalog.CompositeCatalog
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 class CompositeCatalogsSetupControllerViewModel(
   private val savedStateHandle: SavedStateHandle,
@@ -131,6 +133,17 @@ class CompositeCatalogsSetupControllerViewModel(
           _compositeCatalogs.add(indexOfPrevCompositeCatalog, updatedGlobalCompositeCatalog)
         }
       }
+    }
+  }
+
+  class ViewModelFactory @Inject constructor(
+    private val compositeCatalogManager: CompositeCatalogManager
+  ) : ViewModelAssistedFactory<CompositeCatalogsSetupControllerViewModel> {
+    override fun create(handle: SavedStateHandle): CompositeCatalogsSetupControllerViewModel {
+      return CompositeCatalogsSetupControllerViewModel(
+        savedStateHandle = handle,
+        compositeCatalogManager = compositeCatalogManager
+      )
     }
   }
 

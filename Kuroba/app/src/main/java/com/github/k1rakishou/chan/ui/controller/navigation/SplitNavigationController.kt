@@ -146,8 +146,8 @@ class SplitNavigationController(
     // both are always visible
   }
 
-  override fun openControllerWrappedIntoBottomNavAwareController(controller: Controller?) {
-    requireStartActivity().openControllerWrappedIntoBottomNavAwareController(controller!!)
+  override fun openControllerWrappedIntoBottomNavAwareController(controller: Controller) {
+    requireStartActivity().openControllerWrappedIntoBottomNavAwareController(controller)
   }
 
   override fun pushController(to: Controller): Boolean {

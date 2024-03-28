@@ -64,9 +64,7 @@ class ProxySetupController(
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.Id(R.string.controller_proxy_setup_title)

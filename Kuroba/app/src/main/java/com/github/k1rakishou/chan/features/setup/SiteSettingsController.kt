@@ -70,9 +70,7 @@ class SiteSettingsController(
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.String(context.getString(R.string.controller_site_settings_title, siteName))
@@ -264,11 +262,6 @@ class SiteSettingsController(
 
   override fun pushController(controller: Controller) {
     navigationController!!.pushController(controller)
-  }
-
-  override fun openControllerWrappedIntoBottomNavAwareController(controller: Controller) {
-    requireStartActivity().openControllerWrappedIntoBottomNavAwareController(controller)
-    requireStartActivity().setSettingsMenuItemSelected()
   }
 
 }

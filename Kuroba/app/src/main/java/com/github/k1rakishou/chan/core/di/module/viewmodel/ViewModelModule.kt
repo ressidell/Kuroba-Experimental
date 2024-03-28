@@ -15,6 +15,7 @@ import com.github.k1rakishou.chan.features.reply_image_search.ImageSearchControl
 import com.github.k1rakishou.chan.features.report.Chan4ReportPostControllerViewModel
 import com.github.k1rakishou.chan.features.setup.ComposeBoardsControllerViewModel
 import com.github.k1rakishou.chan.features.setup.ComposeBoardsSelectorControllerViewModel
+import com.github.k1rakishou.chan.features.setup.CompositeCatalogsSetupControllerViewModel
 import com.github.k1rakishou.chan.features.site_archive.BoardArchiveViewModel
 import com.github.k1rakishou.chan.features.thread_downloading.LocalArchiveViewModel
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsViewModel
@@ -159,6 +160,13 @@ abstract class ViewModelModule {
   @Binds
   abstract fun bindThreadDownloaderSettingsViewModel(
     impl: ThreadDownloaderSettingsViewModel.ViewModelFactory
+  ): ViewModelAssistedFactory<out ViewModel>
+
+  @IntoMap
+  @ViewModelKey(CompositeCatalogsSetupControllerViewModel::class)
+  @Binds
+  abstract fun bindCompositeCatalogsSetupControllerViewModel(
+    impl: CompositeCatalogsSetupControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
 
 }

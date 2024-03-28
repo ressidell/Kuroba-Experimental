@@ -23,11 +23,12 @@ fun KurobaComposeCardView(
   val chanTheme = LocalChanTheme.current
 
   Card(
+    modifier = modifier,
     shape = shape,
     backgroundColor = backgroundColor ?: chanTheme.backColorCompose,
     elevation = elevation
   ) {
-    Box(modifier = modifier) {
+    Box {
       content()
     }
   }

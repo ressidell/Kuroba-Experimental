@@ -133,9 +133,7 @@ class BoardsSetupController(
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.String(context.getString(R.string.controller_boards_setup_title, siteDescriptor.siteName))

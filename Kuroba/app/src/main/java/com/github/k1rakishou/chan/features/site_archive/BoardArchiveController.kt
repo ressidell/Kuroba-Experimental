@@ -87,9 +87,7 @@ class BoardArchiveController(
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.String(getString(R.string.controller_board_archive_title, catalogDescriptor.boardCode()))

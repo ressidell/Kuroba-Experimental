@@ -106,9 +106,7 @@ class ThemeSettingsController(context: Context) : Controller(context) {
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.Id(R.string.settings_screen_theme)
@@ -462,7 +460,11 @@ class ThemeSettingsController(context: Context) : Controller(context) {
       )
 
       kurobaToolbarState.enterDefaultMode(
-        leftItem = BackArrowMenuItem(onClick = {  }),
+        leftItem = BackArrowMenuItem(
+          onClick = {
+            // no-op
+          }
+        ),
         middleContent = ToolbarMiddleContent.Title(
           title = ToolbarText.String(theme.name)
         ),

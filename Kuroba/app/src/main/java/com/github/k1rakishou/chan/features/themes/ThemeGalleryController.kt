@@ -75,9 +75,7 @@ class ThemeGalleryController(
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.String(getString(R.string.theme_gallery_screen_theme_gallery, themeType))
@@ -157,7 +155,11 @@ class ThemeGalleryController(
       )
 
       kurobaToolbarState.enterDefaultMode(
-        leftItem = BackArrowMenuItem(onClick = {  }),
+        leftItem = BackArrowMenuItem(
+          onClick = {
+            // no-op
+          }
+        ),
         middleContent = ToolbarMiddleContent.Title(
           title = ToolbarText.String(chanTheme.name)
         )

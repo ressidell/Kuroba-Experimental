@@ -72,7 +72,7 @@ import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
-import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
@@ -147,9 +147,9 @@ class LocalArchiveController(
     )
 
     toolbarState.enterDefaultMode(
-      leftItem = BackArrowMenuItem(
+      leftItem = HamburgMenuItem(
         onClick = {
-          // TODO: New toolbar
+          // TODO: New toolbar. Open the drawer.
         }
       ),
       middleContent = ToolbarMiddleContent.Title(
@@ -168,7 +168,12 @@ class LocalArchiveController(
         withMenuItem(
           id = ACTION_UPDATE_ALL,
           drawableId = R.drawable.ic_refresh_white_24dp,
-          onClick = { onRefreshClicked() }
+          onClick = {
+            toolbarState.findItem(ACTION_UPDATE_ALL)
+              ?.spinItemOnce()
+
+            onRefreshClicked()
+          }
         )
       }
     )

@@ -86,6 +86,7 @@ import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_OFF
 import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -266,6 +267,9 @@ class Chan : Application(), ActivityLifecycleCallbacks {
       maxPostsInDatabaseSettingValue = 75000,
       maxThreadsInDatabaseSettingValue = 12500
     )
+
+    // Preload user-agent on a background thread
+    applicationScope.launch(Dispatchers.IO) { appConstants.userAgent }
 
     applicationMigrationManager.performMigration(this)
 

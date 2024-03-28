@@ -20,9 +20,7 @@ class JsCaptchaCookiesEditorController(context: Context) :
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.Id(R.string.js_captcha_cookies_editor_controller_title)

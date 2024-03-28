@@ -112,7 +112,7 @@ class ComposeBoardsController(
         state = reoderableState.listState,
         modifier = Modifier
           .fillMaxWidth()
-          .weight(1f)
+          .weight(1f, false)
           .simpleVerticalScrollbar(reoderableState.listState, chanTheme)
           .reorderable(
             state = reoderableState,

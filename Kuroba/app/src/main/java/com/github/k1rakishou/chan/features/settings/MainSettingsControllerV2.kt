@@ -22,7 +22,7 @@ import com.github.k1rakishou.chan.features.settings.setting.LinkSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.ListSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.RangeSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.SettingV2
-import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
@@ -90,9 +90,9 @@ class MainSettingsControllerV2(
     )
 
     toolbarState.enterDefaultMode(
-      leftItem = BackArrowMenuItem(
+      leftItem = HamburgMenuItem(
         onClick = {
-          // TODO: New toolbar
+          // TODO: New toolbar. Open the drawer.
         }
       ),
       middleContent = ToolbarMiddleContent.Title(

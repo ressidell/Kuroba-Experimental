@@ -30,7 +30,6 @@ import com.github.k1rakishou.chan.features.settings.setting.MapSettingV2
 import com.github.k1rakishou.common.isNotNullNorBlank
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
-import com.github.k1rakishou.prefs.MapSetting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -226,7 +225,7 @@ class SiteSettingsPresenter(
           },
           callback = {
             withViewNormal {
-              openControllerWrappedIntoBottomNavAwareController(LoginController(context, site))
+              pushController(LoginController(context, site))
             }
           }
         )

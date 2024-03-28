@@ -72,6 +72,7 @@ class CompositeCatalogsSetupController(
   private val viewModel by lazy {
     requireComponentActivity().viewModelByKey<CompositeCatalogsSetupControllerViewModel>()
   }
+
   private val bottomPadding = mutableStateOf(0)
   private val rendezvousCoroutineExecutor = RendezvousCoroutineExecutor(controllerScope)
 
@@ -84,9 +85,7 @@ class CompositeCatalogsSetupController(
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.Id(R.string.controller_composite_catalogs_setup_title)

@@ -390,7 +390,7 @@ class BookmarksController(
     toolbarState.enterDefaultMode(
       leftItem = HamburgMenuItem(
         onClick = { toolbarIcon ->
-          // TODO: New toolbar.
+          // TODO: New toolbar. Open the drawer.
         }
       ),
       middleContent = ToolbarMiddleContent.Title(

@@ -12,5 +12,5 @@ interface DoubleNavigationController : ControllerWithNavigation, HasNavigation {
 
   fun switchToController(leftController: Boolean, animated: Boolean)
   fun switchToController(leftController: Boolean)
-  fun openControllerWrappedIntoBottomNavAwareController(controller: Controller?)
+  fun openControllerWrappedIntoBottomNavAwareController(controller: Controller)
 }

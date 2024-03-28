@@ -40,9 +40,7 @@ class WebViewReportController(
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.String(appResources.string(R.string.report_screen, getTitle(post, null)))

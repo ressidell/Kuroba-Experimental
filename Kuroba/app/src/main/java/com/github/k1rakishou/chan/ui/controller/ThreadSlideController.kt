@@ -231,10 +231,8 @@ class ThreadSlideController(
     return rightController
   }
 
-  override fun openControllerWrappedIntoBottomNavAwareController(controller: Controller?) {
-    if (controller != null) {
-      requireStartActivity().openControllerWrappedIntoBottomNavAwareController(controller)
-    }
+  override fun openControllerWrappedIntoBottomNavAwareController(controller: Controller) {
+    requireStartActivity().openControllerWrappedIntoBottomNavAwareController(controller)
   }
 
   override fun pushController(to: Controller): Boolean {

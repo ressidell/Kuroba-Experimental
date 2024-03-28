@@ -23,7 +23,7 @@ import com.github.k1rakishou.chan.features.search.epoxy.epoxyBoardSelectionButto
 import com.github.k1rakishou.chan.features.search.epoxy.epoxyButtonView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchInputView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchSiteView
-import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
@@ -79,9 +79,9 @@ class GlobalSearchController(
     )
 
     toolbarState.enterDefaultMode(
-      leftItem = BackArrowMenuItem(
+      leftItem = HamburgMenuItem(
         onClick = {
-          // TODO: New toolbar
+          // TODO: New toolbar. Open the drawer.
         }
       ),
       middleContent = ToolbarMiddleContent.Title(
