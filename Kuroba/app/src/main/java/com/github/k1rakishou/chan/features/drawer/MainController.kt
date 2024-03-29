@@ -1,19 +1,3 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.features.drawer
 
 import android.annotation.SuppressLint
@@ -155,6 +139,7 @@ import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -218,6 +203,8 @@ class MainController(
   private lateinit var drawer: TouchBlockingLinearLayoutNoBackground
   private lateinit var navigationViewContract: NavigationViewContract
   private lateinit var bottomMenuPanel: BottomMenuPanel
+
+  private val _latestDrawerEnableState = MutableStateFlow<DrawerEnableState?>(null)
 
   private val kurobaComposeBottomPanel by lazy {
     KurobaComposeIconPanel(
@@ -398,13 +385,32 @@ class MainController(
           )
         }
       )
-        .onEach { drawerState ->
+        .onEach { drawerEnableState ->
+          _latestDrawerEnableState.value = drawerEnableState
+
           if (drawerLayout.isDrawerOpen(drawer)) {
             setDrawerEnabled(true)
             return@onEach
           }
 
-          setDrawerEnabled(drawerState.isDrawerEnabled())
+          setDrawerEnabled(drawerEnableState.isDrawerEnabled())
+        }
+        .collect()
+    }
+
+    controllerScope.launch {
+      globalUiStateHolder.drawer.drawerOpenCloseEventFlow
+        .onEach { openDrawer ->
+          val latestDrawerEnableState = _latestDrawerEnableState.value
+          if (latestDrawerEnableState != null && !latestDrawerEnableState.isDrawerEnabled()) {
+            return@onEach
+          }
+
+          if (openDrawer && !drawerLayout.isOpen) {
+            drawerLayout.openDrawer(drawer)
+          } else if (!openDrawer && drawerLayout.isOpen) {
+            drawerLayout.closeDrawer(drawer)
+          }
         }
         .collect()
     }
@@ -1479,9 +1485,10 @@ class MainController(
       )
     }
 
-    val alpha = .35f
 
     val targetColor = if (transition.isRunning) {
+      val alpha = .35f
+
       when {
         currentAdditionalInfo.newQuotes > 0 -> {
           chanTheme.bookmarkCounterHasRepliesColorCompose.copy(alpha = alpha)

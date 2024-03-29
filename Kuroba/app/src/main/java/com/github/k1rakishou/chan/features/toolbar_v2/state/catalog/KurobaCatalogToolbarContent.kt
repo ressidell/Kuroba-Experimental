@@ -57,7 +57,7 @@ fun KurobaCatalogToolbarContent(
         onClick = {
           val iconClickInterceptor = state.iconClickInterceptor
 
-          if (iconClickInterceptor == null || iconClickInterceptor(leftIcon)) {
+          if (iconClickInterceptor == null || !iconClickInterceptor(leftIcon)) {
             leftIcon.onClick(leftIcon)
           }
         }

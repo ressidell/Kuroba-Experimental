@@ -92,7 +92,9 @@ class MainSettingsControllerV2(
     toolbarState.enterDefaultMode(
       leftItem = HamburgMenuItem(
         onClick = {
-          // TODO: New toolbar. Open the drawer.
+          globalUiStateHolder.updateDrawerState {
+            openDrawer()
+          }
         }
       ),
       middleContent = ToolbarMiddleContent.Title(

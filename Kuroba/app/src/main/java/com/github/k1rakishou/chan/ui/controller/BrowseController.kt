@@ -787,7 +787,9 @@ class BrowseController(
     toolbarState.enterCatalogMode(
       leftItem = HamburgMenuItem(
         onClick = {
-          // TODO: New toolbar. Open the drawer.
+          globalUiStateHolder.updateDrawerState {
+            openDrawer()
+          }
         }
       ),
       menuBuilder = {

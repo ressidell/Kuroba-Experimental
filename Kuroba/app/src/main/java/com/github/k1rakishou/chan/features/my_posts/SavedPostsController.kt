@@ -97,8 +97,10 @@ class SavedPostsController(
 
     toolbarState.enterDefaultMode(
       leftItem = HamburgMenuItem(
-        onClick = { toolbarIcon ->
-          // TODO: New toolbar. Open the drawer.
+        onClick = {
+          globalUiStateHolder.updateDrawerState {
+            openDrawer()
+          }
         }
       ),
       middleContent = ToolbarMiddleContent.Title(
