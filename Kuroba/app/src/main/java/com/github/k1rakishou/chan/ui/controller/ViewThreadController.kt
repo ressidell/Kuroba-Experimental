@@ -478,7 +478,10 @@ open class ViewThreadController(
     toolbarState.enterThreadMode(
       leftItem = BackArrowMenuItem(
         onClick = {
-          // TODO: New toolbar. Go back to catalog controller.
+          doubleNavigationController?.switchToController(
+            leftController = true,
+            animated = true
+          )
         }
       ),
       scrollableTitle = ChanSettings.scrollingTextForThreadTitles.get(),
