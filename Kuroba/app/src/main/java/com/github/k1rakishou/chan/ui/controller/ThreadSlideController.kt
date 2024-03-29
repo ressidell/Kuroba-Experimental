@@ -13,8 +13,11 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.controller.transition.ControllerTransition
+import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
+import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutBoundsStates
@@ -45,8 +48,43 @@ class ThreadSlideController(
   private var leftController: BrowseController? = null
   private var rightController: ViewThreadController? = null
   private var mainControllerCallbacks: MainControllerCallbacks?
-  private var leftOpen = true
   private var slidingPaneLayout: ThreadSlidingPaneLayout? = null
+  private var leftOpen = true
+  private var onSlidingInProgress = false
+
+  private val emptyCatalogToolbar by lazy(LazyThreadSafetyMode.NONE) {
+    val kurobaToolbarState = KurobaToolbarState(
+      controllerKey = controllerKey,
+      globalUiStateHolder = globalUiStateHolder
+    )
+
+    kurobaToolbarState.enterDefaultMode(
+      leftItem = HamburgMenuItem(
+        onClick = {
+          // no-op
+        }
+      )
+    )
+
+    return@lazy kurobaToolbarState
+  }
+
+  private val emptyThreadToolbar by lazy(LazyThreadSafetyMode.NONE) {
+    val kurobaToolbarState = KurobaToolbarState(
+      controllerKey = controllerKey,
+      globalUiStateHolder = globalUiStateHolder
+    )
+
+    kurobaToolbarState.enterDefaultMode(
+      leftItem = BackArrowMenuItem(
+        onClick = {
+          // TODO: New toolbar. Switch to catalog controller.
+        }
+      )
+    )
+
+    return@lazy kurobaToolbarState
+  }
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -143,8 +181,9 @@ class ThreadSlideController(
     }
   }
 
+  @Suppress("RedundantIf")
   override fun onPanelSlide(panel: View, slideOffset: Float) {
-
+    startOrUpdateToolbarTransition(slideOffset)
   }
 
   override fun onPanelOpened(panel: View) {
@@ -152,6 +191,8 @@ class ThreadSlideController(
       leftOpen = leftOpen()
       slideStateChanged()
     }
+
+    finishToolbarTransition()
   }
 
   override fun onPanelClosed(panel: View) {
@@ -159,6 +200,8 @@ class ThreadSlideController(
       leftOpen = leftOpen()
       slideStateChanged()
     }
+
+    finishToolbarTransition()
   }
 
   override fun switchToController(leftController: Boolean) {
@@ -332,21 +375,66 @@ class ThreadSlideController(
     requireToolbarNavController().toolbarState.updateFromState(getToolbarState(left))
   }
 
-  private fun getToolbarState(leftOpen: Boolean): KurobaToolbarState {
-    var kurobaToolbarState = if (leftOpen) {
+  private fun getToolbarState(forCatalog: Boolean): KurobaToolbarState {
+    var kurobaToolbarState = if (forCatalog) {
       leftController?.toolbarState
     } else {
       rightController?.toolbarState
     }
 
     if (kurobaToolbarState == null) {
-      kurobaToolbarState = KurobaToolbarState(
-        controllerKey = controllerKey,
-        globalUiStateHolder = globalUiStateHolder
-      )
+      kurobaToolbarState = if (forCatalog) {
+        emptyCatalogToolbar
+      } else {
+        emptyThreadToolbar
+      }
     }
 
     return kurobaToolbarState
+  }
+
+  private fun startOrUpdateToolbarTransition(slideOffset: Float) {
+    if (onSlidingInProgress) {
+      requireToolbarNavController().toolbarState.onTransitionProgress(
+        progress = slideOffset
+      )
+
+      return
+    }
+
+    onSlidingInProgress = true
+
+    // If left (catalog) is currently opened then we want to transition into right's (thread) controller's toolbar and
+    // vice versa.
+    val forCatalog = slideOffset <= 0.5f
+
+    val transitionMode = if (forCatalog) {
+      TransitionMode.In
+    } else {
+      TransitionMode.Out
+    }
+
+    val kurobaToolbarState = getToolbarState(forCatalog = forCatalog)
+
+    requireToolbarNavController().toolbarState.onTransitionProgressStart(
+      other = kurobaToolbarState,
+      transitionMode = transitionMode
+    )
+  }
+
+  private fun finishToolbarTransition() {
+    if (!onSlidingInProgress) {
+      return
+    }
+
+    val forCatalog = leftOpen()
+    val kurobaToolbarState = getToolbarState(forCatalog = forCatalog)
+
+    requireToolbarNavController().toolbarState.onTransitionProgressFinished(
+      other = kurobaToolbarState
+    )
+
+    onSlidingInProgress = false
   }
 
   fun passMotionEventIntoSlidingPaneLayout(event: MotionEvent): Boolean {
