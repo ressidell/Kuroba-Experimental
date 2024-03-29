@@ -60,6 +60,8 @@ fun KurobaThreadToolbarContent(
         subtitle = null,
         scrollableTitle = scrollableTitle
       )
+    } else {
+      Spacer(modifier = Modifier.weight(1f))
     }
 
     if (toolbarMenu != null) {

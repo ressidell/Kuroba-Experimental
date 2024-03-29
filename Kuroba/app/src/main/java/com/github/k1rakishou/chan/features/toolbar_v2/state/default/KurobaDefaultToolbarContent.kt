@@ -64,7 +64,7 @@ fun KurobaDefaultToolbarContent(
         }
       }
       null -> {
-        // no-op
+        Spacer(modifier = Modifier.weight(1f))
       }
     }
 

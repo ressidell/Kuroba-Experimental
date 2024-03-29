@@ -35,7 +35,6 @@ import com.github.k1rakishou.model.repository.ChanPostRepository
 import com.github.k1rakishou.model.util.ChanPostUtils
 import dagger.Lazy
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -87,7 +86,7 @@ class BrowsePresenter @Inject constructor(
             && boardManager.activeBoardsCountForAllSites() <= 0
 
           if (catalogDescriptor == null && noMoreCatalogs) {
-            currentOpenedCatalog = catalogDescriptor
+            currentOpenedCatalog = null
             callback?.showSitesNotSetup()
           } else if (catalogDescriptor != null) {
             currentOpenedCatalog = catalogDescriptor

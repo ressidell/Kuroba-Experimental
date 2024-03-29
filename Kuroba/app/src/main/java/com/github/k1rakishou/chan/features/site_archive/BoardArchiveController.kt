@@ -207,11 +207,17 @@ class BoardArchiveController(
     )
 
     if (!searchState.usingSearch) {
-      DisposableEffect(key1 = Unit, effect = {
-        onDispose {
-          viewModel.updatePrevLazyListState(state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset)
+      DisposableEffect(
+        key1 = Unit,
+        effect = {
+          onDispose {
+            viewModel.updatePrevLazyListState(
+              firstVisibleItemIndex = state.firstVisibleItemIndex,
+              firstVisibleItemScrollOffset = state.firstVisibleItemScrollOffset
+            )
+          }
         }
-      })
+      )
     }
 
     val topPd by topPadding

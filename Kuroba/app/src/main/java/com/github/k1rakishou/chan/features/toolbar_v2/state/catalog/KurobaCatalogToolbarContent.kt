@@ -81,6 +81,8 @@ fun KurobaCatalogToolbarContent(
         subtitle = subtitle,
         scrollableTitle = false
       )
+    } else {
+      Spacer(modifier = Modifier.weight(1f))
     }
 
     if (toolbarMenu != null) {

@@ -103,7 +103,6 @@ class BrowseController(
 
   private lateinit var serializedCoroutineExecutor: SerializedCoroutineExecutor
 
-  private var toolbarUpdatedAfterFirstCatalogLoad = false
   private var updateCompositeCatalogNavigationSubtitleJob: Job? = null
 
   override val threadControllerType: ThreadControllerType
@@ -130,7 +129,7 @@ class BrowseController(
       )
     )
 
-    buildMenu(catalogLoaded = false)
+    buildMenu()
 
     // Presenter
     presenter.create(controllerScope, this)
@@ -143,7 +142,10 @@ class BrowseController(
     serializedCoroutineExecutor.post {
       val order = PostsFilter.Order.find(ChanSettings.boardOrder.get())
 
-      threadLayout.presenter.setOrder(order, isManuallyChangedOrder = false)
+      threadLayout.presenter.setOrder(
+        order = order,
+        isManuallyChangedOrder = false
+      )
     }
 
     controllerScope.launch {
@@ -219,14 +221,9 @@ class BrowseController(
     controllerScope.launch(Dispatchers.Main.immediate) {
       Logger.d(TAG, "loadCatalog($catalogDescriptor)")
 
-      updateToolbarTitle(catalogDescriptor)
       threadLayout.presenter.bindChanDescriptor(catalogDescriptor as ChanDescriptor)
 
-      if (!toolbarUpdatedAfterFirstCatalogLoad) {
-        toolbarUpdatedAfterFirstCatalogLoad = true
-        buildMenu(catalogLoaded = true)
-      }
-
+      updateToolbarTitle(catalogDescriptor)
       updateMenuItems()
     }
   }
@@ -237,39 +234,40 @@ class BrowseController(
     updateCompositeCatalogNavigationSubtitleJob?.cancel()
     updateCompositeCatalogNavigationSubtitleJob = null
 
-    if (catalogDescriptor is CatalogDescriptor) {
-      val boardDescriptor = catalogDescriptor.boardDescriptor
+    when (catalogDescriptor) {
+      is CatalogDescriptor -> {
+        val boardDescriptor = catalogDescriptor.boardDescriptor
 
-      val board = boardManager.byBoardDescriptor(boardDescriptor)
-        ?: return
-
-      toolbarState.catalog.updateTitle(
-        newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/"),
-        newSubTitle = ToolbarText.String(board.name ?: "")
-      )
-    } else {
-      catalogDescriptor as ChanDescriptor.CompositeCatalogDescriptor
-
-      toolbarState.catalog.updateTitle(
-        newTitle = ToolbarText.Id(R.string.composite_catalog),
-        newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
-      )
-
-      updateCompositeCatalogNavigationSubtitleJob = controllerScope.launch {
-        val newTitle = presenter.getCompositeCatalogNavigationTitle(catalogDescriptor)
-
-        val compositeCatalogSubTitle = SpannableHelper.getCompositeCatalogNavigationSubtitle(
-          siteManager = siteManager,
-          coroutineScope = this,
-          context = context,
-          fontSizePx = sp(12f),
-          compositeCatalogDescriptor = catalogDescriptor
-        )
+        val board = boardManager.byBoardDescriptor(boardDescriptor)
+          ?: return
 
         toolbarState.catalog.updateTitle(
-          newTitle = ToolbarText.String(newTitle ?: ""),
-          newSubTitle = ToolbarText.Spanned(compositeCatalogSubTitle)
+          newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/"),
+          newSubTitle = ToolbarText.String(board.name ?: "")
         )
+      }
+      is ChanDescriptor.CompositeCatalogDescriptor -> {
+        toolbarState.catalog.updateTitle(
+          newTitle = ToolbarText.Id(R.string.composite_catalog),
+          newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
+        )
+
+        updateCompositeCatalogNavigationSubtitleJob = controllerScope.launch {
+          val newTitle = presenter.getCompositeCatalogNavigationTitle(catalogDescriptor)
+
+          val compositeCatalogSubTitle = SpannableHelper.getCompositeCatalogNavigationSubtitle(
+            siteManager = siteManager,
+            coroutineScope = this,
+            context = context,
+            fontSizePx = sp(12f),
+            compositeCatalogDescriptor = catalogDescriptor
+          )
+
+          toolbarState.catalog.updateTitle(
+            newTitle = ToolbarText.String(newTitle ?: ""),
+            newSubTitle = ToolbarText.Spanned(compositeCatalogSubTitle)
+          )
+        }
       }
     }
   }
@@ -760,7 +758,7 @@ class BrowseController(
   }
 
   @Suppress("MoveLambdaOutsideParentheses")
-  private fun buildMenu(catalogLoaded: Boolean) {
+  private fun buildMenu() {
     val modeStringId = when (ChanSettings.boardPostViewMode.get()) {
       BoardPostViewMode.LIST -> R.string.action_switch_catalog_grid
       BoardPostViewMode.GRID -> R.string.action_switch_catalog_stagger
@@ -771,19 +769,6 @@ class BrowseController(
     val isCompositeCatalog = threadLayout.presenter.currentChanDescriptor is ChanDescriptor.CompositeCatalogDescriptor
     val isUnlimitedCatalog = threadLayout.presenter.isUnlimitedCatalog && !isCompositeCatalog
 
-    // TODO: New toolbar
-    if (catalogLoaded) {
-//      if (!initialized) {
-//        return@setMiddleMenu
-//      }
-//
-//      if (!siteManager.areSitesSetup()) {
-//        openSitesSetupController()
-//      } else {
-//        openBoardSelectionController()
-//      }
-    }
-
     toolbarState.enterCatalogMode(
       leftItem = HamburgMenuItem(
         onClick = {
@@ -792,6 +777,13 @@ class BrowseController(
           }
         }
       ),
+      onMainContentClick = {
+        if (!siteManager.areSitesSetup()) {
+          openSitesSetupController()
+        } else {
+          openBoardSelectionController()
+        }
+      },
       menuBuilder = {
         withMenuItem(drawableId = R.drawable.ic_search_white_24dp, onClick = { item -> searchClicked(item) })
         withMenuItem(drawableId = R.drawable.ic_refresh_white_24dp, onClick = { item -> reloadClicked(item) })

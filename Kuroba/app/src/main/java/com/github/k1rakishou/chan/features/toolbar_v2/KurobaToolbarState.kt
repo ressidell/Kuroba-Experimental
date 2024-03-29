@@ -143,6 +143,7 @@ class KurobaToolbarState(
 
   fun enterCatalogMode(
     leftItem: ToolbarMenuItem?,
+    onMainContentClick: () -> Unit,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
     iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
   ) {
@@ -153,6 +154,7 @@ class KurobaToolbarState(
       params = KurobaCatalogToolbarParams(
         leftItem = leftItem,
         toolbarMenu = toolbarMenuBuilder.build(),
+        onMainContentClick = onMainContentClick,
         iconClickInterceptor = iconClickInterceptor
       ),
       state = catalog
