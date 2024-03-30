@@ -305,6 +305,20 @@ fun fixImageUrlIfNecessary(requestUrl: String, imageUrl: String?): String? {
 }
 
 @Composable
+fun rememberComposableLambda(vararg keys: Any, block: @Composable () -> Unit): @Composable () -> Unit {
+  return remember(keys) { { block() } }
+}
+
+@Suppress("UnnecessaryVariable")
+@Composable
+fun <T> rememberComposableLambda(vararg keys: Any, block: @Composable (T) -> Unit): @Composable (T) -> Unit {
+  return remember(keys) {
+    val func: @Composable (T) -> Unit = { value: T -> block(value) }
+    return@remember func
+  }
+}
+
+@Composable
 inline fun <reified VM : ViewModel> rememberViewModel(
   key: String? = null,
   noinline defaultArgs: (@DisallowComposableCalls () -> Bundle)? = null

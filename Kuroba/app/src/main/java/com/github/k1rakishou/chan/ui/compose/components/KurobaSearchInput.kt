@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.ui.compose.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import com.github.k1rakishou.chan.ui.compose.clearText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.OverrideChanTheme
+import com.github.k1rakishou.chan.utils.rememberComposableLambda
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 
@@ -107,7 +109,8 @@ fun KurobaSearchInput(
   modifier: Modifier = Modifier,
   onBackgroundColor: Color,
   searchQueryState: TextFieldState,
-  labelText: String = stringResource(id = R.string.search_hint)
+  interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+  labelText: String? = null
 ) {
   val chanTheme = LocalChanTheme.current
 
@@ -120,8 +123,6 @@ fun KurobaSearchInput(
           .align(Alignment.CenterVertically)
           .padding(horizontal = 4.dp)
       ) {
-        val interactionSource = remember { MutableInteractionSource() }
-
         val textColor = remember(key1 = onBackgroundColor) {
           if (ThemeEngine.isDarkColor(onBackgroundColor)) {
             Color.White
@@ -136,6 +137,19 @@ fun KurobaSearchInput(
             newTextColorPrimary = ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)
           )
         ) {
+          val labelFunc: (@Composable (InteractionSource) -> Unit)? = if (labelText == null) {
+            null
+          } else {
+            rememberComposableLambda<InteractionSource>(labelText, interactionSource) {
+              KurobaLabelText(
+                enabled = true,
+                labelText = labelText,
+                fontSize = 12.ktu,
+                interactionSource = interactionSource
+              )
+            }
+          }
+
           KurobaComposeTextFieldV2(
             modifier = Modifier
               .wrapContentHeight()
@@ -145,14 +159,7 @@ fun KurobaSearchInput(
             textStyle = remember(key1 = textColor) { TextStyle.Default.copy(color = textColor) },
             lineLimits = TextFieldLineLimits.SingleLine,
             interactionSource = interactionSource,
-            label = {
-              KurobaLabelText(
-                enabled = true,
-                labelText = labelText,
-                fontSize = 12.ktu,
-                interactionSource = interactionSource
-              )
-            }
+            label = labelFunc
           )
         }
       }
