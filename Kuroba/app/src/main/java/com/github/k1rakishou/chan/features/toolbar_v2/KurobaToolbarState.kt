@@ -183,6 +183,7 @@ class KurobaToolbarState(
 
   fun enterDefaultMode(
     leftItem: ToolbarMenuItem?,
+    scrollableTitle: Boolean = false,
     middleContent: ToolbarMiddleContent? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
     iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
@@ -193,6 +194,7 @@ class KurobaToolbarState(
     enterToolbarMode(
       params = KurobaDefaultToolbarParams(
         leftItem = leftItem,
+        scrollableTitle = scrollableTitle,
         middleContent = middleContent,
         toolbarMenu = toolbarMenuBuilder.build(),
         iconClickInterceptor = iconClickInterceptor

@@ -31,6 +31,8 @@ fun KurobaDefaultToolbarContent(
   val toolbarMenuMut by state.toolbarMenu
   val toolbarMenu = toolbarMenuMut
 
+  val scrollableTitle by state.scrollableTitle
+
   Row(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically
@@ -59,7 +61,7 @@ fun KurobaDefaultToolbarContent(
               .padding(start = 12.dp),
             title = middleContent.title,
             subtitle = middleContent.subtitle,
-            scrollableTitle = false
+            scrollableTitle = scrollableTitle
           )
         }
       }

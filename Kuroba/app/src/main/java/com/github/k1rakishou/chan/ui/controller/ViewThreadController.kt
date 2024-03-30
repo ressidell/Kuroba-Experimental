@@ -90,8 +90,7 @@ open class ViewThreadController(
 
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
-        hasDrawer = true,
-        scrollableTitle = ChanSettings.scrollingTextForThreadTitles.get()
+        hasDrawer = true
       )
     )
 

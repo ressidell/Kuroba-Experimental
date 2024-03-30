@@ -79,7 +79,8 @@ internal fun ToolbarTitleWithSubtitle(
       KurobaComposeText(
         modifier = Modifier
           .wrapContentWidth()
-          .wrapContentHeight(),
+          .wrapContentHeight()
+          .then(marqueeModifier),
         text = subtitle.resolve(),
         fontSize = 14.ktu,
         color = textColor,

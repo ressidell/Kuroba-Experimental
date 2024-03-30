@@ -15,6 +15,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 @Immutable
 data class KurobaDefaultToolbarParams(
   val leftItem: ToolbarMenuItem? = null,
+  val scrollableTitle: Boolean = false,
   val middleContent: ToolbarMiddleContent? = null,
   val toolbarMenu: ToolbarMenu? = null,
   val iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
@@ -29,6 +30,10 @@ class KurobaDefaultToolbarState(
   private val _leftItem = mutableStateOf<ToolbarMenuItem?>(params.leftItem)
   val leftItem: State<ToolbarMenuItem?>
     get() = _leftItem
+
+  private val _scrollableTitle = mutableStateOf<Boolean>(params.scrollableTitle)
+  val scrollableTitle: State<Boolean>
+    get() = _scrollableTitle
 
   private val _middleContent = mutableStateOf<ToolbarMiddleContent?>(params.middleContent)
   val middleContent: State<ToolbarMiddleContent?>
@@ -54,6 +59,7 @@ class KurobaDefaultToolbarState(
     params as KurobaDefaultToolbarParams
 
     _leftItem.value = params.leftItem
+    _scrollableTitle.value = params.scrollableTitle
     _middleContent.value = params.middleContent
     _toolbarMenu.value = params.toolbarMenu
     _iconClickInterceptor = params.iconClickInterceptor
@@ -63,6 +69,7 @@ class KurobaDefaultToolbarState(
     toolbarState as KurobaDefaultToolbarState
 
     _leftItem.value = toolbarState._leftItem.value
+    _scrollableTitle.value = toolbarState._scrollableTitle.value
     _middleContent.value = toolbarState._middleContent.value
     _toolbarMenu.value = toolbarState._toolbarMenu.value
     _iconClickInterceptor = toolbarState._iconClickInterceptor

@@ -73,17 +73,15 @@ class SearchResultsController(
 
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false,
-        scrollableTitle = true
+        swipeable = false
       )
     )
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar
-        }
+        onClick = { requireNavController().popController() }
       ),
+      scrollableTitle = true,
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.String("")
       )
