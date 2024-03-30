@@ -76,7 +76,6 @@ class ToolbarOverflowMenuBuilder {
 
     overflowItems += ToolbarMenuOverflowItem(
       id = id,
-      // TODO: New toolbar
       text = getString(stringId),
       visible = visible,
       enabled = enabled,
@@ -126,7 +125,6 @@ class ToolbarOverflowMenuBuilder {
 
     overflowItems += ToolbarMenuCheckableOverflowItem(
       id = id,
-      // TODO: New toolbar
       text = text,
       visible = visible,
       enabled = enabled,

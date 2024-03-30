@@ -77,9 +77,7 @@ class ThreadSlideController(
 
     kurobaToolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = {
-          // TODO: New toolbar. Switch to catalog controller.
-        }
+        onClick = { switchToController(leftController = true, animated = true) }
       )
     )
 
