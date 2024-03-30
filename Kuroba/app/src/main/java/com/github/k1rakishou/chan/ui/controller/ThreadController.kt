@@ -32,7 +32,6 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScroll
 import com.github.k1rakishou.chan.features.report.Chan4ReportPostController
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
-import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.ui.helper.OpenExternalThreadHelper
 import com.github.k1rakishou.chan.ui.helper.ShowPostsInExternalThreadHelper
@@ -138,7 +137,7 @@ abstract class ThreadController(
     get() = threadLayout.presenter.currentChanDescriptor
 
   override val kurobaToolbarState: KurobaToolbarState
-    get() = (navigationController as ToolbarNavigationController).toolbarState
+    get() = navigationController!!.requireToolbarNavController().containerToolbarState
 
   abstract override val threadControllerType: ThreadControllerType
 

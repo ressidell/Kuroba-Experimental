@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.features.toolbar_v2
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.unit.Dp
@@ -28,6 +27,9 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadT
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.common.quantize
 import com.github.k1rakishou.core_logger.Logger
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -44,9 +46,15 @@ class KurobaToolbarState(
   val toolbarLayerEventFlow: SharedFlow<KurobaToolbarStateEvent>
     get() = _toolbarLayerEventFlow.asSharedFlow()
 
-  private val _toolbarStates = mutableStateListOf<IKurobaToolbarState>()
+  private val _toolbarStateList = mutableStateOf<PersistentList<IKurobaToolbarState>>(persistentListOf())
+  val toolbarStateList: State<ImmutableList<IKurobaToolbarState>>
+    get() = _toolbarStateList
+
+  private val _toolbarList: PersistentList<IKurobaToolbarState>
+    get() = _toolbarStateList.value
+
   val topToolbar: IKurobaToolbarState?
-    get() = _toolbarStates.lastOrNull()
+    get() = _toolbarStateList.value.lastOrNull()
 
   private val _transitionToolbarState = mutableStateOf<KurobaToolbarTransition?>(null)
   val transitionToolbarState: State<KurobaToolbarTransition?>
@@ -118,13 +126,14 @@ class KurobaToolbarState(
   fun onTransitionProgressFinished(other: KurobaToolbarState) {
     _transitionToolbarState.value = null
 
+    // TODO: New toolbar. Might need to replace it with
+    //  containerToolbarState = getToolbarState(left)
     updateFromState(other)
   }
 
   fun updateFromState(toolbarState: KurobaToolbarState) {
     Snapshot.withMutableSnapshot {
-      _toolbarStates.clear()
-      _toolbarStates.addAll(toolbarState._toolbarStates)
+      _toolbarStateList.value = toolbarState._toolbarStateList.value
 
       container.updateFromState(toolbarState.container)
       default.updateFromState(toolbarState.default)
@@ -204,6 +213,7 @@ class KurobaToolbarState(
   }
 
   fun enterSearchMode(
+    initialSearchQuery: String? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
   ) {
     val toolbarMenuBuilder = ToolbarMenuBuilder()
@@ -211,6 +221,7 @@ class KurobaToolbarState(
 
     enterToolbarMode(
       params = KurobaSearchToolbarParams(
+        initialSearchQuery = initialSearchQuery,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
       state = search
@@ -218,7 +229,7 @@ class KurobaToolbarState(
   }
 
   fun isInSearchMode(): Boolean {
-    return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Search
+    return topToolbar?.kind == ToolbarStateKind.Search
   }
 
   fun enterSelectionMode(
@@ -238,7 +249,7 @@ class KurobaToolbarState(
   }
 
   fun isInSelectionMode(): Boolean {
-    return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Selection
+    return topToolbar?.kind == ToolbarStateKind.Selection
   }
 
   fun enterReplyMode(
@@ -256,16 +267,17 @@ class KurobaToolbarState(
   }
 
   fun isInReplyMode(): Boolean {
-    return _toolbarStates.lastOrNull()?.kind == ToolbarStateKind.Reply
+    return topToolbar?.kind == ToolbarStateKind.Reply
   }
 
   fun pop(): Boolean {
-    if (_toolbarStates.size <= 1) {
+    if (_toolbarList.size <= 1) {
       return false
     }
 
-    val topToolbar = _toolbarStates.removeLastOrNull()
+    val topToolbar = _toolbarList.lastOrNull()
     if (topToolbar != null) {
+      _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
       topToolbar.onPopped()
       _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Popped(topToolbar.kind))
     }
@@ -274,7 +286,7 @@ class KurobaToolbarState(
   }
 
   fun popAll() {
-    while (_toolbarStates.size > 1) {
+    while (_toolbarList.size > 1) {
       pop()
     }
   }
@@ -284,7 +296,7 @@ class KurobaToolbarState(
   }
 
   fun findItem(id: Int): ToolbarMenuItem? {
-    for (toolbarState in _toolbarStates) {
+    for (toolbarState in _toolbarList) {
       val toolbarMenuItem = toolbarState.findItem(id)
       if (toolbarMenuItem?.id == id) {
         return toolbarMenuItem
@@ -295,7 +307,7 @@ class KurobaToolbarState(
   }
 
   fun findOverflowItem(id: Int): ToolbarMenuOverflowItem? {
-    for (toolbarState in _toolbarStates) {
+    for (toolbarState in _toolbarList) {
       val toolbarOverflowMenuItem = toolbarState.findOverflowItem(id)
       if (toolbarOverflowMenuItem?.id == id) {
         return toolbarOverflowMenuItem
@@ -306,7 +318,7 @@ class KurobaToolbarState(
   }
 
   fun findCheckableOverflowItem(id: Int): ToolbarMenuCheckableOverflowItem? {
-    for (toolbarState in _toolbarStates) {
+    for (toolbarState in _toolbarList) {
       val toolbarCheckableOverflowMenuItem = toolbarState.findCheckableOverflowItem(id)
       if (toolbarCheckableOverflowMenuItem?.id == id) {
         return toolbarCheckableOverflowMenuItem
@@ -317,7 +329,7 @@ class KurobaToolbarState(
   }
 
   fun checkOrUncheckItem(subItem: ToolbarMenuCheckableOverflowItem, check: Boolean) {
-    for (toolbarState in _toolbarStates) {
+    for (toolbarState in _toolbarList) {
       toolbarState.checkOrUncheckItem(subItem, check)
     }
   }
@@ -342,16 +354,16 @@ class KurobaToolbarState(
   ) {
     Logger.debug(TAG) { "Toolbar '${toolbarKey}' entering state ${state.kind}" }
 
-    val indexOfState = _toolbarStates.indexOfFirst { prevLayer -> prevLayer.kind == params.kind }
+    val indexOfState = _toolbarList.indexOfFirst { prevLayer -> prevLayer.kind == params.kind }
     if (indexOfState >= 0) {
-      val prevToolbarLayer = _toolbarStates[indexOfState]
+      val prevToolbarLayer = _toolbarList[indexOfState]
       Snapshot.withMutableSnapshot { prevToolbarLayer.update(params) }
 
       _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Updated(prevToolbarLayer.kind))
     } else {
       Snapshot.withMutableSnapshot { state.update(params) }
 
-      _toolbarStates += state
+      _toolbarStateList.value = _toolbarList.add(state)
       state.onPushed()
 
       _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Pushed(state.kind))

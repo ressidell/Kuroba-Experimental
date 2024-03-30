@@ -59,7 +59,7 @@ class KurobaSelectionToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaSelectionToolbarState(title: ${_title.value})"
+    return "KurobaSelectionToolbarState(title: '${_title.value}')"
   }
 
 }

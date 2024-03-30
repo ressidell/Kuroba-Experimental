@@ -32,6 +32,8 @@ class BottomNavBarAwareNavigationController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
+  private lateinit var toolbar: KurobaToolbarView
+
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
   }
@@ -42,9 +44,9 @@ class BottomNavBarAwareNavigationController(
     view = inflate(context, R.layout.controller_navigation_bottom_nav_bar_aware)
     container = view.findViewById<NavigationControllerContainerLayout>(R.id.bottom_bar_aware_controller_container)
 
-    val toolbar = view.findViewById<KurobaToolbarView>(R.id.toolbar)
+    toolbar = view.findViewById<KurobaToolbarView>(R.id.toolbar)
     toolbar.init(this)
-    toolbarState.enterContainerMode()
+    containerToolbarState.enterContainerMode()
 
     // Wait a little bit so that GlobalWindowInsetsManager have time to get initialized so we can
     // use the insets
@@ -54,7 +56,7 @@ class BottomNavBarAwareNavigationController(
     }
 
     controllerScope.launch {
-      toolbarState.toolbarHeightState
+      containerToolbarState.toolbarHeightState
         .onEach { onInsetsChanged() }
         .collect()
     }
@@ -62,6 +64,10 @@ class BottomNavBarAwareNavigationController(
 
   override fun onDestroy() {
     super.onDestroy()
+
+    if (::toolbar.isInitialized) {
+      toolbar.destroy()
+    }
 
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
   }
@@ -73,7 +79,9 @@ class BottomNavBarAwareNavigationController(
       0
     }
 
-    val toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeightState.value?.toPx() }?.toInt() ?: 0
+    val toolbarHeight = with(appResources.composeDensity) {
+      containerToolbarState.toolbarHeightState.value?.toPx()
+    }?.toInt() ?: 0
 
     container?.updatePaddings(
       top = toolbarHeight,

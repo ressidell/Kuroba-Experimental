@@ -1913,7 +1913,7 @@ class MainController(
         menuItemBadgeInfo = null
       )
 
-      mainToolbarNavigationController?.toolbarState?.updateBadge(
+      mainToolbarNavigationController?.containerToolbarState?.updateBadge(
         count = 0,
         highImportance = false
       )
@@ -1934,7 +1934,7 @@ class MainController(
         )
       )
 
-      mainToolbarNavigationController?.toolbarState?.updateBadge(
+      mainToolbarNavigationController?.containerToolbarState?.updateBadge(
         count = state.totalUnseenPostsCount,
         highImportance = state.hasUnreadReplies
       )

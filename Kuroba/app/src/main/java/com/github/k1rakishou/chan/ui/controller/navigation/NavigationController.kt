@@ -212,7 +212,8 @@ abstract class NavigationController(context: Context) : Controller(context), Con
     }
 
     if (to != null) {
-      requireToolbarNavController().toolbarState.updateFromState(to.toolbarState)
+      // TODO: New toolbar. Might not work entirely correct.
+      containerToolbarState = to.toolbarState
     }
   }
 

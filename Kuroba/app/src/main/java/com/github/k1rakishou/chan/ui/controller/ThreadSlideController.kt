@@ -234,7 +234,7 @@ class ThreadSlideController(
       leftController.attachToParentView(slidingPaneLayout!!.leftPane)
       leftController.onShow()
       if (leftOpen()) {
-        setParentNavigationItem(true, animated)
+        updateContainerToolbarStateWithChildToolbarState(true, animated)
       }
     }
   }
@@ -256,7 +256,7 @@ class ThreadSlideController(
         rightController.onShow()
 
         if (!leftOpen()) {
-          setParentNavigationItem(false, animated)
+          updateContainerToolbarStateWithChildToolbarState(false, animated)
         }
       }
     } else {
@@ -322,7 +322,7 @@ class ThreadSlideController(
   }
 
   private fun slideStateChanged(animated: Boolean = true) {
-    setParentNavigationItem(leftOpen, animated)
+    updateContainerToolbarStateWithChildToolbarState(leftOpen, animated)
 
     if (leftOpen && rightController != null) {
       (rightController as ReplyAutoCloseListener).onReplyViewShouldClose()
@@ -369,7 +369,9 @@ class ThreadSlideController(
     }
   }
 
-  private fun setParentNavigationItem(left: Boolean, animate: Boolean) {
+  private fun updateContainerToolbarStateWithChildToolbarState(left: Boolean, animate: Boolean) {
+    // TODO: New toolbar. Might need to replace it with
+    //  containerToolbarState = getToolbarState(left)
     requireToolbarNavController().toolbarState.updateFromState(getToolbarState(left))
   }
 
@@ -393,7 +395,7 @@ class ThreadSlideController(
 
   private fun startOrUpdateToolbarTransition(slideOffset: Float) {
     if (onSlidingInProgress) {
-      requireToolbarNavController().toolbarState.onTransitionProgress(
+      containerToolbarState.onTransitionProgress(
         progress = slideOffset
       )
 
@@ -414,7 +416,7 @@ class ThreadSlideController(
 
     val kurobaToolbarState = getToolbarState(forCatalog = forCatalog)
 
-    requireToolbarNavController().toolbarState.onTransitionProgressStart(
+    containerToolbarState.onTransitionProgressStart(
       other = kurobaToolbarState,
       transitionMode = transitionMode
     )
@@ -428,7 +430,7 @@ class ThreadSlideController(
     val forCatalog = leftOpen()
     val kurobaToolbarState = getToolbarState(forCatalog = forCatalog)
 
-    requireToolbarNavController().toolbarState.onTransitionProgressFinished(
+    containerToolbarState.onTransitionProgressFinished(
       other = kurobaToolbarState
     )
 

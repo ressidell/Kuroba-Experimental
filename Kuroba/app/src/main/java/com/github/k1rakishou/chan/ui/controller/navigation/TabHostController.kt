@@ -105,7 +105,7 @@ class TabHostController(
     val topController = topController
       ?: return false
 
-    if (requireToolbarNavController().toolbarState.isInSearchMode()) {
+    if (containerToolbarState.isInSearchMode()) {
       return false
     }
 
@@ -194,6 +194,8 @@ class TabHostController(
       val childControllerToolbarState = childController.updateToolbarState()
       childController.onTabFocused()
 
+      // TODO: New toolbar. Might need to replace it with
+      //  containerToolbarState = getToolbarState(left)
       requireToolbarNavController().toolbarState.updateFromState(childControllerToolbarState)
     }
 

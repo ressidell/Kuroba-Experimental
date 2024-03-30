@@ -340,7 +340,7 @@ class FiltersController(
     coroutineScope: CoroutineScope
   ) {
     val searchState = rememberSimpleSearchStateV2<FiltersControllerViewModel.ChanFilterInfo>(
-      textFieldState = toolbarState.search.searchQueryState
+      textFieldState = toolbarState.search.currentSearchQueryState
     )
 
     val searchQuery = searchState.textFieldState.text

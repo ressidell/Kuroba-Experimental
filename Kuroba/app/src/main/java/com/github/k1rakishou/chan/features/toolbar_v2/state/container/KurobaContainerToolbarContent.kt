@@ -41,7 +41,9 @@ fun KurobaContainerToolbarContent(
     kurobaToolbarState.onToolbarHeightChanged(totalToolbarHeight)
   }
 
-  val topToolbarState = kurobaToolbarState.topToolbar
+  val toolbarStates by kurobaToolbarState.toolbarStateList
+  val topToolbarState = toolbarStates.lastOrNull()
+
   if (topToolbarState is KurobaContainerToolbarState) {
     return
   }

@@ -70,10 +70,13 @@ abstract class Controller(
   @Inject
   lateinit var appResources: AppResources
 
-  open val controllerKey: ControllerKey
+  val controllerKey: ControllerKey
     get() = ControllerKey(this::class.java.name)
   open val toolbarState: KurobaToolbarState
     get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
+  open var containerToolbarState: KurobaToolbarState
+    get() = requireToolbarNavController().containerToolbarState
+    set(value) { requireToolbarNavController().containerToolbarState = value }
 
   @JvmField
   var parentController: Controller? = null

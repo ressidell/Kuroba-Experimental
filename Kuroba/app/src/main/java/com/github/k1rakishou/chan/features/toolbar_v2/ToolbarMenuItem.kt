@@ -206,7 +206,12 @@ sealed interface ToolbarMiddleContent {
   data class Title(
     val title: ToolbarText?,
     val subtitle: ToolbarText? = null
-  ) : ToolbarMiddleContent
+  ) : ToolbarMiddleContent {
+
+    override fun toString(): String {
+      return "Title(${title}, ${subtitle})"
+    }
+  }
 
 }
 
@@ -229,7 +234,22 @@ sealed interface ToolbarText {
     }
   }
 
-  data class Id(val stringId: Int) : ToolbarText
-  data class String(val string: kotlin.String) : ToolbarText
-  data class Spanned(val string: AnnotatedString) : ToolbarText
+  data class Id(val stringId: Int) : ToolbarText {
+    override fun toString(): kotlin.String {
+      return "Id(${stringId})"
+    }
+  }
+
+  data class String(val string: kotlin.String) : ToolbarText {
+    override fun toString(): kotlin.String {
+      return "String('${string}')"
+    }
+  }
+
+  data class Spanned(val string: AnnotatedString) : ToolbarText {
+    override fun toString(): kotlin.String {
+      return "Spanned('${string.text}')"
+    }
+  }
+
 }

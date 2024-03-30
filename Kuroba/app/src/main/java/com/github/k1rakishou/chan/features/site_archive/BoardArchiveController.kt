@@ -184,7 +184,7 @@ class BoardArchiveController(
     val endReached by viewModel.endReached
 
     val searchState = rememberSimpleSearchStateV2<BoardArchiveViewModel.ArchiveThread>(
-      textFieldState = toolbarState.search.searchQueryState
+      textFieldState = toolbarState.search.currentSearchQueryState
     )
     val searchQuery = searchState.textFieldState.text
 

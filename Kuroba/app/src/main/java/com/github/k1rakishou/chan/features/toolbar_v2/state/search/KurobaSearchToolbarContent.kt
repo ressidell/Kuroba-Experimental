@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -36,7 +37,12 @@ fun KurobaSearchToolbarContent(
   val focusRequester = remember { FocusRequester() }
   val coroutineScope = rememberCoroutineScope()
 
-  val searchQueryState = state.searchQueryState
+  val searchVisibleState by state.searchVisibleState
+  if (!searchVisibleState) {
+    return
+  }
+
+  val searchQueryState by state.searchQueryState
 
   DisposableEffect(
     key1 = Unit,

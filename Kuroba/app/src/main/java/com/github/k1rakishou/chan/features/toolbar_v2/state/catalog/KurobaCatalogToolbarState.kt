@@ -94,7 +94,7 @@ class KurobaCatalogToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaCatalogToolbarState(title: ${_title.value}, subtitle: ${_subtitle.value})"
+    return "KurobaCatalogToolbarState(title: '${_title.value}', subtitle: '${_subtitle.value}')"
   }
 
 }

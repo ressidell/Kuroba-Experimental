@@ -8,12 +8,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
+import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -25,6 +30,8 @@ class KurobaToolbarView @JvmOverloads constructor(
 
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
+
+  private val coroutineScope = KurobaCoroutineScope()
 
   private val _kurobaToolbarState = mutableStateOf<KurobaToolbarState?>(null)
   private var attachedController: Controller? = null
@@ -50,13 +57,24 @@ class KurobaToolbarView @JvmOverloads constructor(
     )
   }
 
-  fun init(controller: Controller) {
-    _kurobaToolbarState.value = controller.toolbarState
+  fun init(controller: ToolbarNavigationController) {
+    _kurobaToolbarState.value = controller.containerToolbarState
     attachedController = controller
+
+    coroutineScope.cancelChildren()
+    coroutineScope.launch {
+      controller.listenForContainerToolbarStateUpdates()
+        .onEach { kurobaToolbarState -> _kurobaToolbarState.value = kurobaToolbarState }
+        .collect()
+    }
   }
 
   fun init(kurobaToolbarState: KurobaToolbarState) {
     _kurobaToolbarState.value = kurobaToolbarState
+  }
+
+  fun destroy() {
+    coroutineScope.cancel()
   }
 
   private fun showFloatingMenu(

@@ -16,6 +16,8 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 
 class StyledToolbarNavigationController(context: Context) : ToolbarNavigationController(context) {
 
+  private lateinit var toolbar: KurobaToolbarView
+
   private val mainController: MainController?
     get() {
       if (parentController is MainController) {
@@ -40,11 +42,19 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
     view = AppModuleAndroidUtils.inflate(context, R.layout.controller_navigation_toolbar)
     container = view.findViewById<ViewGroup>(R.id.toolbar_navigation_controller_container)
 
-    val toolbar = view.findViewById<KurobaToolbarView>(R.id.toolbar)
+    toolbar = view.findViewById<KurobaToolbarView>(R.id.toolbar)
     toolbar.init(this)
-    toolbarState.enterContainerMode()
+    containerToolbarState.enterContainerMode()
 
     reloadControllerTracking()
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+
+    if (::toolbar.isInitialized) {
+      toolbar.destroy()
+    }
   }
 
   override fun popController(transition: ControllerTransition?): Boolean {

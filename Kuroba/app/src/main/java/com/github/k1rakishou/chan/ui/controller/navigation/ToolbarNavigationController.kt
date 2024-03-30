@@ -1,11 +1,30 @@
 package com.github.k1rakishou.chan.ui.controller.navigation
 
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.controller.transition.ControllerTransition
 import com.github.k1rakishou.chan.controller.transition.TransitionMode
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import kotlinx.coroutines.flow.Flow
 
 abstract class ToolbarNavigationController(context: Context) : NavigationController(context) {
+
+  private val _containerToolbarState = mutableStateOf<KurobaToolbarState>(
+    kurobaToolbarStateManager.getOrCreate(controllerKey)
+  )
+
+  final override val toolbarState: KurobaToolbarState
+    get() = _containerToolbarState.value
+
+  override var containerToolbarState: KurobaToolbarState
+    get() = _containerToolbarState.value
+    set(value) { _containerToolbarState.value = value }
+
+  fun listenForContainerToolbarStateUpdates(): Flow<KurobaToolbarState> {
+    return snapshotFlow { _containerToolbarState.value }
+  }
 
   override fun transition(
     from: Controller?,
@@ -20,7 +39,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     super.transition(from, to, pushing, controllerTransition)
 
     if (to != null) {
-      requireToolbarNavController().toolbarState.showToolbar()
+      containerToolbarState.showToolbar()
     }
   }
 
@@ -33,10 +52,10 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
       return false
     }
 
-    requireToolbarNavController().toolbarState.showToolbar()
+    containerToolbarState.showToolbar()
 
     if (to != null) {
-      requireToolbarNavController().toolbarState.onTransitionProgressStart(
+      containerToolbarState.onTransitionProgressStart(
         other = to.toolbarState,
         transitionMode = TransitionMode.Out
       )
@@ -48,7 +67,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
   override fun swipeTransitionProgress(progress: Float) {
     super.swipeTransitionProgress(progress)
 
-    requireToolbarNavController().toolbarState.onTransitionProgress(progress)
+    containerToolbarState.onTransitionProgress(progress)
   }
 
   override fun endSwipeTransition(from: Controller?, to: Controller?, finish: Boolean) {
@@ -58,17 +77,17 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
 
     super.endSwipeTransition(from, to, finish)
 
-    requireToolbarNavController().toolbarState.showToolbar()
+    containerToolbarState.showToolbar()
 
     if (finish && to != null) {
-      requireToolbarNavController().toolbarState.onTransitionProgressFinished(to.toolbarState)
+      containerToolbarState.onTransitionProgressFinished(to.toolbarState)
     } else if (!finish && from != null) {
-      requireToolbarNavController().toolbarState.onTransitionProgressFinished(from.toolbarState)
+      containerToolbarState.onTransitionProgressFinished(from.toolbarState)
     }
   }
 
   override fun onBack(): Boolean {
-    return requireToolbarNavController().toolbarState.onBack() || super.onBack()
+    return containerToolbarState.onBack() || super.onBack()
   }
 
 }

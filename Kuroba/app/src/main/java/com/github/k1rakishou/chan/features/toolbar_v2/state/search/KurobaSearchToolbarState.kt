@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 data class KurobaSearchToolbarParams(
+  val initialSearchQuery: String? = null,
   val toolbarMenu: ToolbarMenu? = null
 ) : IKurobaToolbarParams {
   override val kind: ToolbarStateKind = ToolbarStateKind.Search
@@ -29,11 +30,16 @@ class KurobaSearchToolbarState(
   val toolbarMenu: State<ToolbarMenu?>
     get() = _toolbarMenu
 
-  private val _searchVisible = mutableStateOf(false)
-  val searchVisible: State<Boolean>
-    get() = _searchVisible
+  private val _searchVisibleState = mutableStateOf(false)
+  val searchVisibleState: State<Boolean>
+    get() = _searchVisibleState
 
-  val searchQueryState = TextFieldState()
+  private val _searchQueryState = mutableStateOf(TextFieldState(initialText = params.initialSearchQuery ?: ""))
+  val searchQueryState: State<TextFieldState>
+    get() = _searchQueryState
+
+  val currentSearchQueryState: TextFieldState
+    get() = searchQueryState.value
 
   override val kind: ToolbarStateKind = params.kind
 
@@ -56,33 +62,33 @@ class KurobaSearchToolbarState(
   }
 
   override fun onPushed() {
-    _searchVisible.value = true
+    _searchVisibleState.value = true
   }
 
   override fun onPopped() {
-    _searchVisible.value = false
-    searchQueryState.edit { clearText() }
+    _searchVisibleState.value = false
+    currentSearchQueryState.edit { clearText() }
   }
 
   fun listenForSearchQueryUpdates(): Flow<String> {
-    return searchQueryState.textAsFlow()
+    return currentSearchQueryState.textAsFlow()
       .map { textFieldCharSequence -> textFieldCharSequence.toString() }
   }
 
   fun listenForSearchVisibilityUpdates(): Flow<Boolean> {
-    return snapshotFlow { _searchVisible.value }
+    return snapshotFlow { _searchVisibleState.value }
   }
 
   fun isInSearchMode(): Boolean {
-    return _searchVisible.value
+    return _searchVisibleState.value
   }
 
   fun clearSearchQuery() {
-    searchQueryState.edit { clearText() }
+    currentSearchQueryState.edit { clearText() }
   }
 
   override fun toString(): String {
-    return "KurobaSearchToolbarState(searchVisible: ${_searchVisible.value}, searchQuery: ${searchQueryState.text})"
+    return "KurobaSearchToolbarState(searchVisible: ${_searchVisibleState.value}, searchQuery: '${currentSearchQueryState.text}')"
   }
 
 }
