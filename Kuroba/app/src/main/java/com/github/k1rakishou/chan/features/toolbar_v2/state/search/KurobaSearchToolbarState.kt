@@ -34,12 +34,9 @@ class KurobaSearchToolbarState(
   val searchVisibleState: State<Boolean>
     get() = _searchVisibleState
 
-  private val _searchQueryState = mutableStateOf(TextFieldState(initialText = params.initialSearchQuery ?: ""))
-  val searchQueryState: State<TextFieldState>
+  private val _searchQueryState = TextFieldState(initialText = params.initialSearchQuery ?: "")
+  val searchQueryState: TextFieldState
     get() = _searchQueryState
-
-  val currentSearchQueryState: TextFieldState
-    get() = searchQueryState.value
 
   override val kind: ToolbarStateKind = params.kind
 
@@ -67,11 +64,11 @@ class KurobaSearchToolbarState(
 
   override fun onPopped() {
     _searchVisibleState.value = false
-    currentSearchQueryState.edit { clearText() }
+    _searchQueryState.edit { clearText() }
   }
 
   fun listenForSearchQueryUpdates(): Flow<String> {
-    return currentSearchQueryState.textAsFlow()
+    return _searchQueryState.textAsFlow()
       .map { textFieldCharSequence -> textFieldCharSequence.toString() }
   }
 
@@ -84,11 +81,11 @@ class KurobaSearchToolbarState(
   }
 
   fun clearSearchQuery() {
-    currentSearchQueryState.edit { clearText() }
+    _searchQueryState.edit { clearText() }
   }
 
   override fun toString(): String {
-    return "KurobaSearchToolbarState(searchVisible: ${_searchVisibleState.value}, searchQuery: '${currentSearchQueryState.text}')"
+    return "KurobaSearchToolbarState(searchVisible: ${_searchVisibleState.value}, searchQuery: '${_searchQueryState.text}')"
   }
 
 }

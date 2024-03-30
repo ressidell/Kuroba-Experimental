@@ -63,7 +63,12 @@ fun KurobaToolbar(
       is KurobaSearchToolbarState -> {
         KurobaSearchToolbarContent(
           modifier = Modifier.fillMaxSize(),
-          state = childToolbarState
+          state = childToolbarState,
+          onCloseSearchToolbarButtonClicked = {
+            if (kurobaToolbarState.isInSearchMode()) {
+              kurobaToolbarState.pop()
+            }
+          }
         )
       }
       is KurobaSelectionToolbarState -> {

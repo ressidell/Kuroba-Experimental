@@ -370,6 +370,15 @@ open class ThemeEngine(
     }
 
     @JvmStatic
+    fun resolveTextColor(color: ComposeColor): ComposeColor {
+      return if (ThemeEngine.isDarkColor(color)) {
+        ComposeColor.White
+      } else {
+        ComposeColor.Black
+      }
+    }
+
+    @JvmStatic
     fun resolveDrawableTintColor(chanTheme: ChanTheme): Int {
       return if (chanTheme.isBackColorDark) {
         LIGHT_DRAWABLE_TINT

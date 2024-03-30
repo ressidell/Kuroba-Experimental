@@ -260,7 +260,7 @@ class ThreadCellData(
     val showPostFileInfo = ChanSettings.postFileInfo.get()
     val markUnseenPosts = ChanSettings.markUnseenPosts.get() && chanDescriptor.isThreadDescriptor()
     val markSeenThreads = ChanSettings.markSeenThreads.get() && chanDescriptor.isCatalogDescriptor()
-    val chanTheme = theme.fullCopy()
+    val chanTheme = theme.copyTheme()
     val postCellThumbnailSizePercents = ChanSettings.postCellThumbnailSizePercents.get()
     val boardPages = getBoardPages(chanDescriptor, neverShowPages, postCellCallback)
     val isTablet = isTablet()

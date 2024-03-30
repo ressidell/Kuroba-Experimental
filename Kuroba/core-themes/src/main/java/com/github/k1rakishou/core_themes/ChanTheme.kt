@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.toArgb
 import com.github.k1rakishou.core_themes.ThemeEngine.Companion.manipulateColor
 
 @SuppressLint("ResourceType")
@@ -56,7 +57,36 @@ abstract class ChanTheme {
   abstract val bookmarkCounterHasRepliesColor: Int
   abstract val bookmarkCounterNormalColor: Int
 
-  abstract fun fullCopy(): ChanTheme
+  abstract fun copyTheme(
+    name: String = this.name,
+    isLightTheme: Boolean = this.isLightTheme,
+    lightStatusBar: Boolean = this.lightStatusBar,
+    lightNavBar: Boolean = this.lightNavBar,
+    accentColor: Int = this.accentColor,
+    primaryColor: Int = this.primaryColor,
+    backColor: Int = this.backColor,
+    backColorSecondary: Int = this.backColorSecondary,
+    errorColor: Int = this.errorColor,
+    textColorPrimary: Int = this.textColorPrimary,
+    textColorSecondary: Int = this.textColorSecondary,
+    textColorHint: Int = this.textColorHint,
+    postHighlightedColor: Int = this.postHighlightedColor,
+    postSavedReplyColor: Int = this.postSavedReplyColor,
+    postSubjectColor: Int = this.postSubjectColor,
+    postDetailsColor: Int = this.postDetailsColor,
+    postNameColor: Int = this.postNameColor,
+    postInlineQuoteColor: Int = this.postInlineQuoteColor,
+    postQuoteColor: Int = this.postQuoteColor,
+    postHighlightQuoteColor: Int = this.postHighlightQuoteColor,
+    postLinkColor: Int = this.postLinkColor,
+    postSpoilerColor: Int = this.postSpoilerColor,
+    postSpoilerRevealTextColor: Int = this.postSpoilerRevealTextColor,
+    postUnseenLabelColor: Int = this.postUnseenLabelColor,
+    dividerColor: Int = this.dividerColor,
+    bookmarkCounterNotWatchingColor: Int = this.bookmarkCounterNotWatchingColor,
+    bookmarkCounterHasRepliesColor: Int = this.bookmarkCounterHasRepliesColor,
+    bookmarkCounterNormalColor: Int = this.bookmarkCounterNormalColor,
+  ): ChanTheme
 
   val isDarkTheme: Boolean
     get() = !isLightTheme
@@ -295,6 +325,13 @@ abstract class ChanTheme {
     }
 
     return Color(ThemeEngine.hslToColor(textColorHSL))
+  }
+
+  fun overrideForSearchInputOnToolbar(newAccentColor: Color, newTextColorPrimary: Color): ChanTheme {
+    return copyTheme(
+      accentColor = newAccentColor.toArgb(),
+      textColorPrimary = newTextColorPrimary.toArgb()
+    )
   }
 
   data class DefaultColors(

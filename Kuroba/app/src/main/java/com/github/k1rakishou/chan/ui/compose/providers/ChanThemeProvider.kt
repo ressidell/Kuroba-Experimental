@@ -26,7 +26,7 @@ fun ProvideChanTheme(
   DisposableEffect(themeEngine.chanTheme) {
     val themeUpdateObserver = object : ThemeEngine.ThemeChangesListener {
       override fun onThemeChanged() {
-        chanTheme = themeEngine.chanTheme.fullCopy()
+        chanTheme = themeEngine.chanTheme.copyTheme()
       }
     }
 
@@ -56,5 +56,12 @@ fun ProvideChanTheme(
         content()
       }
     }
+  }
+}
+
+@Composable
+fun OverrideChanTheme(chanTheme: ChanTheme, content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalChanTheme provides chanTheme) {
+    content()
   }
 }

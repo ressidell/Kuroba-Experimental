@@ -33,8 +33,66 @@ data class DefaultDarkTheme(
   override val bookmarkCounterNormalColor: Int = Color.parseColor("#33B5E5"),
 ) : ChanTheme() {
 
-  override fun fullCopy(): ChanTheme {
-    return copy()
+  override fun copyTheme(
+    name: String,
+    isLightTheme: Boolean,
+    lightStatusBar: Boolean,
+    lightNavBar: Boolean,
+    accentColor: Int,
+    primaryColor: Int,
+    backColor: Int,
+    backColorSecondary: Int,
+    errorColor: Int,
+    textColorPrimary: Int,
+    textColorSecondary: Int,
+    textColorHint: Int,
+    postHighlightedColor: Int,
+    postSavedReplyColor: Int,
+    postSubjectColor: Int,
+    postDetailsColor: Int,
+    postNameColor: Int,
+    postInlineQuoteColor: Int,
+    postQuoteColor: Int,
+    postHighlightQuoteColor: Int,
+    postLinkColor: Int,
+    postSpoilerColor: Int,
+    postSpoilerRevealTextColor: Int,
+    postUnseenLabelColor: Int,
+    dividerColor: Int,
+    bookmarkCounterNotWatchingColor: Int,
+    bookmarkCounterHasRepliesColor: Int,
+    bookmarkCounterNormalColor: Int
+  ): ChanTheme {
+    return copy(
+      name = name,
+      isLightTheme = isLightTheme,
+      lightStatusBar = lightStatusBar,
+      lightNavBar = lightNavBar,
+      accentColor = accentColor,
+      primaryColor = primaryColor,
+      backColor = backColor,
+      backColorSecondary = backColorSecondary,
+      errorColor = errorColor,
+      textColorPrimary = textColorPrimary,
+      textColorSecondary = textColorSecondary,
+      textColorHint = textColorHint,
+      postHighlightedColor = postHighlightedColor,
+      postSavedReplyColor = postSavedReplyColor,
+      postSubjectColor = postSubjectColor,
+      postDetailsColor = postDetailsColor,
+      postNameColor = postNameColor,
+      postInlineQuoteColor = postInlineQuoteColor,
+      postQuoteColor = postQuoteColor,
+      postHighlightQuoteColor = postHighlightQuoteColor,
+      postLinkColor = postLinkColor,
+      postSpoilerColor = postSpoilerColor,
+      postSpoilerRevealTextColor = postSpoilerRevealTextColor,
+      postUnseenLabelColor = postUnseenLabelColor,
+      dividerColor = dividerColor,
+      bookmarkCounterNotWatchingColor = bookmarkCounterNotWatchingColor,
+      bookmarkCounterHasRepliesColor = bookmarkCounterHasRepliesColor,
+      bookmarkCounterNormalColor = bookmarkCounterNormalColor
+    )
   }
 
 }

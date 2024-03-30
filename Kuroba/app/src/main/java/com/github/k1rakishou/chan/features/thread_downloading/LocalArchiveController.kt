@@ -356,7 +356,7 @@ class LocalArchiveController(
           .simpleVerticalScrollbar(state, chanTheme, bottomPadding)
       ) {
         if (threadDownloadViews.isEmpty()) {
-          val searchQuery = toolbarState.search.currentSearchQueryState.text
+          val searchQuery = toolbarState.search.searchQueryState.text
           if (searchQuery.isNullOrEmpty()) {
             item {
               KurobaComposeErrorMessage(

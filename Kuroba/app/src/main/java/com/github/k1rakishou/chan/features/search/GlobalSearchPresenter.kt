@@ -119,7 +119,7 @@ internal class GlobalSearchPresenter(
       }
 
       val dataState = GlobalSearchControllerStateData(
-        currentTheme = themeEngine.chanTheme.fullCopy(),
+        currentTheme = themeEngine.chanTheme.copyTheme(),
         sitesWithSearch = sitesWithSearch,
         searchParameters = searchParameters
       )
@@ -181,7 +181,7 @@ internal class GlobalSearchPresenter(
     val searchType = site.siteGlobalSearchType()
 
     val dataState = GlobalSearchControllerStateData(
-      currentTheme = themeEngine.chanTheme.fullCopy(),
+      currentTheme = themeEngine.chanTheme.copyTheme(),
       sitesWithSearch = SitesWithSearch(
         sites = sitesSupportingSearch,
         selectedSite = SelectedSite(
