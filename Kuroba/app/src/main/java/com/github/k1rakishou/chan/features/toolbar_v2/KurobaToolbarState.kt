@@ -27,6 +27,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadT
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.common.quantize
 import com.github.k1rakishou.core_logger.Logger
+import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -60,13 +61,27 @@ class KurobaToolbarState(
   val transitionToolbarState: State<KurobaToolbarTransition?>
     get() = _transitionToolbarState
 
-  val container by lazy(LazyThreadSafetyMode.NONE) { KurobaContainerToolbarState() }
-  val catalog by lazy(LazyThreadSafetyMode.NONE) { KurobaCatalogToolbarState() }
-  val thread by lazy(LazyThreadSafetyMode.NONE) { KurobaThreadToolbarState() }
-  val default by lazy(LazyThreadSafetyMode.NONE) { KurobaDefaultToolbarState() }
-  val search by lazy(LazyThreadSafetyMode.NONE) { KurobaSearchToolbarState() }
-  val selection by lazy(LazyThreadSafetyMode.NONE) { KurobaSelectionToolbarState() }
-  val reply by lazy(LazyThreadSafetyMode.NONE) { KurobaReplyToolbarState() }
+  private val _container = mutableStateOf(KurobaContainerToolbarState())
+  val container: KurobaContainerToolbarState
+    get() = _container.value
+  private val _catalog = mutableStateOf(KurobaCatalogToolbarState())
+  val catalog: KurobaCatalogToolbarState
+    get() = _catalog.value
+  private val _thread = mutableStateOf(KurobaThreadToolbarState())
+  val thread: KurobaThreadToolbarState
+    get() = _thread.value
+  private val _default = mutableStateOf(KurobaDefaultToolbarState())
+  val default: KurobaDefaultToolbarState
+    get() = _default.value
+  private val _search = mutableStateOf(KurobaSearchToolbarState())
+  val search: KurobaSearchToolbarState
+    get() = _search.value
+  private val _selection = mutableStateOf(KurobaSelectionToolbarState())
+  val selection: KurobaSelectionToolbarState
+    get() = _selection.value
+  private val _reply = mutableStateOf(KurobaReplyToolbarState())
+  val reply: KurobaReplyToolbarState
+    get() = _reply.value
 
   val toolbarVisibleState: Flow<Boolean>
     get() = globalUiStateHolder.toolbarState.toolbarVisibilityStateFlow()
@@ -123,30 +138,30 @@ class KurobaToolbarState(
     _transitionToolbarState.value = transitionState.copy(progress = quantizedProgress)
   }
 
-  fun onTransitionProgressFinished(other: KurobaToolbarState) {
+  fun onTransitionProgressFinished() {
     _transitionToolbarState.value = null
 
-    // TODO: New toolbar. Might need to replace it with
-    //  containerToolbarState = getToolbarState(left)
-    updateFromState(other)
+    // TODO: New toolbar.
+//    updateFromState(other)
   }
 
-  fun updateFromState(toolbarState: KurobaToolbarState) {
-    Snapshot.withMutableSnapshot {
-      _toolbarStateList.value = toolbarState._toolbarStateList.value
-
-      container.updateFromState(toolbarState.container)
-      default.updateFromState(toolbarState.default)
-      search.updateFromState(toolbarState.search)
-      selection.updateFromState(toolbarState.selection)
-      reply.updateFromState(toolbarState.reply)
-    }
-  }
+  // TODO: New toolbar.
+//  fun updateFromState(toolbarState: KurobaToolbarState) {
+//    Snapshot.withMutableSnapshot {
+//      _toolbarStateList.value = toolbarState._toolbarStateList.value
+//
+//      _container.value = toolbarState._container.value
+//      _default.value = toolbarState._default.value
+//      _search.value = toolbarState._search.value
+//      _selection.value = toolbarState._selection.value
+//      _reply.value = toolbarState._reply.value
+//    }
+//  }
 
   fun enterContainerMode() {
     enterToolbarMode(
       params = KurobaContainerToolbarParams(),
-      state = container
+      state = _container.value
     )
   }
 
@@ -166,7 +181,7 @@ class KurobaToolbarState(
         onMainContentClick = onMainContentClick,
         iconClickInterceptor = iconClickInterceptor
       ),
-      state = catalog
+      state = _catalog.value
     )
   }
 
@@ -186,7 +201,7 @@ class KurobaToolbarState(
         toolbarMenu = toolbarMenuBuilder.build(),
         iconClickInterceptor = iconClickInterceptor
       ),
-      state = thread
+      state = _thread.value
     )
   }
 
@@ -208,7 +223,7 @@ class KurobaToolbarState(
         toolbarMenu = toolbarMenuBuilder.build(),
         iconClickInterceptor = iconClickInterceptor
       ),
-      state = default
+      state = _default.value
     )
   }
 
@@ -224,7 +239,7 @@ class KurobaToolbarState(
         initialSearchQuery = initialSearchQuery,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
-      state = search
+      state = _search.value
     )
   }
 
@@ -244,7 +259,7 @@ class KurobaToolbarState(
         title = title,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
-      state = selection
+      state = _selection.value
     )
   }
 
@@ -253,6 +268,8 @@ class KurobaToolbarState(
   }
 
   fun enterReplyMode(
+    chanDescriptor: ChanDescriptor,
+    leftItem: ToolbarMenuItem? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
   ) {
     val toolbarMenuBuilder = ToolbarMenuBuilder()
@@ -260,9 +277,11 @@ class KurobaToolbarState(
 
     enterToolbarMode(
       params = KurobaReplyToolbarParams(
+        leftItem = leftItem,
+        chanDescriptor = chanDescriptor,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
-      state = reply
+      state = _reply.value
     )
   }
 

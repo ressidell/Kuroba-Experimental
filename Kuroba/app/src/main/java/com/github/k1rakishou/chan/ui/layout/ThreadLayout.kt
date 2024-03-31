@@ -389,6 +389,27 @@ class ThreadLayout @JvmOverloads constructor(
     return true
   }
 
+  fun onPickLocalMediaButtonClicked() {
+    threadListLayout.onPickLocalMediaButtonClicked()
+  }
+
+  // TODO: New reply layout.
+  fun onPickLocalMediaButtonLongClicked() {
+    threadListLayout.onPickLocalMediaButtonLongClicked()
+  }
+
+  fun onPickRemoteMediaButtonClicked() {
+    threadListLayout.onPickRemoteMediaButtonClicked()
+  }
+
+  fun onSearchRemoteMediaButtonClicked(chanDescriptor: ChanDescriptor) {
+    threadListLayout.onSearchRemoteMediaButtonClicked(chanDescriptor)
+  }
+
+  fun onReplyLayoutOptionsButtonClicked() {
+    threadListLayout.onReplyLayoutOptionsButtonClicked()
+  }
+
   fun canChildScrollUp(): Boolean {
     if (visible != Visible.THREAD) {
       return true

@@ -1,12 +1,8 @@
 package com.github.k1rakishou.chan.features.toolbar_v2.state.search
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,33 +10,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.forEachTextValue
 import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.ui.compose.clearText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.freeFocusSafe
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.requestFocusSafe
-import com.github.k1rakishou.core_themes.ChanTheme
-import com.github.k1rakishou.core_themes.ThemeEngine
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -95,51 +82,17 @@ fun KurobaSearchToolbarContent(
         .wrapContentHeight()
         .padding(horizontal = 8.dp)
     ) {
-      SearchInput(focusRequester, searchQueryState, chanTheme)
+      KurobaSearchInput(
+        modifier = Modifier
+          .fillMaxSize()
+          .focusable()
+          .focusRequester(focusRequester),
+        searchQueryState = searchQueryState,
+        onBackgroundColor = chanTheme.toolbarBackgroundComposeColor,
+      )
     }
 
     Spacer(modifier = Modifier.width(12.dp))
-  }
-}
-
-@Composable
-private fun BoxScope.SearchInput(
-  focusRequester: FocusRequester,
-  searchQueryState: TextFieldState,
-  chanTheme: ChanTheme
-) {
-  var isSearchQueryEmpty by remember { mutableStateOf(true) }
-
-  LaunchedEffect(key1 = Unit) {
-    searchQueryState.forEachTextValue { textFieldCharSequence ->
-      isSearchQueryEmpty = textFieldCharSequence.isEmpty()
-    }
-  }
-
-  KurobaSearchInput(
-    modifier = Modifier
-      .fillMaxSize()
-      .focusable()
-      .focusRequester(focusRequester),
-    searchQueryState = searchQueryState,
-    onBackgroundColor = chanTheme.toolbarBackgroundComposeColor
-  )
-
-  AnimatedVisibility(
-    modifier = Modifier
-      .align(Alignment.CenterStart)
-      .padding(start = 8.dp),
-    visible = isSearchQueryEmpty,
-    enter = fadeIn(),
-    exit = fadeOut()
-  ) {
-    KurobaComposeText(
-      text = stringResource(id = R.string.type_to_search_hint),
-      color = remember(chanTheme) {
-        ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)
-          .copy(alpha = 0.7f)
-      }
-    )
   }
 }
 

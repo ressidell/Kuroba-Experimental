@@ -94,7 +94,7 @@ class KurobaThreadToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaThreadToolbarState(title: ${_title.value}, subtitle: ${_subtitle.value})"
+    return "KurobaThreadToolbarState(title: '${_title.value}', subtitle: '${_subtitle.value}')"
   }
 
 }

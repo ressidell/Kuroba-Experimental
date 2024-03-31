@@ -107,15 +107,6 @@ class ReplyLayoutView @JvmOverloads constructor(
         ReplyLayout(
           replyLayoutViewModel = replyLayoutViewModel,
           onPresolveCaptchaButtonClicked = replyLayoutCallbacks::onPresolveCaptchaButtonClicked,
-          onSearchRemoteMediaButtonClicked = { chanDescriptor ->
-            val imageSearchController = ImageSearchController(
-              context = context,
-              boundChanDescriptor = chanDescriptor,
-              onImageSelected = { selectedImageUrl -> replyLayoutViewModel.onRemoteImageSelected(selectedImageUrl) }
-            )
-
-            replyLayoutCallbacks.pushController(imageSearchController)
-          }
         )
       }
     }
@@ -282,18 +273,6 @@ class ReplyLayoutView @JvmOverloads constructor(
       .also { toast -> toast.show() }
   }
 
-  override fun onReplyLayoutOptionsButtonClicked() {
-    val chanDescriptor = replyLayoutViewModel.boundChanDescriptor.value
-      ?: return
-
-    val prevReplyMode = siteManager.bySiteDescriptor(chanDescriptor.siteDescriptor())
-      ?.getSettingBySettingId<OptionsSetting<ReplyMode>>(SiteSetting.SiteSettingId.LastUsedReplyMode)
-      ?.get()
-      ?: ReplyMode.Unknown
-
-    showReplyOptions(chanDescriptor, prevReplyMode)
-  }
-
   override fun onAttachedMediaClicked(attachedMedia: ReplyFileAttachable, isFileSupportedForReencoding: Boolean) {
     replyLayoutCallbacks.showMediaReencodingController(attachedMedia, isFileSupportedForReencoding)
   }
@@ -382,6 +361,40 @@ class ReplyLayoutView @JvmOverloads constructor(
         onDismissListener = { cancellableContinuation.resumeValueSafe(false) }
       )
     }
+  }
+
+  fun onPickLocalMediaButtonClicked() {
+    replyLayoutViewModel.onPickLocalMediaButtonClicked()
+  }
+
+  fun onPickLocalMediaButtonLongClicked() {
+    replyLayoutViewModel.onPickLocalMediaButtonLongClicked()
+  }
+
+  fun onPickRemoteMediaButtonClicked() {
+    replyLayoutViewModel.onPickRemoteMediaButtonClicked()
+  }
+
+  fun onSearchRemoteMediaButtonClicked(chanDescriptor: ChanDescriptor) {
+    val imageSearchController = ImageSearchController(
+      context = context,
+      boundChanDescriptor = chanDescriptor,
+      onImageSelected = { selectedImageUrl -> replyLayoutViewModel.onRemoteImageSelected(selectedImageUrl) }
+    )
+
+    replyLayoutCallbacks.pushController(imageSearchController)
+  }
+
+  override fun onReplyLayoutOptionsButtonClicked() {
+    val chanDescriptor = replyLayoutViewModel.boundChanDescriptor.value
+      ?: return
+
+    val prevReplyMode = siteManager.bySiteDescriptor(chanDescriptor.siteDescriptor())
+      ?.getSettingBySettingId<OptionsSetting<ReplyMode>>(SiteSetting.SiteSettingId.LastUsedReplyMode)
+      ?.get()
+      ?: ReplyMode.Unknown
+
+    showReplyOptions(chanDescriptor, prevReplyMode)
   }
 
   private fun showDialogInternal(

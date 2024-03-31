@@ -3,7 +3,6 @@ package com.github.k1rakishou.chan.ui.compose.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -12,9 +11,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.forEachTextValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -28,7 +30,6 @@ import com.github.k1rakishou.chan.ui.compose.clearText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.OverrideChanTheme
-import com.github.k1rakishou.chan.utils.rememberComposableLambda
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 
@@ -109,8 +110,7 @@ fun KurobaSearchInput(
   modifier: Modifier = Modifier,
   onBackgroundColor: Color,
   searchQueryState: TextFieldState,
-  interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-  labelText: String? = null
+  interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
   val chanTheme = LocalChanTheme.current
 
@@ -137,30 +137,25 @@ fun KurobaSearchInput(
             newTextColorPrimary = ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)
           )
         ) {
-          val labelFunc: (@Composable (InteractionSource) -> Unit)? = if (labelText == null) {
-            null
-          } else {
-            rememberComposableLambda<InteractionSource>(labelText, interactionSource) {
-              KurobaLabelText(
-                enabled = true,
-                labelText = labelText,
-                fontSize = 12.ktu,
-                interactionSource = interactionSource
-              )
+          var isSearchQueryEmpty by remember { mutableStateOf(true) }
+
+          LaunchedEffect(key1 = Unit) {
+            searchQueryState.forEachTextValue { textFieldCharSequence ->
+              isSearchQueryEmpty = textFieldCharSequence.isEmpty()
             }
           }
 
-          KurobaComposeTextFieldV2(
-            modifier = Modifier
-              .wrapContentHeight()
-              .fillMaxWidth(),
-            state = searchQueryState,
-            fontSize = 16.ktu,
-            textStyle = remember(key1 = textColor) { TextStyle.Default.copy(color = textColor) },
-            lineLimits = TextFieldLineLimits.SingleLine,
-            interactionSource = interactionSource,
-            label = labelFunc
-          )
+          Box(
+            contentAlignment = Alignment.CenterStart
+          ) {
+            TextFieldWithHint(
+              isSearchQueryEmpty = isSearchQueryEmpty,
+              chanTheme = chanTheme,
+              searchQueryState = searchQueryState,
+              textColor = textColor,
+              interactionSource = interactionSource
+            )
+          }
         }
       }
 
@@ -183,5 +178,41 @@ fun KurobaSearchInput(
         )
       }
     }
+  }
+}
+
+@Composable
+private fun TextFieldWithHint(
+  isSearchQueryEmpty: Boolean,
+  chanTheme: ChanTheme,
+  searchQueryState: TextFieldState,
+  textColor: Color,
+  interactionSource: MutableInteractionSource
+) {
+  KurobaComposeTextFieldV2(
+    modifier = Modifier
+      .wrapContentHeight()
+      .fillMaxWidth(),
+    state = searchQueryState,
+    fontSize = 16.ktu,
+    textStyle = remember(key1 = textColor) { TextStyle.Default.copy(color = textColor) },
+    lineLimits = TextFieldLineLimits.SingleLine,
+    interactionSource = interactionSource,
+    label = null
+  )
+
+  AnimatedVisibility(
+    modifier = Modifier.padding(start = 8.dp),
+    visible = isSearchQueryEmpty,
+    enter = fadeIn(),
+    exit = fadeOut()
+  ) {
+    KurobaComposeText(
+      text = stringResource(id = R.string.type_to_search_hint),
+      color = remember(chanTheme) {
+        ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)
+          .copy(alpha = 0.7f)
+      }
+    )
   }
 }

@@ -23,7 +23,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 internal class InnerCache(
@@ -729,7 +728,6 @@ internal class InnerCache(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   private fun recalculateSize() {
     var calculatedSize: Long = 0
 

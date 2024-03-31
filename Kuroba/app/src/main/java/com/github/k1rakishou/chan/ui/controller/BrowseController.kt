@@ -29,6 +29,7 @@ import com.github.k1rakishou.chan.features.setup.SiteSettingsController
 import com.github.k1rakishou.chan.features.setup.SitesSetupController
 import com.github.k1rakishou.chan.features.site_archive.BoardArchiveController
 import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
@@ -107,6 +108,9 @@ class BrowseController(
 
   override val threadControllerType: ThreadControllerType
     get() = ThreadControllerType.Catalog
+
+  override val kurobaToolbarState: KurobaToolbarState
+    get() = toolbarState
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

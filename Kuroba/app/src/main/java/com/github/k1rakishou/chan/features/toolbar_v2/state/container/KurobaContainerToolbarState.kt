@@ -27,6 +27,7 @@ class KurobaContainerToolbarState(
     // no-op
   }
 
+  // TODO: New toolbar. Remove?
   override fun updateFromState(toolbarState: IKurobaToolbarState) {
     // no-op
   }

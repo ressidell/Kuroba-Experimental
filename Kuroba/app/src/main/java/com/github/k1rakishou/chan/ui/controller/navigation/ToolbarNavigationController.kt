@@ -80,9 +80,17 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     containerToolbarState.showToolbar()
 
     if (finish && to != null) {
-      containerToolbarState.onTransitionProgressFinished(to.toolbarState)
+      // TODO: New toolbar.
+      //       containerToolbarState.onTransitionProgressFinished(to.toolbarState)
+
+      containerToolbarState.onTransitionProgressFinished()
+      containerToolbarState = to.toolbarState
     } else if (!finish && from != null) {
-      containerToolbarState.onTransitionProgressFinished(from.toolbarState)
+      // TODO: New toolbar.
+      //       containerToolbarState.onTransitionProgressFinished(from.toolbarState)
+
+      containerToolbarState.onTransitionProgressFinished()
+      containerToolbarState = from.toolbarState
     }
   }
 

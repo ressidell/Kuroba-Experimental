@@ -19,6 +19,7 @@ import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
@@ -77,6 +78,9 @@ open class ViewThreadController(
 
   override val threadControllerType: ThreadControllerType
     get() = ThreadControllerType.Thread
+
+  override val kurobaToolbarState: KurobaToolbarState
+    get() = toolbarState
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

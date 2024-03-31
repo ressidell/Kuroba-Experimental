@@ -30,7 +30,7 @@ import com.github.k1rakishou.chan.features.media_viewer.MediaViewerOptions
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenAlbumHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.report.Chan4ReportPostController
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.CloseMenuItem
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.ui.helper.OpenExternalThreadHelper
@@ -136,9 +136,6 @@ abstract class ThreadController(
   val chanDescriptor: ChanDescriptor?
     get() = threadLayout.presenter.currentChanDescriptor
 
-  override val kurobaToolbarState: KurobaToolbarState
-    get() = navigationController!!.requireToolbarNavController().containerToolbarState
-
   abstract override val threadControllerType: ThreadControllerType
 
   override fun onCreate() {
@@ -220,14 +217,18 @@ abstract class ThreadController(
       globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow
         .onEach { replyLayoutVisibilityEvents ->
           val isInReplyLayoutMode = kurobaToolbarState.isInReplyMode()
-          val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.anyOpened() || replyLayoutVisibilityEvents.anyExpanded()
+          val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.anyOpened()
+            || replyLayoutVisibilityEvents.anyExpanded()
 
           if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
             return@onEach
           }
 
           if (anyReplyLayoutOpenedOrExpanded) {
-            kurobaToolbarState.enterReplyMode()
+            val descriptor = chanDescriptor
+              ?: return@onEach
+
+            enterReplyLayoutToolbarMode(descriptor)
           } else {
             if (toolbarState.isInReplyMode()) {
               toolbarState.pop()
@@ -572,6 +573,40 @@ abstract class ThreadController(
     )
 
     presentController(floatingListMenuController)
+  }
+
+  private fun enterReplyLayoutToolbarMode(descriptor: ChanDescriptor) {
+    kurobaToolbarState.enterReplyMode(
+      chanDescriptor = descriptor,
+      leftItem = CloseMenuItem(
+        onClick = {
+          if (toolbarState.isInReplyMode()) {
+            toolbarState.pop()
+          }
+        }
+      ),
+      menuBuilder = {
+        withMenuItem(
+          drawableId = R.drawable.ic_baseline_attach_file_24,
+          onClick = { threadLayout.onPickLocalMediaButtonClicked() }
+        )
+
+        withMenuItem(
+          drawableId = R.drawable.ic_baseline_cloud_download_24,
+          onClick = { threadLayout.onPickRemoteMediaButtonClicked() }
+        )
+
+        withMenuItem(
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = { threadLayout.onSearchRemoteMediaButtonClicked(descriptor) }
+        )
+
+        withMenuItem(
+          drawableId = R.drawable.ic_more_vert_white_24dp,
+          onClick = { threadLayout.onReplyLayoutOptionsButtonClicked() }
+        )
+      }
+    )
   }
 
   private fun onToolbarHeightChanged(toolbarHeightDp: Dp?) {

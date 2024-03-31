@@ -30,7 +30,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.max
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
@@ -70,7 +69,6 @@ class ChanPostRepository(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun awaitUntilInitialized() {
     if (isReady()) {
       return
@@ -357,7 +355,6 @@ class ChanPostRepository(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun preloadForThread(
     threadDescriptor: ChanDescriptor.ThreadDescriptor
   ): ModularResult<Unit> {
@@ -686,7 +683,6 @@ class ChanPostRepository(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun deleteOldPostsIfNeeded(forced: Boolean = false): ModularResult<ChanPostLocalSource.DeleteResult> {
     return applicationScope.dbCall {
       return@dbCall tryWithTransaction {
@@ -737,7 +733,6 @@ class ChanPostRepository(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun deleteOldThreadsIfNeeded(forced: Boolean = false): ModularResult<ChanPostLocalSource.DeleteResult> {
     return applicationScope.dbCall {
       return@dbCall tryWithTransaction {

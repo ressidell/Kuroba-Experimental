@@ -42,12 +42,7 @@ fun ReplyLayoutContainer(
   onAttachableSelectionChanged: (ReplyFileAttachable, Boolean) -> Unit,
   onAttachableStatusIconButtonClicked: (ReplyFileAttachable) -> Unit,
   onFlagSelectorClicked: (ChanDescriptor) -> Unit,
-  onPickLocalMediaButtonClicked: () -> Unit,
-  onPickLocalMediaButtonLongClicked: () -> Unit,
-  onPickRemoteMediaButtonClicked: () -> Unit,
-  onSearchRemoteMediaButtonClicked: () -> Unit,
   onPresolveCaptchaButtonClicked: () -> Unit,
-  onReplyLayoutOptionsButtonClicked: () -> Unit,
 ) {
   val replyInputRightPartWidth = 58.dp
   val iconSize = 36.dp
@@ -118,12 +113,7 @@ fun ReplyLayoutContainer(
         onDragStopped = onDragStopped,
         onCancelReplySendClicked = onCancelReplySendClicked,
         onSendReplyClicked = onSendReplyClicked,
-        onPickLocalMediaButtonClicked = onPickLocalMediaButtonClicked,
-        onPickLocalMediaButtonLongClicked = onPickLocalMediaButtonLongClicked,
-        onPickRemoteMediaButtonClicked = onPickRemoteMediaButtonClicked,
-        onSearchRemoteMediaButtonClicked = onSearchRemoteMediaButtonClicked,
         onPresolveCaptchaButtonClicked = onPresolveCaptchaButtonClicked,
-        onReplyLayoutOptionsButtonClicked = onReplyLayoutOptionsButtonClicked
       )
     }
   }

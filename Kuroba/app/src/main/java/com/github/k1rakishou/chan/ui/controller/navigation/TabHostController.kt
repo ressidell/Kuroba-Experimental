@@ -195,8 +195,9 @@ class TabHostController(
       childController.onTabFocused()
 
       // TODO: New toolbar. Might need to replace it with
-      //  containerToolbarState = getToolbarState(left)
-      requireToolbarNavController().toolbarState.updateFromState(childControllerToolbarState)
+//      requireToolbarNavController().toolbarState.updateFromState(childControllerToolbarState)
+
+      requireToolbarNavController().containerToolbarState = childControllerToolbarState
     }
 
   }

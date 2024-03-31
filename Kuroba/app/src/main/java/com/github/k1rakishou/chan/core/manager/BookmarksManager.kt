@@ -26,11 +26,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import org.joda.time.DateTime
-import java.util.BitSet
+import java.util.*
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 class BookmarksManager(
@@ -123,7 +122,6 @@ class BookmarksManager(
       .hide()
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun awaitUntilInitialized() {
     if (isReady()) {
       return

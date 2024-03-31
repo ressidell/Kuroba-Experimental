@@ -179,7 +179,6 @@ class ThreadSlideController(
     }
   }
 
-  @Suppress("RedundantIf")
   override fun onPanelSlide(panel: View, slideOffset: Float) {
     startOrUpdateToolbarTransition(slideOffset)
   }
@@ -216,8 +215,9 @@ class ThreadSlideController(
 
       toolbarState.showToolbar()
 
-      leftOpen = leftController
-      slideStateChanged(animated)
+      // TODO: New toolbar.
+//      leftOpen = leftController
+//      slideStateChanged(animated)
     }
   }
 
@@ -370,9 +370,10 @@ class ThreadSlideController(
   }
 
   private fun updateContainerToolbarStateWithChildToolbarState(left: Boolean, animate: Boolean) {
-    // TODO: New toolbar. Might need to replace it with
-    //  containerToolbarState = getToolbarState(left)
-    requireToolbarNavController().toolbarState.updateFromState(getToolbarState(left))
+//    requireToolbarNavController().toolbarState.updateFromState(getToolbarState(left))
+
+    // TODO: New toolbar. Might not work entirely correct.
+    containerToolbarState = getToolbarState(left)
   }
 
   private fun getToolbarState(forCatalog: Boolean): KurobaToolbarState {
@@ -404,9 +405,7 @@ class ThreadSlideController(
 
     onSlidingInProgress = true
 
-    // If left (catalog) is currently opened then we want to transition into right's (thread) controller's toolbar and
-    // vice versa.
-    val forCatalog = slideOffset <= 0.5f
+    val forCatalog = !leftOpen
 
     val transitionMode = if (forCatalog) {
       TransitionMode.In
@@ -428,11 +427,10 @@ class ThreadSlideController(
     }
 
     val forCatalog = leftOpen()
-    val kurobaToolbarState = getToolbarState(forCatalog = forCatalog)
 
-    containerToolbarState.onTransitionProgressFinished(
-      other = kurobaToolbarState
-    )
+    containerToolbarState.onTransitionProgressFinished()
+    // TODO: New toolbar. Might now work correctly.
+    containerToolbarState = getToolbarState(forCatalog = forCatalog)
 
     onSlidingInProgress = false
   }

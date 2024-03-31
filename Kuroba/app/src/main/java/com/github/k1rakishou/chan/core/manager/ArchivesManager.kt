@@ -27,7 +27,6 @@ import java.util.*
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @DoNotStrip
@@ -52,7 +51,6 @@ open class ArchivesManager(
   @GuardedBy("lock")
   private val allArchiveDescriptors = mutableListOf<ArchiveDescriptor>()
 
-  @OptIn(ExperimentalTime::class)
   fun initialize() {
     Logger.d(TAG, "ArchivesManager.initialize()")
 
@@ -119,7 +117,6 @@ open class ArchivesManager(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun awaitUntilInitialized() {
     if (suspendableInitializer.isInitialized()) {
       return

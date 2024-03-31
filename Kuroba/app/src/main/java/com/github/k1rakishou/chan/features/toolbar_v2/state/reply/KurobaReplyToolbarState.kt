@@ -7,17 +7,27 @@ import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarParams
+import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 
 data class KurobaReplyToolbarParams(
+  val chanDescriptor: ChanDescriptor? = null,
+  val leftItem: ToolbarMenuItem? = null,
   val toolbarMenu: ToolbarMenu? = null
 ) : IKurobaToolbarParams {
   override val kind: ToolbarStateKind = ToolbarStateKind.Reply
 }
 
 class KurobaReplyToolbarState(
-  params: KurobaSearchToolbarParams = KurobaSearchToolbarParams()
+  params: KurobaReplyToolbarParams = KurobaReplyToolbarParams()
 ) : IKurobaToolbarState {
+  private val _chanDescriptor = mutableStateOf<ChanDescriptor?>(params.chanDescriptor)
+  val chanDescriptor: State<ChanDescriptor?>
+    get() = _chanDescriptor
+
+  private val _leftItem = mutableStateOf<ToolbarMenuItem?>(params.leftItem)
+  val leftItem: State<ToolbarMenuItem?>
+    get() = _leftItem
+
   private val _toolbarMenu = mutableStateOf<ToolbarMenu?>(params.toolbarMenu)
   val toolbarMenu: State<ToolbarMenu?>
     get() = _toolbarMenu
@@ -32,12 +42,16 @@ class KurobaReplyToolbarState(
   override fun update(params: IKurobaToolbarParams) {
     params as KurobaReplyToolbarParams
 
+    _leftItem.value = params.leftItem
+    _chanDescriptor.value = params.chanDescriptor
     _toolbarMenu.value = params.toolbarMenu
   }
 
   override fun updateFromState(toolbarState: IKurobaToolbarState) {
     toolbarState as KurobaReplyToolbarState
 
+    _leftItem.value = toolbarState._leftItem.value
+    _chanDescriptor.value = toolbarState._chanDescriptor.value
     _toolbarMenu.value = toolbarState._toolbarMenu.value
   }
 
@@ -48,7 +62,7 @@ class KurobaReplyToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaReplyToolbarState()"
+    return "KurobaReplyToolbarState(chanDescriptor: ${_chanDescriptor.value})"
   }
 
 }

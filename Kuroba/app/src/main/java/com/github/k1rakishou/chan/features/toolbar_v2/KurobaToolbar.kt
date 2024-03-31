@@ -80,7 +80,8 @@ fun KurobaToolbar(
       is KurobaReplyToolbarState -> {
         KurobaReplyToolbarContent(
           modifier = Modifier.fillMaxSize(),
-          state = childToolbarState
+          state = childToolbarState,
+          showFloatingMenu = showFloatingMenu
         )
       }
       null -> {

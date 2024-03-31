@@ -855,6 +855,26 @@ class ThreadListLayout @JvmOverloads constructor(
     openOrCloseReplyLayout(open = false)
   }
 
+  fun onPickLocalMediaButtonClicked() {
+    replyLayoutView.onPickLocalMediaButtonClicked()
+  }
+
+  fun onPickLocalMediaButtonLongClicked() {
+    replyLayoutView.onPickLocalMediaButtonLongClicked()
+  }
+
+  fun onPickRemoteMediaButtonClicked() {
+    replyLayoutView.onPickRemoteMediaButtonClicked()
+  }
+
+  fun onSearchRemoteMediaButtonClicked(chanDescriptor: ChanDescriptor) {
+    replyLayoutView.onSearchRemoteMediaButtonClicked(chanDescriptor)
+  }
+
+  fun onReplyLayoutOptionsButtonClicked() {
+    replyLayoutView.onReplyLayoutOptionsButtonClicked()
+  }
+
   fun showError(error: String?) {
     postAdapter.showError(error)
   }

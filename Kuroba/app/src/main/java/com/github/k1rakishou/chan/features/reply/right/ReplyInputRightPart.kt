@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.reply.ReplyLayoutViewModel
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutState
-import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutVisibility
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 
@@ -39,12 +38,7 @@ internal fun ReplyInputRightPart(
   onDragStopped: suspend (velocity: Float) -> Unit,
   onCancelReplySendClicked: () -> Unit,
   onSendReplyClicked: (ChanDescriptor) -> Unit,
-  onPickLocalMediaButtonClicked: () -> Unit,
-  onPickLocalMediaButtonLongClicked: () -> Unit,
-  onPickRemoteMediaButtonClicked: () -> Unit,
-  onSearchRemoteMediaButtonClicked: () -> Unit,
   onPresolveCaptchaButtonClicked: () -> Unit,
-  onReplyLayoutOptionsButtonClicked: () -> Unit,
 ) {
   val chanTheme = LocalChanTheme.current
   val density = LocalDensity.current
@@ -52,19 +46,8 @@ internal fun ReplyInputRightPart(
   val padding = with(density) { 8.dp.toPx() }
   val cornerRadius = with(density) { remember { CornerRadius(8.dp.toPx(), 8.dp.toPx()) } }
 
-  val replyLayoutVisibility by replyLayoutState.replyLayoutVisibility
   val displayCaptchaPresolveButton by replyLayoutState.displayCaptchaPresolveButton
-  val attachables by replyLayoutState.attachables
-  val syntheticAttachables = replyLayoutState.syntheticAttachables
-
   val newReplyLayoutTutorialFinished by replyLayoutViewModel.newReplyLayoutTutorialFinished.collectAsState()
-
-  var buttonCounter = 0
-  val maxButtonsCount = when {
-    replyLayoutVisibility == ReplyLayoutVisibility.Expanded -> Int.MAX_VALUE
-    attachables.attachables.isEmpty() && syntheticAttachables.isEmpty() -> 4
-    else -> 6
-  }
 
   Column(
     modifier = Modifier
@@ -94,77 +77,27 @@ internal fun ReplyInputRightPart(
       ),
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    // TODO: implement a custom layout and add buttons based on the current height of ReplyInputRightPart?
-    if (buttonCounter++ < maxButtonsCount) {
+    Spacer(modifier = Modifier.height(6.dp))
+
+    SendReplyButton(
+      iconSize = iconSize,
+      padding = 4.dp,
+      newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
+      chanDescriptor = chanDescriptor,
+      replyLayoutState = replyLayoutState,
+      onCancelReplySendClicked = onCancelReplySendClicked,
+      onSendReplyClicked = onSendReplyClicked,
+    )
+
+    AnimatedVisibility(visible = displayCaptchaPresolveButton) {
       Spacer(modifier = Modifier.height(6.dp))
 
-      SendReplyButton(
+      PresolveCaptchaButton(
         iconSize = iconSize,
         padding = 4.dp,
         newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
-        chanDescriptor = chanDescriptor,
-        replyLayoutState = replyLayoutState,
-        onCancelReplySendClicked = onCancelReplySendClicked,
-        onSendReplyClicked = onSendReplyClicked,
-      )
-    }
-
-    if (buttonCounter++ < maxButtonsCount) {
-      AnimatedVisibility(visible = displayCaptchaPresolveButton) {
-        Spacer(modifier = Modifier.height(6.dp))
-
-        PresolveCaptchaButton(
-          iconSize = iconSize,
-          padding = 4.dp,
-          newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
-          replyLayoutViewModel = replyLayoutViewModel,
-          onPresolveCaptchaButtonClicked = onPresolveCaptchaButtonClicked
-        )
-      }
-    }
-
-    if (buttonCounter++ < maxButtonsCount) {
-      Spacer(modifier = Modifier.height(6.dp))
-
-      PickLocalMediaButton(
-        iconSize = iconSize,
-        padding = 4.dp,
-        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
-        onPickLocalMediaButtonClicked = onPickLocalMediaButtonClicked,
-        onPickLocalMediaButtonLongClicked = onPickLocalMediaButtonLongClicked
-      )
-    }
-
-    if (buttonCounter++ < maxButtonsCount) {
-      Spacer(modifier = Modifier.height(6.dp))
-
-      SearchRemoteMediaButton(
-        iconSize = iconSize,
-        padding = 4.dp,
-        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
-        onSearchRemoteMediaButtonClicked = onSearchRemoteMediaButtonClicked
-      )
-    }
-
-    if (buttonCounter++ < maxButtonsCount) {
-      Spacer(modifier = Modifier.height(6.dp))
-
-      PickRemoteMediaButton(
-        iconSize = iconSize,
-        padding = 4.dp,
-        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
-        onPickRemoteMediaButtonClicked = onPickRemoteMediaButtonClicked
-      )
-    }
-
-    if (buttonCounter++ < maxButtonsCount) {
-      Spacer(modifier = Modifier.height(6.dp))
-
-      ReplyLayoutOptionsButton(
-        iconSize = iconSize,
-        padding = 4.dp,
-        newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
-        onReplyLayoutOptionsButtonClicked = onReplyLayoutOptionsButtonClicked
+        replyLayoutViewModel = replyLayoutViewModel,
+        onPresolveCaptchaButtonClicked = onPresolveCaptchaButtonClicked
       )
     }
   }

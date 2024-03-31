@@ -540,7 +540,6 @@ class ThreadPresenter @Inject constructor(
     chanThreadLoadingState = ChanThreadLoadingState.Uninitialized
   }
 
-  @OptIn(ExperimentalTime::class)
   private suspend fun onChanTickerTick(chanDescriptor: ChanDescriptor) {
     Logger.d(TAG, "onChanTickerTick($chanDescriptor)")
 
