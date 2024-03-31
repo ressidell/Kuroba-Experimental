@@ -49,8 +49,8 @@ class ThreadSlideController(
   private var rightController: ViewThreadController? = null
   private var mainControllerCallbacks: MainControllerCallbacks?
   private var slidingPaneLayout: ThreadSlidingPaneLayout? = null
-  private var leftOpen = true
-  private var onSlidingInProgress = false
+  private var slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.LeftOpened
+  private var isSlidingInProgress = false
 
   private val emptyCatalogToolbar by lazy(LazyThreadSafetyMode.NONE) {
     val kurobaToolbarState = KurobaToolbarState(
@@ -93,7 +93,7 @@ class ThreadSlideController(
   }
 
   override val toolbarState: KurobaToolbarState
-    get() = getToolbarState(leftOpen)
+    get() = getToolbarState(slidingPaneLayoutOpenState)
 
   override fun onCreate() {
     super.onCreate()
@@ -173,8 +173,9 @@ class ThreadSlideController(
     val restoredOpen = slidingPaneLayout?.preservedOpenState
       ?: return
 
-    if (restoredOpen != leftOpen) {
-      leftOpen = restoredOpen
+    val newSlidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.from(restoredOpen)
+    if (newSlidingPaneLayoutOpenState != slidingPaneLayoutOpenState) {
+      slidingPaneLayoutOpenState = newSlidingPaneLayoutOpenState
       slideStateChanged(false)
     }
   }
@@ -184,21 +185,21 @@ class ThreadSlideController(
   }
 
   override fun onPanelOpened(panel: View) {
-    if (leftOpen != leftOpen()) {
-      leftOpen = leftOpen()
+    if (slidingPaneLayoutOpenState != SlidingPaneLayoutOpenState.from(leftOpen())) {
+      slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.LeftOpened
       slideStateChanged()
     }
 
-    finishToolbarTransition()
+    finishToolbarTransition(slidingPaneLayoutOpenState)
   }
 
   override fun onPanelClosed(panel: View) {
-    if (leftOpen != leftOpen()) {
-      leftOpen = leftOpen()
+    if (slidingPaneLayoutOpenState != SlidingPaneLayoutOpenState.from(leftOpen())) {
+      slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.RightOpened
       slideStateChanged()
     }
 
-    finishToolbarTransition()
+    finishToolbarTransition(slidingPaneLayoutOpenState)
   }
 
   override fun switchToController(leftController: Boolean) {
@@ -209,8 +210,10 @@ class ThreadSlideController(
     if (leftController != leftOpen()) {
       if (leftController) {
         slidingPaneLayout?.openPane()
+        slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.LeftOpening
       } else {
         slidingPaneLayout?.closePane()
+        slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.RightOpening
       }
 
       toolbarState.showToolbar()
@@ -233,8 +236,12 @@ class ThreadSlideController(
       addChildController(leftController)
       leftController.attachToParentView(slidingPaneLayout!!.leftPane)
       leftController.onShow()
+
       if (leftOpen()) {
-        updateContainerToolbarStateWithChildToolbarState(true, animated)
+        updateContainerToolbarStateWithChildToolbarState(
+          slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.LeftOpened,
+          animate = animated
+        )
       }
     }
   }
@@ -256,7 +263,10 @@ class ThreadSlideController(
         rightController.onShow()
 
         if (!leftOpen()) {
-          updateContainerToolbarStateWithChildToolbarState(false, animated)
+          updateContainerToolbarStateWithChildToolbarState(
+            slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.RightOpened,
+            animate = animated
+          )
         }
       }
     } else {
@@ -322,22 +332,41 @@ class ThreadSlideController(
   }
 
   private fun slideStateChanged(animated: Boolean = true) {
-    updateContainerToolbarStateWithChildToolbarState(leftOpen, animated)
+    updateContainerToolbarStateWithChildToolbarState(
+      slidingPaneLayoutOpenState = slidingPaneLayoutOpenState,
+      animate = animated
+    )
 
-    if (leftOpen && rightController != null) {
+    if (slidingPaneLayoutOpenState.leftOpenedOrOpening && rightController != null) {
       (rightController as ReplyAutoCloseListener).onReplyViewShouldClose()
-    } else if (!leftOpen && leftController != null) {
+    } else if (slidingPaneLayoutOpenState.rightOpenedOrOpening && leftController != null) {
       (leftController as ReplyAutoCloseListener).onReplyViewShouldClose()
     }
 
     notifyFocusLost(
-      controllerType = if (leftOpen) ThreadControllerType.Thread else ThreadControllerType.Catalog,
-      controller = if (leftOpen) rightController else leftController
+      controllerType = if (slidingPaneLayoutOpenState.leftOpenedOrOpening) {
+        ThreadControllerType.Thread
+      } else {
+        ThreadControllerType.Catalog
+      },
+      controller = if (slidingPaneLayoutOpenState.leftOpenedOrOpening) {
+        rightController
+      } else {
+        leftController
+      }
     )
 
     notifyFocusGained(
-      controllerType = if (leftOpen) ThreadControllerType.Catalog else ThreadControllerType.Thread,
-      controller = if (leftOpen) leftController else rightController
+      controllerType = if (slidingPaneLayoutOpenState.leftOpenedOrOpening) {
+        ThreadControllerType.Catalog
+      } else {
+        ThreadControllerType.Thread
+      },
+      controller = if (slidingPaneLayoutOpenState.leftOpenedOrOpening) {
+        leftController
+      } else {
+        rightController
+      }
     )
   }
 
@@ -369,22 +398,25 @@ class ThreadSlideController(
     }
   }
 
-  private fun updateContainerToolbarStateWithChildToolbarState(left: Boolean, animate: Boolean) {
+  private fun updateContainerToolbarStateWithChildToolbarState(
+    slidingPaneLayoutOpenState: SlidingPaneLayoutOpenState,
+    animate: Boolean
+  ) {
 //    requireToolbarNavController().toolbarState.updateFromState(getToolbarState(left))
 
     // TODO: New toolbar. Might not work entirely correct.
-    containerToolbarState = getToolbarState(left)
+    containerToolbarState = getToolbarState(slidingPaneLayoutOpenState)
   }
 
-  private fun getToolbarState(forCatalog: Boolean): KurobaToolbarState {
-    var kurobaToolbarState = if (forCatalog) {
+  private fun getToolbarState(slidingPaneLayoutOpenState: SlidingPaneLayoutOpenState): KurobaToolbarState {
+    var kurobaToolbarState = if (slidingPaneLayoutOpenState.leftOpenedOrOpening) {
       leftController?.toolbarState
     } else {
       rightController?.toolbarState
     }
 
     if (kurobaToolbarState == null) {
-      kurobaToolbarState = if (forCatalog) {
+      kurobaToolbarState = if (slidingPaneLayoutOpenState.leftOpenedOrOpening) {
         emptyCatalogToolbar
       } else {
         emptyThreadToolbar
@@ -395,7 +427,7 @@ class ThreadSlideController(
   }
 
   private fun startOrUpdateToolbarTransition(slideOffset: Float) {
-    if (onSlidingInProgress) {
+    if (isSlidingInProgress) {
       containerToolbarState.onTransitionProgress(
         progress = slideOffset
       )
@@ -403,17 +435,19 @@ class ThreadSlideController(
       return
     }
 
-    onSlidingInProgress = true
+    isSlidingInProgress = true
 
-    val forCatalog = !leftOpen
+    val updatedState = slidingPaneLayoutOpenState
+      .asTransition()
+      .invert()
 
-    val transitionMode = if (forCatalog) {
+    val transitionMode = if (updatedState.rightOpenedOrOpening) {
       TransitionMode.In
     } else {
       TransitionMode.Out
     }
 
-    val kurobaToolbarState = getToolbarState(forCatalog = forCatalog)
+    val kurobaToolbarState = getToolbarState(updatedState)
 
     containerToolbarState.onTransitionProgressStart(
       other = kurobaToolbarState,
@@ -421,18 +455,16 @@ class ThreadSlideController(
     )
   }
 
-  private fun finishToolbarTransition() {
-    if (!onSlidingInProgress) {
+  private fun finishToolbarTransition(slidingPaneLayoutOpenState: SlidingPaneLayoutOpenState) {
+    if (!isSlidingInProgress) {
       return
     }
 
-    val forCatalog = leftOpen()
-
     containerToolbarState.onTransitionProgressFinished()
-    // TODO: New toolbar. Might now work correctly.
-    containerToolbarState = getToolbarState(forCatalog = forCatalog)
+    // TODO: New toolbar. Might not work correctly.
+    containerToolbarState = getToolbarState(slidingPaneLayoutOpenState)
 
-    onSlidingInProgress = false
+    isSlidingInProgress = false
   }
 
   fun passMotionEventIntoSlidingPaneLayout(event: MotionEvent): Boolean {
@@ -476,6 +508,46 @@ class ThreadSlideController(
       return false
     }
 
+  }
+
+  private enum class SlidingPaneLayoutOpenState {
+    LeftOpening,
+    LeftOpened,
+    RightOpening,
+    RightOpened;
+
+    fun asTransition(): SlidingPaneLayoutOpenState {
+      return when (this) {
+        LeftOpened -> LeftOpening
+        RightOpened -> RightOpening
+        LeftOpening -> error("Shouldn't happen")
+        RightOpening -> error("Shouldn't happen")
+      }
+    }
+
+    fun invert(): SlidingPaneLayoutOpenState {
+      return when (this) {
+        LeftOpening -> RightOpening
+        LeftOpened -> RightOpened
+        RightOpening -> LeftOpening
+        RightOpened -> LeftOpened
+      }
+    }
+
+    val leftOpenedOrOpening: Boolean
+      get() = this == LeftOpened || this == LeftOpening
+    val rightOpenedOrOpening: Boolean
+      get() = this == RightOpened || this == RightOpening
+
+    companion object {
+      fun from(leftOpened: Boolean): SlidingPaneLayoutOpenState {
+        return if (leftOpened) {
+          LeftOpened
+        } else {
+          RightOpened
+        }
+      }
+    }
   }
 
   companion object {

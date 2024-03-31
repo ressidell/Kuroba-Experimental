@@ -77,8 +77,6 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.math.ceil
-import kotlin.math.floor
 
 private const val TAG = "KotlinExntesions"
 val ELLIPSIS_SYMBOL: CharSequence = "…"
@@ -1818,19 +1816,11 @@ fun Throwable.isTimeoutCancellationException(): Boolean {
 }
 
 fun Float.quantize(precision: Float): Float {
-  val additionalPrecision = if (this >= -1f && this <= 1f) {
-    if (this >= 0f) {
-      precision * 1f
-    } else {
-      precision * -1f
-    }
+  val adjustedValue = this + if (this >= 0) {
+    precision / 2
   } else {
-    0f
+    -precision / 2
   }
 
-  return if (this >= 0f) {
-    (floor((this.toDouble() / precision.toDouble()) + additionalPrecision) * precision).toFloat()
-  } else {
-    (ceil((this.toDouble() / precision.toDouble()) + additionalPrecision) * precision).toFloat()
-  }
+  return (adjustedValue / precision).toInt() * precision
 }

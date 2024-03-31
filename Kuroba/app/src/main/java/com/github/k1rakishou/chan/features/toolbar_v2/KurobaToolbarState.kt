@@ -130,11 +130,11 @@ class KurobaToolbarState(
     val transitionState = _transitionToolbarState.value
       ?: return
 
-    if (transitionState.progress == progress) {
+    val quantizedProgress = progress.quantize(precision = 0.033f)
+    if (quantizedProgress == transitionState.progress) {
       return
     }
 
-    val quantizedProgress = progress.quantize(precision = 0.033f)
     _transitionToolbarState.value = transitionState.copy(progress = quantizedProgress)
   }
 
