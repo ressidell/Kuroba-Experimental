@@ -32,6 +32,7 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScroll
 import com.github.k1rakishou.chan.features.report.Chan4ReportPostController
 import com.github.k1rakishou.chan.features.toolbar_v2.CloseMenuItem
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
+import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.ui.helper.OpenExternalThreadHelper
 import com.github.k1rakishou.chan.ui.helper.ShowPostsInExternalThreadHelper
@@ -215,33 +216,7 @@ abstract class ThreadController(
 
     controllerScope.launch {
       globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow
-        .onEach { replyLayoutVisibilityEvents ->
-          val currentFocusedDescriptor = currentOpenedDescriptorStateManager.currentFocusedDescriptor
-            ?: return@onEach
-
-          val currentDescriptor = chanDescriptor
-            ?: return@onEach
-
-          if (currentFocusedDescriptor != currentDescriptor) {
-            return@onEach
-          }
-
-          val isInReplyLayoutMode = kurobaToolbarState.isInReplyMode()
-          val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.isOpenedForDescriptor(currentDescriptor)
-
-          if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
-            return@onEach
-          }
-
-          if (anyReplyLayoutOpenedOrExpanded) {
-            enterReplyLayoutToolbarMode(currentDescriptor)
-            return@onEach
-          }
-
-          if (toolbarState.isInReplyMode()) {
-            toolbarState.pop()
-          }
-        }
+        .onEach { replyLayoutVisibilityEvents -> onReplyLayoutVisibilityEvent(replyLayoutVisibilityEvents) }
         .collect()
     }
 
@@ -580,6 +555,34 @@ abstract class ThreadController(
     )
 
     presentController(floatingListMenuController)
+  }
+
+  private fun onReplyLayoutVisibilityEvent(replyLayoutVisibilityEvents: ReplyLayoutVisibilityStates) {
+    val currentFocusedDescriptor = currentOpenedDescriptorStateManager.currentFocusedDescriptor
+      ?: return
+
+    val currentDescriptor = chanDescriptor
+      ?: return
+
+    if (currentFocusedDescriptor != currentDescriptor) {
+      return
+    }
+
+    val isInReplyLayoutMode = kurobaToolbarState.isInReplyMode()
+    val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.isOpenedForDescriptor(currentDescriptor)
+
+    if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
+      return
+    }
+
+    if (anyReplyLayoutOpenedOrExpanded) {
+      enterReplyLayoutToolbarMode(currentDescriptor)
+      return
+    }
+
+    if (toolbarState.isInReplyMode()) {
+      toolbarState.pop()
+    }
   }
 
   private fun enterReplyLayoutToolbarMode(descriptor: ChanDescriptor) {
