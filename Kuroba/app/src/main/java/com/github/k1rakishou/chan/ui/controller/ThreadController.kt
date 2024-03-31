@@ -216,23 +216,30 @@ abstract class ThreadController(
     controllerScope.launch {
       globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow
         .onEach { replyLayoutVisibilityEvents ->
+          val currentFocusedDescriptor = currentOpenedDescriptorStateManager.currentFocusedDescriptor
+            ?: return@onEach
+
+          val currentDescriptor = chanDescriptor
+            ?: return@onEach
+
+          if (currentFocusedDescriptor != currentDescriptor) {
+            return@onEach
+          }
+
           val isInReplyLayoutMode = kurobaToolbarState.isInReplyMode()
-          val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.anyOpened()
-            || replyLayoutVisibilityEvents.anyExpanded()
+          val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.isOpenedForDescriptor(currentDescriptor)
 
           if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
             return@onEach
           }
 
           if (anyReplyLayoutOpenedOrExpanded) {
-            val descriptor = chanDescriptor
-              ?: return@onEach
+            enterReplyLayoutToolbarMode(currentDescriptor)
+            return@onEach
+          }
 
-            enterReplyLayoutToolbarMode(descriptor)
-          } else {
-            if (toolbarState.isInReplyMode()) {
-              toolbarState.pop()
-            }
+          if (toolbarState.isInReplyMode()) {
+            toolbarState.pop()
           }
         }
         .collect()
