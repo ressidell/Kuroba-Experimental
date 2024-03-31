@@ -484,7 +484,7 @@ abstract class Controller(
       // slide mode
       val doubleNav = previousSiblingController as DoubleNavigationController
       if (doubleNav is ThreadSlideController) {
-        if (doubleNav.leftOpen()) {
+        if (doubleNav.isLeftOpen()) {
           threadController = doubleNav.leftController() as ThreadController
         } else {
           threadController = doubleNav.rightController() as ThreadController
