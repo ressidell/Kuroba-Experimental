@@ -194,9 +194,6 @@ class TabHostController(
       val childControllerToolbarState = childController.updateToolbarState()
       childController.onTabFocused()
 
-      // TODO: New toolbar. Might need to replace it with
-//      requireToolbarNavController().toolbarState.updateFromState(childControllerToolbarState)
-
       requireToolbarNavController().containerToolbarState = childControllerToolbarState
     }
 

@@ -215,17 +215,11 @@ class ThreadSlideController(
     if (leftController != isLeftOpen()) {
       if (leftController) {
         slidingPaneLayout?.openPane()
-        slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.LeftOpening
       } else {
         slidingPaneLayout?.closePane()
-        slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.RightOpening
       }
 
       toolbarState.showToolbar()
-
-      // TODO: New toolbar.
-//      leftOpen = leftController
-//      slideStateChanged(animated)
     }
   }
 
@@ -407,9 +401,6 @@ class ThreadSlideController(
     slidingPaneLayoutOpenState: SlidingPaneLayoutOpenState,
     animate: Boolean
   ) {
-//    requireToolbarNavController().toolbarState.updateFromState(getToolbarState(left))
-
-    // TODO: New toolbar. Might not work entirely correct.
     containerToolbarState = getToolbarState(slidingPaneLayoutOpenState)
   }
 
@@ -458,7 +449,6 @@ class ThreadSlideController(
     }
 
     containerToolbarState.onTransitionProgressFinished()
-    // TODO: New toolbar. Might not work correctly.
     containerToolbarState = getToolbarState(slidingPaneLayoutOpenState)
 
     isSlidingInProgress = false

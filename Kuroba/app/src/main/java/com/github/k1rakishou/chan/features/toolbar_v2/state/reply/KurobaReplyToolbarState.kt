@@ -47,14 +47,6 @@ class KurobaReplyToolbarState(
     _toolbarMenu.value = params.toolbarMenu
   }
 
-  override fun updateFromState(toolbarState: IKurobaToolbarState) {
-    toolbarState as KurobaReplyToolbarState
-
-    _leftItem.value = toolbarState._leftItem.value
-    _chanDescriptor.value = toolbarState._chanDescriptor.value
-    _toolbarMenu.value = toolbarState._toolbarMenu.value
-  }
-
   override fun onPushed() {
   }
 

@@ -140,23 +140,7 @@ class KurobaToolbarState(
 
   fun onTransitionProgressFinished() {
     _transitionToolbarState.value = null
-
-    // TODO: New toolbar.
-//    updateFromState(other)
   }
-
-  // TODO: New toolbar.
-//  fun updateFromState(toolbarState: KurobaToolbarState) {
-//    Snapshot.withMutableSnapshot {
-//      _toolbarStateList.value = toolbarState._toolbarStateList.value
-//
-//      _container.value = toolbarState._container.value
-//      _default.value = toolbarState._default.value
-//      _search.value = toolbarState._search.value
-//      _selection.value = toolbarState._selection.value
-//      _reply.value = toolbarState._reply.value
-//    }
-//  }
 
   fun enterContainerMode() {
     enterToolbarMode(

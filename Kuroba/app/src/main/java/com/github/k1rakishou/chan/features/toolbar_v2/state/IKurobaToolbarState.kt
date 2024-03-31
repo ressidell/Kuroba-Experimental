@@ -12,8 +12,6 @@ interface IKurobaToolbarState {
   val rightToolbarMenu: ToolbarMenu?
 
   fun update(params: IKurobaToolbarParams)
-  fun updateFromState(toolbarState: IKurobaToolbarState)
-
   fun onPushed()
   fun onPopped()
 

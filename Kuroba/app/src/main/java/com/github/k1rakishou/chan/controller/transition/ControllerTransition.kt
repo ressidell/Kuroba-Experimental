@@ -53,9 +53,6 @@ abstract class ControllerTransition(
     }
 
     if (transitionStarted && navController != null && controllerToolbarState != null) {
-      // TODO: New toolbar.
-//      navController.toolbarState.onTransitionProgressFinished(controllerToolbarState)
-
       navController.toolbarState.onTransitionProgressFinished()
       navController.containerToolbarState = controllerToolbarState
     }

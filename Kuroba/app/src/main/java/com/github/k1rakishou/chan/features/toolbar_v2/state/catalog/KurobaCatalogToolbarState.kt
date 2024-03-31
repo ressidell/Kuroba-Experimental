@@ -68,17 +68,6 @@ class KurobaCatalogToolbarState(
     _iconClickInterceptor = params.iconClickInterceptor
   }
 
-  override fun updateFromState(toolbarState: IKurobaToolbarState) {
-    toolbarState as KurobaCatalogToolbarState
-
-    _leftItem.value = toolbarState._leftItem.value
-    _title.value = toolbarState._title.value
-    _subtitle.value = toolbarState._subtitle.value
-    _toolbarMenu.value = toolbarState._toolbarMenu.value
-    _onMainContentClick = toolbarState._onMainContentClick
-    _iconClickInterceptor = toolbarState._iconClickInterceptor
-  }
-
   override fun onPushed() {
   }
 

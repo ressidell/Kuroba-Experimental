@@ -47,13 +47,6 @@ class KurobaSelectionToolbarState(
     _toolbarMenu.value = params.toolbarMenu
   }
 
-  override fun updateFromState(toolbarState: IKurobaToolbarState) {
-    toolbarState as KurobaSelectionToolbarState
-
-    _title.value = toolbarState._title.value
-    _toolbarMenu.value = toolbarState._toolbarMenu.value
-  }
-
   fun updateTitle(text: ToolbarText) {
     _title.value = text
   }
