@@ -64,7 +64,7 @@ fun KurobaContainerToolbarContent(
   ) {
     Spacer(modifier = Modifier.height(windowInsets.top))
 
-    if (transitionToolbar == null) {
+    if (transitionToolbar == null || transitionToolbar.progress < 0f) {
       childToolbarMovable(topToolbarState)
     } else {
       ToolbarTransitionContainer(

@@ -122,7 +122,7 @@ class KurobaToolbarState(
     _transitionToolbarState.value = KurobaToolbarTransition(
       transitionToolbarState = topToolbar,
       transitionMode = transitionMode,
-      progress = 0f
+      progress = -1f
     )
   }
 
