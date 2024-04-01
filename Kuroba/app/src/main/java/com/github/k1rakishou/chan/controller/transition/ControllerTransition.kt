@@ -19,15 +19,11 @@ abstract class ControllerTransition(
   @JvmField
   var to: Controller? = null
 
-  fun onStarted() {
+  fun onAnimationStarted() {
     val navController = navigationController
       ?: return
 
-    val controllerToolbarState = when (transitionMode) {
-      TransitionMode.In -> to?.toolbarState
-      TransitionMode.Out -> from?.toolbarState
-    }
-
+    val controllerToolbarState = to?.toolbarState
     if (controllerToolbarState == null) {
       return
     }
@@ -36,7 +32,7 @@ abstract class ControllerTransition(
     navController.toolbarState.onTransitionProgressStart(controllerToolbarState, transitionMode)
   }
 
-  fun onProgress(progress: Float) {
+  fun onAnimationProgress(progress: Float) {
     val navController = navigationController
 
     if (transitionStarted && navController != null) {
@@ -44,13 +40,9 @@ abstract class ControllerTransition(
     }
   }
 
-  fun onCompleted() {
+  fun onAnimationCompleted() {
     val navController = navigationController
-
-    val controllerToolbarState = when (transitionMode) {
-      TransitionMode.In -> to?.toolbarState
-      TransitionMode.Out -> from?.toolbarState
-    }
+    val controllerToolbarState = to?.toolbarState
 
     if (transitionStarted && navController != null && controllerToolbarState != null) {
       navController.toolbarState.onTransitionProgressFinished()

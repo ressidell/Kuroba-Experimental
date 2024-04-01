@@ -14,17 +14,8 @@ sealed class ChanCacheUpdateOptions {
     }
   }
 
-  object UpdateCache : ChanCacheUpdateOptions() {
-    override fun toString(): String {
-      return "UpdateCache"
-    }
-  }
-
-  object DoNotUpdateCache : ChanCacheUpdateOptions() {
-    override fun toString(): String {
-      return "DoNotUpdateCache"
-    }
-  }
+  data object UpdateCache : ChanCacheUpdateOptions()
+  data object DoNotUpdateCache : ChanCacheUpdateOptions()
 
   /**
    * Only used in the [ChanThreadManager] to figure out whether we can reload posts from the database

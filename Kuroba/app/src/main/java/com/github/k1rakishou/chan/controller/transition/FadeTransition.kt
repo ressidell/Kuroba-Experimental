@@ -32,21 +32,21 @@ class FadeTransition(
     progress.interpolator = AccelerateDecelerateInterpolator()
     progress.duration = 250
     progress.addUpdateListener { animator ->
-      onProgress(animator.animatedValue as Float)
+      onAnimationProgress(animator.animatedValue as Float)
     }
 
     progress.addListener(
       object : AnimatorListenerAdapter() {
         override fun onAnimationStart(animation: Animator, isReverse: Boolean) {
-          onStarted()
+          onAnimationStarted()
         }
 
         override fun onAnimationCancel(animation: Animator) {
-          onCompleted()
+          onAnimationCompleted()
         }
 
         override fun onAnimationEnd(animation: Animator) {
-          onCompleted()
+          onAnimationCompleted()
         }
       }
     )
