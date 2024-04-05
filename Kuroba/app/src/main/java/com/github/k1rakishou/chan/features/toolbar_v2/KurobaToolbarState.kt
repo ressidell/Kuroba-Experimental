@@ -294,10 +294,6 @@ class KurobaToolbarState(
     }
   }
 
-  fun onBack(): Boolean {
-    return pop()
-  }
-
   fun findItem(id: Int): ToolbarMenuItem? {
     for (toolbarState in _toolbarList) {
       val toolbarMenuItem = toolbarState.findItem(id)

@@ -43,6 +43,7 @@ fun ReplyLayoutContainer(
   onAttachableStatusIconButtonClicked: (ReplyFileAttachable) -> Unit,
   onFlagSelectorClicked: (ChanDescriptor) -> Unit,
   onPresolveCaptchaButtonClicked: () -> Unit,
+  onReplyLayoutOptionsButtonClicked: () -> Unit
 ) {
   val replyInputRightPartWidth = 58.dp
   val iconSize = 36.dp
@@ -114,6 +115,7 @@ fun ReplyLayoutContainer(
         onCancelReplySendClicked = onCancelReplySendClicked,
         onSendReplyClicked = onSendReplyClicked,
         onPresolveCaptchaButtonClicked = onPresolveCaptchaButtonClicked,
+        onReplyLayoutOptionsButtonClicked = onReplyLayoutOptionsButtonClicked
       )
     }
   }

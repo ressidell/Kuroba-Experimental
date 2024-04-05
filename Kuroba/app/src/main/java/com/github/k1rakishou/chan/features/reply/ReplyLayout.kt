@@ -72,6 +72,7 @@ fun ReplyLayout(
           onAttachableStatusIconButtonClicked = replyLayoutViewModel::onAttachableStatusIconButtonClicked,
           onFlagSelectorClicked = replyLayoutViewModel::onFlagSelectorClicked,
           onPresolveCaptchaButtonClicked = onPresolveCaptchaButtonClicked,
+          onReplyLayoutOptionsButtonClicked = replyLayoutViewModel::onReplyLayoutOptionsButtonClicked
         )
       }
     }

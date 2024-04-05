@@ -88,8 +88,4 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     }
   }
 
-  override fun onBack(): Boolean {
-    return containerToolbarState.onBack() || super.onBack()
-  }
-
 }

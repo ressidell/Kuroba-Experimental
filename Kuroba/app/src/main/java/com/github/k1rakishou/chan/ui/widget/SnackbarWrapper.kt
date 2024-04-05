@@ -53,6 +53,7 @@ class SnackbarWrapper private constructor(
   fun show(threadControllerType: ThreadControllerType) {
     val isReplyLayoutOpened = globalUiStateHolder.replyLayout.state(threadControllerType).isOpenedOrExpanded()
     if (isReplyLayoutOpened) {
+      // TODO: New toolbar. We probably want to show snackbars when reply layout is opened. Need to remove this check.
       // Do not show the snackbar when the reply layout is opened
       return
     }
@@ -170,7 +171,7 @@ class SnackbarWrapper private constructor(
       textId: Int,
       duration: Int
     ): SnackbarWrapper {
-      require(duration in allowedDurations) { "Bad duration" }
+      require(duration in allowedDurations) { "Bad duration '${duration}'" }
 
       val snackbar = Snackbar.make(view, textId, duration)
       snackbar.isGestureInsetBottomIgnored = true
@@ -189,7 +190,7 @@ class SnackbarWrapper private constructor(
       text: String,
       duration: Int
     ): SnackbarWrapper {
-      require(duration in allowedDurations) { "Bad duration" }
+      require(duration in allowedDurations) { "Bad duration '${duration}'" }
 
       val snackbar = Snackbar.make(view, text, duration)
       snackbar.isGestureInsetBottomIgnored = true

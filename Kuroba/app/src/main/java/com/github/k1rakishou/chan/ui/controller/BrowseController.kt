@@ -994,7 +994,7 @@ class BrowseController(
   }
 
   private fun replyClicked(item: ToolbarMenuOverflowItem) {
-    threadLayout.openReply(true)
+    threadLayout.openOrCloseReply(true)
   }
 
   private fun viewModeClicked(item: ToolbarMenuOverflowItem) {
@@ -1193,7 +1193,7 @@ class BrowseController(
       toolbarState.pop()
     }
 
-    threadLayout.openReply(false)
+    threadLayout.openOrCloseReply(false)
   }
 
   private fun handleShareOrOpenInBrowser(share: Boolean) {

@@ -593,6 +593,8 @@ abstract class ThreadController(
           if (toolbarState.isInReplyMode()) {
             toolbarState.pop()
           }
+
+          threadLayout.openOrCloseReply(open = false)
         }
       ),
       menuBuilder = {
@@ -609,11 +611,6 @@ abstract class ThreadController(
         withMenuItem(
           drawableId = R.drawable.ic_search_white_24dp,
           onClick = { threadLayout.onSearchRemoteMediaButtonClicked(descriptor) }
-        )
-
-        withMenuItem(
-          drawableId = R.drawable.ic_more_vert_white_24dp,
-          onClick = { threadLayout.onReplyLayoutOptionsButtonClicked() }
         )
       }
     )

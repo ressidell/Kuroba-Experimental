@@ -37,8 +37,6 @@ fun KurobaReplyToolbarContent(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically
   ) {
-    Spacer(modifier = Modifier.width(12.dp))
-
     if (leftIcon != null) {
       Spacer(modifier = Modifier.width(12.dp))
 

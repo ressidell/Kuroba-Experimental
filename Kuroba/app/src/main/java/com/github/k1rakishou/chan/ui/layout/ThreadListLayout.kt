@@ -871,10 +871,6 @@ class ThreadListLayout @JvmOverloads constructor(
     replyLayoutView.onSearchRemoteMediaButtonClicked(chanDescriptor)
   }
 
-  fun onReplyLayoutOptionsButtonClicked() {
-    replyLayoutView.onReplyLayoutOptionsButtonClicked()
-  }
-
   fun showError(error: String?) {
     postAdapter.showError(error)
   }

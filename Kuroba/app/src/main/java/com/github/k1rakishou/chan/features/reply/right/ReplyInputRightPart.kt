@@ -39,6 +39,7 @@ internal fun ReplyInputRightPart(
   onCancelReplySendClicked: () -> Unit,
   onSendReplyClicked: (ChanDescriptor) -> Unit,
   onPresolveCaptchaButtonClicked: () -> Unit,
+  onReplyLayoutOptionsButtonClicked: () -> Unit
 ) {
   val chanTheme = LocalChanTheme.current
   val density = LocalDensity.current
@@ -100,5 +101,14 @@ internal fun ReplyInputRightPart(
         onPresolveCaptchaButtonClicked = onPresolveCaptchaButtonClicked
       )
     }
+
+    Spacer(modifier = Modifier.height(6.dp))
+
+    ReplyLayoutOptionsButton(
+      iconSize = iconSize,
+      padding = 4.dp,
+      newReplyLayoutTutorialFinished = newReplyLayoutTutorialFinished,
+      onReplyLayoutOptionsButtonClicked = onReplyLayoutOptionsButtonClicked
+    )
   }
 }

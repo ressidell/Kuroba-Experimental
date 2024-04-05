@@ -131,7 +131,7 @@ open class ViewThreadController(
       toolbarState.pop()
     }
 
-    threadLayout.openReply(false)
+    threadLayout.openOrCloseReply(false)
   }
 
   override suspend fun showThreadWithoutFocusing(descriptor: ThreadDescriptor, animated: Boolean) {
@@ -637,7 +637,7 @@ open class ViewThreadController(
   }
 
   private fun replyClicked(item: ToolbarMenuOverflowItem) {
-    threadLayout.openReply(true)
+    threadLayout.openOrCloseReply(true)
   }
 
   private fun albumClicked(item: ToolbarMenuItem) {

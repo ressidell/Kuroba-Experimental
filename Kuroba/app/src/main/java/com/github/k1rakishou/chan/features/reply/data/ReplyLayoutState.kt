@@ -991,9 +991,6 @@ class ReplyLayoutState(
   private fun updateReplyFieldHintText() {
     _replyFieldHintText.value = formatLabelText(
       replyAttachables = _attachables.value,
-      threadControllerType = threadControllerType,
-      makeNewThreadHint = appResources.string(R.string.reply_make_new_thread_hint),
-      replyInThreadHint = appResources.string(R.string.reply_reply_in_thread_hint),
       replyText = replyTextState.text.toString(),
       maxCommentLength = _maxCommentLength.intValue
     )
@@ -1014,22 +1011,10 @@ class ReplyLayoutState(
   @Suppress("ConvertTwoComparisonsToRangeCheck")
   private fun formatLabelText(
     replyAttachables: ReplyAttachables,
-    threadControllerType: ThreadControllerType,
-    makeNewThreadHint: String,
-    replyInThreadHint: String,
     replyText: CharSequence,
     maxCommentLength: Int
   ): AnnotatedString {
     return buildAnnotatedString {
-      val commentLabelText = when (threadControllerType) {
-        ThreadControllerType.Catalog -> makeNewThreadHint
-        ThreadControllerType.Thread -> replyInThreadHint
-      }
-
-      append(commentLabelText)
-
-      append(" ")
-
       val commentLength = replyText.length
 
       if (maxCommentLength > 0 && commentLength > maxCommentLength) {

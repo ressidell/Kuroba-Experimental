@@ -406,10 +406,6 @@ class ThreadLayout @JvmOverloads constructor(
     threadListLayout.onSearchRemoteMediaButtonClicked(chanDescriptor)
   }
 
-  fun onReplyLayoutOptionsButtonClicked() {
-    threadListLayout.onReplyLayoutOptionsButtonClicked()
-  }
-
   fun canChildScrollUp(): Boolean {
     if (visible != Visible.THREAD) {
       return true
@@ -1234,7 +1230,7 @@ class ThreadLayout @JvmOverloads constructor(
     }
   }
 
-  fun openReply(open: Boolean) {
+  fun openOrCloseReply(open: Boolean) {
     openReplyInternal(open)
   }
 
