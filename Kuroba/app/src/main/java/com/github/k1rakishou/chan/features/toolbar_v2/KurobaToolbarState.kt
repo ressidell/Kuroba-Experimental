@@ -31,21 +31,15 @@ import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 
 @Stable
 class KurobaToolbarState(
   private val controllerKey: ControllerKey,
   private val globalUiStateHolder: GlobalUiStateHolder
 ) {
-  private val _toolbarLayerEventFlow = MutableSharedFlow<KurobaToolbarStateEvent>(extraBufferCapacity = Channel.UNLIMITED)
-  val toolbarLayerEventFlow: SharedFlow<KurobaToolbarStateEvent>
-    get() = _toolbarLayerEventFlow.asSharedFlow()
+  private var _destroying = false
 
   private val _toolbarStateList = mutableStateOf<PersistentList<IKurobaToolbarState>>(persistentListOf())
   val toolbarStateList: State<ImmutableList<IKurobaToolbarState>>
@@ -61,25 +55,25 @@ class KurobaToolbarState(
   val transitionToolbarState: State<KurobaToolbarTransition?>
     get() = _transitionToolbarState
 
-  private val _container = mutableStateOf(KurobaContainerToolbarState())
+  private val _container by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaContainerToolbarState()) }
   val container: KurobaContainerToolbarState
     get() = _container.value
-  private val _catalog = mutableStateOf(KurobaCatalogToolbarState())
+  private val _catalog by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaCatalogToolbarState()) }
   val catalog: KurobaCatalogToolbarState
     get() = _catalog.value
-  private val _thread = mutableStateOf(KurobaThreadToolbarState())
+  private val _thread by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaThreadToolbarState()) }
   val thread: KurobaThreadToolbarState
     get() = _thread.value
-  private val _default = mutableStateOf(KurobaDefaultToolbarState())
+  private val _default by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaDefaultToolbarState()) }
   val default: KurobaDefaultToolbarState
     get() = _default.value
-  private val _search = mutableStateOf(KurobaSearchToolbarState())
+  private val _search by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaSearchToolbarState()) }
   val search: KurobaSearchToolbarState
     get() = _search.value
-  private val _selection = mutableStateOf(KurobaSelectionToolbarState())
+  private val _selection by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaSelectionToolbarState()) }
   val selection: KurobaSelectionToolbarState
     get() = _selection.value
-  private val _reply = mutableStateOf(KurobaReplyToolbarState())
+  private val _reply by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaReplyToolbarState()) }
   val reply: KurobaReplyToolbarState
     get() = _reply.value
 
@@ -110,16 +104,26 @@ class KurobaToolbarState(
     other: KurobaToolbarState,
     transitionMode: TransitionMode
   ) {
-    check(_transitionToolbarState.value == null) {
-      "Attempt to perform more than one transition at the same time! " +
-        "transitionState: ${transitionToolbarState.value}, other: ${other}, transitionMode: ${transitionMode}"
+    when (val transition = _transitionToolbarState.value) {
+      is KurobaToolbarTransition.Instant -> {
+        // End current transition animation
+        onKurobaToolbarTransitionInstantFinished(transition)
+      }
+      is KurobaToolbarTransition.Progress -> {
+        error("Attempt to perform more than one transition at the same time!\n" +
+          "current: ${transitionToolbarState.value}\n" +
+          "new: ${other} with transitionMode: ${transitionMode}")
+      }
+      null -> {
+        // no-op
+      }
     }
 
     val topToolbar = checkNotNull(other.topToolbar) {
       "Attempt to perform a transition with a non-initialized toolbar! toolbar: ${other}"
     }
 
-    _transitionToolbarState.value = KurobaToolbarTransition(
+    _transitionToolbarState.value = KurobaToolbarTransition.Progress(
       transitionToolbarState = topToolbar,
       transitionMode = transitionMode,
       progress = -1f
@@ -130,6 +134,10 @@ class KurobaToolbarState(
     val transitionState = _transitionToolbarState.value
       ?: return
 
+    check(transitionState is KurobaToolbarTransition.Progress) {
+      "Expected transitionState to be Progress but got ${transitionState}"
+    }
+
     val quantizedProgress = progress.quantize(precision = 0.033f)
     if (quantizedProgress == transitionState.progress) {
       return
@@ -139,6 +147,14 @@ class KurobaToolbarState(
   }
 
   fun onTransitionProgressFinished() {
+    val transitionState = _transitionToolbarState.value
+
+    if (transitionState != null) {
+      check(transitionState is KurobaToolbarTransition.Progress) {
+        "Expected transitionState to be Progress but got ${transitionState}"
+      }
+    }
+
     _transitionToolbarState.value = null
   }
 
@@ -278,19 +294,43 @@ class KurobaToolbarState(
       return false
     }
 
+    if (!_destroying && _transitionToolbarState.value != null) {
+      return false
+    }
+
     val topToolbar = _toolbarList.lastOrNull()
-    if (topToolbar != null) {
+    if (topToolbar == null) {
+      return false
+    }
+
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' exiting state ${topToolbar.kind}" }
+
+    if (_destroying) {
       _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
       topToolbar.onPopped()
-      _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Popped(topToolbar.kind))
+    } else {
+      val belowTop = _toolbarList.getOrNull(_toolbarList.lastIndex - 1)
+      if (belowTop == null) {
+        return false
+      }
+
+      _transitionToolbarState.value = KurobaToolbarTransition.Instant(
+        transitionMode = TransitionMode.Out,
+        transitionToolbarState = belowTop
+      )
     }
 
     return true
   }
 
   fun popAll() {
+    _destroying = true
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being destroyed" }
+
     while (_toolbarList.size > 1) {
-      pop()
+      if (!pop()) {
+        break
+      }
     }
   }
 
@@ -334,7 +374,8 @@ class KurobaToolbarState(
   }
 
   fun updateBadge(count: Int, highImportance: Boolean) {
-    // TODO: New toolbar.
+    // TODO: New toolbar. This probably should only ever be used on catalog/thread/default toolbars
+    //  so I should probably move this into specific toolbar states.
 //    if (ChanSettings.isSplitLayoutMode() || ChanSettings.bottomNavigationViewEnabled.get()) {
 //      badgeText = null
 //      return
@@ -347,6 +388,34 @@ class KurobaToolbarState(
 //    }
   }
 
+  fun onKurobaToolbarTransitionInstantFinished(instant: KurobaToolbarTransition.Instant) {
+    if (_transitionToolbarState.value == null) {
+      // Already canceled by someone else
+      return
+    }
+
+    if (_transitionToolbarState.value is KurobaToolbarTransition.Progress) {
+      error("Attempt to cancel Progress transition with Instant animation. " +
+        "Progress transition takes higher priority so it can't be canceled like this.")
+    }
+
+    when (instant.transitionMode) {
+      TransitionMode.In -> {
+        _toolbarStateList.value = _toolbarList.add(instant.transitionToolbarState)
+        instant.transitionToolbarState.onPushed()
+      }
+      TransitionMode.Out -> {
+        val topToolbar = _toolbarList.lastOrNull()
+        if (topToolbar != null) {
+          _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
+          topToolbar.onPopped()
+        }
+      }
+    }
+
+    _transitionToolbarState.value = null
+  }
+
   private fun enterToolbarMode(
     params: IKurobaToolbarParams,
     state: IKurobaToolbarState
@@ -357,15 +426,18 @@ class KurobaToolbarState(
     if (indexOfState >= 0) {
       val prevToolbarLayer = _toolbarList[indexOfState]
       Snapshot.withMutableSnapshot { prevToolbarLayer.update(params) }
-
-      _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Updated(prevToolbarLayer.kind))
     } else {
       Snapshot.withMutableSnapshot { state.update(params) }
 
-      _toolbarStateList.value = _toolbarList.add(state)
-      state.onPushed()
-
-      _toolbarLayerEventFlow.tryEmit(KurobaToolbarStateEvent.Pushed(state.kind))
+      if (topToolbar == null) {
+        _toolbarStateList.value = _toolbarList.add(state)
+        state.onPushed()
+      } else {
+        _transitionToolbarState.value = KurobaToolbarTransition.Instant(
+          transitionMode = TransitionMode.In,
+          transitionToolbarState = state
+        )
+      }
     }
   }
 
