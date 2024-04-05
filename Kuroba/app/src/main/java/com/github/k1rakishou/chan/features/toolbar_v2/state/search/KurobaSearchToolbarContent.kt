@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun KurobaSearchToolbarContent(
   modifier: Modifier,
-  state: KurobaSearchToolbarState,
+  state: KurobaSearchToolbarSubState,
   onCloseSearchToolbarButtonClicked: () -> Unit
 ) {
   val chanTheme = LocalChanTheme.current

@@ -18,7 +18,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarTitleWithSubt
 @Composable
 fun KurobaThreadToolbarContent(
   modifier: Modifier,
-  state: KurobaThreadToolbarState,
+  state: KurobaThreadToolbarSubState,
   showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
   val leftIconMut by state.leftItem

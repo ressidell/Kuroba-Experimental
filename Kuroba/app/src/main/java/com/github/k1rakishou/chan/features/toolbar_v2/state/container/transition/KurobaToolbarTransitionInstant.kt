@@ -12,16 +12,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarTransition
-import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
 
 @Composable
 internal fun KurobaToolbarTransitionInstant(
   toolbarHeight: Dp,
   transitionToolbarState: KurobaToolbarTransition,
-  topToolbarState: IKurobaToolbarState?,
-  childToolbarMovable: @Composable (IKurobaToolbarState?) -> Unit,
-  childToolbar: @Composable (IKurobaToolbarState?) -> Unit,
+  topToolbarState: KurobaToolbarSubState?,
+  childToolbarMovable: @Composable (KurobaToolbarSubState?) -> Unit,
+  childToolbar: @Composable (KurobaToolbarSubState?) -> Unit,
   onAnimationFinished: () -> Unit
 ) {
   transitionToolbarState as KurobaToolbarTransition.Instant

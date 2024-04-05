@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarTransition
-import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
 
 
@@ -17,9 +17,9 @@ import com.github.k1rakishou.chan.ui.compose.consumeClicks
 internal fun KurobaToolbarTransitionProgress(
   toolbarHeight: Dp,
   transitionToolbarState: KurobaToolbarTransition?,
-  topToolbarState: IKurobaToolbarState?,
-  childToolbarMovable: @Composable (IKurobaToolbarState?) -> Unit,
-  childToolbar: @Composable (IKurobaToolbarState?) -> Unit
+  topToolbarState: KurobaToolbarSubState?,
+  childToolbarMovable: @Composable (KurobaToolbarSubState?) -> Unit,
+  childToolbar: @Composable (KurobaToolbarSubState?) -> Unit
 ) {
   transitionToolbarState as KurobaToolbarTransition.Progress?
 
@@ -43,10 +43,10 @@ private fun ToolbarTransitionContainer(
   toolbarHeight: Dp,
   transitionMode: TransitionMode,
   transitionProgress: Float,
-  transitionToolbarState: IKurobaToolbarState?,
-  topToolbarState: IKurobaToolbarState?,
-  childToolbarMovable: @Composable (IKurobaToolbarState?) -> Unit,
-  childToolbar: @Composable (IKurobaToolbarState?) -> Unit
+  transitionToolbarState: KurobaToolbarSubState?,
+  topToolbarState: KurobaToolbarSubState?,
+  childToolbarMovable: @Composable (KurobaToolbarSubState?) -> Unit,
+  childToolbar: @Composable (KurobaToolbarSubState?) -> Unit
 ) {
   val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.toPx() }
 

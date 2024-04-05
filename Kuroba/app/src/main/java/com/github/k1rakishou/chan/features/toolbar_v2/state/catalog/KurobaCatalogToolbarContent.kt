@@ -26,7 +26,7 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 @Composable
 fun KurobaCatalogToolbarContent(
   modifier: Modifier,
-  state: KurobaCatalogToolbarState,
+  state: KurobaCatalogToolbarSubState,
   showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
   val leftIconMut by state.leftItem

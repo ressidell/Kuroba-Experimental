@@ -9,7 +9,7 @@ import androidx.compose.runtime.snapshotFlow
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenu
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.compose.clearText
 import kotlinx.coroutines.flow.Flow
@@ -23,9 +23,9 @@ data class KurobaSearchToolbarParams(
 }
 
 @Stable
-class KurobaSearchToolbarState(
+class KurobaSearchToolbarSubState(
   params: KurobaSearchToolbarParams = KurobaSearchToolbarParams()
-) : IKurobaToolbarState {
+) : KurobaToolbarSubState {
   private val _toolbarMenu = mutableStateOf<ToolbarMenu?>(params.toolbarMenu)
   val toolbarMenu: State<ToolbarMenu?>
     get() = _toolbarMenu
@@ -78,7 +78,7 @@ class KurobaSearchToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaSearchToolbarState(searchVisible: ${_searchVisibleState.value}, searchQuery: '${_searchQueryState.text}')"
+    return "KurobaSearchToolbarSubState(searchVisible: ${_searchVisibleState.value}, searchQuery: '${_searchQueryState.text}')"
   }
 
 }

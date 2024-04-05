@@ -8,22 +8,22 @@ import androidx.compose.ui.unit.Dp
 import com.github.k1rakishou.chan.controller.ControllerKey
 import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarSubState
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.common.quantize
 import com.github.k1rakishou.core_logger.Logger
@@ -41,40 +41,40 @@ class KurobaToolbarState(
 ) {
   private var _destroying = false
 
-  private val _toolbarStateList = mutableStateOf<PersistentList<IKurobaToolbarState>>(persistentListOf())
-  val toolbarStateList: State<ImmutableList<IKurobaToolbarState>>
+  private val _toolbarStateList = mutableStateOf<PersistentList<KurobaToolbarSubState>>(persistentListOf())
+  val toolbarStateList: State<ImmutableList<KurobaToolbarSubState>>
     get() = _toolbarStateList
 
-  private val _toolbarList: PersistentList<IKurobaToolbarState>
+  private val _toolbarList: PersistentList<KurobaToolbarSubState>
     get() = _toolbarStateList.value
 
-  val topToolbar: IKurobaToolbarState?
+  val topToolbar: KurobaToolbarSubState?
     get() = _toolbarStateList.value.lastOrNull()
 
   private val _transitionToolbarState = mutableStateOf<KurobaToolbarTransition?>(null)
   val transitionToolbarState: State<KurobaToolbarTransition?>
     get() = _transitionToolbarState
 
-  private val _container by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaContainerToolbarState()) }
-  val container: KurobaContainerToolbarState
+  private val _container by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaContainerToolbarSubState()) }
+  val container: KurobaContainerToolbarSubState
     get() = _container.value
-  private val _catalog by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaCatalogToolbarState()) }
-  val catalog: KurobaCatalogToolbarState
+  private val _catalog by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaCatalogToolbarSubState()) }
+  val catalog: KurobaCatalogToolbarSubState
     get() = _catalog.value
-  private val _thread by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaThreadToolbarState()) }
-  val thread: KurobaThreadToolbarState
+  private val _thread by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaThreadToolbarSubState()) }
+  val thread: KurobaThreadToolbarSubState
     get() = _thread.value
-  private val _default by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaDefaultToolbarState()) }
-  val default: KurobaDefaultToolbarState
+  private val _default by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaDefaultToolbarSubState()) }
+  val default: KurobaDefaultToolbarSubState
     get() = _default.value
-  private val _search by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaSearchToolbarState()) }
-  val search: KurobaSearchToolbarState
+  private val _search by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaSearchToolbarSubState()) }
+  val search: KurobaSearchToolbarSubState
     get() = _search.value
-  private val _selection by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaSelectionToolbarState()) }
-  val selection: KurobaSelectionToolbarState
+  private val _selection by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaSelectionToolbarSubState()) }
+  val selection: KurobaSelectionToolbarSubState
     get() = _selection.value
-  private val _reply by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaReplyToolbarState()) }
-  val reply: KurobaReplyToolbarState
+  private val _reply by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaReplyToolbarSubState()) }
+  val reply: KurobaReplyToolbarSubState
     get() = _reply.value
 
   val toolbarVisibleState: Flow<Boolean>
@@ -418,7 +418,7 @@ class KurobaToolbarState(
 
   private fun enterToolbarMode(
     params: IKurobaToolbarParams,
-    state: IKurobaToolbarState
+    state: KurobaToolbarSubState
   ) {
     Logger.debug(TAG) { "Toolbar '${toolbarKey}' entering state ${state.kind}" }
 

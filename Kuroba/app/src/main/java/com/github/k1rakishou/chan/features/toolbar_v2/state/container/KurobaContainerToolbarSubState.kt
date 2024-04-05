@@ -5,7 +5,7 @@ import androidx.compose.runtime.Stable
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenu
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 
 @Immutable
@@ -14,9 +14,9 @@ class KurobaContainerToolbarParams : IKurobaToolbarParams {
 }
 
 @Stable
-class KurobaContainerToolbarState(
+class KurobaContainerToolbarSubState(
   params: KurobaContainerToolbarParams = KurobaContainerToolbarParams()
-) : IKurobaToolbarState {
+) : KurobaToolbarSubState {
   override val kind: ToolbarStateKind = params.kind
 
   override val leftMenuItem: ToolbarMenuItem? = null
@@ -36,7 +36,7 @@ class KurobaContainerToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaContainerToolbarState()"
+    return "KurobaContainerToolbarSubState()"
   }
 
 }

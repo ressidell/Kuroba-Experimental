@@ -6,7 +6,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverfl
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
 
-interface IKurobaToolbarState {
+interface KurobaToolbarSubState {
   val kind: ToolbarStateKind
   val leftMenuItem: ToolbarMenuItem?
   val rightToolbarMenu: ToolbarMenu?

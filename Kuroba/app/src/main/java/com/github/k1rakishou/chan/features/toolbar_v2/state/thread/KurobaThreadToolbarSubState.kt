@@ -7,7 +7,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenu
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 
 @Immutable
@@ -22,9 +22,9 @@ data class KurobaThreadToolbarParams(
   override val kind: ToolbarStateKind = ToolbarStateKind.Thread
 }
 
-class KurobaThreadToolbarState(
+class KurobaThreadToolbarSubState(
   params: KurobaThreadToolbarParams = KurobaThreadToolbarParams()
-) : IKurobaToolbarState {
+) : KurobaToolbarSubState {
   private val _leftItem = mutableStateOf<ToolbarMenuItem?>(params.leftItem)
   val leftItem: State<ToolbarMenuItem?>
     get() = _leftItem
@@ -83,7 +83,7 @@ class KurobaThreadToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaThreadToolbarState(title: '${_title.value}', subtitle: '${_subtitle.value}')"
+    return "KurobaThreadToolbarSubState(title: '${_title.value}', subtitle: '${_subtitle.value}')"
   }
 
 }

@@ -6,19 +6,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarContent
-import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarContent
-import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.container.KurobaContainerToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarContent
-import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.default.KurobaDefaultToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarContent
-import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.reply.KurobaReplyToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarContent
-import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.search.KurobaSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarContent
-import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarContent
-import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarSubState
 
 @Composable
 fun KurobaToolbar(
@@ -36,31 +36,31 @@ fun KurobaToolbar(
 
   KurobaContainerToolbarContent(kurobaToolbarState) { childToolbarState ->
     when (childToolbarState) {
-      is KurobaContainerToolbarState -> {
+      is KurobaContainerToolbarSubState -> {
         error("Must be a toolbar container")
       }
-      is KurobaCatalogToolbarState -> {
+      is KurobaCatalogToolbarSubState -> {
         KurobaCatalogToolbarContent(
           modifier = Modifier.fillMaxSize(),
           state = childToolbarState,
           showFloatingMenu = showFloatingMenu
         )
       }
-      is KurobaThreadToolbarState -> {
+      is KurobaThreadToolbarSubState -> {
         KurobaThreadToolbarContent(
           modifier = Modifier.fillMaxSize(),
           state = childToolbarState,
           showFloatingMenu = showFloatingMenu
         )
       }
-      is KurobaDefaultToolbarState -> {
+      is KurobaDefaultToolbarSubState -> {
         KurobaDefaultToolbarContent(
           modifier = Modifier.fillMaxSize(),
           state = childToolbarState,
           showFloatingMenu = showFloatingMenu
         )
       }
-      is KurobaSearchToolbarState -> {
+      is KurobaSearchToolbarSubState -> {
         KurobaSearchToolbarContent(
           modifier = Modifier.fillMaxSize(),
           state = childToolbarState,
@@ -71,13 +71,13 @@ fun KurobaToolbar(
           }
         )
       }
-      is KurobaSelectionToolbarState -> {
+      is KurobaSelectionToolbarSubState -> {
         KurobaSelectionToolbarContent(
           modifier = Modifier.fillMaxSize(),
           state = childToolbarState
         )
       }
-      is KurobaReplyToolbarState -> {
+      is KurobaReplyToolbarSubState -> {
         KurobaReplyToolbarContent(
           modifier = Modifier.fillMaxSize(),
           state = childToolbarState,

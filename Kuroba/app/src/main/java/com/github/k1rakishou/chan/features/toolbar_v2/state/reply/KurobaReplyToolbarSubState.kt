@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenu
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
-import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 
@@ -17,9 +17,9 @@ data class KurobaReplyToolbarParams(
   override val kind: ToolbarStateKind = ToolbarStateKind.Reply
 }
 
-class KurobaReplyToolbarState(
+class KurobaReplyToolbarSubState(
   params: KurobaReplyToolbarParams = KurobaReplyToolbarParams()
-) : IKurobaToolbarState {
+) : KurobaToolbarSubState {
   private val _chanDescriptor = mutableStateOf<ChanDescriptor?>(params.chanDescriptor)
   val chanDescriptor: State<ChanDescriptor?>
     get() = _chanDescriptor
@@ -54,7 +54,7 @@ class KurobaReplyToolbarState(
   }
 
   override fun toString(): String {
-    return "KurobaReplyToolbarState(chanDescriptor: ${_chanDescriptor.value})"
+    return "KurobaReplyToolbarSubState(chanDescriptor: ${_chanDescriptor.value})"
   }
 
 }

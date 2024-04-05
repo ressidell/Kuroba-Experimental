@@ -4,6 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun KurobaSelectionToolbarContent(modifier: Modifier, state: KurobaSelectionToolbarState) {
+fun KurobaSelectionToolbarContent(modifier: Modifier, state: KurobaSelectionToolbarSubState) {
   // TODO: New toolbar.
 }

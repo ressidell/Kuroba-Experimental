@@ -21,7 +21,7 @@ import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 @Composable
 fun KurobaReplyToolbarContent(
   modifier: Modifier,
-  state: KurobaReplyToolbarState,
+  state: KurobaReplyToolbarSubState,
   showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
   val chanDescriptorMut by state.chanDescriptor

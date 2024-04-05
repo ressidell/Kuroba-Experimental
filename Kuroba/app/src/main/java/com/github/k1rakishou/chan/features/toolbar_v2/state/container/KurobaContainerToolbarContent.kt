@@ -14,7 +14,7 @@ import androidx.compose.ui.res.dimensionResource
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarTransition
-import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.transition.KurobaToolbarTransitionInstant
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.transition.KurobaToolbarTransitionProgress
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
@@ -23,7 +23,7 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 @Composable
 fun KurobaContainerToolbarContent(
   kurobaToolbarState: KurobaToolbarState,
-  childToolbar: @Composable (IKurobaToolbarState?) -> Unit
+  childToolbar: @Composable (KurobaToolbarSubState?) -> Unit
 ) {
   val chanTheme = LocalChanTheme.current
   val windowInsets = LocalWindowInsets.current
@@ -38,7 +38,7 @@ fun KurobaContainerToolbarContent(
   val toolbarStates by kurobaToolbarState.toolbarStateList
   val topToolbarState = toolbarStates.lastOrNull()
 
-  if (topToolbarState is KurobaContainerToolbarState) {
+  if (topToolbarState is KurobaContainerToolbarSubState) {
     return
   }
 
@@ -46,7 +46,7 @@ fun KurobaContainerToolbarContent(
   val transitionToolbar = transitionToolbarMut
 
   val childToolbarMovable = remember {
-    movableContentOf { topToolbarState: IKurobaToolbarState? ->
+    movableContentOf { topToolbarState: KurobaToolbarSubState? ->
       childToolbar(topToolbarState)
     }
   }
