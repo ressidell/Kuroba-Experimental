@@ -109,7 +109,5 @@ enum class ToolbarStateKind {
   Default,
   Search,
   Selection,
-  Reply;
-
-  fun isSearch(): Boolean = this == Search
+  Reply
 }

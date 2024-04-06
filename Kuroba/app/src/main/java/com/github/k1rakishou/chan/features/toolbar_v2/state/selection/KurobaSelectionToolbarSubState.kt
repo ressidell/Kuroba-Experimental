@@ -10,6 +10,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubStat
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 
 data class KurobaSelectionToolbarParams(
+  val leftItem: ToolbarMenuItem? = null,
   val title: ToolbarText? = null,
   val toolbarMenu: ToolbarMenu? = null
 ) : IKurobaToolbarParams {
@@ -19,6 +20,10 @@ data class KurobaSelectionToolbarParams(
 class KurobaSelectionToolbarSubState(
   params: KurobaSelectionToolbarParams = KurobaSelectionToolbarParams()
 ) : KurobaToolbarSubState {
+  private val _leftItem = mutableStateOf<ToolbarMenuItem?>(params.leftItem)
+  val leftItem: State<ToolbarMenuItem?>
+    get() = _leftItem
+
   private val _toolbarMenu = mutableStateOf<ToolbarMenu?>(params.toolbarMenu)
   val toolbarMenu: State<ToolbarMenu?>
     get() = _toolbarMenu
@@ -43,12 +48,13 @@ class KurobaSelectionToolbarSubState(
   override fun update(params: IKurobaToolbarParams) {
     params as KurobaSelectionToolbarParams
 
+    _leftItem.value = params.leftItem
     _title.value = params.title
     _toolbarMenu.value = params.toolbarMenu
   }
 
-  fun updateTitle(text: ToolbarText) {
-    _title.value = text
+  fun updateTitle(title: ToolbarText) {
+    _title.value = title
   }
 
   override fun toString(): String {

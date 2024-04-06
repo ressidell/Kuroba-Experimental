@@ -74,7 +74,8 @@ fun KurobaToolbar(
       is KurobaSelectionToolbarSubState -> {
         KurobaSelectionToolbarContent(
           modifier = Modifier.fillMaxSize(),
-          state = childToolbarState
+          state = childToolbarState,
+          showFloatingMenu = showFloatingMenu
         )
       }
       is KurobaReplyToolbarSubState -> {

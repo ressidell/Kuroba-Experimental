@@ -515,8 +515,8 @@ class BookmarksPresenter(
   }
 
   sealed class SearchQuery {
-    object Closed : SearchQuery()
-    object Opened : SearchQuery()
+    data object Closed : SearchQuery()
+    data object Opened : SearchQuery()
     class Searching(val query: String) : SearchQuery()
   }
 

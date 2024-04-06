@@ -491,8 +491,8 @@ class SavedPostsController(
 
   private fun onNewSelectionEvent(selectionEvent: BaseSelectionHelper.SelectionEvent?) {
     when (selectionEvent) {
-      BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
-      BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
+      is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
+      is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
         mainControllerCallbacks.showBottomPanel(viewModel.getBottomPanelMenus())
         enterSelectionModeOrUpdate()
       }

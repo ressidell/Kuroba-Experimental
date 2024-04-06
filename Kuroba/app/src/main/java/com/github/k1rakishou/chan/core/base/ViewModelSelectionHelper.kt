@@ -108,8 +108,12 @@ class ViewModelSelectionHelper<Element, MenuItemClickEvent> {
     val nowInSelectionMode = isInSelectionMode()
 
     val newValue = when {
-      wasInSelectionMode && nowInSelectionMode -> BaseSelectionHelper.SelectionEvent.ItemSelectionToggled
-      nowInSelectionMode -> BaseSelectionHelper.SelectionEvent.EnteredSelectionMode
+      wasInSelectionMode && nowInSelectionMode -> {
+        BaseSelectionHelper.SelectionEvent.ItemSelectionToggled(selectedItems.size)
+      }
+      nowInSelectionMode -> {
+        BaseSelectionHelper.SelectionEvent.EnteredSelectionMode(selectedItems.size)
+      }
       else ->  BaseSelectionHelper.SelectionEvent.ExitedSelectionMode
     }
 

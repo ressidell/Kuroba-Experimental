@@ -161,7 +161,8 @@ class KurobaToolbarState(
   fun enterContainerMode() {
     enterToolbarMode(
       params = KurobaContainerToolbarParams(),
-      state = _container.value
+      state = _container.value,
+      withAnimation = false
     )
   }
 
@@ -181,7 +182,8 @@ class KurobaToolbarState(
         onMainContentClick = onMainContentClick,
         iconClickInterceptor = iconClickInterceptor
       ),
-      state = _catalog.value
+      state = _catalog.value,
+      withAnimation = false
     )
   }
 
@@ -201,13 +203,15 @@ class KurobaToolbarState(
         toolbarMenu = toolbarMenuBuilder.build(),
         iconClickInterceptor = iconClickInterceptor
       ),
-      state = _thread.value
+      state = _thread.value,
+      withAnimation = false
     )
   }
 
   fun enterDefaultMode(
     leftItem: ToolbarMenuItem?,
     scrollableTitle: Boolean = false,
+    withAnimation: Boolean = true,
     middleContent: ToolbarMiddleContent? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
     iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)? = null
@@ -223,11 +227,13 @@ class KurobaToolbarState(
         toolbarMenu = toolbarMenuBuilder.build(),
         iconClickInterceptor = iconClickInterceptor
       ),
-      state = _default.value
+      state = _default.value,
+      withAnimation = withAnimation
     )
   }
 
   fun enterSearchMode(
+    withAnimation: Boolean = true,
     initialSearchQuery: String? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
   ) {
@@ -239,7 +245,8 @@ class KurobaToolbarState(
         initialSearchQuery = initialSearchQuery,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
-      state = _search.value
+      state = _search.value,
+      withAnimation = withAnimation
     )
   }
 
@@ -247,7 +254,9 @@ class KurobaToolbarState(
     return topToolbar?.kind == ToolbarStateKind.Search
   }
 
+  // TODO: New toolbar. Implement leftItem with click action which, when clicked, will exit the selection mode.
   fun enterSelectionMode(
+    withAnimation: Boolean = true,
     title: ToolbarText? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
   ) {
@@ -259,7 +268,8 @@ class KurobaToolbarState(
         title = title,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
-      state = _selection.value
+      state = _selection.value,
+      withAnimation = withAnimation
     )
   }
 
@@ -269,6 +279,7 @@ class KurobaToolbarState(
 
   fun enterReplyMode(
     chanDescriptor: ChanDescriptor,
+    withAnimation: Boolean = true,
     leftItem: ToolbarMenuItem? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
   ) {
@@ -281,7 +292,8 @@ class KurobaToolbarState(
         chanDescriptor = chanDescriptor,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
-      state = _reply.value
+      state = _reply.value,
+      withAnimation = withAnimation
     )
   }
 
@@ -289,7 +301,7 @@ class KurobaToolbarState(
     return topToolbar?.kind == ToolbarStateKind.Reply
   }
 
-  fun pop(): Boolean {
+  fun pop(withAnimation: Boolean = true): Boolean {
     if (_toolbarList.size <= 1) {
       return false
     }
@@ -305,7 +317,7 @@ class KurobaToolbarState(
 
     Logger.debug(TAG) { "Toolbar '${toolbarKey}' exiting state ${topToolbar.kind}" }
 
-    if (_destroying) {
+    if (!withAnimation) {
       _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
       topToolbar.onPopped()
     } else {
@@ -328,7 +340,7 @@ class KurobaToolbarState(
     Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being destroyed" }
 
     while (_toolbarList.size > 1) {
-      if (!pop()) {
+      if (!pop(withAnimation = false)) {
         break
       }
     }
@@ -418,9 +430,10 @@ class KurobaToolbarState(
 
   private fun enterToolbarMode(
     params: IKurobaToolbarParams,
-    state: KurobaToolbarSubState
+    state: KurobaToolbarSubState,
+    withAnimation: Boolean
   ) {
-    Logger.debug(TAG) { "Toolbar '${toolbarKey}' entering state ${state.kind}" }
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' entering state ${state.kind}, withAnimation: ${withAnimation}" }
 
     val indexOfState = _toolbarList.indexOfFirst { prevLayer -> prevLayer.kind == params.kind }
     if (indexOfState >= 0) {
@@ -429,7 +442,7 @@ class KurobaToolbarState(
     } else {
       Snapshot.withMutableSnapshot { state.update(params) }
 
-      if (topToolbar == null) {
+      if (topToolbar == null || !withAnimation) {
         _toolbarStateList.value = _toolbarList.add(state)
         state.onPushed()
       } else {

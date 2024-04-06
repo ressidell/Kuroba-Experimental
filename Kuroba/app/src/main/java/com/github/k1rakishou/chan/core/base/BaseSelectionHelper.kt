@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 abstract class BaseSelectionHelper<T> {
   protected val selectedItems = mutableSetOf<T>()
 
-  private val selectionUpdatesChannel = MutableSharedFlow<SelectionEvent>(extraBufferCapacity = 32)
+  private val _selectionUpdatesFlow = MutableSharedFlow<SelectionEvent>(extraBufferCapacity = 32)
 
   fun listenForSelectionChanges(): SharedFlow<SelectionEvent> {
-    return selectionUpdatesChannel
+    return _selectionUpdatesFlow
       .asSharedFlow()
   }
 
@@ -62,29 +62,30 @@ abstract class BaseSelectionHelper<T> {
   ) {
     when {
       !wasInSelectionMode && isInSelectionMode -> {
-        onSelectionChanged(SelectionEvent.EnteredSelectionMode)
+        onSelectionChanged(SelectionEvent.EnteredSelectionMode(selectedItems.size))
       }
       wasInSelectionMode && !isInSelectionMode -> {
         onSelectionChanged(SelectionEvent.ExitedSelectionMode)
       }
       else -> {
-        onSelectionChanged(SelectionEvent.ItemSelectionToggled)
+        onSelectionChanged(SelectionEvent.ItemSelectionToggled(selectedItems.size))
       }
     }
   }
 
   private fun onSelectionChanged(selectionEvent: SelectionEvent) {
-    selectionUpdatesChannel.tryEmit(selectionEvent)
+    _selectionUpdatesFlow.tryEmit(selectionEvent)
   }
 
-  sealed class SelectionEvent {
+  sealed interface SelectionEvent {
+
     fun isIsSelectionMode(): Boolean {
       return this is EnteredSelectionMode || this is ItemSelectionToggled
     }
 
-    object EnteredSelectionMode : SelectionEvent()
-    object ItemSelectionToggled : SelectionEvent()
-    object ExitedSelectionMode : SelectionEvent()
+    data class EnteredSelectionMode(val selectedItemsCount: Int) : SelectionEvent
+    data class ItemSelectionToggled(val selectedItemsCount: Int) : SelectionEvent
+    data object ExitedSelectionMode : SelectionEvent
   }
 
 }

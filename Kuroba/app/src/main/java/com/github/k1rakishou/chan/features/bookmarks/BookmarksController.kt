@@ -416,7 +416,14 @@ class BookmarksController(
         withMenuItem(
           id = ACTION_OPEN_SORT_SETTINGS,
           drawableId = R.drawable.ic_baseline_sort_24,
-          onClick = { requireNavController().presentController(BookmarksSortingController(context, this@BookmarksController)) }
+          onClick = {
+            val controller = BookmarksSortingController(
+              context = context,
+              bookmarksView = this@BookmarksController
+            )
+
+            requireNavController().presentController(controller)
+          }
         )
 
         withOverflowMenu {
@@ -591,8 +598,8 @@ class BookmarksController(
 
   private fun onNewSelectionEvent(selectionEvent: BaseSelectionHelper.SelectionEvent) {
     when (selectionEvent) {
-      BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
-      BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
+      is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
+      is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
         if (selectionEvent is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode) {
           mainControllerCallbacks.showBottomPanel(bookmarksSelectionHelper.getBottomPanelMenus())
         }
@@ -610,9 +617,7 @@ class BookmarksController(
   }
 
   private fun onChangeViewModeClicked() {
-    PersistableChanState.viewThreadBookmarksGridMode.set(
-      PersistableChanState.viewThreadBookmarksGridMode.get().not()
-    )
+    PersistableChanState.viewThreadBookmarksGridMode.toggle()
 
     onViewBookmarksModeChanged()
 
@@ -1067,11 +1072,13 @@ class BookmarksController(
   }
 
   private fun enterSelectionModeOrUpdate() {
+    val toolbarTitle = ToolbarText.String(formatSelectionText())
+
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode()
+      toolbarState.enterSelectionMode(title = toolbarTitle)
     }
 
-    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
+    toolbarState.selection.updateTitle(title = toolbarTitle)
   }
 
   private fun formatSelectionText(): String {

@@ -13,6 +13,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubStat
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.compose.clearText
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
 data class KurobaSearchToolbarParams(
@@ -63,6 +64,7 @@ class KurobaSearchToolbarSubState(
   fun listenForSearchQueryUpdates(): Flow<String> {
     return _searchQueryState.textAsFlow()
       .map { textFieldCharSequence -> textFieldCharSequence.toString() }
+      .filter { isInSearchMode() }
   }
 
   fun listenForSearchVisibilityUpdates(): Flow<Boolean> {

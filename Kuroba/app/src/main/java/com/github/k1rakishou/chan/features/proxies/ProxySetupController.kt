@@ -151,8 +151,8 @@ class ProxySetupController(
 
   private fun onNewSelectionEvent(selectionEvent: BaseSelectionHelper.SelectionEvent) {
     when (selectionEvent) {
-      BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
-      BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
+      is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
+      is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
         if (selectionEvent is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode) {
           drawerCallbacks?.showBottomPanel(proxySelectionHelper.getBottomPanelMenus())
           addProxyButton.hide()
