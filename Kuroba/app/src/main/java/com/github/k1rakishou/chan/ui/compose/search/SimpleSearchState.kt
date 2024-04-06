@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.ui.compose.search
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,7 +50,7 @@ class SimpleSearchStateV2<T>(
   val textFieldState: TextFieldState,
   results: List<T>,
   searching: Boolean
-) {
+) : RememberObserver {
   var results by mutableStateOf(results)
   var searching by mutableStateOf(searching)
 
@@ -61,6 +62,18 @@ class SimpleSearchStateV2<T>(
     textFieldState.edit { clearText() }
     textFieldState.undoState.clearHistory()
   }
+
+  override fun onRemembered() {
+  }
+
+  override fun onAbandoned() {
+    reset()
+  }
+
+  override fun onForgotten() {
+    reset()
+  }
+
 }
 
 @Composable
