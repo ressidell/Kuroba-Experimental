@@ -23,7 +23,7 @@ class SnowLayout @JvmOverloads constructor(
   attributeSet: AttributeSet? = null,
   defAttrStyle: Int = 0
 ) : FrameLayout(context, attributeSet, defAttrStyle) {
-  private val fps = ((1f / 16f) * 1000f).toLong()
+  private val fps = ((1f / 30f) * 1000f).toLong()
   private val random = Random(System.currentTimeMillis())
   private val snowflakes = Array<Snowflake>(45) { Snowflake(random) }
   private val fireworks = Array<Firework>(3) { Firework(random = random) }

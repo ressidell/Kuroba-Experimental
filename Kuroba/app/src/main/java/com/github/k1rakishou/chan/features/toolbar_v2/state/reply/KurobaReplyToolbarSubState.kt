@@ -19,7 +19,7 @@ data class KurobaReplyToolbarParams(
 
 class KurobaReplyToolbarSubState(
   params: KurobaReplyToolbarParams = KurobaReplyToolbarParams()
-) : KurobaToolbarSubState {
+) : KurobaToolbarSubState() {
   private val _chanDescriptor = mutableStateOf<ChanDescriptor?>(params.chanDescriptor)
   val chanDescriptor: State<ChanDescriptor?>
     get() = _chanDescriptor

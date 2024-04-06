@@ -19,7 +19,7 @@ data class KurobaSelectionToolbarParams(
 
 class KurobaSelectionToolbarSubState(
   params: KurobaSelectionToolbarParams = KurobaSelectionToolbarParams()
-) : KurobaToolbarSubState {
+) : KurobaToolbarSubState() {
   private val _leftItem = mutableStateOf<ToolbarMenuItem?>(params.leftItem)
   val leftItem: State<ToolbarMenuItem?>
     get() = _leftItem

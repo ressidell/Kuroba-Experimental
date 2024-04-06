@@ -350,19 +350,15 @@ class MainController(
     }
 
     compositeDisposable.add(
-      drawerViewModel.listenForBookmarksBadgeStateChanges()
-        .subscribe(
-          { state -> onBookmarksBadgeStateChanged(state) },
-          { error ->
-            Logger.e(TAG, "Unknown error subscribed to drawerPresenter.listenForBookmarksBadgeStateChanges()", error)
-          }
-        )
-    )
-
-    compositeDisposable.add(
       settingsNotificationManager.listenForNotificationUpdates()
         .subscribe { onSettingsNotificationChanged() }
     )
+
+    controllerScope.launch {
+      drawerViewModel.bookmarksBadgeState
+        .onEach { bookmarksBadgeState -> onBookmarksBadgeStateChanged(bookmarksBadgeState) }
+        .collect()
+    }
 
     controllerScope.launch {
       threadDownloadManager.threadDownloadUpdateFlow
@@ -1912,11 +1908,6 @@ class MainController(
         menuItemId = R.id.action_bookmarks,
         menuItemBadgeInfo = null
       )
-
-      mainToolbarNavigationController?.containerToolbarState?.updateBadge(
-        count = 0,
-        highImportance = false
-      )
     } else {
       navigationViewContract.updateBadge(
         menuItemId = R.id.action_bookmarks,
@@ -1933,11 +1924,23 @@ class MainController(
           highlight = state.hasUnreadReplies
         )
       )
+    }
 
-      mainToolbarNavigationController?.containerToolbarState?.updateBadge(
-        count = state.totalUnseenPostsCount,
-        highImportance = state.hasUnreadReplies
-      )
+    val cannotShowBadge = ChanSettings.isSplitLayoutMode() || ChanSettings.bottomNavigationViewEnabled.get()
+    if (cannotShowBadge) {
+      mainToolbarNavigationController?.containerToolbarState?.hideBadge()
+    } else {
+      if (state.totalUnseenPostsCount <= 0) {
+        mainToolbarNavigationController?.containerToolbarState?.updateBadge(
+          count = 0,
+          highImportance = false
+        )
+      } else {
+        mainToolbarNavigationController?.containerToolbarState?.updateBadge(
+          count = state.totalUnseenPostsCount,
+          highImportance = state.hasUnreadReplies
+        )
+      }
     }
   }
 

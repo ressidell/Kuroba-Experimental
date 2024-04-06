@@ -386,19 +386,18 @@ class KurobaToolbarState(
     }
   }
 
+  fun hideBadge() {
+    catalog.hideBadge()
+    thread.hideBadge()
+    default.hideBadge()
+  }
+
   fun updateBadge(count: Int, highImportance: Boolean) {
-    // TODO: New toolbar. This probably should only ever be used on catalog/thread/default toolbars
-    //  so I should probably move this into specific toolbar states.
-//    if (ChanSettings.isSplitLayoutMode() || ChanSettings.bottomNavigationViewEnabled.get()) {
-//      badgeText = null
-//      return
-//    }
-//    val text = if (count == 0) null else getShortUnreadCount(count)
-//    if (badgeHighImportance != highImportance || !TextUtils.equals(text, badgeText)) {
-//      badgeText = text
-//      badgeHighImportance = highImportance
-//      invalidateSelf()
-//    }
+    // For now we only display badge on catalog/thread toolbar. We might display it on default toolbars
+    // in the near future. For the other toolbars there is no need for now.
+    catalog.updateBadge(count, highImportance)
+    thread.updateBadge(count, highImportance)
+    default.updateBadge(count, highImportance)
   }
 
   fun onKurobaToolbarTransitionInstantFinished(instant: KurobaToolbarTransition.Instant) {

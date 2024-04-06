@@ -160,7 +160,6 @@ import com.github.k1rakishou.chan.ui.layout.SplitNavigationControllerLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadListLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadSlidingPaneLayout
-import com.github.k1rakishou.chan.ui.theme.ArrowMenuDrawable
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableCardView
@@ -408,7 +407,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(lynxchanCaptchaLayout: LynxchanCaptchaLayout)
   fun inject(mrSkeletonLayout: MrSkeletonLayout)
   fun inject(kurobaComposeIconPanel: KurobaComposeIconPanel)
-  fun inject(arrowMenuDrawable: ArrowMenuDrawable)
   fun inject(postPopupContainer: PostPopupContainer)
   fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
   fun inject(replyLayoutView: ReplyLayoutView)

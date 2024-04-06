@@ -33,9 +33,6 @@ import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.navigation.NavHistoryElement
 import com.github.k1rakishou.model.util.ChanPostUtils
 import dagger.Lazy
-import io.reactivex.Flowable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.processors.BehaviorProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,7 +92,10 @@ class MainControllerViewModel(
   val currentNavigationHasDrawer: StateFlow<Boolean>
     get() = _currentNavigationHasDrawer.asStateFlow()
 
-  private val bookmarksBadgeStateSubject = BehaviorProcessor.createDefault(BookmarksBadgeState(0, false))
+  private val _bookmarksBadgeState = MutableStateFlow(BookmarksBadgeState(0, false))
+  val bookmarksBadgeState: StateFlow<BookmarksBadgeState>
+    get() = _bookmarksBadgeState.asStateFlow()
+
   private val updateNavigationHistoryEntryListExecutor = SerializedCoroutineExecutor(scope = viewModelScope)
 
   override fun injectDependencies(component: ViewModelComponent) {
@@ -183,13 +183,6 @@ class MainControllerViewModel(
 
   fun onThemeChanged() {
     updateBadge()
-  }
-
-  fun listenForBookmarksBadgeStateChanges(): Flowable<BookmarksBadgeState> {
-    return bookmarksBadgeStateSubject
-      .onBackpressureLatest()
-      .observeOn(AndroidSchedulers.mainThread())
-      .hide()
   }
 
   suspend fun deleteNavElement(navigationHistoryEntry: NavigationHistoryEntry) {
@@ -335,7 +328,7 @@ class MainControllerViewModel(
       check(!hasUnreadReplies) { "Bookmarks have no unread posts but have unseen replies!" }
     }
 
-    bookmarksBadgeStateSubject.onNext(BookmarksBadgeState(totalUnseenPostsCount, hasUnreadReplies))
+    _bookmarksBadgeState.value = BookmarksBadgeState(totalUnseenPostsCount, hasUnreadReplies)
   }
 
   private suspend fun onCompositeCatalogsUpdated(event: CompositeCatalogManager.Event) {

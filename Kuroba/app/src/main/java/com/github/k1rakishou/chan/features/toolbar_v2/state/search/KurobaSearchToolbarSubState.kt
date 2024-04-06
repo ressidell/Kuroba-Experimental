@@ -26,7 +26,7 @@ data class KurobaSearchToolbarParams(
 @Stable
 class KurobaSearchToolbarSubState(
   params: KurobaSearchToolbarParams = KurobaSearchToolbarParams()
-) : KurobaToolbarSubState {
+) : KurobaToolbarSubState() {
   private val _toolbarMenu = mutableStateOf<ToolbarMenu?>(params.toolbarMenu)
   val toolbarMenu: State<ToolbarMenu?>
     get() = _toolbarMenu

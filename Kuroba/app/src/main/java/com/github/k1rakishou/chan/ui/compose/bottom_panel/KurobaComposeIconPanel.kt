@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.ui.compose.bottom_panel
 
 import android.content.Context
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -31,6 +31,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.dimensionResource
@@ -97,22 +99,15 @@ class KurobaComposeIconPanel(
       .firstOrNull { menuItemState -> menuItemState.menuItem.id == menuItemId }
       ?: return
 
-    val currentMenuItemBadge = menuItemState.menuItemBadge.value
-
     when (menuItemBadgeInfo) {
       MenuItemBadgeInfo.Dot -> {
         menuItemState.menuItemBadge.value = MenuItemBadge.Dot
       }
       is MenuItemBadgeInfo.Counter -> {
-        if (currentMenuItemBadge is MenuItemBadge.Counter) {
-          currentMenuItemBadge.counter.value = menuItemBadgeInfo.counter
-          currentMenuItemBadge.highlight.value = menuItemBadgeInfo.highlight
-        } else {
-          menuItemState.menuItemBadge.value = MenuItemBadge.Counter(
-            counter = mutableStateOf(menuItemBadgeInfo.counter),
-            highlight = mutableStateOf(menuItemBadgeInfo.highlight)
-          )
-        }
+        menuItemState.menuItemBadge.value = MenuItemBadge.Counter(
+          counter = menuItemBadgeInfo.counter,
+          highlight = menuItemBadgeInfo.highlight
+        )
       }
       null -> {
         menuItemState.menuItemBadge.value = null
@@ -282,16 +277,20 @@ class KurobaComposeIconPanel(
 
     when (menuItemBadge) {
       MenuItemBadge.Dot -> {
-        Box(modifier = Modifier
-          .size(10.dp)
-          .offset(x = 8.dp, y = 8.dp)
-          .background(color = chanTheme.accentColorCompose, shape = CircleShape)
-          .align(Alignment.TopCenter)
+        Box(
+          modifier = Modifier
+            .size(10.dp)
+            .offset(x = 8.dp, y = 8.dp)
+            .background(color = chanTheme.accentColorCompose, shape = CircleShape)
+            .align(Alignment.TopCenter)
         )
       }
       is MenuItemBadge.Counter -> {
-        val counter by menuItemBadge.counter
-        val highlight by menuItemBadge.highlight
+        val counter by animateIntAsState(
+          targetValue = menuItemBadge.counter,
+          label = "Menu item badge counter animation"
+        )
+        val highlight = menuItemBadge.highlight
 
         val backgroundColor = if (highlight) {
           chanTheme.accentColorCompose
@@ -316,11 +315,24 @@ class KurobaComposeIconPanel(
           Orientation.Horizontal -> 11.ktu.fixedSize()
         }
 
+        val offsetY = when (orientation) {
+          Orientation.Vertical -> (-4).dp
+          Orientation.Horizontal -> (-8).dp
+        }
+
         KurobaComposeText(
           modifier = Modifier
             .align(Alignment.TopCenter)
-            .offset(x = 0.dp, y = 4.dp)
-            .background(color = backgroundColor, RoundedCornerShape(size = 4.dp))
+            .offset(x = 0.dp, y = offsetY)
+            .drawWithContent {
+              drawRoundRect(
+                color = backgroundColor,
+                alpha = 0.85f,
+                cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
+              )
+
+              drawContent()
+            }
             .padding(horizontal = 4.dp),
           text = counterText,
           color = textColor,
@@ -342,15 +354,15 @@ class KurobaComposeIconPanel(
   }
 
   private sealed class MenuItemBadge {
-    object Dot : MenuItemBadge()
+    data object Dot : MenuItemBadge()
 
     data class Counter(
-      val counter: MutableState<Int>,
-      val highlight: MutableState<Boolean> = mutableStateOf(false)
+      val counter: Int,
+      val highlight: Boolean = false
     ) : MenuItemBadge()
   }
 
-  private data class MenuItemState(
+  private class MenuItemState(
     val menuItem: MenuItem,
     val selected: MutableState<Boolean>,
     val menuItemBadge: MutableState<MenuItemBadge?> = mutableStateOf(null)

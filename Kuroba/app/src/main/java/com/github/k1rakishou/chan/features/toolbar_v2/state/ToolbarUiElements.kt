@@ -1,13 +1,17 @@
 package com.github.k1rakishou.chan.features.toolbar_v2.state
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.ContentAlpha
@@ -15,7 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.graphics.graphicsLayer
@@ -29,6 +37,8 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.helper.PinHelper
+import com.github.k1rakishou.core_themes.ThemeEngine
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlin.coroutines.cancellation.CancellationException
@@ -148,4 +158,54 @@ internal fun ToolbarClickableIcon(
     alpha = alpha,
     contentDescription = null
   )
+}
+
+@Composable
+internal fun BoxScope.ToolbarBadgeContent(toolbarBadge: ToolbarBadge) {
+  val chanTheme = LocalChanTheme.current
+
+  val counter by animateIntAsState(
+    targetValue = toolbarBadge.counter,
+    label = "Menu item badge counter animation"
+  )
+  val highlight = toolbarBadge.highlight
+
+  val backgroundColor = if (highlight) {
+    chanTheme.accentColorCompose
+  } else {
+    if (ThemeEngine.isDarkColor(chanTheme.primaryColor)) {
+      Color.LightGray
+    } else {
+      Color.DarkGray
+    }
+  }
+
+  val textColor = if (ThemeEngine.isDarkColor(backgroundColor)) {
+    Color.White
+  } else {
+    Color.Black
+  }
+
+  if (counter > 0) {
+    val counterText = remember(key1 = counter) { PinHelper.getShortUnreadCount(counter) }
+
+    KurobaComposeText(
+      modifier = Modifier
+        .align(Alignment.Center)
+        .offset(x = 10.dp, y = (-10).dp)
+        .drawWithContent {
+          drawRoundRect(
+            color = backgroundColor,
+            alpha = 0.85f,
+            cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
+          )
+
+          drawContent()
+        }
+        .padding(horizontal = 2.dp),
+      text = counterText,
+      color = textColor,
+      fontSize = 10.ktu.fixedSize()
+    )
+  }
 }

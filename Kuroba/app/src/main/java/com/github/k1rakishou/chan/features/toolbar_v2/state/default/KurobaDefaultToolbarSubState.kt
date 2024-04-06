@@ -26,7 +26,7 @@ data class KurobaDefaultToolbarParams(
 @Stable
 class KurobaDefaultToolbarSubState(
   params: KurobaDefaultToolbarParams = KurobaDefaultToolbarParams()
-) : KurobaToolbarSubState {
+) : KurobaToolbarSubState() {
   private val _leftItem = mutableStateOf<ToolbarMenuItem?>(params.leftItem)
   val leftItem: State<ToolbarMenuItem?>
     get() = _leftItem

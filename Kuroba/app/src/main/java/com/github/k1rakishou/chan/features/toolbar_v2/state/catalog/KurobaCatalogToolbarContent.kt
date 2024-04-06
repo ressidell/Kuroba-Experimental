@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.features.toolbar_v2.state.catalog
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.toolbar_v2.AbstractToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.MoreVerticalMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarBadgeContent
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarTitleWithSubtitle
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
@@ -29,6 +31,9 @@ fun KurobaCatalogToolbarContent(
   state: KurobaCatalogToolbarSubState,
   showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
+  val toolbarBadgeMut by state.toolbarBadgeState
+  val toolbarBadge = toolbarBadgeMut
+
   val leftIconMut by state.leftItem
   val leftIcon = leftIconMut
 
@@ -52,16 +57,22 @@ fun KurobaCatalogToolbarContent(
     if (leftIcon != null) {
       Spacer(modifier = Modifier.width(12.dp))
 
-      ToolbarClickableIcon(
-        toolbarMenuItem = leftIcon,
-        onClick = {
-          val iconClickInterceptor = state.iconClickInterceptor
+      Box {
+        ToolbarClickableIcon(
+          toolbarMenuItem = leftIcon,
+          onClick = {
+            val iconClickInterceptor = state.iconClickInterceptor
 
-          if (iconClickInterceptor == null || !iconClickInterceptor(leftIcon)) {
-            leftIcon.onClick(leftIcon)
+            if (iconClickInterceptor == null || !iconClickInterceptor(leftIcon)) {
+              leftIcon.onClick(leftIcon)
+            }
           }
+        )
+
+        if (toolbarBadge != null) {
+          ToolbarBadgeContent(toolbarBadge)
         }
-      )
+      }
     }
 
     if (title != null) {

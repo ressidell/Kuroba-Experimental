@@ -1,19 +1,25 @@
 package com.github.k1rakishou.chan.features.toolbar_v2.state
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import com.github.k1rakishou.chan.features.toolbar_v2.AbstractToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenu
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
 
-interface KurobaToolbarSubState {
-  val kind: ToolbarStateKind
-  val leftMenuItem: ToolbarMenuItem?
-  val rightToolbarMenu: ToolbarMenu?
+abstract class KurobaToolbarSubState {
+  abstract val kind: ToolbarStateKind
+  abstract val leftMenuItem: ToolbarMenuItem?
+  abstract val rightToolbarMenu: ToolbarMenu?
 
-  fun update(params: IKurobaToolbarParams)
-  fun onPushed()
-  fun onPopped()
+  private val _toolbarBadgeState = mutableStateOf<ToolbarBadge?>(null)
+  val toolbarBadgeState: State<ToolbarBadge?>
+    get() = _toolbarBadgeState
+
+  abstract fun update(params: IKurobaToolbarParams)
+  abstract fun onPushed()
+  abstract fun onPopped()
 
   fun findItem(id: Int): ToolbarMenuItem? {
     if (leftMenuItem?.id == id) {
@@ -100,6 +106,17 @@ interface KurobaToolbarSubState {
     }
   }
 
+  fun updateBadge(counter: Int, highImportance: Boolean) {
+    _toolbarBadgeState.value = ToolbarBadge(
+      counter = counter,
+      highlight = highImportance
+    )
+  }
+
+  fun hideBadge() {
+    _toolbarBadgeState.value = null
+  }
+
 }
 
 enum class ToolbarStateKind {
@@ -111,3 +128,8 @@ enum class ToolbarStateKind {
   Selection,
   Reply
 }
+
+data class ToolbarBadge(
+  val counter: Int,
+  val highlight: Boolean
+)

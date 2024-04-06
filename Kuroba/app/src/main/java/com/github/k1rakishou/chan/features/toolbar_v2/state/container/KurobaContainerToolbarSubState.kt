@@ -16,7 +16,7 @@ class KurobaContainerToolbarParams : IKurobaToolbarParams {
 @Stable
 class KurobaContainerToolbarSubState(
   params: KurobaContainerToolbarParams = KurobaContainerToolbarParams()
-) : KurobaToolbarSubState {
+) : KurobaToolbarSubState() {
   override val kind: ToolbarStateKind = params.kind
 
   override val leftMenuItem: ToolbarMenuItem? = null
