@@ -135,7 +135,6 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
 class ThreadPresenter @Inject constructor(
@@ -782,7 +781,6 @@ class ThreadPresenter @Inject constructor(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   fun normalLoad(
     showLoading: Boolean = false,
     chanCacheUpdateOptions: ChanCacheUpdateOptions = ChanCacheUpdateOptions.UpdateCache,

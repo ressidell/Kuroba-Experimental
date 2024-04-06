@@ -15,10 +15,12 @@ import com.github.k1rakishou.chan.core.manager.ApplicationVisibility
 import com.github.k1rakishou.chan.core.manager.ApplicationVisibilityListener
 import com.github.k1rakishou.chan.core.manager.ApplicationVisibilityManager
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
+import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
+import com.github.k1rakishou.chan.core.manager.PageRequestManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.ThreadFollowHistoryManager
 import com.github.k1rakishou.chan.core.site.Site
@@ -75,6 +77,8 @@ abstract class ThreadController(
   @Inject
   lateinit var siteManagerLazy: Lazy<SiteManager>
   @Inject
+  lateinit var boardManagerLazy: Lazy<BoardManager>
+  @Inject
   lateinit var themeEngineLazy: Lazy<ThemeEngine>
   @Inject
   lateinit var applicationVisibilityManagerLazy: Lazy<ApplicationVisibilityManager>
@@ -98,9 +102,13 @@ abstract class ThreadController(
   lateinit var dialogFactoryLazy: Lazy<DialogFactory>
   @Inject
   lateinit var currentOpenedDescriptorStateManagerLazy: Lazy<CurrentOpenedDescriptorStateManager>
+  @Inject
+  lateinit var pageRequestManagerLazy: Lazy<PageRequestManager>
 
   protected val siteManager: SiteManager
     get() = siteManagerLazy.get()
+  protected val boardManager: BoardManager
+    get() = boardManagerLazy.get()
   protected val themeEngine: ThemeEngine
     get() = themeEngineLazy.get()
   protected val chanThreadViewableInfoManager: ChanThreadViewableInfoManager
@@ -115,6 +123,8 @@ abstract class ThreadController(
     get() = threadFollowHistoryManagerLazy.get()
   protected val currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager
     get() = currentOpenedDescriptorStateManagerLazy.get()
+  protected val pageRequestManager: PageRequestManager
+    get() = pageRequestManagerLazy.get()
 
   private val applicationVisibilityManager: ApplicationVisibilityManager
     get() = applicationVisibilityManagerLazy.get()

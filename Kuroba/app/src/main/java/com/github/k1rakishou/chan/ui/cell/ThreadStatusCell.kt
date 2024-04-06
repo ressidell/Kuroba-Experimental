@@ -1,27 +1,8 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.ui.cell
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Typeface
-import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import android.text.style.StyleSpan
 import android.util.AttributeSet
 import android.view.View
 import android.widget.LinearLayout
@@ -37,13 +18,12 @@ import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.core_themes.ThemeEngine
-import com.github.k1rakishou.model.data.board.ChanBoard
 import com.github.k1rakishou.model.data.board.pages.BoardPage
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
-import com.github.k1rakishou.model.data.post.ChanOriginalPost
 import com.github.k1rakishou.model.data.thread.ChanThread
 import com.github.k1rakishou.model.data.thread.ThreadDownload
+import com.github.k1rakishou.model.util.ChanPostUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -52,7 +32,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("BlockingMethodInNonBlockingContext")
 class ThreadStatusCell(
   context: Context,
   attrs: AttributeSet
@@ -230,7 +209,16 @@ class ThreadStatusCell(
     val op = chanThread.getOriginalPost()
     if (op != null) {
       val board = boardManager.byBoardDescriptor(op.postDescriptor.boardDescriptor())
-      appendThreadStatisticsPart(chanThread, builder, op, board)
+      val threadStatistics = ChanPostUtils.getThreadStatistics(
+        chanThread = chanThread,
+        op = op,
+        board = board,
+        boardPage = callback?.getPage(op.postDescriptor)
+      )
+
+      builder
+        .append(threadStatistics)
+        .appendLine()
     }
 
     if (archivesManager.isSiteArchive(chanDescriptor.siteDescriptor())) {
@@ -271,67 +259,6 @@ class ThreadStatusCell(
         // no-op
       }
     }
-  }
-
-  private fun appendThreadStatisticsPart(
-    chanThread: ChanThread,
-    builder: SpannableStringBuilder,
-    op: ChanOriginalPost,
-    board: ChanBoard?
-  ) {
-    val hasReplies = chanThread.repliesCount > 0
-    val hasImages = chanThread.imagesCount > 0
-
-    if (hasReplies || hasImages) {
-      val bumpLimit = board?.bumpLimit ?: Int.MAX_VALUE
-      val imageLimit = board?.imageLimit ?: Int.MAX_VALUE
-
-      val hasBumpLimit = bumpLimit > 0
-      val hasImageLimit = imageLimit > 0
-
-      val totalRepliesCount = chanThread.repliesCount
-      val replies = SpannableString(totalRepliesCount.toString() + "R")
-
-      if (hasBumpLimit && totalRepliesCount >= bumpLimit) {
-        replies.setSpan(StyleSpan(Typeface.ITALIC), 0, replies.length, 0)
-      }
-
-      val threadImagesCount = chanThread.imagesCount
-      val images = SpannableString(threadImagesCount.toString() + "I")
-
-      if (hasImageLimit && threadImagesCount >= imageLimit) {
-        images.setSpan(StyleSpan(Typeface.ITALIC), 0, images.length, 0)
-      }
-
-      builder
-        .append(replies)
-        .append(" / ")
-        .append(images)
-    }
-
-    if (op.uniqueIps >= 0) {
-      val ips = op.uniqueIps.toString() + "P"
-      builder.append(" / ").append(ips)
-    }
-
-    if (board != null) {
-      val boardPage = callback?.getPage(op.postDescriptor)
-      if (boardPage != null) {
-        val page = SpannableString(boardPage.currentPage.toString())
-        if (boardPage.currentPage >= board.pages) {
-          page.setSpan(StyleSpan(Typeface.ITALIC), 0, page.length, 0)
-        }
-
-        builder
-          .append(" / ")
-          .append(getString(R.string.thread_page_no))
-          .append(' ')
-          .append(page)
-      }
-    }
-
-    builder
-      .appendLine()
   }
 
   private suspend fun appendThreadRefreshPart(

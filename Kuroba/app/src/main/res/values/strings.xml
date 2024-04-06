@@ -286,7 +286,6 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="thread_archived">Archived</string>
     <string name="thread_closed">Closed</string>
     <string name="thread_deleted">Deleted</string>
-    <string name="thread_page_no">Page</string>
     <string name="thread_is_now_pinned">This thread is now pinned</string>
     <string name="thread_is_no_longer_pinned">This thread is no longer pinned</string>
     <string name="thread_is_now_template">This thread is now</string>

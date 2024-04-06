@@ -5,6 +5,7 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.R.string.action_reload
 import com.github.k1rakishou.chan.controller.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.core.base.RendezvousCoroutineExecutor
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
@@ -48,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -75,6 +77,8 @@ open class ViewThreadController(
 
   private var pinItemPinned = false
   private var threadDescriptor: ThreadDescriptor = startingThreadDescriptor
+
+  private val rendezvousCoroutineExecutor = RendezvousCoroutineExecutor(controllerScope)
 
   override val threadControllerType: ThreadControllerType
     get() = ThreadControllerType.Thread
@@ -232,7 +236,8 @@ open class ViewThreadController(
     super.onShowError()
 
     toolbarState.thread.updateTitle(
-      newTitle = ToolbarText.Id(R.string.thread_loading_error_title)
+      newTitle = ToolbarText.Id(R.string.thread_loading_error_title),
+      newSubTitle = null
     )
   }
 
@@ -378,18 +383,46 @@ open class ViewThreadController(
       setNavigationTitleFromDescriptor(newThreadDescriptor)
     } else {
       toolbarState.thread.updateTitle(
-        newTitle = ToolbarText.String(getString(R.string.loading))
+        newTitle = ToolbarText.String(getString(R.string.loading)),
+        newSubTitle = null
       )
     }
   }
 
   private fun setNavigationTitleFromDescriptor(threadDescriptor: ThreadDescriptor?) {
-    val originalPost = chanThreadManager.getChanThread(threadDescriptor)
-      ?.getOriginalPost()
+    rendezvousCoroutineExecutor.post {
+      val (title, subtitle) = withContext(Dispatchers.Default) {
+        val chanThread = chanThreadManager.getChanThread(threadDescriptor)
+        val originalPost = chanThread?.getOriginalPost()
 
-    toolbarState.thread.updateTitle(
-      newTitle = ToolbarText.String(ChanPostUtils.getTitle(originalPost, threadDescriptor))
-    )
+        val title = ChanPostUtils.getTitle(originalPost, threadDescriptor)
+        var subtitle: String? = null
+
+        if (chanThread != null && threadDescriptor != null && originalPost != null) {
+          val chanBoard = boardManager.byBoardDescriptor(threadDescriptor.boardDescriptor)
+          val boardPage = pageRequestManager.getPage(
+            originalPostDescriptor = originalPost.postDescriptor,
+            requestPagesIfNotCached = false
+          )
+
+          if (chanBoard != null) {
+            subtitle = ChanPostUtils.getThreadStatistics(
+              chanThread = chanThread,
+              op = originalPost,
+              board = chanBoard,
+              boardPage = boardPage
+            )
+          }
+        }
+
+        return@withContext title to subtitle
+      }
+
+      toolbarState.thread.updateTitle(
+        newTitle = ToolbarText.String(title),
+        newSubTitle = subtitle?.let { ToolbarText.String(it) }
+      )
+    }
   }
 
   private suspend fun updateMenuItems() {

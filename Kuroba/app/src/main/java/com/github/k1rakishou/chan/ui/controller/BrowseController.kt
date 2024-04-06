@@ -13,7 +13,6 @@ import com.github.k1rakishou.chan.core.base.SerializedCoroutineExecutor
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.SitesSetupControllerOpenNotifier
-import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.FirewallBypassManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
 import com.github.k1rakishou.chan.core.presenter.BrowsePresenter
@@ -81,8 +80,6 @@ class BrowseController(
   @Inject
   lateinit var presenter: BrowsePresenter
   @Inject
-  lateinit var boardManagerLazy: Lazy<BoardManager>
-  @Inject
   lateinit var historyNavigationManagerLazy: Lazy<HistoryNavigationManager>
   @Inject
   lateinit var siteResolverLazy: Lazy<SiteResolver>
@@ -93,8 +90,6 @@ class BrowseController(
   @Inject
   lateinit var sitesSetupControllerOpenNotifier: SitesSetupControllerOpenNotifier
 
-  private val boardManager: BoardManager
-    get() = boardManagerLazy.get()
   private val historyNavigationManager: HistoryNavigationManager
     get() = historyNavigationManagerLazy.get()
   private val siteResolver: SiteResolver

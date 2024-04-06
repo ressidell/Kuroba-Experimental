@@ -1,10 +1,15 @@
 package com.github.k1rakishou.model.util
 
 import android.annotation.SuppressLint
+import android.graphics.Typeface
+import android.text.SpannableString
 import android.text.TextUtils
+import android.text.style.StyleSpan
 import com.github.k1rakishou.common.MurmurHashUtils
 import com.github.k1rakishou.common.StringUtils
 import com.github.k1rakishou.core_logger.Logger
+import com.github.k1rakishou.model.data.board.ChanBoard
+import com.github.k1rakishou.model.data.board.pages.BoardPage
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor.CatalogDescriptor
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor.ThreadDescriptor
@@ -13,6 +18,7 @@ import com.github.k1rakishou.model.data.post.ChanOriginalPost
 import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.data.post.ChanPostBuilder
 import com.github.k1rakishou.model.data.post.ChanPostImage
+import com.github.k1rakishou.model.data.thread.ChanThread
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -147,6 +153,63 @@ object ChanPostUtils {
     }
 
     return "/" + boardDescriptor.boardCode + "/" + threadDescriptor.threadNo
+  }
+
+  fun getThreadStatistics(
+    chanThread: ChanThread,
+    op: ChanOriginalPost,
+    board: ChanBoard?,
+    boardPage: BoardPage?
+  ): String {
+    return buildString {
+      val hasReplies = chanThread.repliesCount > 0
+      val hasImages = chanThread.imagesCount > 0
+
+      if (hasReplies || hasImages) {
+        val bumpLimit = board?.bumpLimit ?: Int.MAX_VALUE
+        val imageLimit = board?.imageLimit ?: Int.MAX_VALUE
+
+        val hasBumpLimit = bumpLimit > 0
+        val hasImageLimit = imageLimit > 0
+
+        val totalRepliesCount = chanThread.repliesCount
+        val replies = SpannableString(totalRepliesCount.toString() + "R")
+
+        if (hasBumpLimit && totalRepliesCount >= bumpLimit) {
+          replies.setSpan(StyleSpan(Typeface.ITALIC), 0, replies.length, 0)
+        }
+
+        val threadImagesCount = chanThread.imagesCount
+        val images = SpannableString(threadImagesCount.toString() + "I")
+
+        if (hasImageLimit && threadImagesCount >= imageLimit) {
+          images.setSpan(StyleSpan(Typeface.ITALIC), 0, images.length, 0)
+        }
+
+        append(replies)
+        append(" / ")
+        append(images)
+      }
+
+      if (op.uniqueIps >= 0) {
+        val ips = op.uniqueIps.toString() + "P"
+        append(" / ").append(ips)
+      }
+
+      if (board != null) {
+        if (boardPage != null) {
+          val page = SpannableString(boardPage.currentPage.toString())
+          if (boardPage.currentPage >= board.pages) {
+            page.setSpan(StyleSpan(Typeface.ITALIC), 0, page.length, 0)
+          }
+
+          append(" / ")
+          append("Page")
+          append(' ')
+          append(page)
+        }
+      }
+    }
   }
 
   fun getLocalDate(post: ChanPost, localDate: Boolean): String {

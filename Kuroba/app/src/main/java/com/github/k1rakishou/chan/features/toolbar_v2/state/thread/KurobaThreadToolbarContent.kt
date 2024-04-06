@@ -35,6 +35,9 @@ fun KurobaThreadToolbarContent(
   val titleMut by state.title
   val title = titleMut
 
+  val subtitleMut by state.subtitle
+  val subtitle = subtitleMut
+
   val scrollableTitle by state.scrollableTitle
 
   Row(
@@ -68,7 +71,7 @@ fun KurobaThreadToolbarContent(
           .weight(1f)
           .padding(start = 12.dp),
         title = title,
-        subtitle = null,
+        subtitle = subtitle,
         scrollableTitle = scrollableTitle
       )
     } else {
