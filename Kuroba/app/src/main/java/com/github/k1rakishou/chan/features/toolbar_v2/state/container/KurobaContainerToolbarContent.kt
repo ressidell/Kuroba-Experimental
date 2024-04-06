@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.dimensionResource
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
@@ -17,6 +18,7 @@ import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarTransition
 import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.transition.KurobaToolbarTransitionInstant
 import com.github.k1rakishou.chan.features.toolbar_v2.state.container.transition.KurobaToolbarTransitionProgress
+import com.github.k1rakishou.chan.ui.compose.consumeClicks
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 
@@ -54,7 +56,9 @@ fun KurobaContainerToolbarContent(
   Column(
     modifier = Modifier
       .height(totalToolbarHeight)
-      .background(chanTheme.toolbarBackgroundComposeColor),
+      .graphicsLayer { alpha = kurobaToolbarState.toolbarAlpha.floatValue }
+      .background(chanTheme.toolbarBackgroundComposeColor)
+      .consumeClicks(enabled = true),
   ) {
     Spacer(modifier = Modifier.height(windowInsets.top))
 

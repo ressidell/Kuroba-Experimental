@@ -12,8 +12,11 @@ import com.github.k1rakishou.chan.ui.globalstate.scroll.IScrollGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.scroll.ScrollGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.toolbar.IToolbarGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.toolbar.ToolbarGlobalState
+import com.github.k1rakishou.chan.ui.helper.AppResources
 
-class GlobalUiStateHolder {
+class GlobalUiStateHolder(
+  private val appResources: AppResources
+) {
   private val _mainUiState = MainUiState()
   val mainUiState: IMainUiState.Readable
     get() = _mainUiState
@@ -30,7 +33,7 @@ class GlobalUiStateHolder {
   val drawer: IDrawerGlobalState.Readable
     get() = _drawer
 
-  private val _scrollState = ScrollGlobalState()
+  private val _scrollState = ScrollGlobalState(appResources)
   val scrollState: IScrollGlobalState.Readable
     get() = _scrollState
 

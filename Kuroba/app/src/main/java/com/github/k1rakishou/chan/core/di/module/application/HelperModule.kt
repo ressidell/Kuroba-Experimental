@@ -263,9 +263,9 @@ class HelperModule {
 
   @Provides
   @Singleton
-  fun provideGlobalUiStateHolder(): GlobalUiStateHolder {
+  fun provideGlobalUiStateHolder(appResources: AppResources): GlobalUiStateHolder {
     Logger.deps("GlobalUiStateHolder");
-    return GlobalUiStateHolder()
+    return GlobalUiStateHolder(appResources)
   }
 
   @Provides

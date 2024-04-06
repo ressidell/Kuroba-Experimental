@@ -3,7 +3,9 @@ package com.github.k1rakishou.chan.features.toolbar_v2
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarContent
 import com.github.k1rakishou.chan.features.toolbar_v2.state.catalog.KurobaCatalogToolbarSubState
@@ -31,6 +33,16 @@ fun KurobaToolbar(
 
   val toolbarVisible by kurobaToolbarState.toolbarVisibleState.collectAsState(initial = false)
   if (!toolbarVisible) {
+    return
+  }
+
+  val toolbarFullyInvisible by remember(key1 = kurobaToolbarState) {
+    derivedStateOf {
+      kurobaToolbarState.toolbarAlpha.floatValue <= 0f
+    }
+  }
+
+  if (toolbarFullyInvisible) {
     return
   }
 

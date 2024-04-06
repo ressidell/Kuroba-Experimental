@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ComposeView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.github.k1rakishou.chan.controller.Controller
@@ -13,6 +14,7 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -30,11 +32,13 @@ class KurobaToolbarView @JvmOverloads constructor(
 
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
+  @Inject
+  lateinit var globalUiStateHolder: GlobalUiStateHolder
 
   private val coroutineScope = KurobaCoroutineScope()
 
   private val _kurobaToolbarState = mutableStateOf<KurobaToolbarState?>(null)
-  private var attachedController: Controller? = null
+  private var _attachedController: Controller? = null
 
   init {
     if (!isInEditMode) {
@@ -59,12 +63,22 @@ class KurobaToolbarView @JvmOverloads constructor(
 
   fun init(controller: ToolbarNavigationController) {
     _kurobaToolbarState.value = controller.containerToolbarState
-    attachedController = controller
+    _attachedController = controller
 
     coroutineScope.cancelChildren()
     coroutineScope.launch {
       controller.listenForContainerToolbarStateUpdates()
-        .onEach { kurobaToolbarState -> _kurobaToolbarState.value = kurobaToolbarState }
+        .onEach { kurobaToolbarState ->
+          val prevToolbar = _kurobaToolbarState.value
+          _kurobaToolbarState.value = kurobaToolbarState
+          prevToolbar?.updateToolbarAlpha(1f)
+        }
+        .collect()
+    }
+
+    coroutineScope.launch {
+      snapshotFlow { globalUiStateHolder.scrollState.scrollTransitionProgress.floatValue }
+        .onEach { toolbarAlpha -> _kurobaToolbarState.value?.updateToolbarAlpha(toolbarAlpha) }
         .collect()
     }
   }
@@ -81,7 +95,7 @@ class KurobaToolbarView @JvmOverloads constructor(
     menuItems: List<AbstractToolbarMenuOverflowItem>,
     context: Context
   ) {
-    val controller = attachedController ?: return
+    val controller = _attachedController ?: return
 
     if (menuItems.isEmpty()) {
       return

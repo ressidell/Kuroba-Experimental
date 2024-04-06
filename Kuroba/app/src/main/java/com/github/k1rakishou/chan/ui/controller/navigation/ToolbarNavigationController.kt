@@ -40,6 +40,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
 
     if (to != null) {
       containerToolbarState.showToolbar()
+      globalUiStateHolder.updateScrollState { resetScrollState() }
     }
   }
 
@@ -53,6 +54,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     }
 
     containerToolbarState.showToolbar()
+    globalUiStateHolder.updateScrollState { resetScrollState() }
 
     if (to != null) {
       containerToolbarState.onTransitionProgressStart(
@@ -78,6 +80,7 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     super.endSwipeTransition(from, to, finish)
 
     containerToolbarState.showToolbar()
+    globalUiStateHolder.updateScrollState { resetScrollState() }
 
     if (finish && to != null) {
       containerToolbarState.onTransitionProgressFinished()

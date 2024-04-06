@@ -1093,16 +1093,16 @@ class ThreadListLayout @JvmOverloads constructor(
       return
     }
 
-    // TODO: New toolbar.
-//    val toolbar = threadListLayoutCallback?.toolbar
-//      ?: return
-//
-//    if (attach && replyLayoutView.isCollapsed()) {
-//      toolbar.attachRecyclerViewScrollStateListener(recyclerView)
-//    } else {
-//      toolbar.detachRecyclerViewScrollStateListener(recyclerView)
-//      toolbar.collapseShow(true)
-//    }
+    if (attach && replyLayoutView.isCollapsed()) {
+      globalUiStateHolder.updateScrollState {
+        attachToRecyclerView(recyclerView)
+      }
+    } else {
+      globalUiStateHolder.updateScrollState {
+        detachFromRecyclerView(recyclerView)
+        resetScrollState()
+      }
+    }
   }
 
   private fun showToolbarIfNeeded() {
@@ -1110,22 +1110,9 @@ class ThreadListLayout @JvmOverloads constructor(
       return
     }
 
-    // Of coming back to focus from a dual controller, like the threadlistcontroller,
-    // check if we should show the toolbar again (after the other controller made it hide).
-    // It should show if the search or reply is open, or if the thread was scrolled at the
-    // top showing an empty space.
-
-    // TODO: New toolbar.
-//    val toolbar = threadListLayoutCallback?.toolbar
-//      ?: return
-//
-//    if (replyLayoutView.isOpenedOrExpanded()) {
-//      // force toolbar to show
-//      toolbar.collapseShow(true)
-//    } else {
-//      // check if it should show if it was scrolled at the top
-//      toolbar.checkToolbarCollapseState(recyclerView, true)
-//    }
+    globalUiStateHolder.updateScrollState {
+      resetScrollState()
+    }
   }
 
   private fun canToolbarCollapse(): Boolean {

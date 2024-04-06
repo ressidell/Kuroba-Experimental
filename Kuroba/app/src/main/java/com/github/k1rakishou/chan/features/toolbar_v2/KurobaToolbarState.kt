@@ -1,7 +1,9 @@
 package com.github.k1rakishou.chan.features.toolbar_v2
 
+import androidx.compose.runtime.FloatState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.unit.Dp
@@ -55,6 +57,10 @@ class KurobaToolbarState(
   val transitionToolbarState: State<KurobaToolbarTransition?>
     get() = _transitionToolbarState
 
+  private val _toolbarAlpha = mutableFloatStateOf(1f)
+  val toolbarAlpha: FloatState
+    get() = _toolbarAlpha
+
   private val _container by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaContainerToolbarSubState()) }
   val container: KurobaContainerToolbarSubState
     get() = _container.value
@@ -95,9 +101,15 @@ class KurobaToolbarState(
   }
 
   fun showToolbar() {
+    _toolbarAlpha.floatValue = 1f
+
     globalUiStateHolder.updateToolbarState {
       updateToolbarVisibilityState(visible = true)
     }
+  }
+
+  fun updateToolbarAlpha(toolbarAlpha: Float) {
+    _toolbarAlpha.floatValue = toolbarAlpha
   }
 
   fun onTransitionProgressStart(
