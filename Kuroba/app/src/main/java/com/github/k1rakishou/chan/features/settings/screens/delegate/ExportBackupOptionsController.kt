@@ -64,7 +64,7 @@ class ExportBackupOptionsController(
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()
-          .padding(all = 8.dp),
+          .padding(horizontal = 8.dp),
         currentlyChecked = exportBackupOptions.exportDownloadedThreadsMedia,
         onCheckChanged = { isChecked ->
           exportBackupOptions = exportBackupOptions.copy(exportDownloadedThreadsMedia = isChecked)

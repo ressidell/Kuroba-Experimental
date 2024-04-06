@@ -161,6 +161,8 @@ class CreateOrUpdateFilterController(
   ) {
     BuildHeader(onHelpClicked = onHelpClicked)
 
+    Spacer(modifier = Modifier.height(4.dp))
+
     BuildFilterPatternSection()
 
     BuildFilterSettingsSection(

@@ -399,8 +399,7 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
                     KurobaComposeCheckbox(
                       modifier = Modifier
                         .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(vertical = 4.dp),
+                        .wrapContentHeight(),
                       currentlyChecked = checkedStates[logLevel] ?: false,
                       text = "Display ${logLevel.logLevelName} logs",
                       onCheckChanged = { nowChecked ->

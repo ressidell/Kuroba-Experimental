@@ -74,6 +74,7 @@ import com.github.k1rakishou.chan.core.usecase.ExportFiltersUseCase
 import com.github.k1rakishou.chan.core.usecase.ImportFiltersUseCase
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
@@ -762,11 +763,23 @@ class FiltersController(
   }
 
   private fun enterSelectionModeOrUpdate() {
+    val toolbarTitle = ToolbarText.String(formatSelectionText())
+
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode()
+      toolbarState.enterSelectionMode(
+        leftItem = CloseMenuItem(
+          onClick = {
+            if (toolbarState.isInSelectionMode()) {
+              toolbarState.pop()
+              viewModel.viewModelSelectionHelper.unselectAll()
+            }
+          }
+        ),
+        title = toolbarTitle
+      )
     }
 
-    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
+    toolbarState.selection.updateTitle(title = toolbarTitle)
   }
 
   private fun formatSelectionText(): String {

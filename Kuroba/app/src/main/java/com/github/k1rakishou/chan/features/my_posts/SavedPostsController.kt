@@ -40,6 +40,7 @@ import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
+import com.github.k1rakishou.chan.features.toolbar_v2.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
@@ -508,11 +509,23 @@ class SavedPostsController(
   }
 
   private fun enterSelectionModeOrUpdate() {
+    val toolbarTitle = ToolbarText.String(formatSelectionText())
+
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode()
+      toolbarState.enterSelectionMode(
+        leftItem = CloseMenuItem(
+          onClick = {
+            if (toolbarState.isInSelectionMode()) {
+              toolbarState.pop()
+              viewModel.viewModelSelectionHelper.unselectAll()
+            }
+          }
+        ),
+        title = toolbarTitle
+      )
     }
 
-    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
+    toolbarState.selection.updateTitle(title = toolbarTitle)
   }
 
   private fun formatSelectionText(): String {

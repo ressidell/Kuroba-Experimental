@@ -51,7 +51,7 @@ abstract class BaseSelectionHelper<T> {
 
   open fun selectedItemsCount(): Int = selectedItems.size
 
-  open fun clearSelection() {
+  open fun unselectAll() {
     selectedItems.clear()
     onSelectionChanged(SelectionEvent.ExitedSelectionMode)
   }

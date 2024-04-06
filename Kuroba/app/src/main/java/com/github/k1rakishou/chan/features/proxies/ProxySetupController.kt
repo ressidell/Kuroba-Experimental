@@ -14,6 +14,7 @@ import com.github.k1rakishou.chan.features.proxies.data.ProxyEntryView
 import com.github.k1rakishou.chan.features.proxies.data.ProxySetupState
 import com.github.k1rakishou.chan.features.proxies.epoxy.epoxyProxyView
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar_v2.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
@@ -118,7 +119,7 @@ class ProxySetupController(
   override fun onBack(): Boolean {
     val result = drawerCallbacks?.passOnBackToBottomPanel() ?: false
     if (result) {
-      proxySelectionHelper.clearSelection()
+      proxySelectionHelper.unselectAll()
     }
 
     return result
@@ -187,7 +188,7 @@ class ProxySetupController(
           positiveButtonText = getString(R.string.delete),
           onPositiveButtonClickListener = {
             presenter.deleteProxies(selectedItems)
-            proxySelectionHelper.clearSelection()
+            proxySelectionHelper.unselectAll()
             showToast(R.string.controller_proxy_editor_proxy_deleted)
           }
         )
@@ -279,11 +280,23 @@ class ProxySetupController(
   }
 
   private fun enterSelectionModeOrUpdate() {
+    val toolbarTitle = ToolbarText.String(formatSelectionText())
+
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode()
+      toolbarState.enterSelectionMode(
+        leftItem = CloseMenuItem(
+          onClick = {
+            if (toolbarState.isInSelectionMode()) {
+              toolbarState.pop()
+              proxySelectionHelper.unselectAll()
+            }
+          }
+        ),
+        title = toolbarTitle
+      )
     }
 
-    toolbarState.selection.updateTitle(ToolbarText.String(formatSelectionText()))
+    toolbarState.selection.updateTitle(title = toolbarTitle)
   }
 
   private fun formatSelectionText(): String {

@@ -44,6 +44,7 @@ import com.github.k1rakishou.chan.features.bookmarks.epoxy.epoxyGridThreadBookma
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.epoxyListThreadBookmarkViewHolder
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
+import com.github.k1rakishou.chan.features.toolbar_v2.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuOverflowItem
@@ -363,7 +364,7 @@ class BookmarksController(
 
     val result = mainControllerCallbacks.passOnBackToBottomPanel() ?: false
     if (result) {
-      bookmarksSelectionHelper.clearSelection()
+      bookmarksSelectionHelper.unselectAll()
     }
 
     return result
@@ -533,7 +534,7 @@ class BookmarksController(
       }
     }
 
-    bookmarksSelectionHelper.clearSelection()
+    bookmarksSelectionHelper.unselectAll()
   }
 
   private fun onDownloadThreadsClicked(
@@ -1075,7 +1076,17 @@ class BookmarksController(
     val toolbarTitle = ToolbarText.String(formatSelectionText())
 
     if (!toolbarState.isInSelectionMode()) {
-      toolbarState.enterSelectionMode(title = toolbarTitle)
+      toolbarState.enterSelectionMode(
+        leftItem = CloseMenuItem(
+          onClick = {
+            if (toolbarState.isInSelectionMode()) {
+              toolbarState.pop()
+              bookmarksSelectionHelper.unselectAll()
+            }
+          }
+        ),
+        title = toolbarTitle
+      )
     }
 
     toolbarState.selection.updateTitle(title = toolbarTitle)

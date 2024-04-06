@@ -254,8 +254,8 @@ class KurobaToolbarState(
     return topToolbar?.kind == ToolbarStateKind.Search
   }
 
-  // TODO: New toolbar. Implement leftItem with click action which, when clicked, will exit the selection mode.
   fun enterSelectionMode(
+    leftItem: ToolbarMenuItem?,
     withAnimation: Boolean = true,
     title: ToolbarText? = null,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
@@ -265,6 +265,7 @@ class KurobaToolbarState(
 
     enterToolbarMode(
       params = KurobaSelectionToolbarParams(
+        leftItem = leftItem,
         title = title,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
@@ -315,7 +316,7 @@ class KurobaToolbarState(
       return false
     }
 
-    Logger.debug(TAG) { "Toolbar '${toolbarKey}' exiting state ${topToolbar.kind}" }
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' exiting state ${topToolbar.kind}, withAnimation: ${withAnimation}" }
 
     if (!withAnimation) {
       _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)

@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Checkbox
 import androidx.compose.runtime.Composable
@@ -38,19 +39,21 @@ fun KurobaComposeCheckbox(
 
   Row(
     modifier = Modifier
-        .clickable(
-            enabled = enabled,
-            interactionSource = remember { MutableInteractionSource() },
-            indication = rememberKurobaRipple(bounded = true, color = color),
-            onClick = {
-                isChecked = isChecked.not()
-                onCheckChanged(isChecked)
-            }
-        )
-        .then(modifier)
+      .clickable(
+        enabled = enabled,
+        interactionSource = remember { MutableInteractionSource() },
+        indication = rememberKurobaRipple(bounded = true, color = color),
+        onClick = {
+          isChecked = isChecked.not()
+          onCheckChanged(isChecked)
+        }
+      )
+      .then(modifier)
   ) {
     Checkbox(
-      modifier = Modifier.align(Alignment.CenterVertically),
+      modifier = Modifier
+        .align(Alignment.CenterVertically)
+        .padding(vertical = 4.dp),
       checked = isChecked,
       enabled = enabled,
       onCheckedChange = { checked ->
