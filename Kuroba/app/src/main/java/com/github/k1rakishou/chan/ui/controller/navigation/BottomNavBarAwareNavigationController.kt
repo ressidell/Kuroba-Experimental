@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// TODO: New toolbar. Remove me and everything related to me.
 class BottomNavBarAwareNavigationController(
   context: Context,
   private val navigationViewType: NavigationViewContract.Type,

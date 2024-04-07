@@ -26,92 +26,92 @@ import com.github.k1rakishou.core_themes.ThemeEngine
 import javax.inject.Inject
 
 abstract class BaseComposeController<VM : ViewModel>(
-    context: Context,
-    @StringRes private val titleStringId: Int
+  context: Context,
+  @StringRes private val titleStringId: Int
 ) : Controller(context), WindowInsetsListener {
 
-    @Inject
-    lateinit var themeEngine: ThemeEngine
-    @Inject
-    lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
+  @Inject
+  lateinit var themeEngine: ThemeEngine
+  @Inject
+  lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-    protected val controllerViewModel by lazy { controllerVM() }
+  protected val controllerViewModel by lazy { controllerVM() }
 
-    protected val controllerPaddingsState = mutableStateOf(PaddingValues())
+  protected val controllerPaddingsState = mutableStateOf(PaddingValues())
 
-    final override fun onCreate() {
-        super.onCreate()
+  final override fun onCreate() {
+    super.onCreate()
 
-        globalWindowInsetsManager.addInsetsUpdatesListener(this)
+    globalWindowInsetsManager.addInsetsUpdatesListener(this)
 
-        setupNavigation()
-        onInsetsChanged()
-        onPrepare()
+    setupNavigation()
+    onInsetsChanged()
+    onPrepare()
 
-        view = ComposeView(context).apply {
-            setContent {
-                ComposeEntrypoint {
-                    val chanTheme = LocalChanTheme.current
+    view = ComposeView(context).apply {
+      setContent {
+        ComposeEntrypoint {
+          val chanTheme = LocalChanTheme.current
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(chanTheme.backColorCompose)
-                    ) {
-                        BuildContent()
-                    }
-                }
-            }
+          Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(chanTheme.backColorCompose)
+          ) {
+            BuildContent()
+          }
         }
+      }
+    }
+  }
+
+  open fun setupNavigation() {
+    updateNavigationFlags(DeprecatedNavigationFlags(swipeable = false))
+
+    toolbarState.enterDefaultMode(
+      leftItem = BackArrowMenuItem(
+        onClick = { requireNavController().popController() }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(titleStringId),
+        subtitle = null
+      )
+    )
+  }
+
+  @CallSuper
+  override fun onDestroy() {
+    super.onDestroy()
+
+    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
+  }
+
+  override fun onInsetsChanged() {
+    var toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeight?.toPx()?.toInt() }
+    if (toolbarHeight == null) {
+      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
     }
 
-    open fun setupNavigation() {
-        updateNavigationFlags(DeprecatedNavigationFlags(swipeable = false))
+    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
+      globalWindowInsetsManager = globalWindowInsetsManager,
+      mainControllerCallbacks = null
+    )
 
-        toolbarState.enterDefaultMode(
-            leftItem = BackArrowMenuItem(
-                onClick = { requireNavController().popController() }
-            ),
-            middleContent = ToolbarMiddleContent.Title(
-                title = ToolbarText.Id(titleStringId),
-                subtitle = null
-            )
-        )
+    Snapshot.withMutableSnapshot {
+      controllerPaddingsState.value = PaddingValues(
+        top = AppModuleAndroidUtils.pxToDp(toolbarHeight).dp,
+        bottom = bottomPaddingDp.dp
+      )
     }
+  }
 
-    @CallSuper
-    override fun onDestroy() {
-        super.onDestroy()
+  open fun onPrepare() {
 
-        globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-    }
+  }
 
-    override fun onInsetsChanged() {
-        var toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeight?.toPx()?.toInt() }
-        if (toolbarHeight == null) {
-            toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
-        }
+  abstract fun controllerVM(): VM
 
-        val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-            globalWindowInsetsManager = globalWindowInsetsManager,
-            mainControllerCallbacks = null
-        )
-
-        Snapshot.withMutableSnapshot {
-            controllerPaddingsState.value = PaddingValues(
-                top = AppModuleAndroidUtils.pxToDp(toolbarHeight).dp,
-                bottom = bottomPaddingDp.dp
-            )
-        }
-    }
-
-    open fun onPrepare() {
-
-    }
-
-    abstract fun controllerVM(): VM
-
-    @Composable
-    abstract fun BuildContent()
+  @Composable
+  abstract fun BuildContent()
 
 }

@@ -581,7 +581,7 @@ abstract class ThreadController(
     }
 
     val isInReplyLayoutMode = kurobaToolbarState.isInReplyMode()
-    val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.isOpenedForDescriptor(currentDescriptor)
+    val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.isOpenedOrExpandedForDescriptor(currentDescriptor)
 
     if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
       return

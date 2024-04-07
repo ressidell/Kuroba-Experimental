@@ -20,10 +20,10 @@ data class ReplyLayoutVisibilityStates(
     return catalog.isExpanded() || thread.isExpanded()
   }
 
-  fun isOpenedForDescriptor(chanDescriptor: ChanDescriptor): Boolean {
+  fun isOpenedOrExpandedForDescriptor(chanDescriptor: ChanDescriptor): Boolean {
     return when (chanDescriptor) {
-      is ChanDescriptor.ICatalogDescriptor -> catalog.isOpened()
-      is ChanDescriptor.ThreadDescriptor -> thread.isOpened()
+      is ChanDescriptor.ICatalogDescriptor -> catalog.isOpenedOrExpanded()
+      is ChanDescriptor.ThreadDescriptor -> thread.isOpenedOrExpanded()
     }
   }
 

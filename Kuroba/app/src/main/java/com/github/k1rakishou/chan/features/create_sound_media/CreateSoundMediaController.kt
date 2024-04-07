@@ -53,10 +53,8 @@ class CreateSoundMediaController(
 
   @Inject
   lateinit var imageLoaderV2: ImageLoaderV2
-
   @Inject
   lateinit var fileChooser: FileChooser
-
   @Inject
   lateinit var dialogFactory: DialogFactory
 
