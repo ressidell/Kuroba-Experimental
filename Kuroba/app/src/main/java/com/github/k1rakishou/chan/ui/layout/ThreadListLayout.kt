@@ -63,7 +63,6 @@ import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
-import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerControllerType
 import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
@@ -396,33 +395,13 @@ class ThreadListLayout @JvmOverloads constructor(
   }
 
   override fun onDragStarted() {
-    if (!canToolbarCollapse() || replyLayoutView.isOpened()) {
-      return
-    }
-
-    // TODO: New toolbar.
-//    val toolbar = threadListLayoutCallback?.toolbar
-//      ?: return
-//
-//    toolbar.detachRecyclerViewScrollStateListener(recyclerView)
-//    toolbar.collapseHide(true)
+    // no-op
   }
 
   override fun onDragEnded() {
     // Fast scroller does not trigger RecyclerView's onScrollStateChanged() so we need to call it
     //  manually after we are down scrolling via Fast scroller.
     onRecyclerViewScrolled()
-
-    if (!canToolbarCollapse() || replyLayoutView.isOpened()) {
-      return
-    }
-
-    // TODO: New toolbar.
-//    val toolbar = threadListLayoutCallback?.toolbar
-//      ?: return
-//
-//    toolbar.attachRecyclerViewScrollStateListener(recyclerView)
-//    toolbar.collapseShow(true)
   }
 
   override fun onPresolveCaptchaButtonClicked() {
@@ -1089,7 +1068,7 @@ class ThreadListLayout @JvmOverloads constructor(
   }
 
   private fun attachToolbarScroll(attach: Boolean) {
-    if (!canToolbarCollapse()) {
+    if (!ChanSettings.canCollapseToolbar()) {
       return
     }
 
@@ -1106,18 +1085,13 @@ class ThreadListLayout @JvmOverloads constructor(
   }
 
   private fun showToolbarIfNeeded() {
-    if (!canToolbarCollapse()) {
+    if (!ChanSettings.canCollapseToolbar()) {
       return
     }
 
     globalUiStateHolder.updateScrollState {
       resetScrollState()
     }
-  }
-
-  private fun canToolbarCollapse(): Boolean {
-    return (ChanSettings.getCurrentLayoutMode() != ChanSettings.LayoutMode.SPLIT
-      && !ChanSettings.neverHideToolbar.get())
   }
 
   private suspend fun setFastScroll(enable: Boolean, posts: List<PostIndexed>) {
@@ -1179,13 +1153,7 @@ class ThreadListLayout @JvmOverloads constructor(
     }
 
     if (fastScroller == null) {
-      val fastScrollerType = when (chanDescriptor) {
-        is ThreadDescriptor -> FastScrollerControllerType.Thread
-        is ChanDescriptor.ICatalogDescriptor -> FastScrollerControllerType.Catalog
-      }
-
       val scroller = FastScrollerHelper.create(
-        fastScrollerType,
         recyclerView,
         postInfoMapItemDecoration
       )

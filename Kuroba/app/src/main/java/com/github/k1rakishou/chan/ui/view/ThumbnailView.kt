@@ -44,7 +44,6 @@ import com.github.k1rakishou.chan.core.cache.CacheHandler
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
-import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerControllerType
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.core_logger.Logger
@@ -418,8 +417,8 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
     )
 
     val fastScroller = globalUiStateHolder.fastScroller
-    val isDraggingCatalogScroller = fastScroller.isDraggingFastScroller(FastScrollerControllerType.Catalog)
-    val isDraggingThreadScroller = fastScroller.isDraggingFastScroller(FastScrollerControllerType.Thread)
+    val isDraggingCatalogScroller = fastScroller.isDraggingFastScroller()
+    val isDraggingThreadScroller = fastScroller.isDraggingFastScroller()
     val isDraggingCatalogOrThreadFastScroller = isDraggingCatalogScroller || isDraggingThreadScroller
 
     if (!isDraggingCatalogOrThreadFastScroller && isCached) {

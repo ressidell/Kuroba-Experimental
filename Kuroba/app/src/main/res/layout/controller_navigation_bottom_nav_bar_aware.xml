@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.github.k1rakishou.chan.controller.ui.NavigationControllerContainerLayout
+    <com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
         android:id="@+id/bottom_bar_aware_controller_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

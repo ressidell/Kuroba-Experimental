@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.github.k1rakishou.chan.controller.ui.NavigationControllerContainerLayout
+    <com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
         android:id="@+id/browse_controller_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

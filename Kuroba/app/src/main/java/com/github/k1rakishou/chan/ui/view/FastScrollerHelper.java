@@ -4,8 +4,6 @@ import static com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerControllerType;
-
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -18,15 +16,12 @@ public class FastScrollerHelper {
     private static final int THUMB_MIN_LENGTH = dp(48);
 
     public static FastScroller create(
-            FastScrollerControllerType fastScrollerControllerType,
             RecyclerView recyclerView,
-            @Nullable
-            PostInfoMapItemDecoration postInfoMapItemDecoration
+            @Nullable PostInfoMapItemDecoration postInfoMapItemDecoration
     ) {
         recyclerView.setVerticalScrollBarEnabled(false);
 
         return new FastScroller(
-                fastScrollerControllerType,
                 recyclerView,
                 postInfoMapItemDecoration,
                 FAST_SCROLLER_WIDTH,

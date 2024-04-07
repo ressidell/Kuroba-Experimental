@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ComposeView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
@@ -15,12 +16,15 @@ import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
+import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.asFlow
 import javax.inject.Inject
 
 
@@ -39,6 +43,9 @@ class KurobaToolbarView @JvmOverloads constructor(
 
   private val _kurobaToolbarState = mutableStateOf<KurobaToolbarState?>(null)
   private var _attachedController: Controller? = null
+
+  private val currentToolbarState: KurobaToolbarState?
+    get() = _kurobaToolbarState.value
 
   init {
     if (!isInEditMode) {
@@ -69,7 +76,7 @@ class KurobaToolbarView @JvmOverloads constructor(
     coroutineScope.launch {
       controller.listenForContainerToolbarStateUpdates()
         .onEach { kurobaToolbarState ->
-          val prevToolbar = _kurobaToolbarState.value
+          val prevToolbar = currentToolbarState
           _kurobaToolbarState.value = kurobaToolbarState
           prevToolbar?.updateToolbarAlpha(1f)
         }
@@ -77,8 +84,28 @@ class KurobaToolbarView @JvmOverloads constructor(
     }
 
     coroutineScope.launch {
-      snapshotFlow { globalUiStateHolder.scrollState.scrollTransitionProgress.floatValue }
-        .onEach { toolbarAlpha -> _kurobaToolbarState.value?.updateToolbarAlpha(toolbarAlpha) }
+      combine(
+        ChanSettings.layoutMode.listenForChanges().asFlow(),
+        ChanSettings.neverHideToolbar.listenForChanges().asFlow(),
+        globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
+        snapshotFlow { globalUiStateHolder.fastScroller.isDraggingFastScrollerState.value },
+        snapshotFlow { globalUiStateHolder.scrollState.scrollTransitionProgress.floatValue }
+      ) { _, _, replyLayoutVisibilityStates, isDraggingFastScroller, scrollProgress ->
+        return@combine ToolbarVisibilityInfo(
+          replyLayoutVisibilityStates = replyLayoutVisibilityStates,
+          isDraggingFastScroller = isDraggingFastScroller,
+          scrollProgress = scrollProgress
+        )
+      }
+        .onEach { toolbarVisibilityInfo ->
+          if (toolbarVisibilityInfo.cannotHideToolbar()) {
+            currentToolbarState?.updateToolbarAlpha(1f)
+            globalUiStateHolder.updateScrollState { resetScrollState() }
+            return@onEach
+          }
+
+          currentToolbarState?.updateToolbarAlpha(toolbarVisibilityInfo.toolbarAlpha)
+        }
         .collect()
     }
   }
@@ -180,9 +207,35 @@ class KurobaToolbarView @JvmOverloads constructor(
     return null
   }
 
+  private data class ToolbarVisibilityInfo(
+    val replyLayoutVisibilityStates: ReplyLayoutVisibilityStates,
+    val isDraggingFastScroller: Boolean,
+    val scrollProgress: Float
+  ) {
+
+    val toolbarAlpha: Float
+      get() = scrollProgress
+
+    fun cannotHideToolbar(): Boolean {
+      if (isDraggingFastScroller) {
+        return true
+      }
+
+      if (replyLayoutVisibilityStates.anyOpenedOrExpanded()) {
+        return true
+      }
+
+      if (!ChanSettings.canCollapseToolbar()) {
+        return true
+      }
+
+      return false
+    }
+  }
+
   companion object {
     val ToolbarAnimationInterpolator = FastOutSlowInInterpolator()
-    const val ToolbarAnimationDurationMs = 175L
+    const val ToolbarAnimationDurationMs = 250L
   }
   
 }

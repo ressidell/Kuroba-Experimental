@@ -26,7 +26,6 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailView
 import com.github.k1rakishou.chan.ui.controller.base.Controller
-import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerControllerType
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
 import com.github.k1rakishou.chan.ui.view.FastScroller
@@ -115,7 +114,6 @@ class AlbumDownloadController(context: Context) : Controller(context),
     recyclerView.setAdapter(adapter)
 
     fastScroller = FastScrollerHelper.create(
-      FastScrollerControllerType.Album,
       recyclerView,
       null
     )

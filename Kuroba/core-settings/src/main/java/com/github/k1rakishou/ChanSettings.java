@@ -878,6 +878,10 @@ public class ChanSettings {
         return getCurrentLayoutMode() == LayoutMode.SPLIT;
     }
 
+    public static boolean canCollapseToolbar() {
+        return !ChanSettings.isSplitLayoutMode() && !ChanSettings.neverHideToolbar.get();
+    }
+
     public static IntRange supportedFontSizes() {
         return new IntRange(10, 20);
     }

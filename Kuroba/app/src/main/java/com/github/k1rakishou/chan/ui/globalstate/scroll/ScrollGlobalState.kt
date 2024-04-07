@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.animation.addListener
 import androidx.recyclerview.widget.RecyclerView
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.common.quantize
 import com.github.k1rakishou.common.resumeValueSafe
@@ -161,7 +162,7 @@ class ScrollGlobalState(
 
       suspendCancellableCoroutine<Unit> { continuation ->
         val animator = ObjectAnimator.ofFloat(from, to)
-        animator.duration = 250
+        animator.duration = KurobaToolbarView.ToolbarAnimationDurationMs
         animator.interpolator = interpolator
         animator.addUpdateListener { valueAnimator ->
           block((valueAnimator.animatedValue as Float).quantize(fps))

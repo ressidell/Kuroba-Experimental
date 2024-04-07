@@ -1,31 +1,31 @@
 package com.github.k1rakishou.chan.ui.globalstate.fastsroller
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+
 interface IFastScrollerGlobalState {
   interface Readable {
-    fun isDraggingFastScroller(fastScrollerControllerType: FastScrollerControllerType): Boolean
+    val isDraggingFastScrollerState: State<Boolean>
+
+    fun isDraggingFastScroller(): Boolean
   }
 
   interface Writeable {
-    fun updateIsDraggingFastScroller(fastScrollerControllerType: FastScrollerControllerType, dragging: Boolean)
+    fun updateIsDraggingFastScroller(dragging: Boolean)
   }
 }
 
 internal class FastScrollerGlobalState : IFastScrollerGlobalState.Readable, IFastScrollerGlobalState.Writeable {
-  private val fastScrollerDragStateMap = mutableMapOf<FastScrollerControllerType, Boolean>()
+  private val _isDraggingFastScrollerState = mutableStateOf(false)
+  override val isDraggingFastScrollerState: State<Boolean>
+    get() = _isDraggingFastScrollerState
 
-  override fun isDraggingFastScroller(fastScrollerControllerType: FastScrollerControllerType): Boolean {
-    return fastScrollerDragStateMap[fastScrollerControllerType] ?: false
+  override fun isDraggingFastScroller(): Boolean {
+    return _isDraggingFastScrollerState.value
   }
 
-  override fun updateIsDraggingFastScroller(fastScrollerControllerType: FastScrollerControllerType, dragging: Boolean) {
-    fastScrollerDragStateMap[fastScrollerControllerType] = dragging
+  override fun updateIsDraggingFastScroller(dragging: Boolean) {
+    _isDraggingFastScrollerState.value = dragging
   }
 
-}
-
-enum class FastScrollerControllerType {
-  Catalog,
-  Thread,
-  Bookmarks,
-  Album
 }

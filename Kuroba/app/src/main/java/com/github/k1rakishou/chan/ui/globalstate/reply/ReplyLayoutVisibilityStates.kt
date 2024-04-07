@@ -8,6 +8,10 @@ data class ReplyLayoutVisibilityStates(
   val thread: ReplyLayoutVisibility
 ) {
 
+  fun anyOpenedOrExpanded(): Boolean {
+    return anyOpened() || anyExpanded()
+  }
+
   fun anyOpened(): Boolean {
     return catalog.isOpened() || thread.isOpened()
   }

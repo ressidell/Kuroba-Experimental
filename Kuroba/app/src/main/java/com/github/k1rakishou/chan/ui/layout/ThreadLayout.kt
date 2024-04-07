@@ -294,7 +294,7 @@ class ThreadLayout @JvmOverloads constructor(
     } else {
       replyButton.setOnClickListener(this)
 
-      // TODO: New reply layout
+      // TODO: New toolbar.
 //      replyButton.setToolbar(callback.toolbar!!)
     }
 
