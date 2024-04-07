@@ -1,25 +1,6 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.ui.layout
 
 import android.content.Context
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.KeyEvent
@@ -74,7 +55,6 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
 import com.github.k1rakishou.chan.utils.BackgroundUtils
-import com.github.k1rakishou.chan.utils.TimeUtils
 import com.github.k1rakishou.chan.utils.ViewUtils.hackMaxFlingVelocity
 import com.github.k1rakishou.chan.utils.setBackgroundColorFast
 import com.github.k1rakishou.common.AndroidUtils
@@ -168,74 +148,6 @@ class ThreadListLayout @JvmOverloads constructor(
     get() = chanLoadProgressNotifierLazy.get()
   private val postHighlightManager: PostHighlightManager
     get() = postHighlightManagerLazy.get()
-
-  private val chan4BirthdayDecoration = object : ItemDecoration() {
-    private val paint by lazy {
-      Paint(Paint.ANTI_ALIAS_FLAG)
-        .also { paint -> paint.alpha = 160 }
-    }
-
-    private val hat by lazy {
-      BitmapFactory.decodeResource(resources, R.drawable.partyhat)!!
-    }
-
-    override fun onDrawOver(canvas: Canvas, parent: RecyclerView, state: RecyclerView.State) {
-      val chanDescriptor = currentChanDescriptorOrNull()
-        ?: return
-
-      var index = 0
-
-      val postAlignmentMode = when (chanDescriptor) {
-        is ChanDescriptor.ICatalogDescriptor -> ChanSettings.catalogPostAlignmentMode.get()
-        is ThreadDescriptor -> ChanSettings.threadPostAlignmentMode.get()
-      }
-
-      while (index < parent.childCount) {
-        val child = parent.getChildAt(index)
-        if (child is GenericPostCell) {
-          val post = child.getPost()
-
-          if (post == null || !post.isOP() || post.postImages.isEmpty()) {
-            index++
-            continue
-          }
-
-          val params = child.layoutParams as RecyclerView.LayoutParams
-
-          when (postAlignmentMode) {
-            ChanSettings.PostAlignmentMode.AlignLeft -> {
-              // Thumbnails on the right side
-
-              val top = child.top + params.topMargin
-              val right = child.right + params.rightMargin
-
-              canvas.drawBitmap(
-                hat,
-                (right - hat.width).toFloat(),
-                top - dp(80f) - parent.paddingTop + toolbarHeight().toFloat(),
-                paint
-              )
-            }
-            ChanSettings.PostAlignmentMode.AlignRight -> {
-              // Thumbnails on the left side
-
-              val top = child.top + params.topMargin
-              val left = child.left + params.leftMargin
-
-              canvas.drawBitmap(
-                hat,
-                left.toFloat(),
-                top - dp(80f) - parent.paddingTop + toolbarHeight().toFloat(),
-                paint
-              )
-            }
-          }
-        }
-
-        index++
-      }
-    }
-  }
 
   private val scrollListener: RecyclerView.OnScrollListener = object : RecyclerView.OnScrollListener() {
     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -365,8 +277,8 @@ class ThreadListLayout @JvmOverloads constructor(
 
     // View binding
     replyLayoutView = findViewById(R.id.reply_layout_view)
-    recyclerView = findViewById(R.id.recycler_view)
     snowLayout = findViewById(R.id.snow_layout)
+    recyclerView = findViewById(R.id.recycler_view)
     recyclerView.hackMaxFlingVelocity()
 
     onThemeChanged()
@@ -506,15 +418,12 @@ class ThreadListLayout @JvmOverloads constructor(
 
           when (replyLayoutVisibility) {
             ReplyLayoutVisibility.Collapsed -> {
-              threadListLayoutCallback.showReplyButton(true)
               bottomNavBarVisibilityStateManager.replyViewStateChanged(
                 isCatalogReplyView = isCatalogReplyView,
                 isVisible = false
               )
             }
             ReplyLayoutVisibility.Opened -> {
-              threadListLayoutCallback.showReplyButton(false)
-
               bottomNavBarVisibilityStateManager.replyViewStateChanged(
                 isCatalogReplyView = isCatalogReplyView,
                 isVisible = true
@@ -584,7 +493,6 @@ class ThreadListLayout @JvmOverloads constructor(
       recyclerView.layoutManager = null
       recyclerView.layoutManager = layoutManager
       recyclerView.recycledViewPool.clear()
-      party()
     }
 
     val posts = chanThreadManager.getMutableListOfPosts(descriptor)
@@ -892,7 +800,6 @@ class ThreadListLayout @JvmOverloads constructor(
     closeReplyLayout()
 
     prevLastPostNo = 0
-    noParty()
   }
 
   fun getThumbnail(postImage: ChanPostImage?): ThumbnailView? {
@@ -1034,23 +941,6 @@ class ThreadListLayout @JvmOverloads constructor(
     }
 
     recyclerView.setPadding(defaultPadding, recyclerTop, recyclerRight, recyclerBottom)
-  }
-
-  private fun party() {
-    val chanDescriptor = getCurrentChanDescriptor()
-      ?: return
-
-    if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
-      return
-    }
-
-    if (chanDescriptor.siteDescriptor().is4chan() && TimeUtils.is4chanBirthdayToday()) {
-      recyclerView.addItemDecoration(chan4BirthdayDecoration)
-    }
-  }
-
-  private fun noParty() {
-    recyclerView.removeItemDecoration(chan4BirthdayDecoration)
   }
 
   private fun scrollToInternal(scrollPosition: Int) {
@@ -1403,7 +1293,6 @@ class ThreadListLayout @JvmOverloads constructor(
     val chanDescriptor: ChanDescriptor?
 
     fun showToolbar()
-    fun showReplyButton(show: Boolean)
     fun showImageReencodingWindow(fileUuid: UUID, supportsReencode: Boolean)
     fun threadBackPressed(): Boolean
     fun threadBackLongPressed()

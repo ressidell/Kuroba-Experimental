@@ -32,7 +32,6 @@ import com.github.k1rakishou.chan.core.watcher.FilterWatcherWorker
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2Service
 import com.github.k1rakishou.chan.features.posting.PostingService
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingWorker
-import com.github.k1rakishou.chan.ui.widget.SnackbarWrapper
 import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.dns.DnsOverHttpsSelectorFactory
 import com.github.k1rakishou.common.dns.NormalDnsSelectorFactory
@@ -69,7 +68,6 @@ interface ApplicationComponent : ApplicationDependencies {
   fun inject(filterWatcherWorker: FilterWatcherWorker)
   fun inject(threadDownloadingWorker: ThreadDownloadingWorker)
   fun inject(compositeCatalogSite: CompositeCatalogSite)
-  fun inject(snackbarWrapper: SnackbarWrapper)
   fun inject(replyNotificationDeleteIntentBroadcastReceiver: ReplyNotificationDeleteIntentBroadcastReceiver)
   fun inject(cloudFlareHandlerInterceptor: CloudFlareHandlerInterceptor)
   fun inject(imageSaverV2Service: ImageSaverV2Service)

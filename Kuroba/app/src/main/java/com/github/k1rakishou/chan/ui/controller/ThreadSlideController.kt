@@ -139,7 +139,7 @@ class ThreadSlideController(
       combine(
         flow = globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
         flow2 = globalUiStateHolder.replyLayout.replyLayoutsBoundsFlow,
-        flow3 = globalUiStateHolder.mainUiState.touchPositionFlow,
+        flow3 = globalUiStateHolder.mainUi.touchPositionFlow,
         transform = { replyLayoutVisibilityEvents, replyLayoutsBounds, touchPosition ->
           return@combine SlidingPaneLockState(
             replyLayoutVisibilityStates = replyLayoutVisibilityEvents,

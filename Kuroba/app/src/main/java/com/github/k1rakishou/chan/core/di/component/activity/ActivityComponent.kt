@@ -200,6 +200,7 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyFloatingListM
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyGroupableFloatingListMenuRow
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyHeaderListMenuRow
 import com.github.k1rakishou.chan.ui.view.sorting.BookmarkSortingItemView
+import com.github.k1rakishou.chan.ui.widget.SnackbarWrapper
 import com.github.k1rakishou.chan.ui.widget.dialog.KurobaAlertController
 import dagger.BindsInstance
 import dagger.Subcomponent
@@ -412,6 +413,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(replyLayoutView: ReplyLayoutView)
   fun inject(kurobaBottomNavigationView: KurobaBottomNavigationView)
   fun inject(kurobaToolbarView: KurobaToolbarView)
+  fun inject(snackbarWrapper: SnackbarWrapper)
 
   @Subcomponent.Builder
   interface Builder {

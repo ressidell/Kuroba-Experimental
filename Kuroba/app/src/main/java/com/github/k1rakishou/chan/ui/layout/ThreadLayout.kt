@@ -69,6 +69,7 @@ import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.LoadView
 import com.github.k1rakishou.chan.ui.view.NavigationViewContract
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
+import com.github.k1rakishou.chan.ui.widget.SnackbarClass
 import com.github.k1rakishou.chan.ui.widget.SnackbarWrapper
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getQuantityString
@@ -126,10 +127,6 @@ class ThreadLayout @JvmOverloads constructor(
   View.OnClickListener,
   ThreadListLayoutCallback,
   ThemeEngine.ThemeChangesListener {
-
-  private enum class Visible {
-    EMPTY, LOADING, THREAD, ERROR
-  }
 
   @Inject
   lateinit var presenter: ThreadPresenter
@@ -200,7 +197,7 @@ class ThreadLayout @JvmOverloads constructor(
   private var newPostsNotification: SnackbarWrapper? = null
   private var refreshedFromSwipe = false
   private var deletingDialog: ProgressDialog? = null
-  private var visible: Visible? = null
+  private var state: State? = null
   private var searchLinkPopupOpenJob: Job? = null
 
   private val scrollToBottomDebouncer = Debouncer(false)
@@ -264,6 +261,7 @@ class ThreadLayout @JvmOverloads constructor(
     loadView = findViewById(R.id.loadview)
     replyButton = findViewById(R.id.reply_button)
     replyButton.setThreadControllerType(threadControllerType)
+    replyButton.setSnackbarClass(SnackbarClass.from(threadControllerType))
 
     // Inflate ThreadListLayout
     threadListLayout = inflate(context, R.layout.layout_thread_list, this, false) as ThreadListLayout
@@ -288,15 +286,7 @@ class ThreadLayout @JvmOverloads constructor(
     errorRetryButton.setOnClickListener(this)
     openThreadInArchiveButton.setOnClickListener(this)
 
-    // Setup
-    if (!ChanSettings.enableReplyFab.get()) {
-      AndroidUtils.removeFromParentView(replyButton)
-    } else {
-      replyButton.setOnClickListener(this)
-
-      // TODO: New toolbar.
-//      replyButton.setToolbar(callback.toolbar!!)
-    }
+    replyButton.setOnClickListener(this)
 
     coroutineScope.launch {
       chanLoadProgressNotifier.progressEventsFlow.collect { chanLoadProgressEvent ->
@@ -407,7 +397,7 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   fun canChildScrollUp(): Boolean {
-    if (visible != Visible.THREAD) {
+    if (state != State.THREAD) {
       return true
     }
 
@@ -433,21 +423,19 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   fun lostFocus(wasFocused: ThreadControllerType) {
-    replyButton.lostFocus(wasFocused)
     threadListLayout.lostFocus(wasFocused)
   }
 
   fun gainedFocus(nowFocused: ThreadControllerType) {
-    replyButton.gainedFocus(nowFocused)
-    threadListLayout.gainedFocus(nowFocused, visible == Visible.THREAD)
+    threadListLayout.gainedFocus(nowFocused, state == State.THREAD)
   }
 
   fun onShown(nowFocused: ThreadControllerType) {
-    threadListLayout.onShown(nowFocused, visible == Visible.THREAD)
+    threadListLayout.onShown(nowFocused, state == State.THREAD)
   }
 
   fun onHidden(nowFocused: ThreadControllerType) {
-    threadListLayout.onHidden(nowFocused, visible == Visible.THREAD)
+    threadListLayout.onHidden(nowFocused, state == State.THREAD)
   }
 
   fun setBoardPostViewMode(boardPostViewMode: BoardPostViewMode) {
@@ -494,7 +482,7 @@ class ThreadLayout @JvmOverloads constructor(
       return
     }
 
-    val initial = visible != Visible.THREAD
+    val initial = state != State.THREAD
     val (width, _) = loadView.awaitUntilGloballyLaidOutAndGetSize(waitForWidth = true)
 
     if (refreshPostPopupHelperPosts && postPopupHelper.isOpen) {
@@ -513,11 +501,11 @@ class ThreadLayout @JvmOverloads constructor(
       "totalDuration=${totalDuration}")
 
     if (!showPostsResult.result) {
-      switchVisible(Visible.EMPTY)
+      switchVisible(State.EMPTY)
       return
     }
 
-    switchVisible(Visible.THREAD)
+    switchVisible(State.THREAD)
     callback.onShowPosts()
   }
 
@@ -540,12 +528,10 @@ class ThreadLayout @JvmOverloads constructor(
 
     val errorMessage = error.errorMessage
 
-    if (visible == Visible.THREAD) {
-      // Hide the button so the user can see the full error message
-      replyButton.hide()
+    if (state == State.THREAD) {
       threadListLayout.showError(errorMessage)
     } else {
-      switchVisible(Visible.ERROR)
+      switchVisible(State.ERROR)
       errorText.text = errorMessage
 
       if (error.isRecoverableError()) {
@@ -580,11 +566,11 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   override fun showLoading(animateTransition: Boolean) {
-    switchVisible(Visible.LOADING, animateTransition = animateTransition)
+    switchVisible(State.LOADING, animateTransition = animateTransition)
   }
 
   override fun showEmpty() {
-    switchVisible(Visible.EMPTY)
+    switchVisible(State.EMPTY)
   }
 
   override fun showPostInfo(info: String) {
@@ -780,7 +766,7 @@ class ThreadLayout @JvmOverloads constructor(
   override fun scrollTo(displayPosition: Int, smooth: Boolean) {
     if (postPopupHelper.isOpen) {
       postPopupHelper.scrollTo(displayPosition, smooth)
-    } else if (visible == Visible.THREAD) {
+    } else if (state == State.THREAD) {
       threadListLayout.scrollTo(displayPosition)
     }
   }
@@ -908,8 +894,6 @@ class ThreadLayout @JvmOverloads constructor(
       }
 
       SnackbarWrapper.create(
-        globalUiStateHolder,
-        globalWindowInsetsManager,
         themeEngine.chanTheme,
         this,
         snackbarStringId,
@@ -966,8 +950,6 @@ class ThreadLayout @JvmOverloads constructor(
       }
 
       SnackbarWrapper.create(
-        globalUiStateHolder,
-        globalWindowInsetsManager,
         themeEngine.chanTheme,
         this,
         formattedString,
@@ -1029,8 +1011,6 @@ class ThreadLayout @JvmOverloads constructor(
       }
 
       SnackbarWrapper.create(
-        globalUiStateHolder,
-        globalWindowInsetsManager,
         themeEngine.chanTheme,
         this,
         getString(R.string.restored_n_posts, selectedPosts.size),
@@ -1120,8 +1100,6 @@ class ThreadLayout @JvmOverloads constructor(
     dismissSnackbar()
 
     newPostsNotification = SnackbarWrapper.create(
-      globalUiStateHolder,
-      globalWindowInsetsManager,
       themeEngine.chanTheme,
       this,
       text,
@@ -1164,8 +1142,6 @@ class ThreadLayout @JvmOverloads constructor(
     }
 
     newPostsNotification = SnackbarWrapper.create(
-      globalUiStateHolder,
-      globalWindowInsetsManager,
       themeEngine.chanTheme,
       this,
       text,
@@ -1244,42 +1220,33 @@ class ThreadLayout @JvmOverloads constructor(
     threadListLayout.showCaptcha(chanDescriptor, replyMode, autoReply, afterPostingAttempt, onFinished)
   }
 
-  override fun showReplyButton(show: Boolean) {
-    if (replyButton.isFabVisible() == show || !ChanSettings.enableReplyFab.get()) {
+  private fun switchVisible(state: State, animateTransition: Boolean = true) {
+    if (this.state == state) {
       return
     }
 
-    if (show) {
-      replyButton.show()
-    } else {
-      replyButton.hide()
-    }
-  }
-
-  private fun switchVisible(visible: Visible, animateTransition: Boolean = true) {
-    if (this.visible == visible) {
-      return
-    }
-
-    if (this.visible != null) {
-      if (this.visible == Visible.THREAD) {
+    if (this.state != null) {
+      if (this.state == State.THREAD) {
         threadListLayout.cleanup()
         postPopupHelper.popAll()
 
-        showReplyButton(false)
         dismissSnackbar()
       }
     }
 
-    this.visible = visible
-    this.replyButton.setThreadVisibilityState(visible == Visible.THREAD)
+    this.state = state
 
-    when (visible) {
-      Visible.EMPTY -> {
-        loadView.setView(inflateEmptyView(), animateTransition)
-        showReplyButton(false)
+    threadControllerType?.let { controllerType ->
+      globalUiStateHolder.updateThreadLayoutState {
+        updateThreadLayoutState(controllerType, state)
       }
-      Visible.LOADING -> {
+    }
+
+    when (state) {
+      State.EMPTY -> {
+        loadView.setView(inflateEmptyView(), animateTransition)
+      }
+      State.LOADING -> {
         val view = loadView.setView(progressLayout, animateTransition)
 
         if (refreshedFromSwipe) {
@@ -1289,18 +1256,15 @@ class ThreadLayout @JvmOverloads constructor(
           view.visibility = View.VISIBLE
         }
 
-        showReplyButton(false)
         progressStepText.text = ""
       }
-      Visible.THREAD -> {
+      State.THREAD -> {
         callback.hideSwipeRefreshLayout()
         loadView.setView(threadListLayout, animateTransition)
-        showReplyButton(true)
       }
-      Visible.ERROR -> {
+      State.ERROR -> {
         callback.hideSwipeRefreshLayout()
         loadView.setView(errorLayout, animateTransition)
-        showReplyButton(false)
       }
     }
   }
@@ -1475,6 +1439,12 @@ class ThreadLayout @JvmOverloads constructor(
     }
   }
 
+  enum class State {
+    EMPTY,
+    LOADING,
+    THREAD,
+    ERROR
+  }
 
   interface ThreadLayoutCallback {
     val kurobaToolbarState: KurobaToolbarState

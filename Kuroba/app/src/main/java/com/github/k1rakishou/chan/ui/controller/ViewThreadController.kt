@@ -25,6 +25,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
@@ -85,6 +86,9 @@ open class ViewThreadController(
 
   override val kurobaToolbarState: KurobaToolbarState
     get() = toolbarState
+
+  val viewThreadControllerToolbarState: KurobaToolbarState
+    get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -260,6 +264,16 @@ open class ViewThreadController(
   override fun onLostFocus(wasFocused: ThreadControllerType) {
     super.onLostFocus(wasFocused)
     check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
+
+    viewThreadControllerToolbarState.invokeAfterTransitionFinished {
+      popUntil(withAnimation = false) { topToolbar ->
+        if (topToolbar.kind != ToolbarStateKind.Thread) {
+          return@popUntil true
+        }
+
+        return@popUntil false
+      }
+    }
   }
 
   override fun onGainedFocus(nowFocused: ThreadControllerType) {
@@ -538,7 +552,8 @@ open class ViewThreadController(
             withOverflowMenuItem(
               id = ACTION_REPLY,
               stringId = R.string.action_reply,
-              onClick = { item -> replyClicked(item) })
+              onClick = { item -> replyClicked(item) }
+            )
           }
 
           withOverflowMenuItem(

@@ -1,23 +1,5 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.ui.view
 
-import android.animation.AnimatorSet
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -29,31 +11,35 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.appcompat.widget.AppCompatImageView
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.animation.doOnCancel
-import androidx.core.animation.doOnEnd
-import androidx.core.animation.doOnStart
+import androidx.compose.runtime.snapshotFlow
 import androidx.core.graphics.withSave
 import androidx.core.graphics.withScale
 import androidx.core.graphics.withTranslation
 import androidx.core.view.updatePadding
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
-import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
-import com.github.k1rakishou.chan.ui.animation.cancelAnimations
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
+import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout
+import com.github.k1rakishou.chan.ui.widget.SnackbarClass
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
 import com.github.k1rakishou.chan.utils.TimeUtils
+import com.github.k1rakishou.chan.utils.combineMany
 import com.github.k1rakishou.chan.utils.setAlphaFast
-import com.github.k1rakishou.chan.utils.setVisibilityFast
 import com.github.k1rakishou.common.updateMargins
 import com.github.k1rakishou.core_themes.ThemeEngine
-import com.google.android.material.snackbar.Snackbar.SnackbarLayout
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.asFlow
 import javax.inject.Inject
 
 class HidingFloatingActionButton
@@ -61,57 +47,41 @@ class HidingFloatingActionButton
   WindowInsetsListener,
   ThemeEngine.ThemeChangesListener {
 
-  private var attachedToWindow = false
-  private var attachedToToolbar = false
-  private var coordinatorLayout: CoordinatorLayout? = null
-  private var bottomNavViewHeight = 0
-
-  private var listeningForInsetsChanges = false
-  private var focused = false
-  private var isThreadMode = false
-  private var currentFabAnimation = CurrentFabAnimation.None
-  private var threadControllerType: ThreadControllerType? = null
-  private var animatorSet: AnimatorSet? = null
+  private var _bottomNavViewHeight = 0
+  private var _listeningForInsetsChanges = false
+  private var _threadControllerType: ThreadControllerType? = null
+  private var _snackbarClass: SnackbarClass? = null
 
   private val padding = dp(12f)
   private val additionalPadding = dp(17f)
   private val hatOffsetX = dp(7f).toFloat()
   private val isChristmasToday = TimeUtils.isChristmasToday()
+  private val is4chanBirthdayToday = TimeUtils.is4chanBirthdayToday()
 
+  @Inject
+  lateinit var globalUiStateHolder: GlobalUiStateHolder
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
   @Inject
   lateinit var themeEngine: ThemeEngine
 
-  private val hat by lazy { BitmapFactory.decodeResource(resources, R.drawable.christmashat)!! }
-  private val paint by lazy { Paint(Paint.ANTI_ALIAS_FLAG) }
+  private val coroutineScope = KurobaCoroutineScope()
+  private val christmasHat by lazy(LazyThreadSafetyMode.NONE) { BitmapFactory.decodeResource(resources, R.drawable.christmashat)!! }
+  private val partyHat by lazy(LazyThreadSafetyMode.NONE) { BitmapFactory.decodeResource(resources, R.drawable.partyhat)!! }
+  private val paint by lazy(LazyThreadSafetyMode.NONE) { Paint(Paint.ANTI_ALIAS_FLAG) }
   private val outlinePath = Path()
   private val fabOutlineProvider = FabOutlineProvider(outlinePath)
 
-  private val paddingL = if (isChristmasToday) {
+  private val paddingL = if (isChristmasToday || is4chanBirthdayToday) {
     additionalPadding + padding
   } else {
     padding
   }
-  private val paddingT = if (isChristmasToday) {
+  private val paddingT = if (isChristmasToday || is4chanBirthdayToday) {
     additionalPadding + padding
   } else {
     padding
   }
-
-  private val isSnackbarShowing: Boolean
-    get() {
-      val layout = coordinatorLayout
-        ?: return false
-
-      for (i in 0 until layout.childCount) {
-        if (layout.getChildAt(i) is SnackbarLayout) {
-          return true
-        }
-      }
-
-      return false
-    }
 
   constructor(context: Context) : super(context) {
     init()
@@ -141,7 +111,7 @@ class HidingFloatingActionButton
       // We apply the bottom paddings directly in SplitNavigationController when we are in SPLIT
       // mode, so we don't need to do that twice and that's why we set bottomNavViewHeight to 0
       // when in SPLIT mode.
-      bottomNavViewHeight = if (KurobaBottomNavigationView.isBottomNavViewEnabled()) {
+      _bottomNavViewHeight = if (KurobaBottomNavigationView.isBottomNavViewEnabled()) {
         getDimen(R.dimen.navigation_view_size)
       } else {
         0
@@ -149,66 +119,23 @@ class HidingFloatingActionButton
 
       startListeningForInsetsChangesIfNeeded()
       onThemeChanged()
+      updatePaddings()
     }
 
     outlineProvider = fabOutlineProvider
-
-    setVisibilityFast(GONE)
     setAlphaFast(0f)
   }
 
-  // TODO: New reply layout
-//  fun setToolbar(toolbar: Toolbar) {
-//    this.toolbar = toolbar
-//    updatePaddings()
-//
-//    if (attachedToWindow && !attachedToToolbar) {
-//      toolbar.addCollapseCallback(this)
-//      attachedToToolbar = true
-//    }
-//  }
-
   fun setThreadControllerType(threadControllerType: ThreadControllerType) {
-    this.threadControllerType = threadControllerType
+    _threadControllerType = threadControllerType
   }
 
-  fun setThreadVisibilityState(isThreadMode: Boolean) {
-    this.isThreadMode = isThreadMode
-  }
-
-  fun gainedFocus(threadControllerType: ThreadControllerType) {
-    focused = threadControllerType == this.threadControllerType
-  }
-
-  fun lostFocus(threadControllerType: ThreadControllerType) {
-    if (ChanSettings.neverHideToolbar.get()) {
-      return
-    }
-
-    val prevFocused = focused
-    focused = (threadControllerType == this.threadControllerType).not()
-
-    if (!focused && focused != prevFocused) {
-      onCollapseAnimationInternal(collapse = true, forced = true)
-    }
-  }
-
-  fun isFabVisible(): Boolean {
-    return visibility == View.VISIBLE && currentFabAnimation != CurrentFabAnimation.Hiding
-  }
-
-  fun hide() {
-    // TODO: New toolbar.
-//    onCollapseAnimation(collapse = true)
-  }
-
-  fun show() {
-    // TODO: New toolbar.
-//    onCollapseAnimation(collapse = false)
+  fun setSnackbarClass(snackbarClass: SnackbarClass) {
+    _snackbarClass = snackbarClass
   }
 
   override fun onTouchEvent(ev: MotionEvent): Boolean {
-    if (this.visibility != View.VISIBLE || currentFabAnimation != CurrentFabAnimation.None) {
+    if (alpha < 1f) {
       return false
     }
 
@@ -221,39 +148,22 @@ class HidingFloatingActionButton
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    attachedToWindow = true
-
-    require(parent is CoordinatorLayout) { "HidingFloatingActionButton must be a parent of CoordinatorLayout" }
-    coordinatorLayout = parent as CoordinatorLayout
-
-    // TODO: New reply layout
-//    if (toolbar != null && !attachedToToolbar) {
-//      toolbar!!.addCollapseCallback(this)
-//      attachedToToolbar = true
-//    }
 
     if (!isInEditMode) {
       startListeningForInsetsChangesIfNeeded()
       themeEngine.addListener(this)
+      updatePaddings()
+
+      listenForFabVisibilityFlags()
     }
   }
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
 
-    cancelPrevAnimation()
-    attachedToWindow = false
-
-    // TODO: New reply layout
-//    if (attachedToToolbar) {
-//      toolbar!!.removeCollapseCallback(this)
-//      attachedToToolbar = false
-//    }
-
     stopListeningForInsetsChanges()
     themeEngine.removeListener(this)
-
-    coordinatorLayout = null
+    coroutineScope.cancelChildren()
   }
 
   override fun onInsetsChanged() {
@@ -272,30 +182,84 @@ class HidingFloatingActionButton
       super.draw(canvas)
     }
 
-    if (isChristmasToday) {
+    if (isChristmasToday || is4chanBirthdayToday) {
       canvas.withScale(x = 0.5f, y = 0.5f, pivotX = 0.5f, pivotY = 0.5f) {
         canvas.withTranslation(x = hatOffsetX) {
-          canvas.drawBitmap(hat, 0f, 0f, paint)
+          if (isChristmasToday) {
+            canvas.drawBitmap(christmasHat, 0f, 0f, paint)
+          } else if (is4chanBirthdayToday) {
+            canvas.drawBitmap(partyHat, 0f, 0f, paint)
+          }
         }
       }
     }
   }
 
+  private fun listenForFabVisibilityFlags() {
+    coroutineScope.cancelChildren()
+    coroutineScope.launch {
+      while (_snackbarClass == null && _threadControllerType == null && isActive) {
+        delay(100)
+      }
+
+      val snackbarClass = _snackbarClass
+        ?: return@launch
+      val threadControllerType = _threadControllerType
+        ?: return@launch
+
+      combineMany(
+        ChanSettings.layoutMode.listenForChanges().asFlow(),
+        ChanSettings.neverHideToolbar.listenForChanges().asFlow(),
+        ChanSettings.enableReplyFab.listenForChanges().asFlow(),
+        globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
+        snapshotFlow { globalUiStateHolder.threadLayout.threadLayoutState(threadControllerType).value },
+        snapshotFlow { globalUiStateHolder.threadLayout.focusedControllerState.value },
+        snapshotFlow { globalUiStateHolder.fastScroller.isDraggingFastScrollerState.value },
+        snapshotFlow { globalUiStateHolder.scroll.scrollTransitionProgress.floatValue },
+        snapshotFlow { globalUiStateHolder.snackbar.snackbarVisibilityState(snackbarClass).value }
+      ) { _, _, enableFab, replyLayoutState, threadLayout, focusedController, draggingFastScroller, scroll, snackbarVisible ->
+        return@combineMany FabVisibilityInfo(
+          fabEnabled = enableFab,
+          replyLayoutVisibilityStates = replyLayoutState,
+          threadLayoutState = threadLayout,
+          focusedController = focusedController,
+          scrollProgress = scroll,
+          isDraggingFastScroller = draggingFastScroller,
+          snackbarVisible = snackbarVisible
+        )
+      }
+        .onEach { fabVisibilityInfo ->
+          if (fabVisibilityInfo.cannotHideFab()) {
+            setAlphaFast(1f)
+            return@onEach
+          }
+
+          if (fabVisibilityInfo.needToHideFab(threadControllerType)) {
+            setAlphaFast(0f)
+            return@onEach
+          }
+
+          setAlphaFast(fabVisibilityInfo.fabAlpha)
+        }
+        .collect()
+    }
+  }
+
   private fun updatePath(inputWidthPx: Int, inputHeightPx: Int) {
-    val widthPx = if (isChristmasToday) {
+    val widthPx = if (isChristmasToday || is4chanBirthdayToday) {
       inputWidthPx - additionalPadding
     } else {
       inputWidthPx
     }
 
-    val heightPx = if (isChristmasToday) {
+    val heightPx = if (isChristmasToday || is4chanBirthdayToday) {
       inputHeightPx - additionalPadding
     } else {
       inputHeightPx
     }
 
-    val offsetX = if (isChristmasToday) additionalPadding else 0
-    val offsetY = if (isChristmasToday) additionalPadding else 0
+    val offsetX = if (isChristmasToday || is4chanBirthdayToday) additionalPadding else 0
+    val offsetY = if (isChristmasToday || is4chanBirthdayToday) additionalPadding else 0
 
     val centerX = offsetX + (widthPx / 2f)
     val centerY = offsetY + (heightPx / 2f)
@@ -305,176 +269,89 @@ class HidingFloatingActionButton
     outlinePath.close()
   }
 
-  // TODO: New reply layout
-//  override fun onCollapseTranslation(offset: Float) {
-//    if (!isThreadMode) {
-//      // We are either showing an error or an empty message or loading view, so we can't update the
-//      // FAB state.
-//      return
-//    }
-//
-//    if (isSnackbarShowing || !focused) {
-//      return
-//    }
-//
-//    val newFabAlpha = 1f - offset
-//
-//    if (newFabAlpha >= 1f && isCurrentReplyLayoutOpened()) {
-//      // If trying to show and currently reply layout is opened - do not show.
-//      return
-//    }
-//
-//    if (newFabAlpha != this.alpha) {
-//      cancelPrevAnimation()
-//
-//      if (newFabAlpha < 0.5f) {
-//        setVisibilityFast(GONE)
-//      } else if (newFabAlpha > 0.5f) {
-//        setVisibilityFast(VISIBLE)
-//      }
-//
-//      setAlphaFast(newFabAlpha)
-//    }
-//  }
-
-  // TODO: New reply layout
-//  override fun onCollapseAnimation(collapse: Boolean) {
-//    onCollapseAnimationInternal(collapse)
-//  }
-
-  private fun onCollapseAnimationInternal(collapse: Boolean, forced: Boolean = false) {
-    if (collapse && currentFabAnimation == CurrentFabAnimation.Hiding
-      || !collapse && currentFabAnimation == CurrentFabAnimation.Showing
-    ) {
-      // Exactly this animation is already running
-      return
-    }
-
-    if (!collapse && !isThreadMode) {
-      // We can only hide the FAB when we are not showing the posts
-      return
-    }
-
-    if (isSnackbarShowing && !collapse) {
-      // Can't show FAB when snackbar is visible
-      return
-    }
-
-    if (!focused && !forced) {
-      // If not focused ignore everything (except for cases when it is a forced update).
-      return
-    }
-
-    if (!collapse && isCurrentReplyLayoutOpened()) {
-      // Prevent showing FAB when the reply layout is opened
-      return
-    }
-
-    cancelPrevAnimation()
-
-    val newFabAlpha = if (collapse) {
-      0f
-    } else {
-      1f
-    }
-
-    currentFabAnimation = if (collapse) {
-      CurrentFabAnimation.Hiding
-    } else {
-      CurrentFabAnimation.Showing
-    }
-
-    val alphaAnimation = ValueAnimator.ofFloat(this.alpha, newFabAlpha).apply {
-      duration = KurobaToolbarView.ToolbarAnimationDurationMs
-      interpolator = KurobaToolbarView.ToolbarAnimationInterpolator
-
-      doOnStart {
-        if (!collapse) {
-          this@HidingFloatingActionButton.setVisibilityFast(VISIBLE)
-        }
-      }
-
-      fun onCancelOrEnd() {
-        currentFabAnimation = CurrentFabAnimation.None
-
-        if (collapse) {
-          this@HidingFloatingActionButton.setAlphaFast(0f)
-          this@HidingFloatingActionButton.setVisibilityFast(GONE)
-        } else {
-          this@HidingFloatingActionButton.setAlphaFast(1f)
-          this@HidingFloatingActionButton.setVisibilityFast(VISIBLE)
-        }
-      }
-
-      doOnCancel { onCancelOrEnd() }
-      doOnEnd { onCancelOrEnd() }
-
-      addUpdateListener { animation ->
-        val newAlpha = animation.animatedValue as Float
-
-        this@HidingFloatingActionButton.setAlphaFast(newAlpha)
-      }
-    }
-
-    animatorSet = AnimatorSet().apply {
-      play(alphaAnimation)
-      start()
-    }
-  }
-
-  private fun cancelPrevAnimation() {
-    if (animatorSet != null) {
-      animatorSet?.cancelAnimations()
-      animatorSet = null
-    }
-  }
-
   private fun stopListeningForInsetsChanges() {
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-    listeningForInsetsChanges = false
+    _listeningForInsetsChanges = false
   }
 
   private fun startListeningForInsetsChangesIfNeeded() {
-    if (listeningForInsetsChanges) {
+    if (_listeningForInsetsChanges) {
       return
     }
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
-    listeningForInsetsChanges = true
+    _listeningForInsetsChanges = true
   }
 
   private fun updatePaddings() {
     val fabBottomMargin = getDimen(R.dimen.hiding_fab_margin)
-    updateMargins(bottom = fabBottomMargin + bottomNavViewHeight + globalWindowInsetsManager.bottom())
+    updateMargins(bottom = fabBottomMargin + _bottomNavViewHeight + globalWindowInsetsManager.bottom())
   }
 
-  private fun isCurrentReplyLayoutOpened(): Boolean {
-    val controllerType = threadControllerType
-      ?: return true
-    val threadLayout = findThreadLayout(controllerType)
-      ?: return true
-    val threadLayoutThreadControllerType = threadLayout.threadControllerType
-      ?: return true
+  private data class FabVisibilityInfo(
+    val fabEnabled: Boolean,
+    val replyLayoutVisibilityStates: ReplyLayoutVisibilityStates,
+    val threadLayoutState: ThreadLayout.State,
+    val focusedController: ThreadControllerType,
+    val scrollProgress: Float,
+    val isDraggingFastScroller: Boolean,
+    val snackbarVisible: Boolean
+  ) {
+    val fabAlpha: Float
+      get() = scrollProgress
 
-    if (controllerType == threadLayoutThreadControllerType && threadLayout.isReplyLayoutOpen()) {
-      return true
-    }
-
-    return false
-  }
-
-  private fun findThreadLayout(controllerType: ThreadControllerType): ThreadLayout? {
-    var parent = this.parent
-
-    while (parent != null && parent !is ThreadLayout) {
-      if (parent is ThreadLayout && parent.threadControllerType == controllerType) {
-        break
+    fun cannotHideFab(): Boolean {
+      if (!fabEnabled) {
+        return false
       }
 
-      parent = parent.parent
+      return !ChanSettings.canCollapseToolbar()
     }
 
-    return parent as? ThreadLayout
+    fun needToHideFab(threadControllerType: ThreadControllerType): Boolean {
+      if (!fabEnabled) {
+        return true
+      }
+
+      when (threadLayoutState) {
+        ThreadLayout.State.EMPTY,
+        ThreadLayout.State.LOADING,
+        ThreadLayout.State.ERROR -> {
+          return true
+        }
+        ThreadLayout.State.THREAD -> {
+          // no-op
+        }
+      }
+
+      if (focusedController != threadControllerType) {
+        return true
+      }
+
+      if (isDraggingFastScroller) {
+        return true
+      }
+
+      when (threadControllerType) {
+        ThreadControllerType.Catalog -> {
+          if (replyLayoutVisibilityStates.catalog.isOpenedOrExpanded()) {
+            return true
+          }
+        }
+        ThreadControllerType.Thread -> {
+          if (replyLayoutVisibilityStates.thread.isOpenedOrExpanded()) {
+            return true
+          }
+        }
+      }
+
+      if (snackbarVisible) {
+        return true
+      }
+
+      return false
+    }
+
   }
 
   private class FabOutlineProvider(
@@ -485,12 +362,6 @@ class HidingFloatingActionButton
       outline.setConvexPath(path)
     }
 
-  }
-
-  enum class CurrentFabAnimation {
-    None,
-    Hiding,
-    Showing
   }
 
 }

@@ -16,12 +16,12 @@ interface IReplyLayoutGlobalState {
     fun anyReplyLayoutBoundsContainTouchPosition(touchPosition: Offset): Boolean
   }
 
-  interface Writable {
+  interface Writeable {
     fun updateReplyLayoutForController(threadControllerType: ThreadControllerType, updater: (IIndividualReplyLayoutGlobalState.Writable) -> Unit)
   }
 }
 
-internal class ReplyLayoutGlobalState : IReplyLayoutGlobalState.Readable, IReplyLayoutGlobalState.Writable {
+internal class ReplyLayoutGlobalState : IReplyLayoutGlobalState.Readable, IReplyLayoutGlobalState.Writeable {
   private val catalogReplyLayoutState = IndividualReplyLayoutGlobalState(isCatalog = true)
   private val threadReplyLayoutState = IndividualReplyLayoutGlobalState(isCatalog = false)
 

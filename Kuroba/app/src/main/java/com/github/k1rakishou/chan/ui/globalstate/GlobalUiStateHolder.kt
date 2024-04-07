@@ -10,6 +10,10 @@ import com.github.k1rakishou.chan.ui.globalstate.reply.IReplyLayoutGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.scroll.IScrollGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.scroll.ScrollGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.snackbar.ISnackbarGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.snackbar.SnackbarGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.thread.IThreadLayoutGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.thread.ThreadLayoutGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.toolbar.IToolbarGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.toolbar.ToolbarGlobalState
 import com.github.k1rakishou.chan.ui.helper.AppResources
@@ -17,9 +21,9 @@ import com.github.k1rakishou.chan.ui.helper.AppResources
 class GlobalUiStateHolder(
   private val appResources: AppResources
 ) {
-  private val _mainUiState = MainUiState()
-  val mainUiState: IMainUiState.Readable
-    get() = _mainUiState
+  private val _mainUi = MainUiState()
+  val mainUi: IMainUiState.Readable
+    get() = _mainUi
 
   private val _replyLayout = ReplyLayoutGlobalState()
   val replyLayout: IReplyLayoutGlobalState.Readable
@@ -33,19 +37,27 @@ class GlobalUiStateHolder(
   val drawer: IDrawerGlobalState.Readable
     get() = _drawer
 
-  private val _scrollState = ScrollGlobalState(appResources)
-  val scrollState: IScrollGlobalState.Readable
-    get() = _scrollState
+  private val _scroll = ScrollGlobalState(appResources)
+  val scroll: IScrollGlobalState.Readable
+    get() = _scroll
 
-  private val _toolbarState = ToolbarGlobalState()
-  val toolbarState: IToolbarGlobalState.Readable
-    get() = _toolbarState
+  private val _toolbar = ToolbarGlobalState()
+  val toolbar: IToolbarGlobalState.Readable
+    get() = _toolbar
+
+  private val _threadLayout = ThreadLayoutGlobalState()
+  val threadLayout: IThreadLayoutGlobalState.Readable
+    get() = _threadLayout
+
+  private val _snackbar = SnackbarGlobalState()
+  val snackbar: ISnackbarGlobalState.Readable
+    get() = _snackbar
 
   fun updateMainUiState(updater: IMainUiState.Writeable.() -> Unit) {
-    updater(_mainUiState)
+    updater(_mainUi)
   }
 
-  fun updateReplyLayoutState(updater: IReplyLayoutGlobalState.Writable.() -> Unit) {
+  fun updateReplyLayoutState(updater: IReplyLayoutGlobalState.Writeable.() -> Unit) {
     updater(_replyLayout)
   }
 
@@ -53,16 +65,24 @@ class GlobalUiStateHolder(
     updater(_fastScroller)
   }
 
-  fun updateDrawerState(updater: IDrawerGlobalState.Writable.() -> Unit) {
+  fun updateDrawerState(updater: IDrawerGlobalState.Writeable.() -> Unit) {
     updater(_drawer)
   }
 
-  fun updateScrollState(updater: IScrollGlobalState.Writable.() -> Unit) {
-    updater(_scrollState)
+  fun updateScrollState(updater: IScrollGlobalState.Writeable.() -> Unit) {
+    updater(_scroll)
   }
 
-  fun updateToolbarState(updater: IToolbarGlobalState.Writable.() -> Unit) {
-    updater(_toolbarState)
+  fun updateToolbarState(updater: IToolbarGlobalState.Writeable.() -> Unit) {
+    updater(_toolbar)
+  }
+
+  fun updateThreadLayoutState(updater: IThreadLayoutGlobalState.Writeable.() -> Unit) {
+    updater(_threadLayout)
+  }
+
+  fun updateSnackbarState(updater: ISnackbarGlobalState.Writeable.() -> Unit) {
+    updater(_snackbar)
   }
 
 }

@@ -9,6 +9,7 @@ sealed class ReplyLayoutVisibility(val value: Int) : Comparable<ReplyLayoutVisib
     return this.value.compareTo(other.value)
   }
 
+  fun isOpenedOrExpanded(): Boolean = isOpened() || isExpanded()
   fun isCollapsed(): Boolean = this is Collapsed
   fun isOpened(): Boolean = this is Opened
   fun isExpanded(): Boolean = this is Expanded

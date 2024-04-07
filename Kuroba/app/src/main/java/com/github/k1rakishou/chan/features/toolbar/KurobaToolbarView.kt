@@ -89,7 +89,7 @@ class KurobaToolbarView @JvmOverloads constructor(
         ChanSettings.neverHideToolbar.listenForChanges().asFlow(),
         globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
         snapshotFlow { globalUiStateHolder.fastScroller.isDraggingFastScrollerState.value },
-        snapshotFlow { globalUiStateHolder.scrollState.scrollTransitionProgress.floatValue }
+        snapshotFlow { globalUiStateHolder.scroll.scrollTransitionProgress.floatValue }
       ) { _, _, replyLayoutVisibilityStates, isDraggingFastScroller, scrollProgress ->
         return@combine ToolbarVisibilityInfo(
           replyLayoutVisibilityStates = replyLayoutVisibilityStates,

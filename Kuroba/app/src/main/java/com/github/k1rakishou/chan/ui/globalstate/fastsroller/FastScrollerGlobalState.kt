@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.ui.globalstate.fastsroller
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import com.github.k1rakishou.core_logger.Logger
 
 interface IFastScrollerGlobalState {
   interface Readable {
@@ -25,7 +26,13 @@ internal class FastScrollerGlobalState : IFastScrollerGlobalState.Readable, IFas
   }
 
   override fun updateIsDraggingFastScroller(dragging: Boolean) {
+    Logger.verbose(TAG) { "updateIsDraggingFastScroller() dragging: ${dragging}" }
+
     _isDraggingFastScrollerState.value = dragging
+  }
+
+  companion object {
+    private const val TAG = "FastScrollerGlobalState"
   }
 
 }

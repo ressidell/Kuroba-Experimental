@@ -15,14 +15,14 @@ interface IDrawerGlobalState {
     val drawerAppearanceEventFlow: StateFlow<DrawerAppearanceEvent>
   }
 
-  interface Writable {
+  interface Writeable {
     fun openDrawer()
     fun closeDrawer()
     fun onDrawerAppearanceChanged(opened: Boolean)
   }
 }
 
-class DrawerGlobalState : IDrawerGlobalState.Readable, IDrawerGlobalState.Writable {
+class DrawerGlobalState : IDrawerGlobalState.Readable, IDrawerGlobalState.Writeable {
 
   private val _drawerOpenCloseEventFlow = MutableSharedFlow<Boolean>(
     replay = 1,
@@ -37,10 +37,14 @@ class DrawerGlobalState : IDrawerGlobalState.Readable, IDrawerGlobalState.Writab
     get() = _drawerAppearanceEventFlow.asStateFlow()
 
   override fun openDrawer() {
+    Logger.verbose(TAG) { "openDrawer()" }
+
     _drawerOpenCloseEventFlow.tryEmit(true)
   }
 
   override fun closeDrawer() {
+    Logger.verbose(TAG) { "closeDrawer()" }
+
     _drawerOpenCloseEventFlow.tryEmit(false)
   }
 

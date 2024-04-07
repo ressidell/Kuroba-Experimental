@@ -43,6 +43,8 @@ class KurobaToolbarState(
 ) {
   private var _destroying = false
 
+  private val _invokeAfterTransitionFinishedCallbacks = mutableListOf<KurobaToolbarState.() -> Unit>()
+
   private val _toolbarStateList = mutableStateOf<PersistentList<KurobaToolbarSubState>>(persistentListOf())
   val toolbarStateList: State<ImmutableList<KurobaToolbarSubState>>
     get() = _toolbarStateList
@@ -84,10 +86,9 @@ class KurobaToolbarState(
     get() = _reply.value
 
   val toolbarVisibleState: Flow<Boolean>
-    get() = globalUiStateHolder.toolbarState.toolbarVisibilityStateFlow()
-
+    get() = globalUiStateHolder.toolbar.toolbarVisibilityStateFlow()
   val toolbarHeightState: StateFlow<Dp?>
-    get() = globalUiStateHolder.toolbarState.toolbarHeightStateFlow()
+    get() = globalUiStateHolder.toolbar.toolbarHeightStateFlow()
   val toolbarHeight: Dp?
     get() = toolbarHeightState.value
 
@@ -168,6 +169,26 @@ class KurobaToolbarState(
     }
 
     _transitionToolbarState.value = null
+    invokeAllAfterTransitionFinishedCallbacks()
+  }
+
+  fun invokeAfterTransitionFinished(func: KurobaToolbarState.() -> Unit) {
+    val hasNoActiveTransition = _transitionToolbarState.value == null
+    if (_destroying || hasNoActiveTransition) {
+      func(this)
+      return
+    }
+
+    _invokeAfterTransitionFinishedCallbacks += func
+  }
+
+  private fun invokeAllAfterTransitionFinishedCallbacks() {
+    val callbacks = _invokeAfterTransitionFinishedCallbacks.toList()
+    _invokeAfterTransitionFinishedCallbacks.clear()
+
+    for (callback in callbacks) {
+      callback.invoke(this)
+    }
   }
 
   fun enterContainerMode() {
@@ -314,6 +335,37 @@ class KurobaToolbarState(
     return topToolbar?.kind == ToolbarStateKind.Reply
   }
 
+  fun popAll() {
+    _destroying = true
+    _invokeAfterTransitionFinishedCallbacks.clear()
+    _toolbarAlpha.value = 0f
+
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being destroyed" }
+
+    while (_toolbarList.size > 1) {
+      if (!pop(withAnimation = false)) {
+        break
+      }
+    }
+  }
+
+  fun popUntil(withAnimation: Boolean, predicate: (KurobaToolbarSubState) -> Boolean) {
+    while (true) {
+      val topToolbar = _toolbarList.lastOrNull()
+      if (topToolbar == null) {
+        return
+      }
+
+      if (!predicate(topToolbar)) {
+        return
+      }
+
+      if (!pop(withAnimation)) {
+        return
+      }
+    }
+  }
+
   fun pop(withAnimation: Boolean = true): Boolean {
     if (_toolbarList.size <= 1) {
       return false
@@ -328,7 +380,9 @@ class KurobaToolbarState(
       return false
     }
 
-    Logger.debug(TAG) { "Toolbar '${toolbarKey}' exiting state ${topToolbar.kind}, withAnimation: ${withAnimation}" }
+    Logger.debug(TAG) {
+      "Toolbar '${toolbarKey}' exiting state ${topToolbar.kind}, withAnimation: ${withAnimation}"
+    }
 
     if (!withAnimation) {
       _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
@@ -346,17 +400,6 @@ class KurobaToolbarState(
     }
 
     return true
-  }
-
-  fun popAll() {
-    _destroying = true
-    Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being destroyed" }
-
-    while (_toolbarList.size > 1) {
-      if (!pop(withAnimation = false)) {
-        break
-      }
-    }
   }
 
   fun findItem(id: Int): ToolbarMenuItem? {
@@ -438,6 +481,7 @@ class KurobaToolbarState(
     }
 
     _transitionToolbarState.value = null
+    invokeAllAfterTransitionFinishedCallbacks()
   }
 
   private fun enterToolbarMode(

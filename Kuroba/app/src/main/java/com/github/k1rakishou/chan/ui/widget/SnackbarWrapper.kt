@@ -2,19 +2,13 @@ package com.github.k1rakishou.chan.ui.widget
 
 import android.graphics.Color
 import android.view.View
-import com.github.k1rakishou.chan.Chan
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
-import com.github.k1rakishou.chan.ui.layout.DrawerWidthAdjustingLayout
-import com.github.k1rakishou.chan.ui.layout.ThreadLayout
-import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
-import com.github.k1rakishou.common.findChild
-import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.core_themes.ThemeEngine.Companion.isDarkColor
@@ -23,34 +17,45 @@ import com.google.android.material.snackbar.Snackbar
 import javax.inject.Inject
 
 class SnackbarWrapper private constructor(
-  private val globalUiStateHolder: GlobalUiStateHolder,
-  private val globalWindowInsetsManager: GlobalWindowInsetsManager,
-  private var snackbar: Snackbar? = null
+  snackbar: Snackbar
 ) {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
+  @Inject
+  lateinit var globalUiStateHolder: GlobalUiStateHolder
+  @Inject
+  lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
+
+  private var _snackbar: Snackbar? = snackbar
 
   init {
-    Chan.getComponent().inject(this)
+    AppModuleAndroidUtils.extractActivityComponent(snackbar.context)
+      .inject(this)
 
-    snackbar?.view?.setBackgroundColor(themeEngine.chanTheme.primaryColor)
+    _snackbar?.view?.setBackgroundColor(themeEngine.chanTheme.primaryColor)
   }
 
   fun dismiss() {
-    snackbar?.dismiss()
-    snackbar = null
+    _snackbar?.dismiss()
+    _snackbar = null
   }
 
   fun setAction(actionTextId: Int, onClickListener: View.OnClickListener) {
-    snackbar?.setAction(actionTextId, onClickListener)
+    _snackbar?.setAction(actionTextId, onClickListener)
   }
 
   fun setAction(actionTextId: Int, onClickListener: () -> Unit) {
-    snackbar?.setAction(actionTextId) { onClickListener.invoke() }
+    _snackbar?.setAction(actionTextId) { onClickListener.invoke() }
   }
 
   fun show(threadControllerType: ThreadControllerType) {
+    val snackbarClass = when (threadControllerType) {
+      ThreadControllerType.Catalog -> SnackbarClass.Catalog
+      ThreadControllerType.Thread -> SnackbarClass.Thread
+      // TODO: SnackbarClass.Generic
+    }
+
     val isReplyLayoutOpened = globalUiStateHolder.replyLayout.state(threadControllerType).isOpenedOrExpanded()
     if (isReplyLayoutOpened) {
       // TODO: New toolbar. We probably want to show snackbars when reply layout is opened. Need to remove this check.
@@ -58,7 +63,7 @@ class SnackbarWrapper private constructor(
       return
     }
 
-    snackbar?.view?.let { snackbarView ->
+    _snackbar?.view?.let { snackbarView ->
       val bottomInset = globalWindowInsetsManager.bottom()
 
       if (!KurobaBottomNavigationView.isBottomNavViewEnabled()) {
@@ -69,88 +74,30 @@ class SnackbarWrapper private constructor(
       }
     }
 
-    snackbar?.addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
+    _snackbar?.addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
       override fun onShown(transientBottomBar: Snackbar) {
         super.onShown(transientBottomBar)
 
-        val view = transientBottomBar.view
-        findFab(view)?.hide()
+        globalUiStateHolder.updateSnackbarState {
+          updateSnackbarVisibility(snackbarClass, true)
+        }
       }
 
       override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
         super.onDismissed(transientBottomBar, event)
 
         val view = transientBottomBar.view
-        snackbar?.removeCallback(this)
+        _snackbar?.removeCallback(this)
 
-        val bottomNavigationView = findBottomNavigationView(view)
-
-        if (bottomNavigationView?.isFullyVisible() == true || !KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-          val fab = findFab(view)
-            ?: return
-
-          // Delayed, because we want the snackbar to be hidden and it's not yet detached from the
-          // parent at this point
-          view.post {
-            fab.show()
+        view.post {
+          globalUiStateHolder.updateSnackbarState {
+            updateSnackbarVisibility(snackbarClass, false)
           }
         }
       }
     })
 
-    snackbar?.show()
-  }
-
-  private fun findFab(view: View): HidingFloatingActionButton? {
-    var parent = view.parent
-
-    while (parent != null && parent !is ThreadLayout) {
-      parent = parent.parent
-    }
-
-    if (parent !is ThreadLayout) {
-      Logger.e("SnackbarWrapper", "Couldn't find ThreadLayout!!!")
-      return null
-    }
-
-    val threadLayout = parent
-    val fab = threadLayout.findChild { view -> view is HidingFloatingActionButton } as? HidingFloatingActionButton
-
-    if (fab == null) {
-      Logger.e("SnackbarWrapper", "Couldn't find HidingFloatingActionButton!!!")
-      return null
-    }
-
-    return fab
-  }
-
-  private fun findBottomNavigationView(snackbarView: View): KurobaBottomNavigationView? {
-    if (!KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-      return null
-    }
-
-    var parent = snackbarView.parent
-
-    while (parent != null && parent !is DrawerWidthAdjustingLayout) {
-      parent = parent.parent
-    }
-
-    if (parent !is DrawerWidthAdjustingLayout) {
-      Logger.e("SnackbarWrapper", "Couldn't find DrawerWidthAdjustingLayout!!!")
-      return null
-    }
-
-    val drawer = parent
-    val bottomNavView = drawer.findChild { view ->
-      view is KurobaBottomNavigationView
-    } as? KurobaBottomNavigationView
-
-    if (bottomNavView == null) {
-      Logger.e("SnackbarWrapper", "Couldn't find HidingBottomNavigationView!!!")
-      return null
-    }
-
-    return bottomNavView
+    _snackbar?.show()
   }
 
   companion object {
@@ -164,8 +111,6 @@ class SnackbarWrapper private constructor(
 
     @JvmStatic
     fun create(
-      globalUiStateHolder: GlobalUiStateHolder,
-      globalWindowInsetsManager: GlobalWindowInsetsManager,
       theme: ChanTheme,
       view: View,
       textId: Int,
@@ -178,13 +123,11 @@ class SnackbarWrapper private constructor(
       snackbar.animationMode = Snackbar.ANIMATION_MODE_FADE
 
       fixSnackbarColors(theme, snackbar)
-      return SnackbarWrapper(globalUiStateHolder, globalWindowInsetsManager, snackbar)
+      return SnackbarWrapper(snackbar)
     }
 
     @JvmStatic
     fun create(
-      globalUiStateHolder: GlobalUiStateHolder,
-      globalWindowInsetsManager: GlobalWindowInsetsManager,
       theme: ChanTheme,
       view: View,
       text: String,
@@ -197,7 +140,7 @@ class SnackbarWrapper private constructor(
       snackbar.animationMode = Snackbar.ANIMATION_MODE_FADE
 
       fixSnackbarColors(theme, snackbar)
-      return SnackbarWrapper(globalUiStateHolder, globalWindowInsetsManager, snackbar)
+      return SnackbarWrapper(snackbar)
     }
 
     private fun fixSnackbarColors(theme: ChanTheme, snackbar: Snackbar) {
@@ -208,6 +151,21 @@ class SnackbarWrapper private constructor(
       } else {
         snackbar.setTextColor(Color.BLACK)
         snackbar.setActionTextColor(Color.BLACK)
+      }
+    }
+  }
+}
+
+enum class SnackbarClass {
+  Catalog,
+  Thread,
+  Generic;
+
+  companion object {
+    fun from(threadControllerType: ThreadControllerType): SnackbarClass {
+      return when (threadControllerType) {
+        ThreadControllerType.Catalog -> SnackbarClass.Catalog
+        ThreadControllerType.Thread -> SnackbarClass.Thread
       }
     }
   }

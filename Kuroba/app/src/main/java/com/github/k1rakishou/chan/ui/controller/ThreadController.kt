@@ -494,6 +494,8 @@ abstract class ThreadController(
 
     threadLayout.gainedFocus(nowFocused)
     controllerNavigationManager.onControllerSwipedTo(this)
+
+    globalUiStateHolder.updateThreadLayoutState { updateFocusedController(nowFocused) }
   }
 
   override fun threadBackPressed(): Boolean {

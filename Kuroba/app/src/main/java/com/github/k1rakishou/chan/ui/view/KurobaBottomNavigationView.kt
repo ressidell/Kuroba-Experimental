@@ -193,7 +193,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     }
 
     coroutineScope.launch {
-      globalUiStateHolder.toolbarState.toolbarVisibilityStateFlow()
+      globalUiStateHolder.toolbar.toolbarVisibilityStateFlow()
         .onEach { toolbarVisible ->
           if (!isBottomNavViewEnabled) {
             completelyDisableBottomNavigationView()
@@ -209,7 +209,7 @@ class KurobaBottomNavigationView @JvmOverloads constructor(
     }
 
     coroutineScope.launch {
-      snapshotFlow { globalUiStateHolder.scrollState.scrollTransitionProgress.floatValue }
+      snapshotFlow { globalUiStateHolder.scroll.scrollTransitionProgress.floatValue }
         .onEach { scrollTransitionProgress ->
           if (!isBottomNavViewEnabled) {
             completelyDisableBottomNavigationView()
