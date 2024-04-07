@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.github.k1rakishou.chan.activity
+package com.github.k1rakishou.chan.ui.activity
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -31,7 +31,6 @@ import com.airbnb.epoxy.EpoxyController
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.Chan
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.base.ControllerHostActivity
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
@@ -52,6 +51,7 @@ import com.github.k1rakishou.chan.ui.controller.BrowseController
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
@@ -135,7 +135,8 @@ class StartActivity : ControllerHostActivity(),
     val isFreshStart = savedInstanceState == null
 
     if (intentMismatchWorkaround()) {
-      Logger.d(TAG, "onCreate() intentMismatchWorkaround()==true, " +
+      Logger.d(
+        TAG, "onCreate() intentMismatchWorkaround()==true, " +
         "savedInstanceState == null: $isFreshStart")
       return
     }

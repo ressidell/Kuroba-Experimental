@@ -2,11 +2,11 @@ package com.github.k1rakishou.chan.ui.helper
 
 import android.content.Context
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.PostHideManager
 import com.github.k1rakishou.chan.core.presenter.ThreadPresenter
 import com.github.k1rakishou.chan.ui.controller.RemovedPostsController
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.mutableListWithCap
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor

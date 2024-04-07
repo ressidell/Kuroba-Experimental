@@ -1,6 +1,6 @@
 package com.github.k1rakishou.chan.features.toolbar_v2
 
-import com.github.k1rakishou.chan.controller.ControllerKey
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 
 class KurobaToolbarStateManager(

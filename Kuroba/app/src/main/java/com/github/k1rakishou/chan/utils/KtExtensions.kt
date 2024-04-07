@@ -27,11 +27,11 @@ import com.airbnb.epoxy.DiffResult
 import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyRecyclerView
 import com.airbnb.epoxy.OnModelBuildFinishedListener
-import com.github.k1rakishou.chan.activity.SharingActivity
-import com.github.k1rakishou.chan.activity.StartActivity
-import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.di.module.viewmodel.IHasViewModelProviderFactory
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
+import com.github.k1rakishou.chan.ui.activity.SharingActivity
+import com.github.k1rakishou.chan.ui.activity.StartActivity
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.showToast
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.requireComponentActivity

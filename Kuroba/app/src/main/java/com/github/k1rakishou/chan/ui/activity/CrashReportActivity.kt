@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.activity
+package com.github.k1rakishou.chan.ui.activity
 
 import android.content.Context
 import android.content.Intent
@@ -150,7 +150,8 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
     val appLifetime = bundle.getString(APP_LIFE_TIME_KEY) ?: "-1"
 
     if (className == null || message == null || stacktrace == null) {
-      Logger.e(TAG,
+      Logger.e(
+        TAG,
         "Bad bundle params. " +
           "className is null (${className == null}), " +
           "message is null (${message == null}), " +

@@ -1,7 +1,7 @@
 package com.github.k1rakishou.chan.core.navigation
 
-import com.github.k1rakishou.chan.controller.Controller
-import com.github.k1rakishou.chan.controller.transition.ControllerTransition
+import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransition
 
 interface ControllerWithNavigation {
   fun pushController(to: Controller): Boolean

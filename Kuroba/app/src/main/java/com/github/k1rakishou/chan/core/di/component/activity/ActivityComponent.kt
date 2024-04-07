@@ -1,10 +1,6 @@
 package com.github.k1rakishou.chan.core.di.component.activity
 
 import androidx.appcompat.app.AppCompatActivity
-import com.github.k1rakishou.chan.activity.CrashReportActivity
-import com.github.k1rakishou.chan.activity.SharingActivity
-import com.github.k1rakishou.chan.activity.StartActivity
-import com.github.k1rakishou.chan.controller.ui.NavigationControllerContainerLayout
 import com.github.k1rakishou.chan.core.di.ActivityDependencies
 import com.github.k1rakishou.chan.core.di.module.activity.ActivityModule
 import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelFactoryModule
@@ -102,6 +98,9 @@ import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.thread_downloading.LocalArchiveController
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
+import com.github.k1rakishou.chan.ui.activity.CrashReportActivity
+import com.github.k1rakishou.chan.ui.activity.SharingActivity
+import com.github.k1rakishou.chan.ui.activity.StartActivity
 import com.github.k1rakishou.chan.ui.adapter.PostAdapter
 import com.github.k1rakishou.chan.ui.captcha.CaptchaLayout
 import com.github.k1rakishou.chan.ui.captcha.GenericWebViewAuthenticationLayout
@@ -134,6 +133,7 @@ import com.github.k1rakishou.chan.ui.controller.RemovedPostsController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.WebViewReportController
+import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostController
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaComposeDialogController
 import com.github.k1rakishou.chan.ui.controller.navigation.BottomNavBarAwareNavigationController

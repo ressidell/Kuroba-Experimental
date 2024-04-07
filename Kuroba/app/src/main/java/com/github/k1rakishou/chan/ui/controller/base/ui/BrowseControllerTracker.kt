@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.controller.ui
+package com.github.k1rakishou.chan.ui.controller.base.ui
 
 import android.content.Context
 import android.view.MotionEvent

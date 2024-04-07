@@ -1,6 +1,6 @@
 package com.github.k1rakishou.chan.core.manager
 
-import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.core_logger.Logger
 import io.reactivex.Flowable

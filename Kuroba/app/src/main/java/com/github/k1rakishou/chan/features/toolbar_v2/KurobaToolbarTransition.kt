@@ -1,8 +1,8 @@
 package com.github.k1rakishou.chan.features.toolbar_v2
 
 import androidx.compose.runtime.Immutable
-import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
+import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 
 @Immutable
 sealed interface KurobaToolbarTransition {

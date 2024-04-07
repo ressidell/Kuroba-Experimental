@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.controller.ui
+package com.github.k1rakishou.chan.ui.controller.base.ui
 
 import android.content.Context
 import android.graphics.Canvas
@@ -9,7 +9,7 @@ import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.ViewParent
 import android.widget.Scroller
-import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import kotlin.math.abs

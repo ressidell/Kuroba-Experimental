@@ -42,7 +42,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
@@ -56,6 +55,7 @@ import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.chan.ui.compose.verticalScrollbar
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.core_logger.LogStorage
 import com.github.k1rakishou.core_logger.Logger

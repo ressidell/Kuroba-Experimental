@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.controller
+package com.github.k1rakishou.chan.ui.controller.base
 
 import android.content.Context
 import androidx.annotation.CallSuper

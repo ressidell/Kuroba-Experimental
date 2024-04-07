@@ -30,7 +30,6 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.ChanSettingsInfo
 import com.github.k1rakishou.MpvSettings
 import com.github.k1rakishou.PersistableChanStateInfo
-import com.github.k1rakishou.chan.activity.CrashReportActivity
 import com.github.k1rakishou.chan.core.AppDependenciesInitializer
 import com.github.k1rakishou.chan.core.cache.downloader.MediaDownloadException
 import com.github.k1rakishou.chan.core.di.component.application.ApplicationComponent
@@ -53,6 +52,7 @@ import com.github.k1rakishou.chan.core.manager.ApplicationMigrationManager
 import com.github.k1rakishou.chan.core.manager.ApplicationVisibilityManager
 import com.github.k1rakishou.chan.core.manager.ReportManager
 import com.github.k1rakishou.chan.core.manager.SettingsNotificationManager
+import com.github.k1rakishou.chan.ui.activity.CrashReportActivity
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen

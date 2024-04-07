@@ -9,9 +9,9 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.di.module.activity.IHasActivityComponent
 import com.github.k1rakishou.chan.core.di.module.viewmodel.IHasViewModelProviderFactory
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.helper.RuntimePermissionsHelper
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.core_themes.ChanTheme

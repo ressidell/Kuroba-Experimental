@@ -17,9 +17,9 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.manager.ApplicationVisibilityManager
 import com.github.k1rakishou.chan.core.site.parser.CommentParserHelper
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostController
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostControllerCallbacks
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaComposeDialogController

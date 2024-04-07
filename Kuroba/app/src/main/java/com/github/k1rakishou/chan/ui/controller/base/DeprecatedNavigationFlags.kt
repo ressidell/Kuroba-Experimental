@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.controller
+package com.github.k1rakishou.chan.ui.controller.base
 
 @Deprecated("Remove me!")
 data class DeprecatedNavigationFlags(

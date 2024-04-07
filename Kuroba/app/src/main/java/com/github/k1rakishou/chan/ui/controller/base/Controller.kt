@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.controller
+package com.github.k1rakishou.chan.ui.controller.base
 
 import android.content.Context
 import android.content.res.Configuration
@@ -12,9 +12,6 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.mutableStateOf
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.activity.StartActivityCallbacks
-import com.github.k1rakishou.chan.controller.transition.FadeTransition
-import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.core.base.ControllerHostActivity
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.ControllerNavigationManager
@@ -24,10 +21,13 @@ import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarStateManager
+import com.github.k1rakishou.chan.ui.activity.StartActivityCallbacks
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.ui.controller.PopupController
 import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
+import com.github.k1rakishou.chan.ui.controller.base.transition.FadeTransition
+import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 import com.github.k1rakishou.chan.ui.controller.navigation.BottomNavBarAwareNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController

@@ -1,7 +1,7 @@
-package com.github.k1rakishou.chan.controller.transition
+package com.github.k1rakishou.chan.ui.controller.base.transition
 
 import android.animation.AnimatorSet
-import com.github.k1rakishou.chan.controller.Controller
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 
 abstract class ControllerTransition(

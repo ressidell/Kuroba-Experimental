@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.controller.transition
+package com.github.k1rakishou.chan.ui.controller.base.transition
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter

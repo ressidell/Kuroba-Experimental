@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.activity
+package com.github.k1rakishou.chan.ui.activity
 
 import android.app.Activity
 import android.content.Context

@@ -2,7 +2,7 @@ package com.github.k1rakishou.chan.features.toolbar_v2.state.container.transitio
 
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.util.lerp
-import com.github.k1rakishou.chan.controller.transition.TransitionMode
+import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 
 internal fun GraphicsLayerScope.animateTransitionProgress(
   transitionMode: TransitionMode,

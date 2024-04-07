@@ -17,10 +17,10 @@
 package com.github.k1rakishou.chan.ui.helper
 
 import android.content.Context
-import com.github.k1rakishou.chan.controller.Controller
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.popup.BasePostPopupController
 import com.github.k1rakishou.chan.ui.controller.popup.PostRepliesPopupController
 import com.github.k1rakishou.chan.ui.controller.popup.PostSearchPopupController
@@ -33,7 +33,6 @@ import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import dagger.Lazy
-import java.util.*
 
 class PostPopupHelper(
   private val context: Context,

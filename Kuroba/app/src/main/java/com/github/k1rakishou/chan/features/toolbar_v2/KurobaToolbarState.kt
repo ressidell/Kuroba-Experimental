@@ -7,8 +7,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.unit.Dp
-import com.github.k1rakishou.chan.controller.ControllerKey
-import com.github.k1rakishou.chan.controller.transition.TransitionMode
 import com.github.k1rakishou.chan.features.toolbar_v2.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.ToolbarStateKind
@@ -26,6 +24,8 @@ import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSele
 import com.github.k1rakishou.chan.features.toolbar_v2.state.selection.KurobaSelectionToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarParams
 import com.github.k1rakishou.chan.features.toolbar_v2.state.thread.KurobaThreadToolbarSubState
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
+import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.common.quantize
 import com.github.k1rakishou.core_logger.Logger

@@ -10,8 +10,8 @@ import androidx.core.util.Pair;
 
 import com.github.k1rakishou.ChanSettings;
 import com.github.k1rakishou.chan.R;
-import com.github.k1rakishou.chan.controller.Controller;
 import com.github.k1rakishou.chan.features.reply_attach_sound.CreateSoundMediaController;
+import com.github.k1rakishou.chan.ui.controller.base.Controller;
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils;
 import com.github.k1rakishou.chan.utils.BackgroundUtils;
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor;

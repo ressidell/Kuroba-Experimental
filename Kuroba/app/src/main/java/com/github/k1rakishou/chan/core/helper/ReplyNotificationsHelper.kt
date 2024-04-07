@@ -19,13 +19,13 @@ import coil.transform.Transformation
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.BuildConfig
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.activity.StartActivity
 import com.github.k1rakishou.chan.core.base.DebouncingCoroutineExecutor
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
 import com.github.k1rakishou.chan.core.receiver.ReplyNotificationDeleteIntentBroadcastReceiver
 import com.github.k1rakishou.chan.core.site.parser.search.SimpleCommentParser
+import com.github.k1rakishou.chan.ui.activity.StartActivity
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getFlavorType
 import com.github.k1rakishou.chan.utils.NotificationConstants
 import com.github.k1rakishou.chan.utils.NotificationConstants.MAX_LINES_IN_NOTIFICATION

@@ -3,12 +3,12 @@ package com.github.k1rakishou.chan.ui.controller.navigation
 import android.content.Context
 import android.view.KeyEvent
 import android.view.ViewGroup
-import com.github.k1rakishou.chan.controller.Controller
-import com.github.k1rakishou.chan.controller.transition.ControllerTransition
-import com.github.k1rakishou.chan.controller.transition.PopControllerTransition
-import com.github.k1rakishou.chan.controller.transition.PushControllerTransition
 import com.github.k1rakishou.chan.core.navigation.ControllerWithNavigation
 import com.github.k1rakishou.chan.core.navigation.HasNavigation
+import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransition
+import com.github.k1rakishou.chan.ui.controller.base.transition.PopControllerTransition
+import com.github.k1rakishou.chan.ui.controller.base.transition.PushControllerTransition
 import com.github.k1rakishou.core_logger.Logger
 
 abstract class NavigationController(context: Context) : Controller(context), ControllerWithNavigation, HasNavigation {
