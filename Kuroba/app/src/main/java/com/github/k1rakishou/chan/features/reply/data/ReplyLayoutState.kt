@@ -353,8 +353,16 @@ class ReplyLayoutState(
     onHeightChangedInternal(newHeight)
   }
 
+  fun isReplyLayoutCollapsed(): Boolean {
+    return _replyLayoutVisibility.value.isCollapsed()
+  }
+
+  fun isReplyLayoutOpenedOrExpanded(): Boolean {
+    return _replyLayoutVisibility.value.isOpened() || _replyLayoutVisibility.value.isExpanded()
+  }
+
   fun isReplyLayoutExpanded(): Boolean {
-    return _replyLayoutVisibility.value == ReplyLayoutVisibility.Expanded
+    return _replyLayoutVisibility.value.isExpanded()
   }
 
   fun onAnimationStarted(animationState: ReplyLayoutAnimationState) {
@@ -902,6 +910,10 @@ class ReplyLayoutState(
   }
 
   private fun afterReplyTextChanged() {
+    if (isReplyLayoutCollapsed()) {
+      return
+    }
+
     colorizeReplyTextJob?.cancel()
     colorizeReplyTextJob = coroutineScope.launch {
       updateReplyFieldHintText()
@@ -981,10 +993,16 @@ class ReplyLayoutState(
       }
     }
 
-    if (replyLayoutVisibility is ReplyLayoutVisibility.Expanded) {
+    if (replyLayoutVisibility.isExpanded()) {
       if (!PersistableChanState.newReplyLayoutTutorialFinished.get()) {
         PersistableChanState.newReplyLayoutTutorialFinished.set(true)
       }
+    }
+
+    if (replyLayoutVisibility.isOpened() || replyLayoutVisibility.isExpanded()) {
+      updateHighlightedPosts()
+    } else if (replyLayoutVisibility.isCollapsed()) {
+      callbacks.highlightQuotes(emptySet())
     }
   }
 
