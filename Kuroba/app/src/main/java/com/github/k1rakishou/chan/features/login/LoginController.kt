@@ -18,9 +18,9 @@ import com.github.k1rakishou.chan.core.site.http.login.Chan4LoginRequest
 import com.github.k1rakishou.chan.core.site.http.login.DvachLoginRequest
 import com.github.k1rakishou.chan.core.site.sites.chan4.Chan4
 import com.github.k1rakishou.chan.core.site.sites.dvach.Dvach
-import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableButton

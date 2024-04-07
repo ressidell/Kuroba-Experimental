@@ -19,8 +19,8 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.navigation.RequiresNoBottomNavBar
 import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarStateManager
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.activity.StartActivityCallbacks
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.ui.controller.PopupController

@@ -39,11 +39,11 @@ import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
-import com.github.k1rakishou.chan.features.toolbar_v2.CloseMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
+import com.github.k1rakishou.chan.features.toolbar.HamburgMenuItem
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.SelectableItem
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator

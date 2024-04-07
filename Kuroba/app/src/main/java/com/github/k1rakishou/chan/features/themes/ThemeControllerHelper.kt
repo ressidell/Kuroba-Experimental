@@ -25,8 +25,8 @@ import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.site.common.DefaultPostParser
 import com.github.k1rakishou.chan.core.site.parser.CommentParser
 import com.github.k1rakishou.chan.core.site.parser.PostParser
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.adapter.PostAdapter
 import com.github.k1rakishou.chan.ui.cell.GenericPostCell
 import com.github.k1rakishou.chan.ui.cell.PostCell

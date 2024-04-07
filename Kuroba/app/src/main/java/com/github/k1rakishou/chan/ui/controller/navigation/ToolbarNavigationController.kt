@@ -3,7 +3,7 @@ package com.github.k1rakishou.chan.ui.controller.navigation
 import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode

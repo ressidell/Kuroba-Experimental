@@ -6,7 +6,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransition
 import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
 import com.github.k1rakishou.chan.ui.view.NavigationViewContract

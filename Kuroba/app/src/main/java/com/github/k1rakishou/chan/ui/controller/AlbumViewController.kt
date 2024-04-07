@@ -40,10 +40,10 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToPo
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenThreadHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen.Companion.clampColumnsCount
-import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.cell.AlbumViewCell
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerControllerType

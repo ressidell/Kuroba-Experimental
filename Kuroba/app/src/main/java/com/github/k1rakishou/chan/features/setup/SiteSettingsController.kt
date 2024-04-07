@@ -20,9 +20,9 @@ import com.github.k1rakishou.chan.features.settings.setting.LinkSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.ListSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.MapSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.SettingV2
-import com.github.k1rakishou.chan.features.toolbar_v2.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
 import com.github.k1rakishou.chan.ui.settings.SettingNotificationType

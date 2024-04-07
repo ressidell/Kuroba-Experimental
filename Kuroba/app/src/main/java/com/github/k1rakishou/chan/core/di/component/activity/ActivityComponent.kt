@@ -15,6 +15,7 @@ import com.github.k1rakishou.chan.features.bookmarks.epoxy.BaseThreadBookmarkVie
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.EpoxyGridThreadBookmarkViewHolder
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.EpoxyListThreadBookmarkViewHolder
 import com.github.k1rakishou.chan.features.bypass.SiteFirewallBypassController
+import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaController
 import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.drawer.epoxy.EpoxyHistoryGridEntryView
 import com.github.k1rakishou.chan.features.drawer.epoxy.EpoxyHistoryHeaderView
@@ -28,7 +29,6 @@ import com.github.k1rakishou.chan.features.gesture_editor.AdjustAndroid10Gesture
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController
 import com.github.k1rakishou.chan.features.image_saver.ResolveDuplicateImagesController
 import com.github.k1rakishou.chan.features.image_saver.epoxy.EpoxyDuplicateImageView
-import com.github.k1rakishou.chan.features.issues.ReportIssueController
 import com.github.k1rakishou.chan.features.login.LoginController
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerController
@@ -53,12 +53,12 @@ import com.github.k1rakishou.chan.features.reencoding.ImageOptionsController
 import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper
 import com.github.k1rakishou.chan.features.reencoding.ImageReencodeOptionsController
 import com.github.k1rakishou.chan.features.reencoding.ImageReencodingPresenter
+import com.github.k1rakishou.chan.features.remote_image_search.ImageSearchController
 import com.github.k1rakishou.chan.features.reordering.EpoxyReorderableItemView
 import com.github.k1rakishou.chan.features.reordering.SimpleListItemsReorderingController
 import com.github.k1rakishou.chan.features.reply.ReplyLayoutView
-import com.github.k1rakishou.chan.features.reply_attach_sound.CreateSoundMediaController
-import com.github.k1rakishou.chan.features.reply_image_search.ImageSearchController
-import com.github.k1rakishou.chan.features.report.Chan4ReportPostController
+import com.github.k1rakishou.chan.features.report_bugs.ReportIssueController
+import com.github.k1rakishou.chan.features.report_posts.Chan4ReportPostController
 import com.github.k1rakishou.chan.features.search.GlobalSearchController
 import com.github.k1rakishou.chan.features.search.SearchResultsController
 import com.github.k1rakishou.chan.features.search.SelectBoardForSearchController
@@ -97,7 +97,7 @@ import com.github.k1rakishou.chan.features.thirdeye.AddOrEditBooruController
 import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.thread_downloading.LocalArchiveController
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarView
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.activity.CrashReportActivity
 import com.github.k1rakishou.chan.ui.activity.SharingActivity
 import com.github.k1rakishou.chan.ui.activity.StartActivity

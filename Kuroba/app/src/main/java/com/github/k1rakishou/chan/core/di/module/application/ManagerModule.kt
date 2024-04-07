@@ -95,7 +95,7 @@ import com.github.k1rakishou.chan.features.posting.solvers.two_captcha.TwoCaptch
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadProgressNotifier
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingCoordinator
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingDelegate
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarStateManager
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils

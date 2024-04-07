@@ -47,11 +47,11 @@ import com.github.k1rakishou.chan.core.presenter.ThreadPresenter
 import com.github.k1rakishou.chan.core.presenter.ThreadPresenter.ThreadPresenterCallback
 import com.github.k1rakishou.chan.core.site.Site
 import com.github.k1rakishou.chan.core.site.loader.ChanLoaderException
+import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaController
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper
 import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper.ImageReencodingHelperCallback
-import com.github.k1rakishou.chan.features.reply_attach_sound.CreateSoundMediaController
-import com.github.k1rakishou.chan.features.toolbar_v2.KurobaToolbarState
+import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.controller.PostLinksController

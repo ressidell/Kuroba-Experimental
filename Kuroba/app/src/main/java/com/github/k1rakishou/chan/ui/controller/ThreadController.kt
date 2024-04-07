@@ -30,8 +30,8 @@ import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerOptions
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenAlbumHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
-import com.github.k1rakishou.chan.features.report.Chan4ReportPostController
-import com.github.k1rakishou.chan.features.toolbar_v2.CloseMenuItem
+import com.github.k1rakishou.chan.features.report_posts.Chan4ReportPostController
+import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates

@@ -21,9 +21,9 @@ import com.github.k1rakishou.chan.features.search.epoxy.epoxyBoardSelectionButto
 import com.github.k1rakishou.chan.features.search.epoxy.epoxyButtonView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchInputView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchSiteView
-import com.github.k1rakishou.chan.features.toolbar_v2.HamburgMenuItem
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarMiddleContent
-import com.github.k1rakishou.chan.features.toolbar_v2.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.HamburgMenuItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
