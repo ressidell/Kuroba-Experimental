@@ -107,12 +107,12 @@ class FloatingListMenu @JvmOverloads constructor(
               }
             }
           }
-        }
 
-        if (index != items.lastIndex) {
-          epoxyDividerView {
-            id("epoxy_divider_${index}")
-            updateMargins(MARGINS)
+          if (index != items.lastIndex) {
+            epoxyDividerView {
+              id("epoxy_divider_${index}")
+              updateMargins(MARGINS)
+            }
           }
         }
       }

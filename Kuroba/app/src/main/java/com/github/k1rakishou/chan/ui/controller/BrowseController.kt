@@ -885,6 +885,7 @@ class BrowseController(
   @Suppress("MoveLambdaOutsideParentheses")
   private fun ToolbarOverflowMenuBuilder.addSortMenu() {
     val currentOrder = PostsFilter.Order.find(ChanSettings.boardOrder.get())
+    val groupId = "catalog_sort"
 
     withOverflowMenuItem(
       id = ACTION_SORT,
@@ -896,6 +897,7 @@ class BrowseController(
           stringId = R.string.order_bump,
           visible = true,
           checked = currentOrder == PostsFilter.Order.BUMP,
+          groupId = groupId,
           value = PostsFilter.Order.BUMP,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
@@ -904,6 +906,7 @@ class BrowseController(
           stringId = R.string.order_reply,
           visible = true,
           checked = currentOrder == PostsFilter.Order.REPLY,
+          groupId = groupId,
           value = PostsFilter.Order.REPLY,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
@@ -912,6 +915,7 @@ class BrowseController(
           stringId = R.string.order_image,
           visible = true,
           checked = currentOrder == PostsFilter.Order.IMAGE,
+          groupId = groupId,
           value = PostsFilter.Order.IMAGE,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
@@ -920,6 +924,7 @@ class BrowseController(
           stringId = R.string.order_newest,
           visible = true,
           checked = currentOrder == PostsFilter.Order.NEWEST,
+          groupId = groupId,
           value = PostsFilter.Order.NEWEST,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
@@ -928,6 +933,7 @@ class BrowseController(
           stringId = R.string.order_oldest,
           visible = true,
           checked = currentOrder == PostsFilter.Order.OLDEST,
+          groupId = groupId,
           value = PostsFilter.Order.OLDEST,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
@@ -936,6 +942,7 @@ class BrowseController(
           stringId = R.string.order_modified,
           visible = true,
           checked = currentOrder == PostsFilter.Order.MODIFIED,
+          groupId = groupId,
           value = PostsFilter.Order.MODIFIED,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
@@ -944,6 +951,7 @@ class BrowseController(
           stringId = R.string.order_activity,
           visible = true,
           checked = currentOrder == PostsFilter.Order.ACTIVITY,
+          groupId = groupId,
           value = PostsFilter.Order.ACTIVITY,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )

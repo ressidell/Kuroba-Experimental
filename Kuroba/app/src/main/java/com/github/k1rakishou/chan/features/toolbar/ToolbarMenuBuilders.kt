@@ -93,6 +93,7 @@ class ToolbarOverflowMenuBuilder {
     stringId: Int,
     visible: Boolean = true,
     checked: Boolean = false,
+    groupId: String? = null,
     value: Any? = null,
     onClick: (ToolbarMenuCheckableOverflowItem) -> Unit,
     builder: ToolbarOverflowMenuBuilder.() -> Unit = { }
@@ -102,6 +103,7 @@ class ToolbarOverflowMenuBuilder {
       text = getString(stringId),
       visible = visible,
       checked = checked,
+      groupId = groupId,
       value = value,
       onClick = onClick,
       builder = builder
