@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import javax.inject.Inject
 
-
+// TODO: New toolbar. Toolbar still flickers sometimes when pushing/popping controllers. Clearly visible on Themes controller.
 class KurobaToolbarView @JvmOverloads constructor(
   context: Context,
   attrSet: AttributeSet? = null,
