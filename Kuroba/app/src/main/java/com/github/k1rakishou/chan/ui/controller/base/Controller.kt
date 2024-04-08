@@ -256,60 +256,6 @@ abstract class Controller(
     }
   }
 
-  fun addChildControllerOrMoveToTop(container: ViewGroup, newController: Controller) {
-    fun restoreCallbacks(newController: Controller) {
-      if (doubleNavigationController != null) {
-        newController.doubleNavigationController = doubleNavigationController
-      }
-
-      if (navigationController != null) {
-        newController.navigationController = navigationController
-      }
-    }
-
-    fun hideOtherControllers(newController: Controller) {
-      childControllers.forEach { controller ->
-        if (controller === newController) {
-          return@forEach
-        }
-
-        if (controller.shown) {
-          controller.onHide()
-        }
-      }
-    }
-
-    val controllerIndex = childControllers.indexOfFirst { controller -> controller === newController }
-    if (controllerIndex >= 0) {
-      hideOtherControllers(newController)
-      restoreCallbacks(newController)
-
-      if (childControllers.size >= 2) {
-        // Move this controller to the end so that it's considered to be the "top" controller
-        childControllers.add(childControllers.removeAt(controllerIndex))
-      }
-
-      newController.attachToParentView(container)
-
-      if (!newController.shown) {
-        newController.onShow()
-      }
-
-      return
-    }
-
-    childControllers.add(newController)
-
-    newController.parentController = this
-
-    hideOtherControllers(newController)
-    restoreCallbacks(newController)
-
-    newController.onCreate()
-    newController.attachToParentView(container)
-    newController.onShow()
-  }
-
   fun removeChildController(controller: Controller?) {
     if (controller == null) {
       return
@@ -492,7 +438,7 @@ abstract class Controller(
 
     if (threadController != null) {
       action(threadController)
-      navigationController!!.popController(false)
+      requireNavController().popController(false)
     }
   }
 

@@ -94,6 +94,8 @@ class ThreadSlideController(
 
   override val toolbarState: KurobaToolbarState
     get() = getToolbarState(slidingPaneLayoutOpenState)
+  override val navigationType: DoubleNavigationController.NavigationType
+    get() = DoubleNavigationController.NavigationType.Slide
 
   override fun onCreate() {
     super.onCreate()

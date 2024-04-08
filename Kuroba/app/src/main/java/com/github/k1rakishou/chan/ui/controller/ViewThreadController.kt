@@ -30,6 +30,7 @@ import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoC
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
+import com.github.k1rakishou.chan.ui.controller.navigation.doOnNavigation
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -521,9 +522,19 @@ open class ViewThreadController(
     toolbarState.enterThreadMode(
       leftItem = BackArrowMenuItem(
         onClick = {
-          doubleNavigationController?.switchToController(
-            leftController = true,
-            animated = true
+          doubleNavigationController.doOnNavigation(
+            splitNavigation = {
+              doubleNavigationController?.updateRightController(
+                rightController = null,
+                animated = true
+              )
+            },
+            slideNavigation = {
+              doubleNavigationController?.switchToController(
+                leftController = true,
+                animated = true
+              )
+            }
           )
         }
       ),

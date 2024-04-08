@@ -49,6 +49,8 @@ class SplitNavigationController(
 
   override val toolbarState: KurobaToolbarState
     get() = error("Cannot be used directly!")
+  override val navigationType: DoubleNavigationController.NavigationType
+    get() = DoubleNavigationController.NavigationType.Split
 
   val leftControllerToolbarState: KurobaToolbarState?
     get() = leftController()?.toolbarState
