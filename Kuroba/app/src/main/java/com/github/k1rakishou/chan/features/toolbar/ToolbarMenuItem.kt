@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.features.toolbar
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.IntState
@@ -249,6 +250,20 @@ sealed interface ToolbarText {
   data class Spanned(val string: AnnotatedString) : ToolbarText {
     override fun toString(): kotlin.String {
       return "Spanned('${string.text}')"
+    }
+  }
+
+  companion object {
+    fun from(@StringRes stringId: Int): ToolbarText.Id {
+      return ToolbarText.Id(stringId)
+    }
+
+    fun from(string: kotlin.String): ToolbarText.String {
+      return ToolbarText.String(string)
+    }
+
+    fun from(string: AnnotatedString): ToolbarText.Spanned {
+      return ToolbarText.Spanned(string)
     }
   }
 

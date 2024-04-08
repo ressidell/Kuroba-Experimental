@@ -220,7 +220,6 @@ abstract class Controller(
     _alive = false
     compositeDisposable.clear()
     job.cancelChildren()
-    toolbarState.popAll()
 
     if (LOG_STATES) {
       Logger.e("LOG_STATES", javaClass.simpleName + " onDestroy")
@@ -249,6 +248,13 @@ abstract class Controller(
       controller.navigationController = navigationController
     }
 
+    if (controller is DoubleNavigationController) {
+      controller.leftControllerToolbarState?.init()
+      controller.rightControllerToolbarState?.init()
+    } else {
+      controller.toolbarState.init()
+    }
+
     controller.onCreate()
 
     if (controller.navigationController is StyledToolbarNavigationController) {
@@ -267,6 +273,15 @@ abstract class Controller(
     if (controller.navigationController is StyledToolbarNavigationController) {
       (controller.navigationController as StyledToolbarNavigationController).onChildControllerPopped(controller)
     }
+
+    if (controller is DoubleNavigationController) {
+      controller.leftControllerToolbarState?.destroy()
+      controller.rightControllerToolbarState?.destroy()
+    } else {
+      controller.toolbarState.destroy()
+    }
+
+    kurobaToolbarStateManager.remove(controller.controllerKey)
   }
 
   fun attachToParentView(parentView: ViewGroup?) {

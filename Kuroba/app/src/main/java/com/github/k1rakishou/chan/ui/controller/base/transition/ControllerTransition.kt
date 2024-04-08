@@ -45,8 +45,9 @@ abstract class ControllerTransition(
     val controllerToolbarState = to?.toolbarState
 
     if (transitionStarted && navController != null && controllerToolbarState != null) {
-      navController.toolbarState.onTransitionProgressFinished()
+      val prevToolbarState = navController.toolbarState
       navController.containerToolbarState = controllerToolbarState
+      prevToolbarState.onTransitionProgressFinished()
     }
 
     listener?.onControllerTransitionCompleted(this)

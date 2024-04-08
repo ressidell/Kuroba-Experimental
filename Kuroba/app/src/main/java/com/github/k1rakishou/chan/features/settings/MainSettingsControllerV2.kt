@@ -102,7 +102,7 @@ class MainSettingsControllerV2(
         }
       ),
       middleContent = ToolbarMiddleContent.Title(
-        title = ToolbarText.String("")
+        title = ToolbarText.from(com.github.k1rakishou.chan.R.string.loading)
       ),
       menuBuilder = {
         withMenuItem(

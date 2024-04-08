@@ -97,6 +97,11 @@ class ThreadSlideController(
   override val navigationType: DoubleNavigationController.NavigationType
     get() = DoubleNavigationController.NavigationType.Slide
 
+  override val leftControllerToolbarState: KurobaToolbarState?
+    get() = leftController()?.toolbarState
+  override val rightControllerToolbarState: KurobaToolbarState?
+    get() = rightController()?.toolbarState
+
   override fun onCreate() {
     super.onCreate()
 
@@ -441,8 +446,9 @@ class ThreadSlideController(
       return
     }
 
-    containerToolbarState.onTransitionProgressFinished()
+    val prevToolbarState = containerToolbarState
     containerToolbarState = getToolbarState(slidingPaneLayoutOpenState)
+    prevToolbarState.onTransitionProgressFinished()
 
     isSlidingInProgress = false
   }

@@ -13,7 +13,7 @@ import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
-import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.navigation.ContainerToolbarStateUpdatedListener
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
@@ -27,12 +27,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import javax.inject.Inject
 
-// TODO: New toolbar. Toolbar still flickers sometimes when pushing/popping controllers. Clearly visible on Themes controller.
 class KurobaToolbarView @JvmOverloads constructor(
   context: Context,
   attrSet: AttributeSet? = null,
   defAttrStyle: Int = 0
-) : FrameLayout(context, attrSet, defAttrStyle) {
+) : FrameLayout(context, attrSet, defAttrStyle), ContainerToolbarStateUpdatedListener {
 
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
@@ -42,7 +41,7 @@ class KurobaToolbarView @JvmOverloads constructor(
   private val coroutineScope = KurobaCoroutineScope()
 
   private val _kurobaToolbarState = mutableStateOf<KurobaToolbarState?>(null)
-  private var _attachedController: Controller? = null
+  private var _attachedController: ToolbarNavigationController? = null
 
   private val currentToolbarState: KurobaToolbarState?
     get() = _kurobaToolbarState.value
@@ -68,20 +67,19 @@ class KurobaToolbarView @JvmOverloads constructor(
     )
   }
 
+  override fun onStateUpdated(kurobaToolbarState: KurobaToolbarState) {
+    val prevToolbar = currentToolbarState
+    _kurobaToolbarState.value = kurobaToolbarState
+    prevToolbar?.updateToolbarAlpha(1f)
+  }
+
   fun init(controller: ToolbarNavigationController) {
+    coroutineScope.cancelChildren()
+
     _kurobaToolbarState.value = controller.containerToolbarState
     _attachedController = controller
 
-    coroutineScope.cancelChildren()
-    coroutineScope.launch {
-      controller.listenForContainerToolbarStateUpdates()
-        .onEach { kurobaToolbarState ->
-          val prevToolbar = currentToolbarState
-          _kurobaToolbarState.value = kurobaToolbarState
-          prevToolbar?.updateToolbarAlpha(1f)
-        }
-        .collect()
-    }
+    controller.addOrReplaceContainerToolbarStateUpdated(this)
 
     coroutineScope.launch {
       combine(
@@ -115,7 +113,12 @@ class KurobaToolbarView @JvmOverloads constructor(
   }
 
   fun destroy() {
+    _attachedController?.let { controller ->
+      controller.removeContainerToolbarStateUpdated(this@KurobaToolbarView)
+    }
+
     coroutineScope.cancel()
+    _attachedController = null
   }
 
   private fun showFloatingMenu(

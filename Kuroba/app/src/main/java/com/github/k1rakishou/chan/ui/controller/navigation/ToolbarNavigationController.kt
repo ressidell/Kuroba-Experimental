@@ -2,14 +2,13 @@ package com.github.k1rakishou.chan.ui.controller.navigation
 
 import android.content.Context
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshotFlow
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
-import kotlinx.coroutines.flow.Flow
 
 abstract class ToolbarNavigationController(context: Context) : NavigationController(context) {
+  private val _containerToolbarStateUpdatedListeners = mutableListOf<ContainerToolbarStateUpdatedListener>()
 
   private val _containerToolbarState = mutableStateOf<KurobaToolbarState>(
     kurobaToolbarStateManager.getOrCreate(controllerKey)
@@ -20,10 +19,18 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
 
   override var containerToolbarState: KurobaToolbarState
     get() = _containerToolbarState.value
-    set(value) { _containerToolbarState.value = value }
+    set(value) {
+      _containerToolbarStateUpdatedListeners.forEach { listener -> listener.onStateUpdated(value) }
+      _containerToolbarState.value = value
+    }
 
-  fun listenForContainerToolbarStateUpdates(): Flow<KurobaToolbarState> {
-    return snapshotFlow { _containerToolbarState.value }
+  fun addOrReplaceContainerToolbarStateUpdated(listener: ContainerToolbarStateUpdatedListener) {
+    _containerToolbarStateUpdatedListeners -= listener
+    _containerToolbarStateUpdatedListeners += listener
+  }
+
+  fun removeContainerToolbarStateUpdated(listener: ContainerToolbarStateUpdatedListener) {
+    _containerToolbarStateUpdatedListeners -= listener
   }
 
   override fun transition(
@@ -82,13 +89,19 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     containerToolbarState.showToolbar()
     globalUiStateHolder.updateScrollState { resetScrollState() }
 
+    val prevToolbarState = containerToolbarState
+
     if (finish && to != null) {
-      containerToolbarState.onTransitionProgressFinished()
       containerToolbarState = to.toolbarState
+      prevToolbarState.onTransitionProgressFinished()
     } else if (!finish && from != null) {
-      containerToolbarState.onTransitionProgressFinished()
       containerToolbarState = from.toolbarState
+      prevToolbarState.onTransitionProgressFinished()
     }
   }
 
+}
+
+interface ContainerToolbarStateUpdatedListener {
+  fun onStateUpdated(kurobaToolbarState: KurobaToolbarState)
 }

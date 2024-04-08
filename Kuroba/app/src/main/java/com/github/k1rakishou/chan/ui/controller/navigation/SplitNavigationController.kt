@@ -52,9 +52,9 @@ class SplitNavigationController(
   override val navigationType: DoubleNavigationController.NavigationType
     get() = DoubleNavigationController.NavigationType.Split
 
-  val leftControllerToolbarState: KurobaToolbarState?
+  override val leftControllerToolbarState: KurobaToolbarState?
     get() = leftController()?.toolbarState
-  val rightControllerToolbarState: KurobaToolbarState?
+  override val rightControllerToolbarState: KurobaToolbarState?
     get() = rightController()?.toolbarState
 
   override fun onCreate() {

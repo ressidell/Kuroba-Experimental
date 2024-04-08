@@ -41,7 +41,7 @@ class KurobaToolbarState(
   private val controllerKey: ControllerKey,
   private val globalUiStateHolder: GlobalUiStateHolder
 ) {
-  private var _destroying = false
+  private var _destroyed = false
 
   private val _invokeAfterTransitionFinishedCallbacks = mutableListOf<KurobaToolbarState.() -> Unit>()
 
@@ -109,6 +109,24 @@ class KurobaToolbarState(
     }
   }
 
+  fun init() {
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being initialized (${hashCode()})" }
+
+    _destroyed = false
+  }
+
+  fun destroy() {
+    _invokeAfterTransitionFinishedCallbacks.forEach { callback -> callback.invoke(this) }
+    _invokeAfterTransitionFinishedCallbacks.clear()
+
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being destroyed (${hashCode()})" }
+
+    _toolbarStateList.value = persistentListOf()
+    _transitionToolbarState.value = null
+    _toolbarAlpha.value = 0f
+    _destroyed = true
+  }
+
   fun updateToolbarAlpha(toolbarAlpha: Float) {
     _toolbarAlpha.floatValue = toolbarAlpha
   }
@@ -174,7 +192,7 @@ class KurobaToolbarState(
 
   fun invokeAfterTransitionFinished(func: KurobaToolbarState.() -> Unit) {
     val hasNoActiveTransition = _transitionToolbarState.value == null
-    if (_destroying || hasNoActiveTransition) {
+    if (_destroyed || hasNoActiveTransition) {
       func(this)
       return
     }
@@ -335,20 +353,6 @@ class KurobaToolbarState(
     return topToolbar?.kind == ToolbarStateKind.Reply
   }
 
-  fun popAll() {
-    _destroying = true
-    _invokeAfterTransitionFinishedCallbacks.clear()
-    _toolbarAlpha.value = 0f
-
-    Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being destroyed" }
-
-    while (_toolbarList.size > 1) {
-      if (!pop(withAnimation = false)) {
-        break
-      }
-    }
-  }
-
   fun popUntil(withAnimation: Boolean, predicate: (KurobaToolbarSubState) -> Boolean) {
     while (true) {
       val topToolbar = _toolbarList.lastOrNull()
@@ -371,7 +375,7 @@ class KurobaToolbarState(
       return false
     }
 
-    if (!_destroying && _transitionToolbarState.value != null) {
+    if (!_destroyed && _transitionToolbarState.value != null) {
       return false
     }
 
