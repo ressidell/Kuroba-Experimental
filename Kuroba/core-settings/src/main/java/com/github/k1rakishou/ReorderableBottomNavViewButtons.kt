@@ -37,7 +37,6 @@ data class ReorderableBottomNavViewButtons(
       BottomNavViewButton.Search,
       BottomNavViewButton.Archive,
       BottomNavViewButton.Bookmarks,
-      BottomNavViewButton.Browse,
       BottomNavViewButton.Settings
     )
 
@@ -48,17 +47,18 @@ data class ReorderableBottomNavViewButtons(
 enum class BottomNavViewButton(val id: Long, val title: String) {
   Search(0, "Search"),
   Bookmarks(1, "Bookmarks"),
+  // TODO: This needs to be removed but it will probably break the sorting orders
   Browse(2, "Browse"),
   Settings(3, "Settings"),
   Archive(4, "Archive");
 
   companion object {
     fun contains(id: Long): Boolean {
-      return values().any { button -> button.id == id }
+      return entries.any { button -> button.id == id }
     }
 
     fun findByIdOrNull(id: Long): BottomNavViewButton? {
-      return values().firstOrNull { button -> button.id == id }
+      return entries.firstOrNull { button -> button.id == id }
     }
   }
 }

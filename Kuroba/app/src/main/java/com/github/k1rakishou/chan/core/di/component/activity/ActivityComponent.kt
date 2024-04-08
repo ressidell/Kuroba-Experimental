@@ -136,7 +136,6 @@ import com.github.k1rakishou.chan.ui.controller.WebViewReportController
 import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostController
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaComposeDialogController
-import com.github.k1rakishou.chan.ui.controller.navigation.BottomNavBarAwareNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.TabHostController
@@ -190,7 +189,6 @@ import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FloatingMenu
 import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.InsetAwareLinearLayout
-import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.ui.view.OptionalSwipeViewPager
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
 import com.github.k1rakishou.chan.ui.view.attach.AttachNewFileButton
@@ -255,7 +253,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(siteSettingsController: SiteSettingsController)
   fun inject(reportIssueController: ReportIssueController)
   fun inject(floatingListMenuController: FloatingListMenuController)
-  fun inject(bottomNavBarAwareNavigationController: BottomNavBarAwareNavigationController)
   fun inject(jsCaptchaCookiesEditorController: JsCaptchaCookiesEditorController)
   fun inject(loadingViewController: LoadingViewController)
   fun inject(boardSelectionController: BoardSelectionController)
@@ -411,7 +408,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(postPopupContainer: PostPopupContainer)
   fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
   fun inject(replyLayoutView: ReplyLayoutView)
-  fun inject(kurobaBottomNavigationView: KurobaBottomNavigationView)
   fun inject(kurobaToolbarView: KurobaToolbarView)
   fun inject(snackbarWrapper: SnackbarWrapper)
 

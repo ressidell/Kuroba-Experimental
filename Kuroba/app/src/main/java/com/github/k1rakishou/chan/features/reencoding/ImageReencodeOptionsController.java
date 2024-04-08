@@ -1,5 +1,7 @@
 package com.github.k1rakishou.chan.features.reencoding;
 
+import static com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.view.View;
@@ -12,7 +14,6 @@ import androidx.core.util.Pair;
 
 import com.github.k1rakishou.chan.R;
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
-import com.github.k1rakishou.chan.core.navigation.RequiresNoBottomNavBar;
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableRadioButton;
@@ -21,13 +22,10 @@ import com.google.android.material.slider.Slider;
 
 import org.jetbrains.annotations.NotNull;
 
-import static com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString;
-
 public class ImageReencodeOptionsController
         extends BaseFloatingController
         implements View.OnClickListener,
-        RadioGroup.OnCheckedChangeListener,
-        RequiresNoBottomNavBar {
+        RadioGroup.OnCheckedChangeListener {
     private final static String TAG = "ImageReencodeOptionsController";
 
     private ImageReencodeOptionsCallbacks callbacks;

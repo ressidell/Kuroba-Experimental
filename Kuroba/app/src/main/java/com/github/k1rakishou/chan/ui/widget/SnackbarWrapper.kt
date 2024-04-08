@@ -2,11 +2,9 @@ package com.github.k1rakishou.chan.ui.widget
 
 import android.graphics.Color
 import android.view.View
-import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
-import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.core_themes.ChanTheme
@@ -65,13 +63,7 @@ class SnackbarWrapper private constructor(
 
     _snackbar?.view?.let { snackbarView ->
       val bottomInset = globalWindowInsetsManager.bottom()
-
-      if (!KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-        snackbarView.translationY = -(MARGIN.toFloat() + bottomInset)
-      } else {
-        val bottomNavViewSize = AppModuleAndroidUtils.getDimen(R.dimen.navigation_view_size)
-        snackbarView.translationY = -(bottomNavViewSize + MARGIN + bottomInset).toFloat()
-      }
+      snackbarView.translationY = -(MARGIN.toFloat() + bottomInset)
     }
 
     _snackbar?.addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {

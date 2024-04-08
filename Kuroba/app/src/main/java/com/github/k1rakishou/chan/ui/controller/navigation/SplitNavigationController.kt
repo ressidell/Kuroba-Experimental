@@ -16,8 +16,6 @@ import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransi
 import com.github.k1rakishou.chan.ui.controller.base.transition.PopControllerTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.PushControllerTransition
 import com.github.k1rakishou.chan.ui.layout.SplitNavigationControllerLayout
-import com.github.k1rakishou.chan.ui.view.NavigationViewContract
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.core_themes.ThemeEngine.ThemeChangesListener
 import javax.inject.Inject
@@ -67,11 +65,6 @@ class SplitNavigationController(
 
     leftControllerView = FrameLayout(context)
     rightControllerView = FrameLayout(context)
-
-    if (mainControllerCallbacks?.navigationViewContractType == NavigationViewContract.Type.BottomNavView) {
-      val bottomNavViewHeight = context.resources.getDimension(R.dimen.navigation_view_size).toInt()
-      container.updatePaddings(null, null, null, bottomNavViewHeight)
-    }
 
     container.setLeftView(leftControllerView)
     container.setRightView(rightControllerView)
@@ -146,10 +139,6 @@ class SplitNavigationController(
     // both are always visible
   }
 
-  override fun openControllerWrappedIntoBottomNavAwareController(controller: Controller) {
-    requireStartActivity().openControllerWrappedIntoBottomNavAwareController(controller)
-  }
-
   override fun pushController(to: Controller): Boolean {
     return pushController(to, true)
   }
@@ -186,9 +175,6 @@ class SplitNavigationController(
     }
 
     if (popupChild?.childControllers?.size == 1) {
-      if (mainControllerCallbacks != null) {
-        mainControllerCallbacks!!.resetBottomNavViewCheckState()
-      }
       if (presentingThisController != null) {
         presentingThisController!!.stopPresenting()
       }
@@ -203,10 +189,6 @@ class SplitNavigationController(
 
   fun popAll() {
     if (popup != null) {
-      if (mainControllerCallbacks != null) {
-        mainControllerCallbacks!!.resetBottomNavViewCheckState()
-      }
-
       if (presentingThisController != null) {
         presentingThisController!!.stopPresenting()
       }

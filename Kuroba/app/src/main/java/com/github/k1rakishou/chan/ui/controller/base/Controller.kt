@@ -11,24 +11,19 @@ import androidx.annotation.CallSuper
 import androidx.annotation.StringRes
 import androidx.compose.runtime.mutableStateOf
 import com.github.k1rakishou.ChanSettings
-import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.ControllerHostActivity
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.core.manager.ControllerNavigationManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.navigation.RequiresNoBottomNavBar
 import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
-import com.github.k1rakishou.chan.ui.activity.StartActivityCallbacks
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.ui.controller.PopupController
 import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.base.transition.FadeTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
-import com.github.k1rakishou.chan.ui.controller.navigation.BottomNavBarAwareNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
@@ -38,7 +33,6 @@ import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.ui.widget.CancellableToast
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.pxToDp
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.DoNotStrip
@@ -61,8 +55,6 @@ abstract class Controller(
 ) {
   lateinit var view: ViewGroup
 
-  @Inject
-  lateinit var controllerNavigationManager: ControllerNavigationManager
   @Inject
   lateinit var kurobaToolbarStateManager: KurobaToolbarStateManager
   @Inject
@@ -165,11 +157,6 @@ abstract class Controller(
     }
 
     return requireNotNull(navigationController) { "navigationController was not set" }
-  }
-
-  fun requireStartActivity(): StartActivityCallbacks {
-    return (context as? StartActivityCallbacks)
-      ?: throw IllegalStateException("Wrong context! Must be StartActivity")
   }
 
   fun requireComponentActivity(): ComponentActivity {
@@ -396,15 +383,10 @@ abstract class Controller(
     if (animated) {
       val transition = FadeTransition(transitionMode = TransitionMode.In)
       transition.to = controller
-      transition.onTransitionFinished {
-        controllerNavigationManager.onControllerPresented(controller)
-      }
       transition.perform()
 
       return
     }
-
-    controllerNavigationManager.onControllerPresented(controller)
   }
 
   fun isAlreadyPresenting(predicate: (Controller) -> Boolean): Boolean {
@@ -436,7 +418,6 @@ abstract class Controller(
 
     startActivity.popController(this)
     presentedByController?.presentingThisController = null
-    controllerNavigationManager.onControllerUnpresented(this)
   }
 
   @JvmOverloads
@@ -577,22 +558,14 @@ abstract class Controller(
     globalWindowInsetsManager: GlobalWindowInsetsManager,
     mainControllerCallbacks: MainControllerCallbacks?
   ): Int {
-    val isInsideBottomNavAwareController = isInsideBottomNavAwareController()
     val isInsidePopupOrFloatingController = isInsidePopupOrFloatingController()
-    val isInsideRequiresNoBottomNavBarController = isInsideRequiresNoBottomNavBarController()
     val isSplitLayoutMode = ChanSettings.isSplitLayoutMode()
-    val bottomNavigationViewEnabled = ChanSettings.bottomNavigationViewEnabled.get()
-      && !isInsideRequiresNoBottomNavBarController
     val isMainController = this is MainController
     val isKeyboardOpened = globalWindowInsetsManager.isKeyboardOpened
 
     // Main controller is a special case (it may or may not have the bottomNavView) so we handle
     // it separately
     if (isKeyboardOpened && !isMainController) {
-      if (ChanSettings.isBottomNavigationPresent()) {
-        return 0
-      }
-
       return pxToDp(globalWindowInsetsManager.keyboardHeight)
     }
 
@@ -600,8 +573,7 @@ abstract class Controller(
     // upward when the bottomNavView is not present (SPLIT layout or it's disabled in the settings)
     if (mainControllerCallbacks?.isBottomPanelShown == true) {
       return when {
-        isSplitLayoutMode || !bottomNavigationViewEnabled -> pxToDp(mainControllerCallbacks.bottomPanelHeight)
-        bottomNavigationViewEnabled -> 0
+        isSplitLayoutMode -> pxToDp(mainControllerCallbacks.bottomPanelHeight)
         else -> pxToDp(globalWindowInsetsManager.bottom())
       }
     }
@@ -614,24 +586,9 @@ abstract class Controller(
       return pxToDp(globalWindowInsetsManager.bottom())
     }
 
-    if (isInsideBottomNavAwareController && !isSplitLayoutMode && !bottomNavigationViewEnabled) {
-      // Controllers is inside the BottomNavAwareController (when the bottomNavigationView is disabled)
-      // have 0 padding so we need to account for the system insets to avoid the recycler being drawn
-      // below the nav bar.
-      return pxToDp(globalWindowInsetsManager.bottom())
-    }
-
-    if (isInsideBottomNavAwareController || isInsidePopupOrFloatingController) {
+    if (isInsidePopupOrFloatingController) {
       // Floating controllers handle the bottom inset inside the BaseFloatingController
       return 0
-    }
-
-    if (bottomNavigationViewEnabled) {
-      if (isMainController) {
-        return pxToDp(globalWindowInsetsManager.bottom())
-      }
-
-      return pxToDp(getDimen(R.dimen.navigation_view_size) + globalWindowInsetsManager.bottom())
     }
 
     if (isMainController) {
@@ -639,24 +596,6 @@ abstract class Controller(
     }
 
     return pxToDp(globalWindowInsetsManager.bottom())
-  }
-
-  private fun isInsideRequiresNoBottomNavBarController(): Boolean {
-    var controller: Controller? = this
-
-    while (true) {
-      if (controller == null) {
-        break
-      }
-
-      if (controller is RequiresNoBottomNavBar) {
-        return true
-      }
-
-      controller = controller.parentController
-    }
-
-    return false
   }
 
   private fun isInsidePopupOrFloatingController(): Boolean {
@@ -668,24 +607,6 @@ abstract class Controller(
       }
 
       if (controller is BaseFloatingComposeController || controller is PopupController) {
-        return true
-      }
-
-      controller = controller.parentController
-    }
-
-    return false
-  }
-
-  private fun isInsideBottomNavAwareController(): Boolean {
-    var controller: Controller? = this
-
-    while (true) {
-      if (controller == null) {
-        break
-      }
-
-      if (controller is BottomNavBarAwareNavigationController) {
         return true
       }
 

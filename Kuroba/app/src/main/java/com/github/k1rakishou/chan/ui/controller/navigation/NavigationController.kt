@@ -119,12 +119,6 @@ abstract class NavigationController(context: Context) : Controller(context), Con
     if (finish && from != null) {
       from.onHide()
       removeChildController(from)
-
-      controllerNavigationManager.onControllerSwipedFrom(from)
-
-      if (to != null) {
-        controllerNavigationManager.onControllerSwipedTo(to)
-      }
     } else if (to != null) {
       to.onHide()
     }
@@ -204,12 +198,6 @@ abstract class NavigationController(context: Context) : Controller(context), Con
 
     controllerTransition = null
     isBlockingInput = false
-
-    if (pushing && to != null) {
-      controllerNavigationManager.onControllerPushed(to)
-    } else if (!pushing && from != null) {
-      controllerNavigationManager.onControllerPopped(from)
-    }
 
     if (to != null) {
       containerToolbarState = to.toolbarState

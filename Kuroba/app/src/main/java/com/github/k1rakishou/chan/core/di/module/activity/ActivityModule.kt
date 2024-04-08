@@ -11,10 +11,8 @@ import com.github.k1rakishou.chan.core.helper.ThumbnailLongtapOptionsHelper
 import com.github.k1rakishou.chan.core.manager.ApplicationVisibilityManager
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
-import com.github.k1rakishou.chan.core.manager.BottomNavBarVisibilityStateManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
-import com.github.k1rakishou.chan.core.manager.ControllerNavigationManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
@@ -107,23 +105,9 @@ class ActivityModule {
 
   @PerActivity
   @Provides
-  fun provideControllerNavigationManager(): ControllerNavigationManager {
-    Logger.deps("ControllerNavigationManager")
-    return ControllerNavigationManager()
-  }
-
-  @PerActivity
-  @Provides
   fun provideThreadFollowHistoryManager(): ThreadFollowHistoryManager {
     Logger.deps("ThreadFollowHistoryManager")
     return ThreadFollowHistoryManager()
-  }
-
-  @PerActivity
-  @Provides
-  fun provideReplyViewStateManager(): BottomNavBarVisibilityStateManager {
-    Logger.deps("BottomNavBarVisibilityStateManager")
-    return BottomNavBarVisibilityStateManager()
   }
 
   @PerActivity

@@ -287,7 +287,6 @@ public class ChanSettings {
     public static BooleanSetting isCurrentThemeDark;
 
     // Layout
-    public static BooleanSetting bottomNavigationViewEnabled;
     public static OptionsSetting<LayoutMode> layoutMode;
     public static IntegerSetting catalogSpanCount;
     public static IntegerSetting albumSpanCount;
@@ -500,7 +499,6 @@ public class ChanSettings {
         isCurrentThemeDark = new BooleanSetting(provider, "is_current_theme_dark", true);
 
         //Layout
-        bottomNavigationViewEnabled = new BooleanSetting(provider, "bottom_navigation_mode", true);
         layoutMode = new OptionsSetting<>(provider, "preference_layout_mode", LayoutMode.class, LayoutMode.AUTO);
         catalogSpanCount = new IntegerSetting(provider, "preference_board_grid_span_count", 0);
         albumSpanCount = new IntegerSetting(provider, "preference_album_span_count", 0);
@@ -830,24 +828,6 @@ public class ChanSettings {
         }
 
         return layoutMode;
-    }
-
-    public static boolean isNavigationViewEnabled() {
-        if (isSplitLayoutMode()) {
-            // The left side navigation view is always enabled when in SPLIT mode
-            return true;
-        }
-
-        return bottomNavigationViewEnabled.get();
-    }
-
-    public static boolean isBottomNavigationPresent() {
-        if (isSplitLayoutMode()) {
-            // The bottom navigation is moved to the left side in SPLIT mode
-            return false;
-        }
-
-        return bottomNavigationViewEnabled.get();
     }
 
     public static File getMainSharedPrefsFileForThisFlavor() {

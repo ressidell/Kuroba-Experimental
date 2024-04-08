@@ -9,7 +9,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.core.navigation.RequiresNoBottomNavBar
 import com.github.k1rakishou.chan.core.site.Site
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
@@ -27,7 +26,7 @@ class WebViewReportController(
   context: Context,
   private val post: ChanPost,
   private val site: Site
-) : Controller(context), RequiresNoBottomNavBar {
+) : Controller(context) {
   private lateinit var frameLayout: FrameLayout
 
   override fun injectDependencies(component: ActivityComponent) {

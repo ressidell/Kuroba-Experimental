@@ -23,14 +23,10 @@ import com.github.k1rakishou.chan.core.helper.AppRestarter
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.ApplicationCrashNotifier
-import com.github.k1rakishou.chan.core.manager.BottomNavBarVisibilityStateManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
-import com.github.k1rakishou.chan.core.manager.ControllerNavigationManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.UpdateManager
-import com.github.k1rakishou.chan.core.navigation.RequiresNoBottomNavBar
 import com.github.k1rakishou.chan.features.drawer.MainController
-import com.github.k1rakishou.chan.ui.controller.AlbumViewController
 import com.github.k1rakishou.chan.ui.controller.BrowseController
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
@@ -41,7 +37,6 @@ import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationContro
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.picker.ImagePickHelper
-import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
@@ -69,7 +64,6 @@ import kotlin.time.measureTime
 @DoNotStrip
 class StartActivity : ControllerHostActivity(),
   FSAFActivityCallbacks,
-  StartActivityCallbacks,
   StartActivityStartupHandlerHelper.StartActivityCallbacks,
   ThemeEngine.ThemeChangesListener {
 
@@ -89,10 +83,6 @@ class StartActivity : ControllerHostActivity(),
   lateinit var appRestarter: AppRestarter
   @Inject
   lateinit var startActivityStartupHandlerHelper: StartActivityStartupHandlerHelper
-  @Inject
-  lateinit var controllerNavigationManager: Lazy<ControllerNavigationManager>
-  @Inject
-  lateinit var bottomNavBarVisibilityStateManager: Lazy<BottomNavBarVisibilityStateManager>
   @Inject
   lateinit var chanThreadViewableInfoManager: Lazy<ChanThreadViewableInfoManager>
   @Inject
@@ -264,18 +254,6 @@ class StartActivity : ControllerHostActivity(),
     coroutineScope.launch {
       startActivityStartupHandlerHelper.setupFromStateOrFreshLaunch(intent, savedInstanceState)
     }
-
-    if (KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-      compositeDisposable.add(
-        bottomNavBarVisibilityStateManager.get().listenForViewsStateUpdates()
-          .subscribe { updateBottomNavBar() }
-      )
-
-      compositeDisposable.add(
-        controllerNavigationManager.get().listenForControllerNavigationChanges()
-          .subscribe { change -> updateBottomNavBarIfNeeded(change) }
-      )
-    }
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -287,44 +265,6 @@ class StartActivity : ControllerHostActivity(),
     }
   }
 
-  private fun updateBottomNavBarIfNeeded(change: ControllerNavigationManager.ControllerNavigationChange?) {
-    when (change) {
-      is ControllerNavigationManager.ControllerNavigationChange.Presented,
-      is ControllerNavigationManager.ControllerNavigationChange.Unpresented,
-      is ControllerNavigationManager.ControllerNavigationChange.Pushed,
-      is ControllerNavigationManager.ControllerNavigationChange.Popped -> {
-        updateBottomNavBar()
-      }
-      is ControllerNavigationManager.ControllerNavigationChange.SwipedFrom -> {
-        if (change.controller is AlbumViewController) {
-          updateBottomNavBar()
-        }
-      }
-      else -> {
-        // no-op
-      }
-    }
-  }
-
-  private fun updateBottomNavBar() {
-    if (!KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-      return
-    }
-
-    val hasRequiresNoBottomNavBarControllers = isControllerAdded { controller -> controller is RequiresNoBottomNavBar }
-    if (hasRequiresNoBottomNavBarControllers) {
-      mainController.hideBottomNavBar(lockTranslation = true, lockCollapse = true)
-      return
-    }
-
-    if (bottomNavBarVisibilityStateManager.get().anyOfViewsIsVisible()) {
-      mainController.hideBottomNavBar(lockTranslation = true, lockCollapse = true)
-      return
-    }
-
-    mainController.resetBottomNavViewState(unlockTranslation = true, unlockCollapse = true)
-  }
-
   override fun loadThreadAndMarkPost(postDescriptor: PostDescriptor, animated: Boolean) {
     lifecycleScope.launch {
       browseController?.getViewThreadController()?.let { viewThreadController ->
@@ -332,8 +272,6 @@ class StartActivity : ControllerHostActivity(),
           viewThreadController.showLoading(animateTransition = false)
         }
       }
-
-      mainController.closeAllNonMainControllers()
 
       chanThreadViewableInfoManager.get().update(postDescriptor.threadDescriptor(), true) { chanThreadViewableInfo ->
         chanThreadViewableInfo.markedPostNo = postDescriptor.postNo
@@ -353,7 +291,6 @@ class StartActivity : ControllerHostActivity(),
 
       mainController.loadThreadWithoutFocusing(
         threadDescriptor = threadDescriptor,
-        closeAllNonMainControllers = true,
         animated = animated
       )
     }
@@ -369,18 +306,9 @@ class StartActivity : ControllerHostActivity(),
 
       mainController.loadThread(
         descriptor = threadDescriptor,
-        closeAllNonMainControllers = true,
         animated = animated
       )
     }
-  }
-
-  override fun openControllerWrappedIntoBottomNavAwareController(controller: Controller) {
-    mainController.openControllerWrappedIntoBottomNavAwareController(controller)
-  }
-
-  override fun setSettingsMenuItemSelected() {
-    mainController.setSettingsMenuItemSelected()
   }
 
   @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")

@@ -153,7 +153,7 @@ abstract class ThreadController(
     super.onCreate()
 
     threadLayout = inflate(context, R.layout.layout_thread, null) as ThreadLayout
-    threadLayout.create(this, threadControllerType, mainControllerCallbacks.navigationViewContractType)
+    threadLayout.create(this, threadControllerType)
     threadLayout.setDrawerCallbacks(mainControllerCallbacks)
 
     swipeRefreshLayout = SwipeRefreshLayout(context)
@@ -466,12 +466,10 @@ abstract class ThreadController(
     )
 
     if (doubleNavigationController != null) {
-      doubleNavigationController!!.openControllerWrappedIntoBottomNavAwareController(filtersController)
+      doubleNavigationController!!.pushController(filtersController)
     } else {
-      requireStartActivity().openControllerWrappedIntoBottomNavAwareController(filtersController)
+      requireNavController().pushController(filtersController)
     }
-
-    requireStartActivity().setSettingsMenuItemSelected()
   }
 
   override fun onLostFocus(wasFocused: ThreadControllerType) {
@@ -482,7 +480,6 @@ abstract class ThreadController(
     }
 
     threadLayout.lostFocus(wasFocused)
-    controllerNavigationManager.onControllerSwipedFrom(this)
   }
 
   override fun onGainedFocus(nowFocused: ThreadControllerType) {
@@ -493,8 +490,6 @@ abstract class ThreadController(
     }
 
     threadLayout.gainedFocus(nowFocused)
-    controllerNavigationManager.onControllerSwipedTo(this)
-
     globalUiStateHolder.updateThreadLayoutState { updateFocusedController(nowFocused) }
   }
 

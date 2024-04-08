@@ -46,7 +46,6 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.pxToDp
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -138,13 +137,7 @@ class BoardArchiveController(
       ChanSettings.isSplitLayoutMode() -> 0
       globalWindowInsetsManager.isKeyboardOpened -> pxToDp(globalWindowInsetsManager.keyboardHeight)
       else -> {
-        val bottomNavViewHeight = if (ChanSettings.bottomNavigationViewEnabled.get()) {
-          getDimen(R.dimen.navigation_view_size)
-        } else {
-          0
-        }
-
-        pxToDp(bottomNavViewHeight + globalWindowInsetsManager.bottom())
+        pxToDp(globalWindowInsetsManager.bottom())
       }
     }
   }

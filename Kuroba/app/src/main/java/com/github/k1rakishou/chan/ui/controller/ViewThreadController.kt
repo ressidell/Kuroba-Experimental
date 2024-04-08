@@ -31,7 +31,6 @@ import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
-import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
@@ -121,12 +120,6 @@ open class ViewThreadController(
   override fun onShow() {
     super.onShow()
     setPinIconState(false)
-
-    mainControllerCallbacks.resetBottomNavViewCheckState()
-
-    if (KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-      mainControllerCallbacks.showBottomNavBar(unlockTranslation = false, unlockCollapse = false)
-    }
   }
 
   override fun onDestroy() {

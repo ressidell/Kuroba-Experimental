@@ -9,6 +9,7 @@ import com.github.k1rakishou.chan.features.toolbar.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 
+// TODO: New toolbar. Display "Selected items count / total items count" in selection toolbar title.
 data class KurobaSelectionToolbarParams(
   val leftItem: ToolbarMenuItem? = null,
   val title: ToolbarText? = null,

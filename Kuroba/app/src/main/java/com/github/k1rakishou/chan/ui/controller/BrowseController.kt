@@ -42,7 +42,6 @@ import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationContro
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.helper.RuntimePermissionsHelper
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
-import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
@@ -177,16 +176,6 @@ class BrowseController(
 
     controllerScope.launch {
       requestApi33NotificationsPermissionOnce()
-    }
-  }
-
-  override fun onShow() {
-    super.onShow()
-
-    mainControllerCallbacks.resetBottomNavViewCheckState()
-
-    if (KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-      mainControllerCallbacks.showBottomNavBar(unlockTranslation = false, unlockCollapse = false)
     }
   }
 
@@ -751,23 +740,19 @@ class BrowseController(
   private fun openSitesSetupController() {
     val sitesSetupController = SitesSetupController(context)
     if (doubleNavigationController != null) {
-      doubleNavigationController!!.openControllerWrappedIntoBottomNavAwareController(sitesSetupController)
+      doubleNavigationController!!.pushController(sitesSetupController)
     } else {
-      requireStartActivity().openControllerWrappedIntoBottomNavAwareController(sitesSetupController)
+      requireNavController().pushController(sitesSetupController)
     }
-
-    requireStartActivity().setSettingsMenuItemSelected()
   }
 
   private fun openSiteSettingsController(siteDescriptor: SiteDescriptor) {
     val siteSettingsController = SiteSettingsController(context, siteDescriptor)
     if (doubleNavigationController != null) {
-      doubleNavigationController!!.openControllerWrappedIntoBottomNavAwareController(siteSettingsController)
+      doubleNavigationController!!.pushController(siteSettingsController)
     } else {
-      requireStartActivity().openControllerWrappedIntoBottomNavAwareController(siteSettingsController)
+      requireNavController().pushController(siteSettingsController)
     }
-
-    requireStartActivity().setSettingsMenuItemSelected()
   }
 
   @Suppress("MoveLambdaOutsideParentheses")

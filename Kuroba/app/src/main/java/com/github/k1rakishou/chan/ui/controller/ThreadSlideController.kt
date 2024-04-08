@@ -164,11 +164,6 @@ class ThreadSlideController(
     slidingPaneLayout?.coveredFadeColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f).toArgb()
   }
 
-  override fun onShow() {
-    super.onShow()
-    mainControllerCallbacks?.resetBottomNavViewCheckState()
-  }
-
   fun onSlidingPaneLayoutStateRestored() {
     val restoredOpen = slidingPaneLayout?.preservedOpenState
       ?: return
@@ -279,10 +274,6 @@ class ThreadSlideController(
 
   override fun rightController(): ViewThreadController? {
     return rightController
-  }
-
-  override fun openControllerWrappedIntoBottomNavAwareController(controller: Controller) {
-    requireStartActivity().openControllerWrappedIntoBottomNavAwareController(controller)
   }
 
   override fun pushController(to: Controller): Boolean {

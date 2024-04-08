@@ -47,7 +47,6 @@ class HidingFloatingActionButton
   WindowInsetsListener,
   ThemeEngine.ThemeChangesListener {
 
-  private var _bottomNavViewHeight = 0
   private var _listeningForInsetsChanges = false
   private var _threadControllerType: ThreadControllerType? = null
   private var _snackbarClass: SnackbarClass? = null
@@ -107,15 +106,6 @@ class HidingFloatingActionButton
     if (!isInEditMode) {
       AppModuleAndroidUtils.extractActivityComponent(context)
         .inject(this)
-
-      // We apply the bottom paddings directly in SplitNavigationController when we are in SPLIT
-      // mode, so we don't need to do that twice and that's why we set bottomNavViewHeight to 0
-      // when in SPLIT mode.
-      _bottomNavViewHeight = if (KurobaBottomNavigationView.isBottomNavViewEnabled()) {
-        getDimen(R.dimen.navigation_view_size)
-      } else {
-        0
-      }
 
       startListeningForInsetsChangesIfNeeded()
       onThemeChanged()
@@ -285,7 +275,7 @@ class HidingFloatingActionButton
 
   private fun updatePaddings() {
     val fabBottomMargin = getDimen(R.dimen.hiding_fab_margin)
-    updateMargins(bottom = fabBottomMargin + _bottomNavViewHeight + globalWindowInsetsManager.bottom())
+    updateMargins(bottom = fabBottomMargin + globalWindowInsetsManager.bottom())
   }
 
   private data class FabVisibilityInfo(

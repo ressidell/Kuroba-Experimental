@@ -326,7 +326,6 @@ sealed class AppearanceScreen(
   ) : IGroup,
     AppearanceScreen(groupIdentifier, SettingIdentifier(settingsId)) {
 
-    object BottomNavigationMode : LayoutGroup("bottom_navigation_mode")
     object LayoutMode : LayoutGroup("layout_mode")
     object CatalogPostAlignmentMode : LayoutGroup("catalog_post_alignment_mode")
     object ThreadPostAlignmentMode : LayoutGroup("thread_post_alignment_mode")

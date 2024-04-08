@@ -14,7 +14,6 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
-import com.github.k1rakishou.chan.core.navigation.RequiresNoBottomNavBar
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2.SimpleSaveableMediaInfo
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2.SimpleSaveableMediaInfo.Companion.fromChanPostImage
@@ -46,8 +45,7 @@ import javax.inject.Inject
 
 class AlbumDownloadController(context: Context) : Controller(context),
   View.OnClickListener,
-  WindowInsetsListener,
-  RequiresNoBottomNavBar {
+  WindowInsetsListener {
 
   @Inject
   lateinit var imageSaverV2: Lazy<ImageSaverV2>

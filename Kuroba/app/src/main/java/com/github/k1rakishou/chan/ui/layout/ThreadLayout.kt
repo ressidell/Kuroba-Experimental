@@ -37,7 +37,6 @@ import com.github.k1rakishou.chan.core.helper.ChanLoadProgressEvent
 import com.github.k1rakishou.chan.core.helper.ChanLoadProgressNotifier
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
-import com.github.k1rakishou.chan.core.manager.BottomNavBarVisibilityStateManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
@@ -67,7 +66,6 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableTextView
 import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.LoadView
-import com.github.k1rakishou.chan.ui.view.NavigationViewContract
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
 import com.github.k1rakishou.chan.ui.widget.SnackbarClass
 import com.github.k1rakishou.chan.ui.widget.SnackbarWrapper
@@ -139,8 +137,6 @@ class ThreadLayout @JvmOverloads constructor(
   @Inject
   lateinit var _postHideManager: Lazy<PostHideManager>
   @Inject
-  lateinit var _bottomNavBarVisibilityStateManager: Lazy<BottomNavBarVisibilityStateManager>
-  @Inject
   lateinit var _archivesManager: Lazy<ArchivesManager>
   @Inject
   lateinit var _dialogFactory: Lazy<DialogFactory>
@@ -161,8 +157,6 @@ class ThreadLayout @JvmOverloads constructor(
     get() = _siteManager.get()
   private val postHideManager: PostHideManager
     get() = _postHideManager.get()
-  private val bottomNavBarVisibilityStateManager: BottomNavBarVisibilityStateManager
-    get() = _bottomNavBarVisibilityStateManager.get()
   private val archivesManager: ArchivesManager
     get() = _archivesManager.get()
   private val dialogFactory: DialogFactory
@@ -249,7 +243,6 @@ class ThreadLayout @JvmOverloads constructor(
   fun create(
     callback: ThreadLayoutCallback,
     threadControllerType: ThreadControllerType,
-    navigationViewContractType: NavigationViewContract.Type
   ) {
     this.callback = callback
     this.serializedCoroutineExecutor = SerializedCoroutineExecutor(coroutineScope)
@@ -278,7 +271,7 @@ class ThreadLayout @JvmOverloads constructor(
 
     // View setup
     presenter.create(context, this)
-    threadListLayout.onCreate(presenter, this, navigationViewContractType, threadControllerType)
+    threadListLayout.onCreate(presenter, this, threadControllerType)
     postPopupHelper = PostPopupHelper(context, presenter, _chanThreadManager, this)
     imageReencodingHelper = ImageOptionsHelper(context, this)
     removedPostsHelper = RemovedPostsHelper(context, presenter, this)
@@ -805,14 +798,6 @@ class ThreadLayout @JvmOverloads constructor(
       return
     }
 
-    val descriptor = chanDescriptor
-      ?: return
-
-    bottomNavBarVisibilityStateManager.replyViewStateChanged(
-      descriptor.isCatalogDescriptor(),
-      true
-    )
-
     postDelayed({
       openReplyInternal(true)
       threadListLayout.replyLayoutViewCallbacks.quote(post, withText)
@@ -824,14 +809,6 @@ class ThreadLayout @JvmOverloads constructor(
       showToast(context, R.string.post_posting_is_not_supported)
       return
     }
-
-    val descriptor = chanDescriptor
-      ?: return
-
-    bottomNavBarVisibilityStateManager.replyViewStateChanged(
-      descriptor.isCatalogDescriptor(),
-      true
-    )
 
     postDelayed({
       openReplyInternal(true)
@@ -1161,11 +1138,11 @@ class ThreadLayout @JvmOverloads constructor(
 
     val isReplyLayoutVisible = when (descriptor) {
       is ChanDescriptor.ThreadDescriptor -> {
-        bottomNavBarVisibilityStateManager.isThreadReplyLayoutVisible()
+        globalUiStateHolder.replyLayout.state(ThreadControllerType.Thread).isOpenedOrExpanded()
       }
       is ChanDescriptor.CompositeCatalogDescriptor,
       is ChanDescriptor.CatalogDescriptor -> {
-        bottomNavBarVisibilityStateManager.isCatalogReplyLayoutVisible()
+        globalUiStateHolder.replyLayout.state(ThreadControllerType.Catalog).isOpenedOrExpanded()
       }
     }
 

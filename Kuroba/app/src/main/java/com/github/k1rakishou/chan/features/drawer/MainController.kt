@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import coil.transform.CircleCropTransformation
+import com.github.k1rakishou.BottomNavViewButton
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
@@ -75,7 +76,6 @@ import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
 import com.github.k1rakishou.chan.core.manager.SettingsNotificationManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
-import com.github.k1rakishou.chan.core.navigation.HasNavigation
 import com.github.k1rakishou.chan.features.drawer.data.HistoryControllerState
 import com.github.k1rakishou.chan.features.drawer.data.NavHistoryBookmarkAdditionalInfo
 import com.github.k1rakishou.chan.features.drawer.data.NavigationHistoryEntry
@@ -108,8 +108,6 @@ import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
-import com.github.k1rakishou.chan.ui.controller.navigation.BottomNavBarAwareNavigationController
-import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
@@ -118,17 +116,13 @@ import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationCont
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground
-import com.github.k1rakishou.chan.ui.view.KurobaBottomNavigationView
-import com.github.k1rakishou.chan.ui.view.NavigationViewContract
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanel
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
-import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.TimeUtils
 import com.github.k1rakishou.chan.utils.findControllerOrNull
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -136,6 +130,7 @@ import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
+import com.github.k1rakishou.persist_state.PersistableChanState
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -201,7 +196,6 @@ class MainController(
   private lateinit var container: TouchBlockingFrameLayoutNoBackground
   private lateinit var drawerLayout: DrawerLayout
   private lateinit var drawer: TouchBlockingLinearLayoutNoBackground
-  private lateinit var navigationViewContract: NavigationViewContract
   private lateinit var bottomMenuPanel: BottomMenuPanel
 
   private val _latestDrawerEnableState = MutableStateFlow<DrawerEnableState?>(null)
@@ -211,7 +205,7 @@ class MainController(
       context = context,
       orientation = KurobaComposeIconPanel.Orientation.Horizontal,
       defaultSelectedMenuItemId = R.id.action_browse,
-      menuItems = KurobaBottomNavigationView.bottomNavViewButtons()
+      menuItems = bottomNavViewButtons()
     )
   }
 
@@ -224,8 +218,6 @@ class MainController(
   private val drawerViewModel by lazy {
     requireComponentActivity().viewModelByKey<MainControllerViewModel>()
   }
-
-  private val childControllersStack = Stack<Controller>()
 
   private val topThreadController: ThreadController?
     get() {
@@ -250,15 +242,8 @@ class MainController(
   private val mainToolbarNavigationController: ToolbarNavigationController?
     get() {
       var navigationController: ToolbarNavigationController? = null
-      var topController: Controller? = topController
-
-      if (topController is BottomNavBarAwareNavigationController) {
-        topController = childControllers.getOrNull(childControllers.lastIndex - 1)
-      }
-
-      if (topController == null) {
-        return null
-      }
+      val topController = topController
+        ?: return null
 
       if (topController is StyledToolbarNavigationController) {
         navigationController = topController
@@ -276,9 +261,6 @@ class MainController(
       return navigationController
     }
 
-  override val navigationViewContractType: NavigationViewContract.Type
-    get() = navigationViewContract.type
-
   override val isBottomPanelShown: Boolean
     get() = bottomMenuPanel.isBottomPanelShown
 
@@ -293,36 +275,19 @@ class MainController(
   override fun onCreate() {
     super.onCreate()
 
-    view = if (ChanSettings.isSplitLayoutMode()) {
-      inflate(context, R.layout.controller_main_split_mode)
-    } else {
-      inflate(context, R.layout.controller_main)
-    }
+    view = inflate(context, R.layout.controller_main)
 
     rootLayout = view.findViewById(R.id.main_root_layout)
     container = view.findViewById(R.id.main_controller_container)
     drawerLayout = view.findViewById(R.id.drawer_layout)
     drawerLayout.setDrawerShadow(R.drawable.panel_shadow, GravityCompat.START)
     drawer = view.findViewById(R.id.drawer_part)
-    navigationViewContract = view.findViewById(R.id.navigation_view) as NavigationViewContract
     bottomMenuPanel = view.findViewById(R.id.bottom_menu_panel)
-
-    navigationViewContract.selectedMenuItemId = R.id.action_browse
-    navigationViewContract.viewElevation = dp(4f).toFloat()
 
     // Must be above bottomNavView
     bottomMenuPanel.elevation = dp(6f).toFloat()
 
     drawerLayout.addDrawerListener(this)
-
-    navigationViewContract.setOnNavigationItemSelectedListener { menuItemId ->
-      if (navigationViewContract.selectedMenuItemId == menuItemId) {
-        return@setOnNavigationItemSelectedListener true
-      }
-
-      onNavigationItemSelectedListener(menuItemId)
-      return@setOnNavigationItemSelectedListener true
-    }
 
     val drawerComposeView = view.findViewById<ComposeView>(R.id.drawer_compose_view)
     drawerComposeView.setContent {
@@ -426,7 +391,6 @@ class MainController(
   override fun onThemeChanged() {
     drawerViewModel.onThemeChanged()
     settingsNotificationManager.onThemeChanged()
-    navigationViewContract.onThemeChanged(themeEngine.chanTheme)
   }
 
   override fun onDestroy() {
@@ -439,29 +403,6 @@ class MainController(
   }
 
   override fun onInsetsChanged() {
-    val navigationViewSize = getDimen(R.dimen.navigation_view_size)
-
-    when (navigationViewContract.type) {
-      NavigationViewContract.Type.BottomNavView -> {
-        navigationViewContract.actualView.layoutParams.height =
-          navigationViewSize + globalWindowInsetsManager.bottom()
-
-        navigationViewContract.updatePaddings(
-          leftPadding = null,
-          bottomPadding = globalWindowInsetsManager.bottom()
-        )
-      }
-      NavigationViewContract.Type.SideNavView -> {
-        navigationViewContract.actualView.layoutParams.width =
-          navigationViewSize + globalWindowInsetsManager.left()
-
-        navigationViewContract.updatePaddings(
-          leftPadding = globalWindowInsetsManager.left(),
-          bottomPadding = globalWindowInsetsManager.bottom()
-        )
-      }
-    }
-
     bottomPadding.value = calculateBottomPaddingForRecyclerInDp(
       globalWindowInsetsManager = globalWindowInsetsManager,
       mainControllerCallbacks = this
@@ -496,10 +437,6 @@ class MainController(
   }
 
   fun pushChildController(childController: Controller) {
-    if (childControllers.isNotEmpty()) {
-      childControllersStack.push(childControllers.last())
-    }
-
     setCurrentChildController(childController)
   }
 
@@ -510,7 +447,7 @@ class MainController(
   }
 
   private fun popChildController(isFromOnBack: Boolean): Boolean {
-    if (childControllers.isEmpty() || childControllersStack.isEmpty()) {
+    if (childControllers.isEmpty()) {
       return false
     }
 
@@ -525,82 +462,32 @@ class MainController(
     prevController.onHide()
     removeChildController(prevController)
 
-    if (childControllersStack.isNotEmpty()) {
-      val newController = childControllersStack.pop()
-
-      newController.attachToParentView(container)
-      newController.onShow()
-    }
-
-    if (childControllersStack.isEmpty()) {
-      resetBottomNavViewCheckState()
-    }
-
     return true
   }
 
   fun openGlobalSearchController() {
-    closeAllNonMainControllers()
-
     val globalSearchController = GlobalSearchController(context, startActivityCallback)
-    openControllerWrappedIntoBottomNavAwareController(globalSearchController)
-
-    setGlobalSearchMenuItemSelected()
+    mainToolbarNavigationController?.pushController(globalSearchController)
   }
 
   fun openArchiveController() {
-    closeAllNonMainControllers()
-
     val localArchiveController = LocalArchiveController(context, this, startActivityCallback)
-    openControllerWrappedIntoBottomNavAwareController(localArchiveController)
-
-    setArchiveMenuItemSelected()
+    mainToolbarNavigationController?.pushController(localArchiveController)
   }
 
   fun openBookmarksController(threadDescriptors: List<ChanDescriptor.ThreadDescriptor>) {
-    closeAllNonMainControllers()
-
     val tabHostController = TabHostController(context, threadDescriptors, this, startActivityCallback)
-    openControllerWrappedIntoBottomNavAwareController(tabHostController)
-
-    setBookmarksMenuItemSelected()
+    mainToolbarNavigationController?.pushController(tabHostController)
   }
 
   fun openSettingsController() {
-    closeAllNonMainControllers()
-    openControllerWrappedIntoBottomNavAwareController(MainSettingsControllerV2(context, this))
-    setSettingsMenuItemSelected()
-  }
-
-  fun openControllerWrappedIntoBottomNavAwareController(controller: Controller) {
-    val bottomNavBarAwareNavigationController = BottomNavBarAwareNavigationController(
-      context,
-      navigationViewContract.type,
-      object : BottomNavBarAwareNavigationController.CloseBottomNavBarAwareNavigationControllerListener {
-        override fun onCloseController() {
-          closeBottomNavBarAwareNavigationControllerListener()
-        }
-
-        override fun onShowMenu() {
-          onMenuClicked()
-        }
-      }
-    )
-
-    pushChildController(bottomNavBarAwareNavigationController)
-    bottomNavBarAwareNavigationController.pushController(controller)
+    val mainSettingsControllerV2 = MainSettingsControllerV2(context, this)
+    mainToolbarNavigationController?.pushController(mainSettingsControllerV2)
   }
 
   fun getViewThreadController(): ViewThreadController? {
-    var topController: Controller? = topController
-
-    if (topController is BottomNavBarAwareNavigationController) {
-      topController = childControllers.getOrNull(childControllers.lastIndex - 1)
-    }
-
-    if (topController == null) {
-      return null
-    }
+    val topController = topController
+      ?: return null
 
     if (topController is SplitNavigationController) {
       return topController
@@ -620,62 +507,19 @@ class MainController(
 
   suspend fun loadThreadWithoutFocusing(
     threadDescriptor: ChanDescriptor.ThreadDescriptor,
-    closeAllNonMainControllers: Boolean = false,
     animated: Boolean
   ) {
     controllerScope.launch {
-      if (closeAllNonMainControllers) {
-        closeAllNonMainControllers()
-      }
-
       topThreadController?.showThreadWithoutFocusing(threadDescriptor, animated)
     }
   }
 
   suspend fun loadThread(
     descriptor: ChanDescriptor.ThreadDescriptor,
-    closeAllNonMainControllers: Boolean = false,
     animated: Boolean
   ) {
     controllerScope.launch {
-      if (closeAllNonMainControllers) {
-        closeAllNonMainControllers()
-      }
-
       topThreadController?.showThread(descriptor, animated)
-    }
-  }
-
-  fun closeAllNonMainControllers() {
-    controllerNavigationManager.onCloseAllNonMainControllers()
-
-    var currentNavController = topController
-      ?: return
-
-    while (true) {
-      if (currentNavController is BottomNavBarAwareNavigationController) {
-        popChildController(false)
-
-        currentNavController = topController
-          ?: return
-
-        continue
-      }
-
-      val topController = currentNavController.topController
-        ?: return
-
-      closeAllChildControllers(topController.childControllers)
-
-      if (topController is HasNavigation) {
-        return
-      }
-
-      if (currentNavController is NavigationController) {
-        currentNavController.popController(false)
-      } else if (currentNavController is DoubleNavigationController) {
-        currentNavController.popController(false)
-      }
     }
   }
 
@@ -710,28 +554,8 @@ class MainController(
     return super.onBack()
   }
 
-  override fun hideBottomNavBar(lockTranslation: Boolean, lockCollapse: Boolean) {
-    navigationViewContract.hide(lockTranslation, lockCollapse)
-  }
-
-  override fun showBottomNavBar(unlockTranslation: Boolean, unlockCollapse: Boolean) {
-    navigationViewContract.show(unlockTranslation, unlockCollapse)
-  }
-
-  override fun resetBottomNavViewState(unlockTranslation: Boolean, unlockCollapse: Boolean) {
-    navigationViewContract.resetState(unlockTranslation, unlockCollapse)
-  }
-
   override fun passMotionEventIntoDrawer(event: MotionEvent): Boolean {
     return drawerLayout.onTouchEvent(event)
-  }
-
-  override fun resetBottomNavViewCheckState() {
-    BackgroundUtils.ensureMainThread()
-
-    // Hack! To reset the bottomNavView's checked item to "browse" when pressing back one either
-    // of the bottomNavView's child controllers (Bookmarks or Settings)
-    setBrowseMenuItemSelected()
   }
 
   override fun onBottomPanelStateChanged(func: (BottomMenuPanel.State) -> Unit) {
@@ -739,42 +563,15 @@ class MainController(
   }
 
   override fun showBottomPanel(items: List<BottomMenuPanelItem>) {
-    navigationViewContract.actualView.isEnabled = false
     bottomMenuPanel.show(items)
   }
 
   override fun hideBottomPanel() {
-    navigationViewContract.actualView.isEnabled = true
     bottomMenuPanel.hide()
   }
 
   override fun passOnBackToBottomPanel(): Boolean {
     return bottomMenuPanel.onBack()
-  }
-
-  fun setBrowseMenuItemSelected() {
-    navigationViewContract.setMenuItemSelected(R.id.action_browse)
-    kurobaComposeBottomPanel.setMenuItemSelected(R.id.action_browse)
-  }
-
-  fun setArchiveMenuItemSelected() {
-    navigationViewContract.setMenuItemSelected(R.id.action_archive)
-    kurobaComposeBottomPanel.setMenuItemSelected(R.id.action_archive)
-  }
-
-  fun setSettingsMenuItemSelected() {
-    navigationViewContract.setMenuItemSelected(R.id.action_settings)
-    kurobaComposeBottomPanel.setMenuItemSelected(R.id.action_settings)
-  }
-
-  fun setBookmarksMenuItemSelected() {
-    navigationViewContract.setMenuItemSelected(R.id.action_bookmarks)
-    kurobaComposeBottomPanel.setMenuItemSelected(R.id.action_bookmarks)
-  }
-
-  fun setGlobalSearchMenuItemSelected() {
-    navigationViewContract.setMenuItemSelected(R.id.action_search)
-    kurobaComposeBottomPanel.setMenuItemSelected(R.id.action_search)
   }
 
   fun onNavigationItemDrawerInfoUpdated(hasDrawer: Boolean) {
@@ -876,17 +673,15 @@ class MainController(
       }
     }
 
-    if (!ChanSettings.isNavigationViewEnabled() && !ChanSettings.isSplitLayoutMode()) {
-      kurobaComposeBottomPanel.BuildPanel(
-        onMenuItemClicked = { clickedMenuItemId ->
-          onNavigationItemSelectedListener(clickedMenuItemId)
+    kurobaComposeBottomPanel.BuildPanel(
+      onMenuItemClicked = { clickedMenuItemId ->
+        onNavigationItemSelectedListener(clickedMenuItemId)
 
-          if (drawerLayout.isDrawerOpen(drawer)) {
-            drawerLayout.closeDrawer(drawer)
-          }
+        if (drawerLayout.isDrawerOpen(drawer)) {
+          drawerLayout.closeDrawer(drawer)
         }
-      )
-    }
+      }
+    )
   }
 
   @Composable
@@ -1843,10 +1638,6 @@ class MainController(
       val currentTopThreadController = topThreadController
         ?: return@launch
 
-      if (topController is BottomNavBarAwareNavigationController) {
-        closeAllNonMainControllers()
-      }
-
       when (val descriptor = navHistoryEntry.descriptor) {
         is ChanDescriptor.ThreadDescriptor -> {
           currentTopThreadController.showThread(descriptor, true)
@@ -1870,53 +1661,18 @@ class MainController(
     when (menuItemId) {
       R.id.action_search -> openGlobalSearchController()
       R.id.action_archive -> openArchiveController()
-      R.id.action_browse -> closeAllNonMainControllers()
       R.id.action_bookmarks -> openBookmarksController(emptyList())
       R.id.action_settings -> openSettingsController()
     }
   }
 
-  private fun closeBottomNavBarAwareNavigationControllerListener() {
-    val currentNavController = topController
-      ?: return
-
-    if (currentNavController !is BottomNavBarAwareNavigationController) {
-      return
-    }
-
-    popChildController(false)
-  }
-
-  private fun closeAllChildControllers(childControllers: List<Controller>) {
-    for (childController in childControllers) {
-      childController.presentingThisController?.stopPresenting(false)
-
-      if (childController.childControllers.isNotEmpty()) {
-        closeAllChildControllers(childController.childControllers)
-      }
-    }
-  }
-
   private fun onBookmarksBadgeStateChanged(state: MainControllerViewModel.BookmarksBadgeState) {
     if (state.totalUnseenPostsCount <= 0) {
-      navigationViewContract.updateBadge(
-        menuItemId = R.id.action_bookmarks,
-        menuItemBadgeInfo = null
-      )
-
       kurobaComposeBottomPanel.updateBadge(
         menuItemId = R.id.action_bookmarks,
         menuItemBadgeInfo = null
       )
     } else {
-      navigationViewContract.updateBadge(
-        menuItemId = R.id.action_bookmarks,
-        menuItemBadgeInfo = KurobaComposeIconPanel.MenuItemBadgeInfo.Counter(
-          counter = state.totalUnseenPostsCount,
-          highlight = state.hasUnreadReplies
-        )
-      )
-
       kurobaComposeBottomPanel.updateBadge(
         menuItemId = R.id.action_bookmarks,
         menuItemBadgeInfo = KurobaComposeIconPanel.MenuItemBadgeInfo.Counter(
@@ -1926,21 +1682,16 @@ class MainController(
       )
     }
 
-    val cannotShowBadge = ChanSettings.isSplitLayoutMode() || ChanSettings.bottomNavigationViewEnabled.get()
-    if (cannotShowBadge) {
-      mainToolbarNavigationController?.containerToolbarState?.hideBadge()
+    if (state.totalUnseenPostsCount <= 0) {
+      mainToolbarNavigationController?.containerToolbarState?.updateBadge(
+        count = 0,
+        highImportance = false
+      )
     } else {
-      if (state.totalUnseenPostsCount <= 0) {
-        mainToolbarNavigationController?.containerToolbarState?.updateBadge(
-          count = 0,
-          highImportance = false
-        )
-      } else {
-        mainToolbarNavigationController?.containerToolbarState?.updateBadge(
-          count = state.totalUnseenPostsCount,
-          highImportance = state.hasUnreadReplies
-        )
-      }
+      mainToolbarNavigationController?.containerToolbarState?.updateBadge(
+        count = state.totalUnseenPostsCount,
+        highImportance = state.hasUnreadReplies
+      )
     }
   }
 
@@ -1948,24 +1699,11 @@ class MainController(
     val activeThreadDownloadsCount = threadDownloadManager.getAllActiveThreadDownloads().size
 
     if (activeThreadDownloadsCount <= 0) {
-      navigationViewContract.updateBadge(
-        menuItemId = R.id.action_archive,
-        menuItemBadgeInfo = null
-      )
-
       kurobaComposeBottomPanel.updateBadge(
         menuItemId = R.id.action_archive,
         menuItemBadgeInfo = null
       )
     } else {
-      navigationViewContract.updateBadge(
-        menuItemId = R.id.action_archive,
-        menuItemBadgeInfo = KurobaComposeIconPanel.MenuItemBadgeInfo.Counter(
-          counter = activeThreadDownloadsCount,
-          highlight = false
-        )
-      )
-
       kurobaComposeBottomPanel.updateBadge(
         menuItemId = R.id.action_archive,
         menuItemBadgeInfo = KurobaComposeIconPanel.MenuItemBadgeInfo.Counter(
@@ -1980,21 +1718,11 @@ class MainController(
     val notificationsCount = settingsNotificationManager.count()
 
     if (notificationsCount <= 0) {
-      navigationViewContract.updateBadge(
-        menuItemId = R.id.action_settings,
-        menuItemBadgeInfo = null
-      )
-
       kurobaComposeBottomPanel.updateBadge(
         menuItemId = R.id.action_settings,
         menuItemBadgeInfo = null
       )
     } else {
-      navigationViewContract.updateBadge(
-        menuItemId = R.id.action_settings,
-        menuItemBadgeInfo = KurobaComposeIconPanel.MenuItemBadgeInfo.Dot
-      )
-
       kurobaComposeBottomPanel.updateBadge(
         menuItemId = R.id.action_settings,
         menuItemBadgeInfo = KurobaComposeIconPanel.MenuItemBadgeInfo.Dot
@@ -2035,6 +1763,43 @@ class MainController(
 
     return navHistoryEntryList.filter { navigationHistoryEntry ->
       navigationHistoryEntry.title.contains(other = query, ignoreCase = true)
+    }
+  }
+
+  private fun bottomNavViewButtons(): List<KurobaComposeIconPanel.MenuItem> {
+    val bottomNavViewButtons = PersistableChanState.reorderableBottomNavViewButtons.get()
+
+    return bottomNavViewButtons.bottomNavViewButtons().mapNotNull { bottomNavViewButton ->
+      return@map when (bottomNavViewButton) {
+        BottomNavViewButton.Search -> {
+          KurobaComposeIconPanel.MenuItem(
+            id = R.id.action_search,
+            iconId = R.drawable.ic_search_white_24dp
+          )
+        }
+        BottomNavViewButton.Archive -> {
+          KurobaComposeIconPanel.MenuItem(
+            id = R.id.action_archive,
+            iconId = R.drawable.ic_baseline_archive_24
+          )
+        }
+        BottomNavViewButton.Browse -> {
+          // This button no longer exists but can't be removed because it will break other stuff.
+          null
+        }
+        BottomNavViewButton.Bookmarks -> {
+          KurobaComposeIconPanel.MenuItem(
+            id = R.id.action_bookmarks,
+            iconId = R.drawable.ic_bookmark_white_24dp
+          )
+        }
+        BottomNavViewButton.Settings -> {
+          KurobaComposeIconPanel.MenuItem(
+            id = R.id.action_settings,
+            iconId = R.drawable.ic_baseline_settings
+          )
+        }
+      }
     }
   }
 

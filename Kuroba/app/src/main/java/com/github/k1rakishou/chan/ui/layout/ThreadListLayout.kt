@@ -18,7 +18,6 @@ import com.github.k1rakishou.chan.core.helper.ChanLoadProgressEvent
 import com.github.k1rakishou.chan.core.helper.ChanLoadProgressNotifier
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.LastViewedPostNoInfoHolder
-import com.github.k1rakishou.chan.core.manager.BottomNavBarVisibilityStateManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
@@ -48,7 +47,6 @@ import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.FixedLinearLayoutManager
-import com.github.k1rakishou.chan.ui.view.NavigationViewContract
 import com.github.k1rakishou.chan.ui.view.PostInfoMapItemDecoration
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -110,8 +108,6 @@ class ThreadListLayout @JvmOverloads constructor(
   @Inject
   lateinit var themeEngineLazy: Lazy<ThemeEngine>
   @Inject
-  lateinit var bottomNavBarVisibilityStateManagerLazy: Lazy<BottomNavBarVisibilityStateManager>
-  @Inject
   lateinit var extractPostMapInfoHolderUseCaseLazy: Lazy<ExtractPostMapInfoHolderUseCase>
   @Inject
   lateinit var lastViewedPostNoInfoHolderLazy: Lazy<LastViewedPostNoInfoHolder>
@@ -130,8 +126,6 @@ class ThreadListLayout @JvmOverloads constructor(
 
   private val themeEngine: ThemeEngine
     get() = themeEngineLazy.get()
-  private val bottomNavBarVisibilityStateManager: BottomNavBarVisibilityStateManager
-    get() = bottomNavBarVisibilityStateManagerLazy.get()
   private val extractPostMapInfoHolderUseCase: ExtractPostMapInfoHolderUseCase
     get() = extractPostMapInfoHolderUseCaseLazy.get()
   private val lastViewedPostNoInfoHolder: LastViewedPostNoInfoHolder
@@ -246,7 +240,6 @@ class ThreadListLayout @JvmOverloads constructor(
   private var fastScroller: FastScroller? = null
   private var postInfoMapItemDecoration: PostInfoMapItemDecoration? = null
   private var callback: ThreadListLayoutPresenterCallback? = null
-  private var navigationViewContractType: NavigationViewContract.Type = NavigationViewContract.Type.BottomNavView
   private var currentThreadControllerType: ThreadControllerType? = null
   private var threadListLayoutCallback: ThreadListLayoutCallback? = null
   private var boardPostViewMode: BoardPostViewMode? = null
@@ -370,13 +363,11 @@ class ThreadListLayout @JvmOverloads constructor(
   fun onCreate(
     threadPresenter: ThreadPresenter,
     threadListLayoutCallback: ThreadListLayoutCallback,
-    navigationViewContractType: NavigationViewContract.Type,
     threadControllerType: ThreadControllerType
   ) {
     this.callback = threadPresenter
     this.threadPresenter = threadPresenter
     this.threadListLayoutCallback = threadListLayoutCallback
-    this.navigationViewContractType = navigationViewContractType
     this.currentThreadControllerType = threadControllerType
 
     listScrollToBottomExecutor = RendezvousCoroutineExecutor(coroutineScope)
@@ -414,26 +405,6 @@ class ThreadListLayout @JvmOverloads constructor(
     coroutineScope.launch {
       globalUiStateHolder.replyLayout.state(threadControllerType).layoutVisibility
         .onEach { replyLayoutVisibility ->
-          val isCatalogReplyView = threadControllerType == ThreadControllerType.Catalog
-
-          when (replyLayoutVisibility) {
-            ReplyLayoutVisibility.Collapsed -> {
-              bottomNavBarVisibilityStateManager.replyViewStateChanged(
-                isCatalogReplyView = isCatalogReplyView,
-                isVisible = false
-              )
-            }
-            ReplyLayoutVisibility.Opened -> {
-              bottomNavBarVisibilityStateManager.replyViewStateChanged(
-                isCatalogReplyView = isCatalogReplyView,
-                isVisible = true
-              )
-            }
-            ReplyLayoutVisibility.Expanded -> {
-              // no-op
-            }
-          }
-
           attachToolbarScroll(attach = replyLayoutVisibility.isCollapsed())
         }
         .collect()
@@ -926,18 +897,7 @@ class ThreadListLayout @JvmOverloads constructor(
       val replyLayoutViewHeight = globalUiStateHolder.replyLayout.state(threadControllerType).height.value
       recyclerBottom += replyLayoutViewHeight
     } else {
-      recyclerBottom += when (navigationViewContractType) {
-        NavigationViewContract.Type.BottomNavView -> {
-          if (ChanSettings.isNavigationViewEnabled()) {
-            globalWindowInsetsManager.bottom() + getDimen(R.dimen.navigation_view_size)
-          } else {
-            globalWindowInsetsManager.bottom()
-          }
-        }
-        NavigationViewContract.Type.SideNavView -> {
-          globalWindowInsetsManager.bottom()
-        }
-      }
+      recyclerBottom += globalWindowInsetsManager.bottom()
     }
 
     recyclerView.setPadding(defaultPadding, recyclerTop, recyclerRight, recyclerBottom)
