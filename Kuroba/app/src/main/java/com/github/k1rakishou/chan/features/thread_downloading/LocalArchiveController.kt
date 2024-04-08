@@ -227,7 +227,13 @@ class LocalArchiveController(
     view = ComposeView(context).apply {
       setContent {
         ComposeEntrypoint {
-          Box(modifier = Modifier.fillMaxSize()) {
+          val chanTheme = LocalChanTheme.current
+
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .background(chanTheme.backColorCompose)
+          ) {
             BuildContent()
           }
         }

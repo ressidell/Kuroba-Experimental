@@ -76,12 +76,14 @@ import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
 import com.github.k1rakishou.chan.core.manager.SettingsNotificationManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
+import com.github.k1rakishou.chan.features.bookmarks.BookmarksController
 import com.github.k1rakishou.chan.features.drawer.data.HistoryControllerState
 import com.github.k1rakishou.chan.features.drawer.data.NavHistoryBookmarkAdditionalInfo
 import com.github.k1rakishou.chan.features.drawer.data.NavigationHistoryEntry
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController
 import com.github.k1rakishou.chan.features.image_saver.ResolveDuplicateImagesController
+import com.github.k1rakishou.chan.features.my_posts.SavedPostsController
 import com.github.k1rakishou.chan.features.search.GlobalSearchController
 import com.github.k1rakishou.chan.features.settings.MainSettingsControllerV2
 import com.github.k1rakishou.chan.features.thread_downloading.LocalArchiveController
@@ -110,7 +112,6 @@ import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
-import com.github.k1rakishou.chan.ui.controller.navigation.TabHostController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
@@ -203,7 +204,6 @@ class MainController(
     KurobaComposeIconPanel(
       context = context,
       orientation = KurobaComposeIconPanel.Orientation.Horizontal,
-      defaultSelectedMenuItemId = R.id.action_browse,
       menuItems = bottomNavViewButtons()
     )
   }
@@ -450,14 +450,19 @@ class MainController(
     mainToolbarNavigationController?.pushController(globalSearchController)
   }
 
+  fun openPostsController() {
+    val savedPostsController = SavedPostsController(context, this, startActivityCallback)
+    mainToolbarNavigationController?.pushController(savedPostsController)
+  }
+
   fun openArchiveController() {
     val localArchiveController = LocalArchiveController(context, this, startActivityCallback)
     mainToolbarNavigationController?.pushController(localArchiveController)
   }
 
   fun openBookmarksController(threadDescriptors: List<ChanDescriptor.ThreadDescriptor>) {
-    val tabHostController = TabHostController(context, threadDescriptors, this, startActivityCallback)
-    mainToolbarNavigationController?.pushController(tabHostController)
+    val bookmarksController = BookmarksController(context, threadDescriptors, this, startActivityCallback)
+    mainToolbarNavigationController?.pushController(bookmarksController)
   }
 
   fun openSettingsController() {
@@ -1635,10 +1640,11 @@ class MainController(
 
   private fun onNavigationItemSelectedListener(menuItemId: Int) {
     when (menuItemId) {
-      R.id.action_search -> openGlobalSearchController()
-      R.id.action_archive -> openArchiveController()
-      R.id.action_bookmarks -> openBookmarksController(emptyList())
-      R.id.action_settings -> openSettingsController()
+      com.github.k1rakishou.chan.R.id.action_search -> openGlobalSearchController()
+      com.github.k1rakishou.chan.R.id.action_archive -> openArchiveController()
+      com.github.k1rakishou.chan.R.id.action_posts -> openPostsController()
+      com.github.k1rakishou.chan.R.id.action_bookmarks -> openBookmarksController(emptyList())
+      com.github.k1rakishou.chan.R.id.action_settings -> openSettingsController()
     }
   }
 
@@ -1745,34 +1751,36 @@ class MainController(
   private fun bottomNavViewButtons(): List<KurobaComposeIconPanel.MenuItem> {
     val bottomNavViewButtons = PersistableChanState.reorderableBottomNavViewButtons.get()
 
-    return bottomNavViewButtons.bottomNavViewButtons().mapNotNull { bottomNavViewButton ->
-      return@mapNotNull when (bottomNavViewButton) {
+    return bottomNavViewButtons.bottomNavViewButtons().map { bottomNavViewButton ->
+      return@map when (bottomNavViewButton) {
         BottomNavViewButton.Search -> {
           KurobaComposeIconPanel.MenuItem(
-            id = R.id.action_search,
-            iconId = R.drawable.ic_search_white_24dp
+            id = com.github.k1rakishou.chan.R.id.action_search,
+            iconId = com.github.k1rakishou.chan.R.drawable.ic_search_white_24dp
           )
         }
         BottomNavViewButton.Archive -> {
           KurobaComposeIconPanel.MenuItem(
-            id = R.id.action_archive,
-            iconId = R.drawable.ic_baseline_archive_24
+            id = com.github.k1rakishou.chan.R.id.action_archive,
+            iconId = com.github.k1rakishou.chan.R.drawable.ic_baseline_archive_24
           )
         }
-        BottomNavViewButton.Browse -> {
-          // This button no longer exists but can't be removed because it will break other stuff.
-          null
+        BottomNavViewButton.MyPosts -> {
+          KurobaComposeIconPanel.MenuItem(
+            id = com.github.k1rakishou.chan.R.id.action_posts,
+            iconId = com.github.k1rakishou.chan.R.drawable.ic_baseline_posts
+          )
         }
         BottomNavViewButton.Bookmarks -> {
           KurobaComposeIconPanel.MenuItem(
-            id = R.id.action_bookmarks,
-            iconId = R.drawable.ic_bookmark_white_24dp
+            id = com.github.k1rakishou.chan.R.id.action_bookmarks,
+            iconId = com.github.k1rakishou.chan.R.drawable.ic_bookmark_white_24dp
           )
         }
         BottomNavViewButton.Settings -> {
           KurobaComposeIconPanel.MenuItem(
-            id = R.id.action_settings,
-            iconId = R.drawable.ic_baseline_settings
+            id = com.github.k1rakishou.chan.R.id.action_settings,
+            iconId = com.github.k1rakishou.chan.R.drawable.ic_baseline_settings
           )
         }
       }

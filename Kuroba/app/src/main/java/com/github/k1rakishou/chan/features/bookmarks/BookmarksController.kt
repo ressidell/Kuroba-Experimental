@@ -45,13 +45,12 @@ import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.HamburgMenuItem
-import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.ui.controller.navigation.TabPageController
 import com.github.k1rakishou.chan.ui.controller.settings.RangeSettingUpdaterController
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyExpandableGroupView
@@ -87,7 +86,7 @@ class BookmarksController(
   private val bookmarksToHighlight: List<ChanDescriptor.ThreadDescriptor>,
   private val mainControllerCallbacks: MainControllerCallbacks,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : TabPageController(context),
+) : Controller(context),
   BookmarksView,
   BookmarksSelectionHelper.OnBookmarkMenuItemClicked,
   WindowInsetsListener {
@@ -298,87 +297,6 @@ class BookmarksController(
     itemTouchHelper = ItemTouchHelper(touchHelperCallback)
     itemTouchHelper.attachToRecyclerView(epoxyRecyclerView)
 
-    controllerScope.launch {
-      bookmarksPresenter.listenForStateChanges()
-        .asFlow()
-        .collect { state -> onStateChanged(state) }
-    }
-
-    controllerScope.launch {
-      bookmarksSelectionHelper.listenForSelectionChanges()
-        .collect { selectionEvent -> onNewSelectionEvent(selectionEvent) }
-    }
-
-    controllerScope.launch {
-      toolbarState.search.listenForSearchVisibilityUpdates()
-        .onEach { searchVisible ->
-          isInSearchMode = searchVisible
-          bookmarksPresenter.onSearchModeChanged(searchVisible)
-          if (!searchVisible) {
-            needRestoreScrollPosition.set(true)
-          }
-        }
-        .collect()
-    }
-
-    controllerScope.launch {
-      toolbarState.search.listenForSearchQueryUpdates()
-        .onEach { entered -> bookmarksPresenter.onSearchEntered(entered) }
-        .collect()
-    }
-
-    mainControllerCallbacks.onBottomPanelStateChanged { state -> onInsetsChanged() }
-
-    onViewBookmarksModeChanged()
-    updateLayoutManager()
-
-    bookmarksPresenter.onCreate(this)
-    onInsetsChanged()
-    setupRecycler()
-
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
-  }
-
-  override fun onDestroy() {
-    super.onDestroy()
-
-    cleanupFastScroller()
-
-    bookmarksPresenter.updateReorderingMode(enterReorderingMode = false)
-    mainControllerCallbacks.hideBottomPanel()
-
-    epoxyRecyclerView.clear()
-    epoxyRecyclerView.removeOnScrollListener(onScrollListener)
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-
-    bookmarksPresenter.onDestroy()
-  }
-
-  override fun onBack(): Boolean {
-    if (bookmarksPresenter.isInReorderingMode()) {
-      if (bookmarksPresenter.updateReorderingMode(enterReorderingMode = false)) {
-        return true
-      }
-    }
-
-    val result = mainControllerCallbacks.passOnBackToBottomPanel() ?: false
-    if (result) {
-      bookmarksSelectionHelper.unselectAll()
-    }
-
-    return result
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = mainControllerCallbacks
-    )
-
-    epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
-  }
-
-  override fun updateToolbarState(): KurobaToolbarState {
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
         hasDrawer = true,
@@ -466,19 +384,85 @@ class BookmarksController(
       }
     )
 
-    return toolbarState
-  }
-
-  override fun onTabFocused() {
-    reloadBookmarks()
-  }
-
-  override fun canSwitchTabs(): Boolean {
-    if (bookmarksSelectionHelper.isInSelectionMode() || bookmarksPresenter.isInReorderingMode()) {
-      return false
+    controllerScope.launch {
+      bookmarksPresenter.listenForStateChanges()
+        .asFlow()
+        .collect { state -> onStateChanged(state) }
     }
 
-    return true
+    controllerScope.launch {
+      bookmarksSelectionHelper.listenForSelectionChanges()
+        .collect { selectionEvent -> onNewSelectionEvent(selectionEvent) }
+    }
+
+    controllerScope.launch {
+      toolbarState.search.listenForSearchVisibilityUpdates()
+        .onEach { searchVisible ->
+          isInSearchMode = searchVisible
+          bookmarksPresenter.onSearchModeChanged(searchVisible)
+          if (!searchVisible) {
+            needRestoreScrollPosition.set(true)
+          }
+        }
+        .collect()
+    }
+
+    controllerScope.launch {
+      toolbarState.search.listenForSearchQueryUpdates()
+        .onEach { entered -> bookmarksPresenter.onSearchEntered(entered) }
+        .collect()
+    }
+
+    mainControllerCallbacks.onBottomPanelStateChanged { state -> onInsetsChanged() }
+
+    onViewBookmarksModeChanged()
+    updateLayoutManager()
+
+    bookmarksPresenter.onCreate(this)
+    onInsetsChanged()
+    setupRecycler()
+    reloadBookmarks()
+
+    globalWindowInsetsManager.addInsetsUpdatesListener(this)
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+
+    cleanupFastScroller()
+
+    bookmarksPresenter.updateReorderingMode(enterReorderingMode = false)
+    mainControllerCallbacks.hideBottomPanel()
+
+    epoxyRecyclerView.clear()
+    epoxyRecyclerView.removeOnScrollListener(onScrollListener)
+    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
+
+    bookmarksPresenter.onDestroy()
+  }
+
+  override fun onBack(): Boolean {
+    if (bookmarksPresenter.isInReorderingMode()) {
+      if (bookmarksPresenter.updateReorderingMode(enterReorderingMode = false)) {
+        return true
+      }
+    }
+
+    val result = mainControllerCallbacks.passOnBackToBottomPanel() ?: false
+    if (result) {
+      bookmarksSelectionHelper.unselectAll()
+    }
+
+    return result
+  }
+
+  override fun onInsetsChanged() {
+    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
+      globalWindowInsetsManager = globalWindowInsetsManager,
+      mainControllerCallbacks = mainControllerCallbacks
+    )
+
+    epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
   override fun onMenuItemClicked(

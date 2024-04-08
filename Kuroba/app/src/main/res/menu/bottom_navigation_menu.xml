@@ -8,13 +8,13 @@
         android:icon="@drawable/ic_baseline_archive_24"
         android:title="@string/menu_archive" />
     <item
+        android:id="@+id/action_posts"
+        android:icon="@drawable/ic_baseline_posts"
+        android:title="@string/menu_posts" />
+    <item
         android:id="@+id/action_bookmarks"
         android:icon="@drawable/ic_baseline_bookmarks"
         android:title="@string/menu_bookmarks" />
-    <item
-        android:id="@+id/action_browse"
-        android:icon="@drawable/ic_baseline_laptop"
-        android:title="@string/menu_browse" />
     <item
         android:id="@+id/action_settings"
         android:icon="@drawable/ic_baseline_settings"

@@ -36,6 +36,7 @@ data class ReorderableBottomNavViewButtons(
     val DEFAULT = listOf(
       BottomNavViewButton.Search,
       BottomNavViewButton.Archive,
+      BottomNavViewButton.MyPosts,
       BottomNavViewButton.Bookmarks,
       BottomNavViewButton.Settings
     )
@@ -46,9 +47,8 @@ data class ReorderableBottomNavViewButtons(
 
 enum class BottomNavViewButton(val id: Long, val title: String) {
   Search(0, "Search"),
-  Bookmarks(1, "Bookmarks"),
-  // TODO: This needs to be removed but it will probably break the sorting orders
-  Browse(2, "Browse"),
+  MyPosts(1, "MyPosts"),
+  Bookmarks(2, "Bookmarks"),
   Settings(3, "Settings"),
   Archive(4, "Archive");
 

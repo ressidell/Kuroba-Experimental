@@ -56,9 +56,7 @@ import com.github.k1rakishou.model.data.post.ChanPostBuilder
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.data.post.ChanPostImageBuilder
 import com.github.k1rakishou.model.data.post.PostIndexed
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.navigation.NavigationBarView
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.util.concurrent.TimeUnit
 
@@ -268,29 +266,8 @@ class ThemeControllerHelper(
     adapter.setBoardPostViewMode(ChanSettings.BoardPostViewMode.LIST)
     postsView.adapter = adapter
 
-    val bottomNavView = BottomNavigationView(context)
-    bottomNavView.menu.clear()
-    bottomNavView.inflateMenu(R.menu.bottom_navigation_menu)
-    bottomNavView.selectedItemId = R.id.action_browse
-    bottomNavView.setBackgroundColor(theme.primaryColor)
-    bottomNavView.labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_UNLABELED
-
-    val uncheckedColor = if (ThemeEngine.isNearToFullyBlackColor(theme.primaryColor)) {
-      Color.DKGRAY
-    } else {
-      ThemeEngine.manipulateColor(theme.primaryColor, .7f)
-    }
-
-    bottomNavView.itemIconTintList = ColorStateList(
-      arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf(-android.R.attr.state_checked)),
-      intArrayOf(Color.WHITE, uncheckedColor)
-    )
-
-    bottomNavView.itemTextColor = ColorStateList(
-      arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf(-android.R.attr.state_checked)),
-      intArrayOf(Color.WHITE, uncheckedColor)
-    )
-
+    // TODO: New toolbar. Need to somehow override the ChanTheme for the toolbar in theme previews because otherwise
+    //  the toolbar uses the app's theme.
     val toolbar = KurobaToolbarView(context)
     toolbar.init(kurobaToolbarState)
 
@@ -329,13 +306,6 @@ class ThemeControllerHelper(
         ViewGroup.LayoutParams.MATCH_PARENT,
         0,
         1f
-      )
-    )
-    linearLayout.addView(
-      bottomNavView,
-      LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        AppModuleAndroidUtils.getDimen(R.dimen.navigation_view_size)
       )
     )
 

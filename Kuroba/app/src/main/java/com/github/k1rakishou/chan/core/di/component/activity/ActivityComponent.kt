@@ -138,7 +138,6 @@ import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostCont
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaComposeDialogController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
-import com.github.k1rakishou.chan.ui.controller.navigation.TabHostController
 import com.github.k1rakishou.chan.ui.controller.popup.PostRepliesPopupController
 import com.github.k1rakishou.chan.ui.controller.popup.PostSearchPopupController
 import com.github.k1rakishou.chan.ui.controller.settings.RangeSettingUpdaterController
@@ -260,7 +259,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(selectSiteForSearchController: SelectSiteForSearchController)
   fun inject(selectBoardForSearchController: SelectBoardForSearchController)
   fun inject(siteFirewallBypassController: SiteFirewallBypassController)
-  fun inject(tabHostController: TabHostController)
   fun inject(imageSaverV2OptionsController: ImageSaverV2OptionsController)
   fun inject(resolveDuplicateImagesController: ResolveDuplicateImagesController)
   fun inject(kurobaAlertDialogHostController: KurobaAlertDialogHostController)

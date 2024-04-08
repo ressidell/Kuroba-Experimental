@@ -41,7 +41,6 @@ import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.HamburgMenuItem
-import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.SelectableItem
@@ -52,8 +51,8 @@ import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.ui.controller.navigation.TabPageController
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -71,7 +70,7 @@ class SavedPostsController(
   context: Context,
   private val mainControllerCallbacks: MainControllerCallbacks,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : TabPageController(context),  WindowInsetsListener {
+) : Controller(context),  WindowInsetsListener {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -87,7 +86,17 @@ class SavedPostsController(
     component.inject(this)
   }
 
-  override fun updateToolbarState(): KurobaToolbarState {
+  override fun onBack(): Boolean {
+    if (viewModel.viewModelSelectionHelper.unselectAll()) {
+      return true
+    }
+
+    return super.onBack()
+  }
+
+  override fun onCreate() {
+    super.onCreate()
+
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
         hasDrawer = true,
@@ -126,31 +135,6 @@ class SavedPostsController(
         }
       }
     )
-
-    return toolbarState
-  }
-
-  override fun onTabFocused() {
-  }
-
-  override fun canSwitchTabs(): Boolean {
-    if (viewModel.viewModelSelectionHelper.isInSelectionMode()) {
-      return false
-    }
-
-    return true
-  }
-
-  override fun onBack(): Boolean {
-    if (viewModel.viewModelSelectionHelper.unselectAll()) {
-      return true
-    }
-
-    return super.onBack()
-  }
-
-  override fun onCreate() {
-    super.onCreate()
 
     controllerScope.launch {
       viewModel.viewModelSelectionHelper.selectionMode.collect { selectionEvent ->
@@ -193,7 +177,13 @@ class SavedPostsController(
     view = ComposeView(context).apply {
       setContent {
         ComposeEntrypoint {
-          Box(modifier = Modifier.fillMaxSize()) {
+          val chanTheme = LocalChanTheme.current
+
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .background(chanTheme.backColorCompose)
+          ) {
             BuildContent()
           }
         }

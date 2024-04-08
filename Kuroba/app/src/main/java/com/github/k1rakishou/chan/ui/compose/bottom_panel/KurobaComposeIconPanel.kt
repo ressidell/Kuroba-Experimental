@@ -55,7 +55,6 @@ import javax.inject.Inject
 class KurobaComposeIconPanel(
   private val context: Context,
   private val orientation: Orientation,
-  private val defaultSelectedMenuItemId: Int,
   menuItems: List<MenuItem>
 ) {
 
@@ -66,33 +65,16 @@ class KurobaComposeIconPanel(
 
   private val menuItemStateList = mutableStateListOf<MenuItemState>()
 
-  val selectedMenuItemId: Int
-    get() {
-      return menuItemStateList
-        .firstOrNull { it.selected.value }?.menuItem?.id
-        ?: menuItemStateList.first().menuItem.id
-    }
-
   init {
     AppModuleAndroidUtils.extractActivityComponent(context)
       .inject(this)
 
-    val newMenuItemStateList = menuItems.map { menuItem ->
-      MenuItemState(
-        menuItem = menuItem,
-        selected = mutableStateOf(menuItem.id == defaultSelectedMenuItemId)
-      )
-    }
+    val newMenuItemStateList = menuItems.map { menuItem -> MenuItemState(menuItem) }
 
     menuItemStateList.clear()
     menuItemStateList.addAll(newMenuItemStateList)
   }
 
-  fun setMenuItemSelected(menuItemId: Int) {
-    menuItemStateList.forEach { menuItemState ->
-      menuItemState.selected.value = menuItemState.menuItem.id == menuItemId
-    }
-  }
 
   fun updateBadge(menuItemId: Int, menuItemBadgeInfo: MenuItemBadgeInfo?) {
     val menuItemState = menuItemStateList
@@ -179,10 +161,7 @@ class KurobaComposeIconPanel(
         .wrapContentHeight()
         .kurobaClickable(
           bounded = false,
-          onClick = {
-            onMenuItemClicked(menuItem.id)
-            setMenuItemSelected(menuItem.id)
-          }
+          onClick = { onMenuItemClicked(menuItem.id) }
         ),
     ) {
       val uncheckedColor = if (ThemeEngine.isNearToFullyBlackColor(themeEngine.chanTheme.primaryColor)) {
@@ -191,12 +170,7 @@ class KurobaComposeIconPanel(
         ThemeEngine.manipulateColor(themeEngine.chanTheme.primaryColor, .7f)
       }
 
-      val selected by menuItemState.selected
-      val targetColor = if (selected) {
-        Color.White
-      } else {
-        remember(key1 = uncheckedColor) { Color(uncheckedColor) }
-      }
+      val targetColor = remember(key1 = uncheckedColor) { Color(uncheckedColor) }
 
       val colorAnimated by animateColorAsState(
         targetValue = targetColor,
@@ -234,10 +208,7 @@ class KurobaComposeIconPanel(
         .weight(iconWeight)
         .kurobaClickable(
           bounded = false,
-          onClick = {
-            onMenuItemClicked(menuItem.id)
-            setMenuItemSelected(menuItem.id)
-          }
+          onClick = { onMenuItemClicked(menuItem.id) }
         ),
     ) {
       val uncheckedColor = if (ThemeEngine.isNearToFullyBlackColor(themeEngine.chanTheme.primaryColor)) {
@@ -246,12 +217,7 @@ class KurobaComposeIconPanel(
         ThemeEngine.manipulateColor(themeEngine.chanTheme.primaryColor, .7f)
       }
 
-      val selected by menuItemState.selected
-      val targetColor = if (selected) {
-        Color.White
-      } else {
-        remember(key1 = uncheckedColor) { Color(uncheckedColor) }
-      }
+      val targetColor = remember(key1 = uncheckedColor) { Color(uncheckedColor) }
 
       val colorAnimated by animateColorAsState(
         targetValue = targetColor,
@@ -364,7 +330,6 @@ class KurobaComposeIconPanel(
 
   private class MenuItemState(
     val menuItem: MenuItem,
-    val selected: MutableState<Boolean>,
     val menuItemBadge: MutableState<MenuItemBadge?> = mutableStateOf(null)
   )
 
