@@ -43,8 +43,8 @@ import com.github.k1rakishou.chan.features.bookmarks.epoxy.epoxyGridThreadBookma
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.epoxyListThreadBookmarkViewHolder
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
+import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
-import com.github.k1rakishou.chan.features.toolbar.HamburgMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
@@ -306,12 +306,8 @@ class BookmarksController(
     )
 
     toolbarState.enterDefaultMode(
-      leftItem = HamburgMenuItem(
-        onClick = {
-          globalUiStateHolder.updateDrawerState {
-            openDrawer()
-          }
-        }
+      leftItem = BackArrowMenuItem(
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.Id(R.string.controller_bookmarks)

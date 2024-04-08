@@ -21,7 +21,7 @@ import com.github.k1rakishou.chan.features.settings.setting.LinkSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.ListSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.RangeSettingV2
 import com.github.k1rakishou.chan.features.settings.setting.SettingV2
-import com.github.k1rakishou.chan.features.toolbar.HamburgMenuItem
+import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
@@ -53,8 +53,8 @@ class MainSettingsControllerV2(
   lateinit var appRestarter: AppRestarter
 
   lateinit var epoxyRecyclerView: EpoxyRecyclerView
-  lateinit var settingsCoordinator: SettingsCoordinator
 
+  private val settingsCoordinator by lazy { SettingsCoordinator(context, requireNavController(), mainControllerCallbacks) }
   private val defaultScreen = MainScreen
 
   private var hasPendingRestart = false
@@ -89,12 +89,16 @@ class MainSettingsControllerV2(
       )
     )
 
+    settingsCoordinator.onCreate()
+
     toolbarState.enterDefaultMode(
-      leftItem = HamburgMenuItem(
+      leftItem = BackArrowMenuItem(
         onClick = {
-          globalUiStateHolder.updateDrawerState {
-            openDrawer()
+          if (settingsCoordinator.onBack()) {
+            return@BackArrowMenuItem
           }
+
+          requireNavController().popController()
         }
       ),
       middleContent = ToolbarMiddleContent.Title(
@@ -108,9 +112,6 @@ class MainSettingsControllerV2(
         )
       }
     )
-
-    settingsCoordinator = SettingsCoordinator(context, requireNavController(), mainControllerCallbacks)
-    settingsCoordinator.onCreate()
 
     compositeDisposable.add(
       settingsCoordinator.listenForRenderScreenActions()

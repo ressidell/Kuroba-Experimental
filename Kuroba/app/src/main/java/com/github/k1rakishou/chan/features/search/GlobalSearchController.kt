@@ -21,7 +21,7 @@ import com.github.k1rakishou.chan.features.search.epoxy.epoxyBoardSelectionButto
 import com.github.k1rakishou.chan.features.search.epoxy.epoxyButtonView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchInputView
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchSiteView
-import com.github.k1rakishou.chan.features.toolbar.HamburgMenuItem
+import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
@@ -79,12 +79,8 @@ class GlobalSearchController(
     )
 
     toolbarState.enterDefaultMode(
-      leftItem = HamburgMenuItem(
-        onClick = {
-          globalUiStateHolder.updateDrawerState {
-            openDrawer()
-          }
-        }
+      leftItem = BackArrowMenuItem(
+        onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
         title = ToolbarText.Id(R.string.controller_search)
