@@ -108,7 +108,6 @@ import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
-import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.TabHostController
@@ -446,25 +445,6 @@ class MainController(
     childController.onShow()
   }
 
-  private fun popChildController(isFromOnBack: Boolean): Boolean {
-    if (childControllers.isEmpty()) {
-      return false
-    }
-
-    val prevController = childControllers.last()
-
-    if (isFromOnBack) {
-      if (prevController is NavigationController && prevController.onBack()) {
-        return true
-      }
-    }
-
-    prevController.onHide()
-    removeChildController(prevController)
-
-    return true
-  }
-
   fun openGlobalSearchController() {
     val globalSearchController = GlobalSearchController(context, startActivityCallback)
     mainToolbarNavigationController?.pushController(globalSearchController)
@@ -537,10 +517,6 @@ class MainController(
   }
 
   override fun onBack(): Boolean {
-    if (popChildController(true)) {
-      return true
-    }
-
     if (drawerViewModel.selectedHistoryEntries.isNotEmpty()) {
       drawerViewModel.clearSelection()
       return true
