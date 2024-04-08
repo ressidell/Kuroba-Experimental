@@ -1770,7 +1770,7 @@ class MainController(
     val bottomNavViewButtons = PersistableChanState.reorderableBottomNavViewButtons.get()
 
     return bottomNavViewButtons.bottomNavViewButtons().mapNotNull { bottomNavViewButton ->
-      return@map when (bottomNavViewButton) {
+      return@mapNotNull when (bottomNavViewButton) {
         BottomNavViewButton.Search -> {
           KurobaComposeIconPanel.MenuItem(
             id = R.id.action_search,
