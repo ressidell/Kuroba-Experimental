@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.ui.unit.Dp
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.SerializedCoroutineExecutor
 import com.github.k1rakishou.chan.core.helper.DialogFactory
@@ -226,7 +227,9 @@ abstract class ThreadController(
 
     controllerScope.launch {
       globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow
-        .onEach { replyLayoutVisibilityEvents -> onReplyLayoutVisibilityEvent(replyLayoutVisibilityEvents) }
+        .onEach { replyLayoutVisibilityEvents ->
+          onReplyLayoutVisibilityEvent(replyLayoutVisibilityEvents)
+        }
         .collect()
     }
 
@@ -565,24 +568,29 @@ abstract class ThreadController(
   }
 
   private fun onReplyLayoutVisibilityEvent(replyLayoutVisibilityEvents: ReplyLayoutVisibilityStates) {
-    val currentFocusedDescriptor = currentOpenedDescriptorStateManager.currentFocusedDescriptor
-      ?: return
-
     val currentDescriptor = chanDescriptor
       ?: return
 
-    if (currentFocusedDescriptor != currentDescriptor) {
-      return
-    }
-
     val isInReplyLayoutMode = kurobaToolbarState.isInReplyMode()
-    val anyReplyLayoutOpenedOrExpanded = replyLayoutVisibilityEvents.isOpenedOrExpandedForDescriptor(currentDescriptor)
 
-    if (isInReplyLayoutMode == anyReplyLayoutOpenedOrExpanded) {
+    val currentReplyLayoutIsOpened = if (ChanSettings.isSplitLayoutMode()) {
+      replyLayoutVisibilityEvents.isOpenedOrExpandedForDescriptor(currentDescriptor)
+    } else {
+      val currentFocusedDescriptor = currentOpenedDescriptorStateManager.currentFocusedDescriptor
+        ?: return
+
+      if (currentFocusedDescriptor != currentDescriptor) {
+        return
+      }
+
+      replyLayoutVisibilityEvents.isOpenedOrExpandedForDescriptor(currentDescriptor)
+    }
+
+    if (isInReplyLayoutMode == currentReplyLayoutIsOpened) {
       return
     }
 
-    if (anyReplyLayoutOpenedOrExpanded) {
+    if (currentReplyLayoutIsOpened) {
       enterReplyLayoutToolbarMode(currentDescriptor)
       return
     }

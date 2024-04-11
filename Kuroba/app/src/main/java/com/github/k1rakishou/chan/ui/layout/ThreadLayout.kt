@@ -494,11 +494,11 @@ class ThreadLayout @JvmOverloads constructor(
       "totalDuration=${totalDuration}")
 
     if (!showPostsResult.result) {
-      switchVisible(State.EMPTY)
+      switchThreadLayoutState(State.EMPTY)
       return
     }
 
-    switchVisible(State.CONTENT)
+    switchThreadLayoutState(State.CONTENT)
     callback.onShowPosts()
   }
 
@@ -524,7 +524,7 @@ class ThreadLayout @JvmOverloads constructor(
     if (state == State.CONTENT) {
       threadListLayout.showError(errorMessage)
     } else {
-      switchVisible(State.ERROR)
+      switchThreadLayoutState(State.ERROR)
       errorText.text = errorMessage
 
       if (error.isRecoverableError()) {
@@ -559,11 +559,11 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   override fun showLoading(animateTransition: Boolean) {
-    switchVisible(State.LOADING, animateTransition = animateTransition)
+    switchThreadLayoutState(State.LOADING, animateTransition = animateTransition)
   }
 
   override fun showEmpty() {
-    switchVisible(State.EMPTY)
+    switchThreadLayoutState(State.EMPTY)
   }
 
   override fun showPostInfo(info: String) {
@@ -1197,7 +1197,7 @@ class ThreadLayout @JvmOverloads constructor(
     threadListLayout.showCaptcha(chanDescriptor, replyMode, autoReply, afterPostingAttempt, onFinished)
   }
 
-  private fun switchVisible(state: State, animateTransition: Boolean = true) {
+  private fun switchThreadLayoutState(state: State, animateTransition: Boolean = true) {
     if (this.state == state) {
       return
     }
