@@ -78,6 +78,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -397,9 +398,19 @@ class ThreadListLayout @JvmOverloads constructor(
     attachToolbarScroll(attach = true)
 
     coroutineScope.launch {
-      globalUiStateHolder.replyLayout.state(threadControllerType).height
-        .onEach { setRecyclerViewPadding() }
-        .collect()
+      if (ChanSettings.isSplitLayoutMode()) {
+        combine(
+          flow = globalUiStateHolder.replyLayout.state(ThreadControllerType.Catalog).height,
+          flow2 = globalUiStateHolder.replyLayout.state(ThreadControllerType.Thread).height,
+          transform = { catalogReplyLayoutHeight, threadReplyLayoutHeight -> catalogReplyLayoutHeight to threadReplyLayoutHeight }
+        )
+          .onEach { setRecyclerViewPadding() }
+          .collect()
+      } else {
+        globalUiStateHolder.replyLayout.state(threadControllerType).height
+          .onEach { setRecyclerViewPadding() }
+          .collect()
+      }
     }
 
     coroutineScope.launch {
@@ -626,25 +637,25 @@ class ThreadListLayout @JvmOverloads constructor(
 
   fun gainedFocus(
     nowFocused: ThreadControllerType,
-    isThreadVisible: Boolean
+    isContentVisible: Boolean
   ) {
     threadPresenter?.gainedFocus(nowFocused)
     snowLayout.gainedFocus()
 
-    if (isThreadVisible) {
+    if (isContentVisible) {
       showToolbarIfNeeded()
     }
   }
 
-  fun onShown(nowFocused: ThreadControllerType, isThreadVisible: Boolean) {
-    if (nowFocused == ThreadControllerType.Thread && isThreadVisible) {
+  fun onShown(nowFocused: ThreadControllerType, isContentVisible: Boolean) {
+    if (nowFocused == ThreadControllerType.Thread && isContentVisible) {
       threadPresenter?.handleMarkedPost()
     }
 
     snowLayout.onShown()
   }
 
-  fun onHidden(nowFocused: ThreadControllerType, isThreadVisible: Boolean) {
+  fun onHidden(nowFocused: ThreadControllerType, isContentVisible: Boolean) {
     snowLayout.onHidden()
   }
 
@@ -875,9 +886,6 @@ class ThreadListLayout @JvmOverloads constructor(
   }
 
   private fun setRecyclerViewPadding() {
-    val threadControllerType = currentThreadControllerType
-      ?: return
-
     val defaultPadding = if (boardPostViewMode == BoardPostViewMode.GRID || boardPostViewMode == BoardPostViewMode.STAGGER) {
       dp(1f)
     } else {
@@ -894,7 +902,20 @@ class ThreadListLayout @JvmOverloads constructor(
     var recyclerBottom = defaultPadding
 
     if (replyLayoutView.isOpened()) {
-      val replyLayoutViewHeight = globalUiStateHolder.replyLayout.state(threadControllerType).height.value
+      val replyLayoutViewHeight = if (ChanSettings.isSplitLayoutMode()) {
+        maxOf(
+          globalUiStateHolder.replyLayout.state(ThreadControllerType.Catalog).height.value,
+          globalUiStateHolder.replyLayout.state(ThreadControllerType.Thread).height.value,
+        )
+      } else {
+        val threadControllerType = currentThreadControllerType
+        if (threadControllerType == null) {
+          return
+        }
+
+        globalUiStateHolder.replyLayout.state(threadControllerType).height.value
+      }
+
       recyclerBottom += replyLayoutViewHeight
     } else {
       recyclerBottom += globalWindowInsetsManager.bottom()

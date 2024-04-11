@@ -55,13 +55,6 @@ internal class ReplyLayoutGlobalState : IReplyLayoutGlobalState.Readable, IReply
     }
   }
 
-  override fun updateReplyLayoutForController(threadControllerType: ThreadControllerType, updater: (IIndividualReplyLayoutGlobalState.Writable) -> Unit) {
-    when (threadControllerType) {
-      ThreadControllerType.Catalog -> updater(catalogReplyLayoutState)
-      ThreadControllerType.Thread -> updater(threadReplyLayoutState)
-    }
-  }
-
   override fun allReplyLayoutCollapsed(): Boolean {
     return catalogReplyLayoutState.isCollapsed() && threadReplyLayoutState.isCollapsed()
   }
@@ -74,4 +67,15 @@ internal class ReplyLayoutGlobalState : IReplyLayoutGlobalState.Readable, IReply
     return catalogReplyLayoutState.boundsContainTouchPosition(touchPosition) ||
       threadReplyLayoutState.boundsContainTouchPosition(touchPosition)
   }
+
+  override fun updateReplyLayoutForController(
+    threadControllerType: ThreadControllerType,
+    updater: (IIndividualReplyLayoutGlobalState.Writable) -> Unit
+  ) {
+    when (threadControllerType) {
+      ThreadControllerType.Catalog -> updater(catalogReplyLayoutState)
+      ThreadControllerType.Thread -> updater(threadReplyLayoutState)
+    }
+  }
+
 }

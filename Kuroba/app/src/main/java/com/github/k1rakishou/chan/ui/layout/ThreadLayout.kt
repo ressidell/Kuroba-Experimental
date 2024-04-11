@@ -390,7 +390,7 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   fun canChildScrollUp(): Boolean {
-    if (state != State.THREAD) {
+    if (state != State.CONTENT) {
       return true
     }
 
@@ -420,15 +420,15 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   fun gainedFocus(nowFocused: ThreadControllerType) {
-    threadListLayout.gainedFocus(nowFocused, state == State.THREAD)
+    threadListLayout.gainedFocus(nowFocused, state == State.CONTENT)
   }
 
   fun onShown(nowFocused: ThreadControllerType) {
-    threadListLayout.onShown(nowFocused, state == State.THREAD)
+    threadListLayout.onShown(nowFocused, state == State.CONTENT)
   }
 
   fun onHidden(nowFocused: ThreadControllerType) {
-    threadListLayout.onHidden(nowFocused, state == State.THREAD)
+    threadListLayout.onHidden(nowFocused, state == State.CONTENT)
   }
 
   fun setBoardPostViewMode(boardPostViewMode: BoardPostViewMode) {
@@ -475,7 +475,7 @@ class ThreadLayout @JvmOverloads constructor(
       return
     }
 
-    val initial = state != State.THREAD
+    val initial = state != State.CONTENT
     val (width, _) = loadView.awaitUntilGloballyLaidOutAndGetSize(waitForWidth = true)
 
     if (refreshPostPopupHelperPosts && postPopupHelper.isOpen) {
@@ -498,7 +498,7 @@ class ThreadLayout @JvmOverloads constructor(
       return
     }
 
-    switchVisible(State.THREAD)
+    switchVisible(State.CONTENT)
     callback.onShowPosts()
   }
 
@@ -521,7 +521,7 @@ class ThreadLayout @JvmOverloads constructor(
 
     val errorMessage = error.errorMessage
 
-    if (state == State.THREAD) {
+    if (state == State.CONTENT) {
       threadListLayout.showError(errorMessage)
     } else {
       switchVisible(State.ERROR)
@@ -759,7 +759,7 @@ class ThreadLayout @JvmOverloads constructor(
   override fun scrollTo(displayPosition: Int, smooth: Boolean) {
     if (postPopupHelper.isOpen) {
       postPopupHelper.scrollTo(displayPosition, smooth)
-    } else if (state == State.THREAD) {
+    } else if (state == State.CONTENT) {
       threadListLayout.scrollTo(displayPosition)
     }
   }
@@ -1203,7 +1203,7 @@ class ThreadLayout @JvmOverloads constructor(
     }
 
     if (this.state != null) {
-      if (this.state == State.THREAD) {
+      if (this.state == State.CONTENT) {
         threadListLayout.cleanup()
         postPopupHelper.popAll()
 
@@ -1235,7 +1235,7 @@ class ThreadLayout @JvmOverloads constructor(
 
         progressStepText.text = ""
       }
-      State.THREAD -> {
+      State.CONTENT -> {
         callback.hideSwipeRefreshLayout()
         loadView.setView(threadListLayout, animateTransition)
       }
@@ -1419,8 +1419,10 @@ class ThreadLayout @JvmOverloads constructor(
   enum class State {
     EMPTY,
     LOADING,
-    THREAD,
-    ERROR
+    CONTENT,
+    ERROR;
+
+    fun isNotInContentState(): Boolean = this != CONTENT
   }
 
   interface ThreadLayoutCallback {

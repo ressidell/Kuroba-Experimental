@@ -117,10 +117,18 @@ class HidingFloatingActionButton
   }
 
   fun setThreadControllerType(threadControllerType: ThreadControllerType) {
+    check(_threadControllerType == null) {
+      "Attempt to set threadControllerType twice! current: ${_threadControllerType}, new: ${threadControllerType}"
+    }
+
     _threadControllerType = threadControllerType
   }
 
   fun setSnackbarClass(snackbarClass: SnackbarClass) {
+    check(_snackbarClass == null) {
+      "Attempt to set snackbarClass twice! current: ${_snackbarClass}, snackbarClass: ${snackbarClass}"
+    }
+
     _snackbarClass = snackbarClass
   }
 
@@ -219,7 +227,7 @@ class HidingFloatingActionButton
         )
       }
         .onEach { fabVisibilityInfo ->
-          if (fabVisibilityInfo.cannotHideFab()) {
+          if (fabVisibilityInfo.isFabForceVisible(threadControllerType)) {
             setAlphaFast(1f)
             return@onEach
           }
@@ -290,9 +298,21 @@ class HidingFloatingActionButton
     val fabAlpha: Float
       get() = scrollProgress
 
-    fun cannotHideFab(): Boolean {
+    fun isFabForceVisible(threadControllerType: ThreadControllerType): Boolean {
       if (!fabEnabled) {
         return false
+      }
+
+      if (ChanSettings.isSplitLayoutMode()) {
+        if (isCurrentReplyLayoutOpened(threadControllerType)) {
+          return false
+        }
+
+        if (threadLayoutState.isNotInContentState()) {
+          return false
+        }
+
+        // fallthrough
       }
 
       return !ChanSettings.canCollapseToolbar()
@@ -303,15 +323,20 @@ class HidingFloatingActionButton
         return true
       }
 
-      when (threadLayoutState) {
-        ThreadLayout.State.EMPTY,
-        ThreadLayout.State.LOADING,
-        ThreadLayout.State.ERROR -> {
+      if (ChanSettings.isSplitLayoutMode()) {
+        if (isCurrentReplyLayoutOpened(threadControllerType)) {
           return true
         }
-        ThreadLayout.State.THREAD -> {
-          // no-op
+
+        if (threadLayoutState.isNotInContentState()) {
+          return true
         }
+
+        return false
+      }
+
+      if (threadLayoutState.isNotInContentState()) {
+        return true
       }
 
       if (focusedController != threadControllerType) {
@@ -322,17 +347,8 @@ class HidingFloatingActionButton
         return true
       }
 
-      when (threadControllerType) {
-        ThreadControllerType.Catalog -> {
-          if (replyLayoutVisibilityStates.catalog.isOpenedOrExpanded()) {
-            return true
-          }
-        }
-        ThreadControllerType.Thread -> {
-          if (replyLayoutVisibilityStates.thread.isOpenedOrExpanded()) {
-            return true
-          }
-        }
+      if (isCurrentReplyLayoutOpened(threadControllerType)) {
+        return true
       }
 
       if (snackbarVisible) {
@@ -340,6 +356,13 @@ class HidingFloatingActionButton
       }
 
       return false
+    }
+
+    private fun isCurrentReplyLayoutOpened(threadControllerType: ThreadControllerType): Boolean {
+      return when (threadControllerType) {
+        ThreadControllerType.Catalog -> replyLayoutVisibilityStates.catalog.isOpenedOrExpanded()
+        ThreadControllerType.Thread -> replyLayoutVisibilityStates.thread.isOpenedOrExpanded()
+      }
     }
 
   }

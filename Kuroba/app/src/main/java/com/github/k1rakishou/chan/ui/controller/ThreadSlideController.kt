@@ -308,14 +308,16 @@ class ThreadSlideController(
   }
 
   override fun onBack(): Boolean {
-    if (!isLeftOpen()) {
-      if (rightController != null && rightController?.onBack() == true) {
+    if (slidingPaneLayout != null) {
+      if (isRightOpen()) {
+        if (rightController != null && rightController?.onBack() == true) {
+          return true
+        }
+
+        switchToController(true)
         return true
       }
 
-      switchToController(true)
-      return true
-    } else {
       if (leftController != null && leftController?.onBack() == true) {
         return true
       }
@@ -326,6 +328,10 @@ class ThreadSlideController(
 
   fun isLeftOpen(): Boolean {
     return slidingPaneLayout!!.isOpen
+  }
+
+  fun isRightOpen(): Boolean {
+    return !isLeftOpen()
   }
 
   private fun slideStateChanged(animated: Boolean = true) {

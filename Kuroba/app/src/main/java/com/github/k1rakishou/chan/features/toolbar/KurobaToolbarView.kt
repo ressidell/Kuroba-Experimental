@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import javax.inject.Inject
 
+// TODO: New toolbar. Fix all toolbar bugs when using SPLIT layout.
 class KurobaToolbarView @JvmOverloads constructor(
   context: Context,
   attrSet: AttributeSet? = null,
