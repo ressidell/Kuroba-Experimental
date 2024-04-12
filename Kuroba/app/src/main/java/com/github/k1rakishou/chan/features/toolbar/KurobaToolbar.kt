@@ -34,31 +34,37 @@ fun KurobaToolbar(
     return
   }
 
+  val overriddenTheme by kurobaToolbarState.overriddenTheme
+  val isThemeOverridden = overriddenTheme != null
+
   val chanTheme = kurobaToolbarState.overriddenTheme.value
     ?: LocalChanTheme.current
 
-  val windowInsets = if (kurobaToolbarState.overriddenTheme.value != null) {
+  val windowInsets = if (isThemeOverridden) {
     remember { KurobaWindowInsets() }
   } else {
     LocalWindowInsets.current
   }
 
-  val toolbarVisible by kurobaToolbarState.toolbarVisibleState.collectAsState(initial = false)
-  if (!toolbarVisible) {
-    return
-  }
+  if (!isThemeOverridden) {
+    val toolbarVisible by kurobaToolbarState.toolbarVisibleState.collectAsState(initial = false)
+    if (!toolbarVisible) {
+      return
+    }
 
-  val toolbarFullyInvisible by remember(key1 = kurobaToolbarState) {
-    derivedStateOf {
-      kurobaToolbarState.toolbarAlpha.floatValue <= 0f
+    val toolbarFullyInvisible by remember(key1 = kurobaToolbarState) {
+      derivedStateOf {
+        kurobaToolbarState.toolbarAlpha.floatValue <= 0f
+      }
+    }
+
+    if (toolbarFullyInvisible) {
+      return
     }
   }
 
-  if (toolbarFullyInvisible) {
-    return
-  }
-
   KurobaContainerToolbarContent(
+    isThemeOverridden = isThemeOverridden,
     chanTheme = chanTheme,
     windowInsets = windowInsets,
     kurobaToolbarState = kurobaToolbarState

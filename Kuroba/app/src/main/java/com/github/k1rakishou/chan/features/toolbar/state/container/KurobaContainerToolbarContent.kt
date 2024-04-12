@@ -24,6 +24,7 @@ import com.github.k1rakishou.core_themes.ChanTheme
 
 @Composable
 fun KurobaContainerToolbarContent(
+  isThemeOverridden: Boolean,
   chanTheme: ChanTheme,
   windowInsets: KurobaWindowInsets,
   kurobaToolbarState: KurobaToolbarState,
@@ -32,8 +33,10 @@ fun KurobaContainerToolbarContent(
   val toolbarHeight = dimensionResource(id = R.dimen.toolbar_height)
   val totalToolbarHeight = windowInsets.top + toolbarHeight
 
-  LaunchedEffect(totalToolbarHeight) {
-    kurobaToolbarState.onToolbarHeightChanged(totalToolbarHeight)
+  if (!isThemeOverridden) {
+    LaunchedEffect(totalToolbarHeight) {
+      kurobaToolbarState.onToolbarHeightChanged(totalToolbarHeight)
+    }
   }
 
   val toolbarStates by kurobaToolbarState.toolbarStateList
