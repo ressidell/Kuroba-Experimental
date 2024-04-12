@@ -297,7 +297,7 @@ class ThemeControllerHelper(
       toolbar,
       LinearLayout.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT,
-        AppModuleAndroidUtils.getDimen(R.dimen.toolbar_height)
+        ViewGroup.LayoutParams.WRAP_CONTENT
       )
     )
     linearLayout.addView(

@@ -26,18 +26,18 @@ import com.github.k1rakishou.chan.ui.compose.clearText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.freeFocusSafe
-import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.requestFocusSafe
+import com.github.k1rakishou.core_themes.ChanTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun KurobaSearchToolbarContent(
   modifier: Modifier,
+  chanTheme: ChanTheme,
   state: KurobaSearchToolbarSubState,
   onCloseSearchToolbarButtonClicked: () -> Unit
 ) {
-  val chanTheme = LocalChanTheme.current
   val focusRequester = remember { FocusRequester() }
   val coroutineScope = rememberCoroutineScope()
 
@@ -70,6 +70,7 @@ fun KurobaSearchToolbarContent(
     Spacer(modifier = Modifier.width(12.dp))
 
     SearchIcon(
+      chanTheme = chanTheme,
       searchQueryState = searchQueryState,
       onCloseSearchToolbarButtonClicked = onCloseSearchToolbarButtonClicked
     )
@@ -98,11 +99,10 @@ fun KurobaSearchToolbarContent(
 
 @Composable
 private fun SearchIcon(
+  chanTheme: ChanTheme,
   searchQueryState: TextFieldState,
   onCloseSearchToolbarButtonClicked: () -> Unit
 ) {
-  val chanTheme = LocalChanTheme.current
-
   val searchQuery by searchQueryState.textAsFlow().collectAsState(initial = "")
 
   AnimatedContent(targetState = searchQuery.isEmpty()) { searchQueryEmpty ->

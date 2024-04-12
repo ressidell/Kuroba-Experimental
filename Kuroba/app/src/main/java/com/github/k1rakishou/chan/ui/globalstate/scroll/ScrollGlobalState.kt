@@ -55,22 +55,18 @@ class ScrollGlobalState(
   }
 
   override fun attachToLazyList(lazyListState: LazyListState) {
-    // TODO: New toolbar.
     Logger.verbose(TAG) { "attachToLazyList()" }
   }
 
   override fun attachToLazyGrid(lazyGridState: LazyGridState) {
-    // TODO: New toolbar.
     Logger.verbose(TAG) { "lazyGridState()" }
   }
 
   override fun attachToLazyStaggeredGrid(lazyStaggeredGridState: LazyStaggeredGridState) {
-    // TODO: New toolbar.
     Logger.verbose(TAG) { "attachToLazyStaggeredGrid()" }
   }
 
   override fun detachFromLazyList() {
-    // TODO: New toolbar.
     Logger.verbose(TAG) { "detachFromLazyList()" }
   }
 

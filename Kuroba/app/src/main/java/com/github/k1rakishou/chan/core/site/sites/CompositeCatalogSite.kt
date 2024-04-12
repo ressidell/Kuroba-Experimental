@@ -50,6 +50,8 @@ class CompositeCatalogSite : Site {
   @Inject
   lateinit var appConstants: AppConstants
 
+  private val _siteIcon by lazy { SiteIcon.fromDrawable(_imageLoaderV2, R.drawable.composition_icon) }
+
   override val isSynthetic: Boolean
     get() = true
 
@@ -208,7 +210,7 @@ class CompositeCatalogSite : Site {
 
   override fun siteDescriptor(): SiteDescriptor = SITE_DESCRIPTOR
 
-  override fun icon(): SiteIcon = SiteIcon.fromDrawable(_imageLoaderV2, R.drawable.composition_icon)
+  override fun icon(): SiteIcon = _siteIcon
 
   override fun boardsType(): Site.BoardsType = Site.BoardsType.STATIC
 
@@ -235,8 +237,6 @@ class CompositeCatalogSite : Site {
   override fun actions(): SiteActions = noOpActions
 
   override fun commentParserType(): CommentParserType = CommentParserType.Default
-
-  override fun board(code: String): ChanBoard? = null
 
   override fun getChunkDownloaderSiteProperties(): ChunkDownloaderSiteProperties {
     return ChunkDownloaderSiteProperties(

@@ -14,10 +14,12 @@ import com.github.k1rakishou.chan.features.toolbar.AbstractToolbarMenuOverflowIt
 import com.github.k1rakishou.chan.features.toolbar.MoreVerticalMenuItem
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarTitleWithSubtitle
+import com.github.k1rakishou.core_themes.ChanTheme
 
 @Composable
 fun KurobaSelectionToolbarContent(
   modifier: Modifier,
+  chanTheme: ChanTheme,
   state: KurobaSelectionToolbarSubState,
   showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
@@ -39,6 +41,7 @@ fun KurobaSelectionToolbarContent(
 
       ToolbarClickableIcon(
         toolbarMenuItem = leftIcon,
+        chanTheme = chanTheme,
         onClick = { leftIcon.onClick(leftIcon) }
       )
     }
@@ -50,7 +53,8 @@ fun KurobaSelectionToolbarContent(
           .padding(start = 12.dp),
         title = title,
         subtitle = null,
-        scrollableTitle = false
+        scrollableTitle = false,
+        chanTheme = chanTheme,
       )
     } else {
       Spacer(modifier = Modifier.weight(1f))
@@ -71,6 +75,7 @@ fun KurobaSelectionToolbarContent(
 
           ToolbarClickableIcon(
             toolbarMenuItem = rightIcon,
+            chanTheme = chanTheme,
             onClick = { rightIcon.onClick(rightIcon) }
           )
         }
@@ -84,6 +89,7 @@ fun KurobaSelectionToolbarContent(
 
         ToolbarClickableIcon(
           toolbarMenuItem = overflowIcon,
+          chanTheme = chanTheme,
           onClick = { showFloatingMenu(overflowMenuItems) }
         )
       }

@@ -36,8 +36,8 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
-import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.helper.PinHelper
+import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -48,9 +48,9 @@ internal fun ToolbarTitleWithSubtitle(
   modifier: Modifier,
   title: ToolbarText,
   subtitle: ToolbarText?,
+  chanTheme: ChanTheme,
   scrollableTitle: Boolean
 ) {
-  val chanTheme = LocalChanTheme.current
   val textColor = chanTheme.onToolbarBackgroundComposeColor
 
   Column(
@@ -107,10 +107,9 @@ internal fun ToolbarClickableIcon(
   toolbarMenuItem: ToolbarMenuItem,
   modifier: Modifier = Modifier,
   enabled: Boolean = true,
+  chanTheme: ChanTheme,
   onClick: () -> Unit
 ) {
-  val chanTheme = LocalChanTheme.current
-
   val visible by toolbarMenuItem.visibleState
   if (!visible) {
     return
@@ -161,9 +160,10 @@ internal fun ToolbarClickableIcon(
 }
 
 @Composable
-internal fun BoxScope.ToolbarBadgeContent(toolbarBadge: ToolbarBadge) {
-  val chanTheme = LocalChanTheme.current
-
+internal fun BoxScope.ToolbarBadgeContent(
+  chanTheme: ChanTheme,
+  toolbarBadge: ToolbarBadge
+) {
   val counter by animateIntAsState(
     targetValue = toolbarBadge.counter,
     label = "Menu item badge counter animation"

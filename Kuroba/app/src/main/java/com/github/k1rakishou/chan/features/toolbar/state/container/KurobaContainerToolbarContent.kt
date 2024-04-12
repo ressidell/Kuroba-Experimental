@@ -19,17 +19,16 @@ import com.github.k1rakishou.chan.features.toolbar.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.container.transition.KurobaToolbarTransitionInstant
 import com.github.k1rakishou.chan.features.toolbar.state.container.transition.KurobaToolbarTransitionProgress
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
-import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
+import com.github.k1rakishou.chan.ui.compose.providers.KurobaWindowInsets
+import com.github.k1rakishou.core_themes.ChanTheme
 
 @Composable
 fun KurobaContainerToolbarContent(
+  chanTheme: ChanTheme,
+  windowInsets: KurobaWindowInsets,
   kurobaToolbarState: KurobaToolbarState,
   childToolbar: @Composable (KurobaToolbarSubState?) -> Unit
 ) {
-  val chanTheme = LocalChanTheme.current
-  val windowInsets = LocalWindowInsets.current
-
   val toolbarHeight = dimensionResource(id = R.dimen.toolbar_height)
   val totalToolbarHeight = windowInsets.top + toolbarHeight
 

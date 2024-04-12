@@ -36,8 +36,6 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.core_logger.Logger
-import com.github.k1rakishou.model.data.board.ChanBoard
-import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import com.github.k1rakishou.model.data.site.SiteBoards
 import com.github.k1rakishou.persist_state.ReplyMode
 import com.github.k1rakishou.prefs.BooleanSetting
@@ -199,11 +197,6 @@ abstract class SiteBase : Site, CoroutineScope {
         throw result.error
       }
     }
-  }
-
-  override fun board(code: String): ChanBoard? {
-    val boardDescriptor = BoardDescriptor.create(siteDescriptor(), code)
-    return boardManager.byBoardDescriptor(boardDescriptor)
   }
 
   override fun <T : Setting<*>> getSettingBySettingId(settingId: SiteSetting.SiteSettingId): T? {

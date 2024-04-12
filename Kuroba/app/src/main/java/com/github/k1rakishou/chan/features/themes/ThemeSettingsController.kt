@@ -435,13 +435,14 @@ class ThemeSettingsController(context: Context) : Controller(context) {
     }
 
     private suspend fun createSimpleThreadViewInternal(
-      theme: ChanTheme,
+      chanTheme: ChanTheme,
       postCellDataWidthNoPaddings: Int
     ): CoordinatorLayout {
       val kurobaToolbarState = KurobaToolbarState(
-        controllerKey = ControllerKey("${controllerKey.key}_${theme.name}"),
+        controllerKey = ControllerKey("${controllerKey.key}_${chanTheme.name}"),
         globalUiStateHolder = globalUiStateHolder
       )
+      kurobaToolbarState.overrideChanTheme(chanTheme)
 
       kurobaToolbarState.enterDefaultMode(
         leftItem = BackArrowMenuItem(
@@ -450,16 +451,16 @@ class ThemeSettingsController(context: Context) : Controller(context) {
           }
         ),
         middleContent = ToolbarMiddleContent.Title(
-          title = ToolbarText.String(theme.name)
+          title = ToolbarText.String(chanTheme.name)
         ),
         menuBuilder = {
-          withOverflowMenu { addItems(theme) }
+          withOverflowMenu { addItems(chanTheme) }
         }
       )
 
       return themeControllerHelper.createSimpleThreadView(
         context = context,
-        theme = theme,
+        theme = chanTheme,
         kurobaToolbarState = kurobaToolbarState,
         navigationController = requireNavController(),
         options = ThemeControllerHelper.Options(

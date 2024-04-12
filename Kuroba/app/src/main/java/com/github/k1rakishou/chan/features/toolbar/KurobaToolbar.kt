@@ -21,6 +21,9 @@ import com.github.k1rakishou.chan.features.toolbar.state.selection.KurobaSelecti
 import com.github.k1rakishou.chan.features.toolbar.state.selection.KurobaSelectionToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadToolbarContent
 import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadToolbarSubState
+import com.github.k1rakishou.chan.ui.compose.providers.KurobaWindowInsets
+import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 
 @Composable
 fun KurobaToolbar(
@@ -29,6 +32,15 @@ fun KurobaToolbar(
 ) {
   if (kurobaToolbarState == null) {
     return
+  }
+
+  val chanTheme = kurobaToolbarState.overriddenTheme.value
+    ?: LocalChanTheme.current
+
+  val windowInsets = if (kurobaToolbarState.overriddenTheme.value != null) {
+    remember { KurobaWindowInsets() }
+  } else {
+    LocalWindowInsets.current
   }
 
   val toolbarVisible by kurobaToolbarState.toolbarVisibleState.collectAsState(initial = false)
@@ -46,7 +58,11 @@ fun KurobaToolbar(
     return
   }
 
-  KurobaContainerToolbarContent(kurobaToolbarState) { childToolbarState ->
+  KurobaContainerToolbarContent(
+    chanTheme = chanTheme,
+    windowInsets = windowInsets,
+    kurobaToolbarState = kurobaToolbarState
+  ) { childToolbarState ->
     when (childToolbarState) {
       is KurobaContainerToolbarSubState -> {
         error("Must be a toolbar container")
@@ -54,6 +70,7 @@ fun KurobaToolbar(
       is KurobaCatalogToolbarSubState -> {
         KurobaCatalogToolbarContent(
           modifier = Modifier.fillMaxSize(),
+          chanTheme = chanTheme,
           state = childToolbarState,
           showFloatingMenu = showFloatingMenu
         )
@@ -61,6 +78,7 @@ fun KurobaToolbar(
       is KurobaThreadToolbarSubState -> {
         KurobaThreadToolbarContent(
           modifier = Modifier.fillMaxSize(),
+          chanTheme = chanTheme,
           state = childToolbarState,
           showFloatingMenu = showFloatingMenu
         )
@@ -68,6 +86,7 @@ fun KurobaToolbar(
       is KurobaDefaultToolbarSubState -> {
         KurobaDefaultToolbarContent(
           modifier = Modifier.fillMaxSize(),
+          chanTheme = chanTheme,
           state = childToolbarState,
           showFloatingMenu = showFloatingMenu
         )
@@ -75,6 +94,7 @@ fun KurobaToolbar(
       is KurobaSearchToolbarSubState -> {
         KurobaSearchToolbarContent(
           modifier = Modifier.fillMaxSize(),
+          chanTheme = chanTheme,
           state = childToolbarState,
           onCloseSearchToolbarButtonClicked = {
             if (kurobaToolbarState.isInSearchMode()) {
@@ -86,6 +106,7 @@ fun KurobaToolbar(
       is KurobaSelectionToolbarSubState -> {
         KurobaSelectionToolbarContent(
           modifier = Modifier.fillMaxSize(),
+          chanTheme = chanTheme,
           state = childToolbarState,
           showFloatingMenu = showFloatingMenu
         )
@@ -93,6 +114,7 @@ fun KurobaToolbar(
       is KurobaReplyToolbarSubState -> {
         KurobaReplyToolbarContent(
           modifier = Modifier.fillMaxSize(),
+          chanTheme = chanTheme,
           state = childToolbarState,
           showFloatingMenu = showFloatingMenu
         )

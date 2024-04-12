@@ -16,10 +16,12 @@ import com.github.k1rakishou.chan.features.toolbar.MoreVerticalMenuItem
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarBadgeContent
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarTitleWithSubtitle
+import com.github.k1rakishou.core_themes.ChanTheme
 
 @Composable
 fun KurobaThreadToolbarContent(
   modifier: Modifier,
+  chanTheme: ChanTheme,
   state: KurobaThreadToolbarSubState,
   showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
@@ -50,6 +52,7 @@ fun KurobaThreadToolbarContent(
       Box {
         ToolbarClickableIcon(
           toolbarMenuItem = leftIcon,
+          chanTheme = chanTheme,
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor
 
@@ -60,7 +63,10 @@ fun KurobaThreadToolbarContent(
         )
 
         if (toolbarBadge != null) {
-          ToolbarBadgeContent(toolbarBadge)
+          ToolbarBadgeContent(
+            chanTheme = chanTheme,
+            toolbarBadge = toolbarBadge
+          )
         }
       }
     }
@@ -72,6 +78,7 @@ fun KurobaThreadToolbarContent(
           .padding(start = 12.dp),
         title = title,
         subtitle = subtitle,
+        chanTheme = chanTheme,
         scrollableTitle = scrollableTitle
       )
     } else {
@@ -93,6 +100,7 @@ fun KurobaThreadToolbarContent(
 
           ToolbarClickableIcon(
             toolbarMenuItem = rightIcon,
+            chanTheme = chanTheme,
             onClick = {
               val iconClickInterceptor = state.iconClickInterceptor
 
@@ -112,6 +120,7 @@ fun KurobaThreadToolbarContent(
 
         ToolbarClickableIcon(
           toolbarMenuItem = overflowIcon,
+          chanTheme = chanTheme,
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor
 

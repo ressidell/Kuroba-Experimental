@@ -23,11 +23,12 @@ import com.github.k1rakishou.chan.features.toolbar.state.ToolbarBadgeContent
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarTitleWithSubtitle
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
-import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.core_themes.ChanTheme
 
 @Composable
 fun KurobaCatalogToolbarContent(
   modifier: Modifier,
+  chanTheme: ChanTheme,
   state: KurobaCatalogToolbarSubState,
   showFloatingMenu: (List<AbstractToolbarMenuOverflowItem>) -> Unit
 ) {
@@ -45,7 +46,6 @@ fun KurobaCatalogToolbarContent(
 
   val subtitle by state.subtitle
 
-  val chanTheme = LocalChanTheme.current
   val textColor = chanTheme.onToolbarBackgroundComposeColor
 
   val path = remember { Path() }
@@ -59,6 +59,7 @@ fun KurobaCatalogToolbarContent(
 
       Box {
         ToolbarClickableIcon(
+          chanTheme = chanTheme,
           toolbarMenuItem = leftIcon,
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor
@@ -70,7 +71,10 @@ fun KurobaCatalogToolbarContent(
         )
 
         if (toolbarBadge != null) {
-          ToolbarBadgeContent(toolbarBadge)
+          ToolbarBadgeContent(
+            chanTheme = chanTheme,
+            toolbarBadge = toolbarBadge
+          )
         }
       }
     }
@@ -90,6 +94,7 @@ fun KurobaCatalogToolbarContent(
           .padding(start = 12.dp, end = 28.dp),
         title = title,
         subtitle = subtitle,
+        chanTheme = chanTheme,
         scrollableTitle = false
       )
     } else {
@@ -111,6 +116,7 @@ fun KurobaCatalogToolbarContent(
 
           ToolbarClickableIcon(
             toolbarMenuItem = rightIcon,
+            chanTheme = chanTheme,
             onClick = {
               val iconClickInterceptor = state.iconClickInterceptor
 
@@ -130,6 +136,7 @@ fun KurobaCatalogToolbarContent(
 
         ToolbarClickableIcon(
           toolbarMenuItem = overflowIcon,
+          chanTheme = chanTheme,
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor
 

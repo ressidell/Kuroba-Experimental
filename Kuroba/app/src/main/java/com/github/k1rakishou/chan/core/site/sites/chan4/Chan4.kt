@@ -79,6 +79,8 @@ open class Chan4 : SiteBase() {
   lateinit var chan4CaptchaSettings: GsonJsonSetting<Chan4CaptchaSettings>
   lateinit var check4chanPostAcknowledged: BooleanSetting
 
+  private val _siteIcon by lazy { SiteIcon.fromFavicon(imageLoaderV2, "https://s.4cdn.org/image/favicon.ico".toHttpUrl()) }
+
   private val siteRequestModifier by lazy { Chan4SiteRequestModifier(this, appConstants) }
 
   override fun initialize() {
@@ -517,7 +519,7 @@ open class Chan4 : SiteBase() {
   }
 
   override fun icon(): SiteIcon {
-    return SiteIcon.fromFavicon(imageLoaderV2, "https://s.4cdn.org/image/favicon.ico".toHttpUrl())
+    return _siteIcon
   }
 
   override fun resolvable(): SiteUrlHandler {

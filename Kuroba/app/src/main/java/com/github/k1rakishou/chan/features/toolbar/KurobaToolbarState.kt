@@ -29,6 +29,7 @@ import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.common.quantize
 import com.github.k1rakishou.core_logger.Logger
+import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
@@ -63,6 +64,10 @@ class KurobaToolbarState(
   val toolbarAlpha: FloatState
     get() = _toolbarAlpha
 
+  private val _overriddenTheme = mutableStateOf<ChanTheme?>(null)
+  val overriddenTheme: State<ChanTheme?>
+    get() = _overriddenTheme
+
   private val _container by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaContainerToolbarSubState()) }
   val container: KurobaContainerToolbarSubState
     get() = _container.value
@@ -95,20 +100,6 @@ class KurobaToolbarState(
   val toolbarKey: String
     get() = "Toolbar_${controllerKey.key}"
 
-  fun onToolbarHeightChanged(totalToolbarHeight: Dp) {
-    globalUiStateHolder.updateToolbarState {
-      updateToolbarHeightState(totalToolbarHeight)
-    }
-  }
-
-  fun showToolbar() {
-    _toolbarAlpha.floatValue = 1f
-
-    globalUiStateHolder.updateToolbarState {
-      updateToolbarVisibilityState(visible = true)
-    }
-  }
-
   fun init() {
     Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being initialized (${hashCode()})" }
 
@@ -123,8 +114,29 @@ class KurobaToolbarState(
 
     _toolbarStateList.value = persistentListOf()
     _transitionToolbarState.value = null
-    _toolbarAlpha.value = 0f
+    _toolbarAlpha.floatValue = 0f
     _destroyed = true
+  }
+
+  fun onToolbarHeightChanged(totalToolbarHeight: Dp) {
+    globalUiStateHolder.updateToolbarState {
+      updateToolbarHeightState(totalToolbarHeight)
+    }
+  }
+
+  fun overrideChanTheme(chanTheme: ChanTheme) {
+    _overriddenTheme.value = chanTheme
+  }
+
+  fun showToolbar() {
+    _toolbarAlpha.floatValue = 1f
+
+    globalUiStateHolder.updateToolbarState {
+      updateToolbarVisibilityState(visible = true)
+    }
+    globalUiStateHolder.updateScrollState {
+      resetScrollState()
+    }
   }
 
   fun updateToolbarAlpha(toolbarAlpha: Float) {

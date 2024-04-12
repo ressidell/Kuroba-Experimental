@@ -62,7 +62,6 @@ interface Site {
   fun chanReader(): ChanReader
   fun actions(): SiteActions
   fun commentParserType(): CommentParserType
-  fun board(code: String): ChanBoard?
   fun getChunkDownloaderSiteProperties(): ChunkDownloaderSiteProperties
   fun siteGlobalSearchType(): SiteGlobalSearchType = SiteGlobalSearchType.SearchNotSupported
   fun postingLimitationInfo(): SitePostingLimitation? = null

@@ -155,6 +155,7 @@ class ThemeGalleryController(
         controllerKey = ControllerKey("${controllerKey.key}_${chanTheme.name}"),
         globalUiStateHolder = globalUiStateHolder
       )
+      kurobaToolbarState.overrideChanTheme(chanTheme)
 
       kurobaToolbarState.enterDefaultMode(
         leftItem = BackArrowMenuItem(
