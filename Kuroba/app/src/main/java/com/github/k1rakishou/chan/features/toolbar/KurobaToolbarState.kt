@@ -457,18 +457,9 @@ class KurobaToolbarState(
     }
   }
 
-  fun hideBadge() {
-    catalog.hideBadge()
-    thread.hideBadge()
-    default.hideBadge()
-  }
-
   fun updateBadge(count: Int, highImportance: Boolean) {
-    // For now we only display badge on catalog/thread toolbar. We might display it on default toolbars
-    // in the near future. For the other toolbars there is no need for now.
     catalog.updateBadge(count, highImportance)
     thread.updateBadge(count, highImportance)
-    default.updateBadge(count, highImportance)
   }
 
   fun onKurobaToolbarTransitionInstantFinished(instant: KurobaToolbarTransition.Instant) {
