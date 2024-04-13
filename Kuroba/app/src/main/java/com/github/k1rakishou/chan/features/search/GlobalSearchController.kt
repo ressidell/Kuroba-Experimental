@@ -10,7 +10,6 @@ import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.core.site.sites.search.SearchBoard
 import com.github.k1rakishou.chan.core.site.sites.search.SiteGlobalSearchType
 import com.github.k1rakishou.chan.features.search.data.GlobalSearchControllerState
@@ -29,12 +28,10 @@ import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
-import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEpoxyRecyclerView
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableInsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.common.AndroidUtils
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
 import java.lang.ref.WeakReference
@@ -43,7 +40,7 @@ import javax.inject.Inject
 class GlobalSearchController(
   context: Context,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : Controller(context), GlobalSearchView, WindowInsetsListener, ThemeEngine.ThemeChangesListener {
+) : Controller(context), GlobalSearchView, ThemeEngine.ThemeChangesListener {
 
   @Inject
   lateinit var siteManager: SiteManager
@@ -58,7 +55,7 @@ class GlobalSearchController(
 
   private val presenter by lazy { GlobalSearchPresenter(siteManager, themeEngine) }
 
-  private lateinit var epoxyRecyclerView: ColorizableEpoxyRecyclerView
+  private lateinit var epoxyRecyclerView: ColorizableInsetAwareEpoxyRecyclerView
 
   private val inputViewRefSet = mutableListOf<WeakReference<View>>()
   private var resetSearchParameters = false
@@ -96,9 +93,6 @@ class GlobalSearchController(
     )
 
     presenter.onCreate(this)
-    onInsetsChanged()
-
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
     themeEngine.addListener(this)
   }
 
@@ -110,7 +104,6 @@ class GlobalSearchController(
     presenter.onDestroy()
 
     themeEngine.removeListener(this)
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
   }
 
   override fun onBack(): Boolean {
@@ -121,15 +114,6 @@ class GlobalSearchController(
 
   override fun onThemeChanged() {
     presenter.reloadCurrentState()
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
-    )
-
-    epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
   override fun updateResetSearchParametersFlag(reset: Boolean) {

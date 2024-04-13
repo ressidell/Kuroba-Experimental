@@ -4,12 +4,10 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.airbnb.epoxy.EpoxyController
-import com.airbnb.epoxy.EpoxyRecyclerView
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.core.site.sites.search.PageCursor
 import com.github.k1rakishou.chan.core.usecase.GlobalSearchUseCase
 import com.github.k1rakishou.chan.features.search.data.SearchParameters
@@ -28,12 +26,12 @@ import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.RecyclerUtils
 import com.github.k1rakishou.chan.utils.addOneshotModelBuildListener
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
@@ -44,7 +42,7 @@ class SearchResultsController(
   private val siteDescriptor: SiteDescriptor,
   private val searchParameters: SearchParameters,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : Controller(context), SearchResultsView, WindowInsetsListener {
+) : Controller(context), SearchResultsView {
 
   @Inject
   lateinit var globalSearchUseCase: GlobalSearchUseCase
@@ -62,7 +60,7 @@ class SearchResultsController(
     )
   }
 
-  private lateinit var epoxyRecyclerView: EpoxyRecyclerView
+  private lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -99,9 +97,6 @@ class SearchResultsController(
     )
 
     presenter.onCreate(this)
-    onInsetsChanged()
-
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
   }
 
   override fun onDestroy() {
@@ -109,22 +104,12 @@ class SearchResultsController(
 
     epoxyRecyclerView.clear()
     presenter.onDestroy()
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
   }
 
   override fun onBack(): Boolean {
     presenter.resetSavedState()
     presenter.resetLastRecyclerViewScrollState()
     return super.onBack()
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
-    )
-
-    epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
   private fun onStateChanged(state: SearchResultsControllerState) {
