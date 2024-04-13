@@ -53,6 +53,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 
+// TODO: New toolbar. Crashes when using Composite catalogs.
 class ReplyLayoutView @JvmOverloads constructor(
   context: Context,
   attributeSet: AttributeSet? = null,

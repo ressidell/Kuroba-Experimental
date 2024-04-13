@@ -6,12 +6,12 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
+import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyModel
 import com.airbnb.epoxy.EpoxyModelTouchCallback
-import com.airbnb.epoxy.EpoxyRecyclerView
 import com.airbnb.epoxy.EpoxyViewHolder
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
@@ -29,15 +29,17 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.common.updateMargins
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -56,10 +58,8 @@ class BoardsSetupController(
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
   private val controller = BoardsEpoxyController()
-  private val fabBottomPadding = dp(16f)
-  private val recyclerBottomPadding = dp(64f)
 
-  private lateinit var epoxyRecyclerView: EpoxyRecyclerView
+  private lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
   private lateinit var fabAddBoards: ColorizableFloatingActionButton
   private lateinit var itemTouchHelper: ItemTouchHelper
 
@@ -131,6 +131,12 @@ class BoardsSetupController(
     val site = siteManager.bySiteDescriptor(siteDescriptor)!!
     val syntheticSite = site.isSynthetic
 
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
+        swipeable = false
+      )
+    )
+
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
         onClick = { requireNavController().popController() }
@@ -184,6 +190,12 @@ class BoardsSetupController(
         .subscribe { state -> onStateChanged(state) }
     )
 
+    controllerScope.launch {
+      globalUiStateHolder.bottomPanel.bottomPanelHeight
+        .onEach { onInsetsChanged() }
+        .collect()
+    }
+
     onInsetsChanged()
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
@@ -191,15 +203,19 @@ class BoardsSetupController(
   }
 
   override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
-    )
+    val bottomPadding = with(appResources.composeDensity) {
+      maxOf(
+        globalWindowInsetsManager.bottom(),
+        globalUiStateHolder.bottomPanel.bottomPanelHeight.value.roundToPx()
+      )
+    }
 
-    val bottomPaddingPx = dp(bottomPaddingDp.toFloat())
+    val fabSizeDp = 64.dp
+    val fabBottomMarginDp = 16.dp
+    epoxyRecyclerView.additionalBottomPadding(fabSizeDp + fabBottomMarginDp)
 
-    fabAddBoards.updateMargins(bottom = fabBottomPadding + bottomPaddingPx)
-    epoxyRecyclerView.updatePaddings(bottom = recyclerBottomPadding + bottomPaddingPx)
+    val fabBottomMargin = with(appResources.composeDensity) { fabBottomMarginDp.roundToPx() + bottomPadding }
+    fabAddBoards.updateMargins(bottom = fabBottomMargin)
   }
 
   override fun onDestroy() {

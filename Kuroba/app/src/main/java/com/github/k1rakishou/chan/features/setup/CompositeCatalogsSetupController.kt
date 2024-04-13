@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
@@ -53,6 +53,8 @@ import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_themes.ChanTheme
@@ -82,6 +84,12 @@ class CompositeCatalogsSetupController(
 
   override fun onCreate() {
     super.onCreate()
+
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
+        swipeable = false
+      )
+    )
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
@@ -135,9 +143,11 @@ class CompositeCatalogsSetupController(
     val padding by bottomPadding
     val bottomPadding = remember(key1 = padding) { PaddingValues(bottom = padding.dp) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+      modifier = Modifier.fillMaxSize()
+    ) {
       if (compositeCatalogs.isNotEmpty()) {
-        LazyColumn(
+        InsetAwareLazyColumn(
           state = reorderState.listState,
           contentPadding = bottomPadding,
           modifier = Modifier
@@ -196,7 +206,7 @@ class CompositeCatalogsSetupController(
       }
 
       val fabBottomOffset = if (ChanSettings.isSplitLayoutMode()) {
-        globalWindowInsetsManager.bottomDp()
+        globalWindowInsetsManager.bottomDp() + 16.dp
       } else {
         16.dp
       }
@@ -228,7 +238,7 @@ class CompositeCatalogsSetupController(
   }
 
   @Composable
-  private fun BuildCompositeCatalogItem(
+  private fun LazyItemScope.BuildCompositeCatalogItem(
     index: Int,
     chanTheme: ChanTheme,
     reorderState: ReorderableState,
@@ -252,8 +262,8 @@ class CompositeCatalogsSetupController(
         )
         .draggedItem(reorderState.offsetByIndex(index))
         .background(chanTheme.backColorCompose)
+        .animateItemPlacement()
     ) {
-
       KurobaComposeIcon(
         modifier = Modifier
           .size(32.dp)

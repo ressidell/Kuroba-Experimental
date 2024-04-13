@@ -288,7 +288,7 @@ object SpannableHelper {
 //    return spannableStringBuilder
 
     // TODO: New toolbar.
-    TODO()
+    return AnnotatedString("")
   }
 
   private fun getIconSpan(icon: Bitmap, fontSizePx: Int): ImageSpan {

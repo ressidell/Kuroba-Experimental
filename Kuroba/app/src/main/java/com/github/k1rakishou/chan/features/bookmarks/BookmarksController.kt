@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import androidx.compose.ui.unit.Dp
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -57,6 +58,7 @@ import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
+import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isTablet
@@ -405,6 +407,12 @@ class BookmarksController(
         .collect()
     }
 
+    controllerScope.launch {
+      toolbarState.toolbarHeightState
+        .onEach { toolbarHeight -> onToolbarHeightChanged(toolbarHeight) }
+        .collect()
+    }
+
     onViewBookmarksModeChanged()
     updateLayoutManager()
 
@@ -495,6 +503,19 @@ class BookmarksController(
     }
 
     bookmarksSelectionHelper.unselectAll()
+  }
+
+  private fun onToolbarHeightChanged(toolbarHeightDp: Dp?) {
+    var toolbarHeight = with(appResources.composeDensity) { toolbarHeightDp?.toPx()?.toInt() }
+    if (toolbarHeight == null) {
+      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
+    }
+
+    swipeRefreshLayout.setProgressViewOffset(
+      false,
+      toolbarHeight - AppModuleAndroidUtils.dp(40f),
+      toolbarHeight + AppModuleAndroidUtils.dp(64 - 40.toFloat())
+    )
   }
 
   private fun onDownloadThreadsClicked(

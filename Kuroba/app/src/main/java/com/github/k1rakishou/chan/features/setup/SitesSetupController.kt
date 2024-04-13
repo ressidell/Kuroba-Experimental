@@ -10,13 +10,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyModel
 import com.airbnb.epoxy.EpoxyModelTouchCallback
-import com.airbnb.epoxy.EpoxyRecyclerView
 import com.airbnb.epoxy.EpoxyViewHolder
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.setup.data.SiteEnableState
 import com.github.k1rakishou.chan.features.setup.data.SitesSetupControllerState
 import com.github.k1rakishou.chan.features.setup.epoxy.site.EpoxySiteView
@@ -26,15 +24,15 @@ import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
-import com.github.k1rakishou.common.updatePaddings
 import javax.inject.Inject
 
-class SitesSetupController(context: Context) : Controller(context), SitesSetupView, WindowInsetsListener {
+class SitesSetupController(context: Context) : Controller(context), SitesSetupView {
 
   @Inject
   lateinit var siteManager: SiteManager
@@ -46,7 +44,7 @@ class SitesSetupController(context: Context) : Controller(context), SitesSetupVi
   }
 
   private val controller = SitesEpoxyController()
-  private lateinit var epoxyRecyclerView: EpoxyRecyclerView
+  private lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
   private lateinit var itemTouchHelper: ItemTouchHelper
 
   private val touchHelperCallback = object : EpoxyModelTouchCallback<EpoxySiteViewModel_>(
@@ -117,6 +115,12 @@ class SitesSetupController(context: Context) : Controller(context), SitesSetupVi
   override fun onCreate() {
     super.onCreate()
 
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
+        swipeable = false
+      )
+    )
+
     view = inflate(context, R.layout.controller_sites_setup)
 
     toolbarState.enterDefaultMode(
@@ -139,26 +143,13 @@ class SitesSetupController(context: Context) : Controller(context), SitesSetupVi
         .subscribe { state -> onStateChanged(state) }
     )
 
-    onInsetsChanged()
-
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
     sitesPresenter.onCreate(this)
   }
 
   override fun onDestroy() {
     super.onDestroy()
 
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     sitesPresenter.onDestroy()
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
-    )
-
-    epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
   private fun onStateChanged(state: SitesSetupControllerState) {

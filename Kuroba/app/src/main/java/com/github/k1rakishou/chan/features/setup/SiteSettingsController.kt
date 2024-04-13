@@ -22,6 +22,7 @@ import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
 import com.github.k1rakishou.chan.ui.settings.SettingNotificationType
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
@@ -60,6 +61,12 @@ class SiteSettingsController(
 
   override fun onCreate() {
     super.onCreate()
+
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags(
+        swipeable = false
+      )
+    )
 
     val siteName = siteManager.bySiteDescriptor(siteDescriptor)
       ?.name()
