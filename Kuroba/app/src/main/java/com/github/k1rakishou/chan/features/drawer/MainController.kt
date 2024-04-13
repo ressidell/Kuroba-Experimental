@@ -121,6 +121,8 @@ class MainController(
   private lateinit var container: TouchBlockingFrameLayoutNoBackground
   private lateinit var drawerLayout: DrawerLayout
   private lateinit var drawer: TouchBlockingLinearLayoutNoBackground
+  // TODO: New toolbar. Move this thing away from MainController and into a StyledToolbarNavigationController so that
+  //  it doesn't take the whole screen width in SPLIT layout.
   private lateinit var bottomMenuPanel: BottomMenuPanel
 
   private val _latestDrawerEnableState = MutableStateFlow<DrawerEnableState?>(null)

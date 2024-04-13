@@ -9,9 +9,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.features.toolbar.AbstractToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.MoreVerticalMenuItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarTitleWithSubtitle
 import com.github.k1rakishou.core_themes.ChanTheme
@@ -29,8 +32,8 @@ fun KurobaSelectionToolbarContent(
   val toolbarMenuMut by state.toolbarMenu
   val toolbarMenu = toolbarMenuMut
 
-  val titleMut by state.title
-  val title = titleMut
+  val selectedItemsCount by state.selectedItemsCount
+  val totalItemsCount by state.totalItemsCount
 
   Row(
     modifier = modifier,
@@ -46,19 +49,21 @@ fun KurobaSelectionToolbarContent(
       )
     }
 
-    if (title != null) {
-      ToolbarTitleWithSubtitle(
-        modifier = Modifier
-          .weight(1f)
-          .padding(start = 12.dp),
-        title = title,
-        subtitle = null,
-        scrollableTitle = false,
-        chanTheme = chanTheme,
-      )
+    val title = if (totalItemsCount > 0) {
+      stringResource(id = R.string.selection_toolbar_title_with_total_counter, selectedItemsCount, totalItemsCount)
     } else {
-      Spacer(modifier = Modifier.weight(1f))
+      stringResource(id = R.string.selection_toolbar_title, selectedItemsCount)
     }
+
+    ToolbarTitleWithSubtitle(
+      modifier = Modifier
+        .weight(1f)
+        .padding(start = 12.dp),
+      title = remember(key1 = title) { ToolbarText.from(title) },
+      subtitle = null,
+      scrollableTitle = false,
+      chanTheme = chanTheme,
+    )
 
     if (toolbarMenu != null) {
       val menuItems = toolbarMenu.menuItems

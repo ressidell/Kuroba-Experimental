@@ -763,7 +763,8 @@ class FiltersController(
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val toolbarTitle = ToolbarText.String(formatSelectionText())
+    val selectedItemsCount = viewModel.viewModelSelectionHelper.selectedItemsCount()
+    val totalItemsCount = viewModel.filters.size
 
     if (!toolbarState.isInSelectionMode()) {
       toolbarState.enterSelectionMode(
@@ -775,19 +776,14 @@ class FiltersController(
             }
           }
         ),
-        title = toolbarTitle
+        selectedItemsCount = selectedItemsCount,
+        totalItemsCount = totalItemsCount,
       )
     }
 
-    toolbarState.selection.updateTitle(title = toolbarTitle)
-  }
-
-  private fun formatSelectionText(): String {
-    require(viewModel.viewModelSelectionHelper.isInSelectionMode()) { "Not in selection mode" }
-
-    return getString(
-      R.string.filter_controller_selection_mode,
-      viewModel.viewModelSelectionHelper.selectedItemsCount()
+    toolbarState.selection.updateCounters(
+      selectedItemsCount = selectedItemsCount,
+      totalItemsCount = totalItemsCount,
     )
   }
 

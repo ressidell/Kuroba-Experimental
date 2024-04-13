@@ -912,7 +912,8 @@ class LocalArchiveController(
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val toolbarTitle = ToolbarText.String(formatSelectionText())
+    val selectedItemsCount = viewModel.viewModelSelectionHelper.selectedItemsCount()
+    val totalItemsCount = (viewModel.state.value.threadDownloadsAsync as? AsyncData.Data)?.data?.size ?: 0
 
     if (!toolbarState.isInSelectionMode()) {
       toolbarState.enterSelectionMode(
@@ -924,19 +925,14 @@ class LocalArchiveController(
             }
           }
         ),
-        title = toolbarTitle
+        selectedItemsCount = selectedItemsCount,
+        totalItemsCount = totalItemsCount,
       )
     }
 
-    toolbarState.selection.updateTitle(title = toolbarTitle)
-  }
-
-  private fun formatSelectionText(): String {
-    require(viewModel.viewModelSelectionHelper.isInSelectionMode()) { "Not in selection mode" }
-
-    return getString(
-      R.string.controller_local_archive_selection_title,
-      viewModel.viewModelSelectionHelper.selectedItemsCount()
+    toolbarState.selection.updateCounters(
+      selectedItemsCount = selectedItemsCount,
+      totalItemsCount = totalItemsCount,
     )
   }
 

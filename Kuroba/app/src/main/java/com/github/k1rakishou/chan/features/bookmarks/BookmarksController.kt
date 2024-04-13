@@ -77,10 +77,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.reactive.asFlow
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
+// TODO: New toolbar. When clicking a bookmark (when using SPLIT mode) the bookmarked thread is not opened.
+//  The same happens on LocalArchiveController, probably on the others too.
 class BookmarksController(
   context: Context,
   private val bookmarksToHighlight: List<ChanDescriptor.ThreadDescriptor>,
@@ -381,8 +382,7 @@ class BookmarksController(
     )
 
     controllerScope.launch {
-      bookmarksPresenter.listenForStateChanges()
-        .asFlow()
+      bookmarksPresenter.bookmarksControllerState
         .collect { state -> onStateChanged(state) }
     }
 
@@ -1051,7 +1051,11 @@ class BookmarksController(
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val toolbarTitle = ToolbarText.String(formatSelectionText())
+    val selectedItemsCount = bookmarksSelectionHelper.selectedItemsCount()
+    val totalItemsCount = (bookmarksPresenter.bookmarksControllerState.value as? BookmarksControllerState.Data)
+      ?.groupedBookmarks
+      ?.sumOf { groupOfThreadBookmarkItemViews -> groupOfThreadBookmarkItemViews.threadBookmarkItemViews.size }
+      ?: 0
 
     if (!toolbarState.isInSelectionMode()) {
       toolbarState.enterSelectionMode(
@@ -1063,19 +1067,14 @@ class BookmarksController(
             }
           }
         ),
-        title = toolbarTitle
+        selectedItemsCount = selectedItemsCount,
+        totalItemsCount = totalItemsCount
       )
     }
 
-    toolbarState.selection.updateTitle(title = toolbarTitle)
-  }
-
-  private fun formatSelectionText(): String {
-    require(bookmarksSelectionHelper.isInSelectionMode()) { "Not in selection mode" }
-
-    return getString(
-      R.string.controller_selected_n_bookmarks,
-      bookmarksSelectionHelper.selectedItemsCount()
+    toolbarState.selection.updateCounters(
+      selectedItemsCount = selectedItemsCount,
+      totalItemsCount = totalItemsCount
     )
   }
 

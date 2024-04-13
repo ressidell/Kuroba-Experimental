@@ -33,7 +33,6 @@ import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 // TODO: New toolbar. The toolbar transition still flickers but mostly only when going from ThemeGallery controller back.
-//  Also, theme gallery controller shows unread bookmarks counter sometimes.
 class ThemeGalleryController(
   context: Context,
   private val lightThemes: Boolean,

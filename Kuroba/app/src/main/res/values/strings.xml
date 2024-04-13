@@ -336,7 +336,6 @@ Re-enable this permission in the app settings if you permanently disabled it."</
     <string name="filter_watch_check_all_warning_description">Selecting \"Check all boards\" means that if you add more boards in the future, the filter will automatically be applied to those boards as well. \n\nSometimes this is a desired behavior (like when creating filters to hide/remove/highlight posts you will probably want those filters to automatically work on all boards you may or may not add in the future, so that you don\'t have to update filters every time you add new boards). On the other hand, this is very bad when combined with \"watch\" filters because, due to how they work, we have to execute a separate network request for each board (to download board\'s current thread list) which consumes battery and network traffic. So if you add 100 boards afterwards, then 100 requests will be executed on every filter watch update cycle. \n\nBe very careful when using the combination of watch filters together with \"check all boards\". I decided to allow this combination to work because it may be useful in some rare cases. This warning will be shown every time you create a watch filter so you don\'t forget about it.</string>
     <string name="filter_watcher_disabled_message">Filter watch filter was successfully created but filter watcher is disabled so nothing is going to happen. You need to enable filter watcher in the settings</string>
     <string name="filter_color_pick">Pick color</string>
-    <string name="filter_controller_selection_mode">Selected %1$d filter(s)</string>
     <string name="filter_controller_not_filters">No filters created yet</string>
     <string name="filter_additional_options">Additional filter options</string>
 
@@ -1055,7 +1054,6 @@ If you ever log out or if the passcode expires you will have to change reply mod
 
     <string name="controller_bookmarks">Bookmarks</string>
     <string name="controller_bookmarks_with_stats">Bookmarks (%1$d/%2$d)</string>
-    <string name="controller_selected_n_bookmarks">Selected %1$d bookmarks</string>
     <string name="controller_bookmarks_bookmarks_are_empty">You haven\'t bookmarked any threads yet</string>
     <string name="controller_bookmarks_nothing_found_by_search_query">Nothing found by search query \"%1$s\"</string>
     <string name="controller_bookmarks_prune_inactive_bookmarks">Prune inactive bookmarks</string>
@@ -1105,7 +1103,6 @@ If you ever log out or if the passcode expires you will have to change reply mod
     <string name="controller_proxy_setup_failed_to_enable_disable_proxy">Failed to enable/disable proxy, error = %1$s</string>
     <string name="controller_proxy_setup_failed_to_delete_proxies">Failed to delete proxies, error = %1$s</string>
     <string name="controller_proxy_setup_proxy_editing_notification">Adding/Removing or updating proxies requires application restart</string>
-    <string name="controller_proxy_setup_selected_n_proxies">Selected %1$d proxies</string>
     <string name="controller_proxy_setup_delete_selected_proxies_title">Are you sure you want to delete %1$d proxies?</string>
 
     <string name="controller_proxy_editor_title">Proxy editor</string>
@@ -1370,12 +1367,11 @@ If you ever log out or if the passcode expires you will have to change reply mod
     <string name="controller_board_archive_title">/%1$s/ archive</string>
 
     <string name="controller_local_archive_title">Local thread archive</string>
-    <string name="controller_local_archive_title_updated">Local thread archive %1$d/%2$d</string>
+    <string name="controller_local_archive_title_updated">Local thread archive (%1$d/%2$d)</string>
     <string name="controller_local_archive_updating_threads">Updating all threads, this may take some time</string>
     <string name="controller_local_archive_no_threads_to_update">Nothing to update</string>
     <string name="controller_local_archive_thread_last_download_status_ok">Last thread update: OK</string>
     <string name="controller_local_archive_thread_last_download_status_error">Last thread update error: %1$s</string>
-    <string name="controller_local_archive_selection_title">Selected %1$d threads</string>
     <string name="controller_local_archive_delete_threads_description">This action will delete thread(s) with all downloaded posts and files. Are you sure you want to do that?</string>
     <string name="controller_local_archive_delete_one_thread">Delete %1$s archived thread?</string>
     <string name="controller_local_archive_delete_many_threads">Delete %1$d archived threads?</string>
@@ -1631,6 +1627,9 @@ Actual error: \'%1$s\'</string>
     <string name="hidden_or_removed_posts_post_hidden">Hidden</string>
     <string name="hidden_or_removed_posts_post_removed">Removed</string>
     <string name="hidden_or_removed_posts_post_manually_restored">Manually restored</string>
+
+    <string name="selection_toolbar_title_with_total_counter">Selected %1$d/%2$d items</string>
+    <string name="selection_toolbar_title">Selected %1$d items</string>
 
     <string name="not_allowed_during_halloween">You are not allowed to do this</string>
     <string name="setting_show_prefetch_loading_indicator_title">Show loading indicator for prefetching images</string>

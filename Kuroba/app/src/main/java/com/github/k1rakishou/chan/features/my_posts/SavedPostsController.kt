@@ -53,7 +53,6 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.isNotNullNorEmpty
@@ -495,7 +494,11 @@ class SavedPostsController(
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val toolbarTitle = ToolbarText.String(formatSelectionText())
+    val selectedItemsCount = viewModel.viewModelSelectionHelper.selectedItemsCount()
+    val totalItemsCount = (viewModel.myPostsViewModelState.value.savedRepliesGroupedAsync as? AsyncData.Data)
+      ?.data
+      ?.sumOf { groupedSavedReplies -> groupedSavedReplies.savedReplyDataList.size }
+      ?: 0
 
     if (!toolbarState.isInSelectionMode()) {
       toolbarState.enterSelectionMode(
@@ -507,19 +510,14 @@ class SavedPostsController(
             }
           }
         ),
-        title = toolbarTitle
+        selectedItemsCount = selectedItemsCount,
+        totalItemsCount = totalItemsCount,
       )
     }
 
-    toolbarState.selection.updateTitle(title = toolbarTitle)
-  }
-
-  private fun formatSelectionText(): String {
-    require(viewModel.viewModelSelectionHelper.isInSelectionMode()) { "Not in selection mode" }
-
-    return AppModuleAndroidUtils.getString(
-      R.string.controller_local_archive_selection_title,
-      viewModel.viewModelSelectionHelper.selectedItemsCount()
+    toolbarState.selection.updateCounters(
+      selectedItemsCount = selectedItemsCount,
+      totalItemsCount = totalItemsCount,
     )
   }
 

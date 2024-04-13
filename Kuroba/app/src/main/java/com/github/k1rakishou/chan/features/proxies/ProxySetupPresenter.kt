@@ -12,6 +12,7 @@ import com.github.k1rakishou.core_logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
@@ -20,7 +21,9 @@ class ProxySetupPresenter(
   private val proxySelectionHelper: ProxySelectionHelper,
   private val proxyStorage: ProxyStorage
 ) : BasePresenter<ProxySetupView>() {
-  private val proxySetupState = MutableStateFlow<ProxySetupState>(ProxySetupState.Uninitialized)
+  private val _proxySetupState = MutableStateFlow<ProxySetupState>(ProxySetupState.Uninitialized)
+  val proxySetupState: StateFlow<ProxySetupState>
+    get() = _proxySetupState.asStateFlow()
 
   override fun onCreate(view: ProxySetupView) {
     super.onCreate(view)
@@ -32,10 +35,6 @@ class ProxySetupPresenter(
     }
 
     reloadProxies()
-  }
-
-  fun listenForStateUpdates(): StateFlow<ProxySetupState> {
-    return proxySetupState
   }
 
   fun toggleProxyEnableDisableState(proxyEntryView: ProxyEntryView) {
@@ -88,7 +87,7 @@ class ProxySetupPresenter(
 
       val allProxies = proxyStorage.getAllProxies()
       if (allProxies.isEmpty()) {
-        proxySetupState.value = ProxySetupState.Empty
+        _proxySetupState.value = ProxySetupState.Empty
         return@launch
       }
 
@@ -117,7 +116,7 @@ class ProxySetupPresenter(
           )
         }
 
-      proxySetupState.value = ProxySetupState.Data(proxyEntryViewList)
+      _proxySetupState.value = ProxySetupState.Data(proxyEntryViewList)
     }
   }
 

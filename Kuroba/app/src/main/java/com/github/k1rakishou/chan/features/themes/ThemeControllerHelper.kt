@@ -266,8 +266,6 @@ class ThemeControllerHelper(
     adapter.setBoardPostViewMode(ChanSettings.BoardPostViewMode.LIST)
     postsView.adapter = adapter
 
-    // TODO: New toolbar. Need to somehow override the ChanTheme for the toolbar in theme previews because otherwise
-    //  the toolbar uses the app's theme.
     val toolbar = KurobaToolbarView(context)
     toolbar.init(kurobaToolbarState)
 

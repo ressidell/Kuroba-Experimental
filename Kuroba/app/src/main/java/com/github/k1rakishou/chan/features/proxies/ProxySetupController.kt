@@ -81,7 +81,7 @@ class ProxySetupController(
     }
 
     controllerScope.launch {
-      presenter.listenForStateUpdates()
+      presenter.proxySetupState
         .collect { state -> onStateChanged(state) }
     }
 
@@ -280,7 +280,8 @@ class ProxySetupController(
   }
 
   private fun enterSelectionModeOrUpdate() {
-    val toolbarTitle = ToolbarText.String(formatSelectionText())
+    val selectedItemsCount = proxySelectionHelper.selectedItemsCount()
+    val totalItemsCount = (presenter.proxySetupState.value as? ProxySetupState.Data)?.proxyEntryViewList?.size ?: 0
 
     if (!toolbarState.isInSelectionMode()) {
       toolbarState.enterSelectionMode(
@@ -292,19 +293,14 @@ class ProxySetupController(
             }
           }
         ),
-        title = toolbarTitle
+        selectedItemsCount = selectedItemsCount,
+        totalItemsCount = totalItemsCount,
       )
     }
 
-    toolbarState.selection.updateTitle(title = toolbarTitle)
-  }
-
-  private fun formatSelectionText(): String {
-    require(proxySelectionHelper.isInSelectionMode()) { "Not in selection mode" }
-
-    return getString(
-      R.string.controller_proxy_setup_selected_n_proxies,
-      proxySelectionHelper.selectedItemsCount()
+    toolbarState.selection.updateCounters(
+      selectedItemsCount = selectedItemsCount,
+      totalItemsCount = totalItemsCount,
     )
   }
 

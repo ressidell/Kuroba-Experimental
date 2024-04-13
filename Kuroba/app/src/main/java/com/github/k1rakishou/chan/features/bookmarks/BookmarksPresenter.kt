@@ -20,13 +20,12 @@ import com.github.k1rakishou.common.mutableIteration
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.bookmark.ThreadBookmarkView
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
-import io.reactivex.Flowable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.processors.PublishProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -47,8 +46,9 @@ class BookmarksPresenter(
   private val bookmarksRefreshed = AtomicBoolean(false)
   private val isReorderingMode = AtomicBoolean(false)
 
-  private val bookmarksControllerStateSubject = PublishProcessor.create<BookmarksControllerState>()
-    .toSerialized()
+  private val _bookmarksControllerState = MutableStateFlow<BookmarksControllerState>(BookmarksControllerState.Loading)
+  val bookmarksControllerState: StateFlow<BookmarksControllerState>
+    get() = _bookmarksControllerState.asStateFlow()
 
   private val searchFlow = MutableStateFlow<SearchQuery>(SearchQuery.Closed)
 
@@ -112,17 +112,6 @@ class BookmarksPresenter(
           }
       }
     }
-  }
-
-  fun listenForStateChanges(): Flowable<BookmarksControllerState> {
-    return bookmarksControllerStateSubject
-      .onBackpressureLatest()
-      .observeOn(AndroidSchedulers.mainThread())
-      .doOnError { error ->
-        Logger.e(TAG, "Unknown error subscribed to bookmarksPresenter.listenForStateChanges()", error)
-      }
-      .onErrorReturn { error -> BookmarksControllerState.Error(error.errorMessageOrClassName()) }
-      .hide()
   }
 
   fun onBookmarkMoving(
@@ -511,7 +500,7 @@ class BookmarksPresenter(
   }
 
   private fun setState(state: BookmarksControllerState) {
-    bookmarksControllerStateSubject.onNext(state)
+    _bookmarksControllerState.value = state
   }
 
   sealed class SearchQuery {

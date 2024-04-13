@@ -30,6 +30,7 @@ import javax.inject.Inject
 // TODO: New toolbar. Fix insets on all screens.
 // TODO: New toolbar. Remove PopupController when using SPLIT layout mode.
 //  Open child controllers in either left or right parent controller, not on top of all of them.
+// TODO: New toolbar. Check toolbar states and switch them to empty ones when catalog/thread are in Empty, Error, Loading states.
 
 class KurobaToolbarView @JvmOverloads constructor(
   context: Context,

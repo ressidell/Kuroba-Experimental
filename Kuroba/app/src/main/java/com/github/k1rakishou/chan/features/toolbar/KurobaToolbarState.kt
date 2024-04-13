@@ -320,7 +320,8 @@ class KurobaToolbarState(
   fun enterSelectionMode(
     leftItem: ToolbarMenuItem?,
     withAnimation: Boolean = true,
-    title: ToolbarText? = null,
+    selectedItemsCount: Int,
+    totalItemsCount: Int,
     menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
   ) {
     val toolbarMenuBuilder = ToolbarMenuBuilder()
@@ -329,7 +330,8 @@ class KurobaToolbarState(
     enterToolbarMode(
       params = KurobaSelectionToolbarParams(
         leftItem = leftItem,
-        title = title,
+        selectedItemsCount = selectedItemsCount,
+        totalItemsCount = totalItemsCount,
         toolbarMenu = toolbarMenuBuilder.build(),
       ),
       state = _selection.value,

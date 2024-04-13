@@ -35,11 +35,11 @@ class SavedPostsViewModel(
   private val savedReplyManager: SavedReplyManager
 ) : BaseViewModel() {
   private val _myPostsViewModelState = MutableStateFlow(MyPostsViewModelState())
-  private val searchQueryDebouncer = DebouncingCoroutineExecutor(viewModelScope)
-  val viewModelSelectionHelper = ViewModelSelectionHelper<PostDescriptor, MenuItemClickEvent>()
-
   val myPostsViewModelState: StateFlow<MyPostsViewModelState>
     get() = _myPostsViewModelState.asStateFlow()
+
+  private val searchQueryDebouncer = DebouncingCoroutineExecutor(viewModelScope)
+  val viewModelSelectionHelper = ViewModelSelectionHelper<PostDescriptor, MenuItemClickEvent>()
 
   private var _rememberedFirstVisibleItemIndex: Int = 0
   val rememberedFirstVisibleItemIndex: Int
