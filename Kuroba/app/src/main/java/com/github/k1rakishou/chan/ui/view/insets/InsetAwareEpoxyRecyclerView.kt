@@ -16,10 +16,11 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
+open class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
   context: Context,
-  attributeSet: AttributeSet? = null
-) : EpoxyRecyclerView(context, attributeSet), WindowInsetsListener {
+  attributeSet: AttributeSet? = null,
+  defStyleAttr: Int = androidx.recyclerview.R.attr.recyclerViewStyle
+) : EpoxyRecyclerView(context, attributeSet, defStyleAttr), WindowInsetsListener {
 
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager

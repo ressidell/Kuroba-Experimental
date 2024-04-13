@@ -19,8 +19,8 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
-import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableInsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
@@ -42,7 +42,7 @@ class ProxySetupController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private lateinit var epoxyRecyclerView: ColorizableEpoxyRecyclerView
+  private lateinit var epoxyRecyclerView: ColorizableInsetAwareEpoxyRecyclerView
   private lateinit var addProxyButton: ColorizableFloatingActionButton
 
   private val proxySelectionHelper = ProxySelectionHelper(this)

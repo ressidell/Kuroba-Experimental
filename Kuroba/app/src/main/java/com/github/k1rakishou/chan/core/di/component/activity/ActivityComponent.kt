@@ -168,6 +168,7 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEditText
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableInsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableListView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableProgressBar
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableRadioButton
@@ -349,6 +350,10 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(epoxyDuplicateImageView: EpoxyDuplicateImageView)
   fun inject(epoxyReorderableItemView: EpoxyReorderableItemView)
 
+  fun inject(insetAwareEpoxyRecyclerView: InsetAwareEpoxyRecyclerView)
+  fun inject(colorizableInsetAwareEpoxyRecyclerView: ColorizableInsetAwareEpoxyRecyclerView)
+  fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
+
   fun inject(captchaNoJsLayoutV2: CaptchaNoJsLayoutV2)
   fun inject(captchaNojsLayoutV1: CaptchaNojsLayoutV1)
   fun inject(thumbnailView: ThumbnailView)
@@ -405,8 +410,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(mrSkeletonLayout: MrSkeletonLayout)
   fun inject(kurobaComposeIconPanel: KurobaComposeIconPanel)
   fun inject(postPopupContainer: PostPopupContainer)
-  fun inject(insetAwareEpoxyRecyclerView: InsetAwareEpoxyRecyclerView)
-  fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
   fun inject(replyLayoutView: ReplyLayoutView)
   fun inject(kurobaToolbarView: KurobaToolbarView)
   fun inject(snackbarWrapper: SnackbarWrapper)
