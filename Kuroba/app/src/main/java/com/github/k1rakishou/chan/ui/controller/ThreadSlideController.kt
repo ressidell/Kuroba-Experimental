@@ -23,7 +23,7 @@ import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationContr
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutBoundsStates
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.layout.ThreadSlidingPaneLayout
-import com.github.k1rakishou.chan.ui.widget.SlidingPaneLayoutEx
+import com.github.k1rakishou.chan.ui.view.widget.SlidingPaneLayoutEx
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.core_themes.ThemeEngine.ThemeChangesListener

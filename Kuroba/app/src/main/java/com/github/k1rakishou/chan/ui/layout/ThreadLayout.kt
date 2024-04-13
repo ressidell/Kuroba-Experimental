@@ -67,8 +67,8 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableTextView
 import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.LoadView
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
-import com.github.k1rakishou.chan.ui.widget.SnackbarClass
-import com.github.k1rakishou.chan.ui.widget.SnackbarWrapper
+import com.github.k1rakishou.chan.ui.view.widget.SnackbarClass
+import com.github.k1rakishou.chan.ui.view.widget.SnackbarWrapper
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getQuantityString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString

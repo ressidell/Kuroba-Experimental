@@ -1,7 +1,7 @@
 package com.github.k1rakishou.chan.ui.globalstate.snackbar
 
 import androidx.compose.runtime.State
-import com.github.k1rakishou.chan.ui.widget.SnackbarClass
+import com.github.k1rakishou.chan.ui.view.widget.SnackbarClass
 import com.github.k1rakishou.core_logger.Logger
 
 interface ISnackbarGlobalState {

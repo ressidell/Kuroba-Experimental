@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.ui.widget.dialog;
+package com.github.k1rakishou.chan.ui.view.widget.dialog;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 

@@ -21,7 +21,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.OverScroller
 import androidx.core.graphics.withSave
 import androidx.core.view.ViewCompat
-import com.github.k1rakishou.chan.ui.widget.SimpleAnimatorListener
+import com.github.k1rakishou.chan.ui.view.widget.SimpleAnimatorListener
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.sp
 import com.github.k1rakishou.core_themes.ThemeEngine

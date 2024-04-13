@@ -35,7 +35,7 @@ import com.github.k1rakishou.chan.core.helper.ImageLoaderFileManagerWrapper
 import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.site.SiteResolver
-import com.github.k1rakishou.chan.ui.widget.FixedViewSizeResolver
+import com.github.k1rakishou.chan.ui.view.widget.FixedViewSizeResolver
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.MediaUtils
 import com.github.k1rakishou.chan.utils.getLifecycleFromContext

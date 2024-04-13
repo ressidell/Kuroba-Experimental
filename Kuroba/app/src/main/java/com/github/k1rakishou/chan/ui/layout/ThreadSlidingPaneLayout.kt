@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
-import com.github.k1rakishou.chan.ui.widget.SlidingPaneLayoutEx
+import com.github.k1rakishou.chan.ui.view.widget.SlidingPaneLayoutEx
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.core_themes.ThemeEngine
 import javax.inject.Inject

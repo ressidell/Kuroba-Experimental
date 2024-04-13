@@ -5,7 +5,7 @@ import android.animation.ValueAnimator
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.ScaleAnimation
-import com.github.k1rakishou.chan.ui.widget.SimpleAnimatorListener
+import com.github.k1rakishou.chan.ui.view.widget.SimpleAnimatorListener
 
 object AnimationUtils {
 

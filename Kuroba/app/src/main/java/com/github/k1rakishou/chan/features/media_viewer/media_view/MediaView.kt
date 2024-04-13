@@ -26,7 +26,7 @@ import com.github.k1rakishou.chan.features.media_viewer.strip.MediaViewerActionS
 import com.github.k1rakishou.chan.features.media_viewer.strip.MediaViewerBottomActionStripCallbacks
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
 import com.github.k1rakishou.chan.ui.view.CircularChunkedLoadingBar
-import com.github.k1rakishou.chan.ui.widget.CancellableToast
+import com.github.k1rakishou.chan.ui.view.widget.CancellableToast
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.setVisibilityFast

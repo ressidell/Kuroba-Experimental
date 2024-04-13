@@ -45,7 +45,7 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity;
 import com.github.k1rakishou.chan.ui.activity.SharingActivity;
 import com.github.k1rakishou.chan.ui.activity.StartActivity;
-import com.github.k1rakishou.chan.ui.widget.CancellableToast;
+import com.github.k1rakishou.chan.ui.view.widget.CancellableToast;
 import com.github.k1rakishou.common.AndroidUtils;
 import com.github.k1rakishou.common.KotlinExtensionsKt;
 import com.github.k1rakishou.core_logger.Logger;

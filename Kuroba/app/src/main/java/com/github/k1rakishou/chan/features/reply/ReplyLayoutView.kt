@@ -33,7 +33,7 @@ import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.ui.layout.ThreadListLayout
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
-import com.github.k1rakishou.chan.ui.widget.dialog.KurobaAlertDialog
+import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertDialog
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.WebViewLink
 import com.github.k1rakishou.chan.utils.WebViewLinkMovementMethod

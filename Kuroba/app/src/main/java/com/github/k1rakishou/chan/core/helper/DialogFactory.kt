@@ -24,8 +24,8 @@ import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostCont
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostControllerCallbacks
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaComposeDialogController
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEditText
-import com.github.k1rakishou.chan.ui.widget.dialog.KurobaAlertDialog
-import com.github.k1rakishou.chan.ui.widget.dialog.KurobaAlertDialog.AlertDialogHandle
+import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertDialog
+import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertDialog.AlertDialogHandle
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.ViewUtils.changeProgressColor

@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.ui.widget.dialog;
+package com.github.k1rakishou.chan.ui.view.widget.dialog;
 
 import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP_PREFIX;
 

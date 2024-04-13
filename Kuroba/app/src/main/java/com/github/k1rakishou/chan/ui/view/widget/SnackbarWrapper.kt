@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.ui.widget
+package com.github.k1rakishou.chan.ui.view.widget
 
 import android.graphics.Color
 import android.view.View
@@ -156,8 +156,8 @@ enum class SnackbarClass {
   companion object {
     fun from(threadControllerType: ThreadControllerType): SnackbarClass {
       return when (threadControllerType) {
-        ThreadControllerType.Catalog -> SnackbarClass.Catalog
-        ThreadControllerType.Thread -> SnackbarClass.Thread
+        ThreadControllerType.Catalog -> Catalog
+        ThreadControllerType.Thread -> Thread
       }
     }
   }

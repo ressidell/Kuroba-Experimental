@@ -5,7 +5,7 @@ import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.animation.ValueAnimator.REVERSE
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import com.github.k1rakishou.chan.ui.widget.SimpleAnimatorListener
+import com.github.k1rakishou.chan.ui.view.widget.SimpleAnimatorListener
 
 object PostBackgroundBlinkAnimator {
 

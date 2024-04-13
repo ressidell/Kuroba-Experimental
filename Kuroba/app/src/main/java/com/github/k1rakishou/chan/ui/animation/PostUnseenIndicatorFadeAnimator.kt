@@ -4,7 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.view.animation.LinearInterpolator
-import com.github.k1rakishou.chan.ui.widget.SimpleAnimatorListener
+import com.github.k1rakishou.chan.ui.view.widget.SimpleAnimatorListener
 
 object PostUnseenIndicatorFadeAnimator {
   const val ANIMATION_DURATION = 4_000L

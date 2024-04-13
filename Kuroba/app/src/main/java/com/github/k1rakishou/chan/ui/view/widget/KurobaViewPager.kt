@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.ui.widget
+package com.github.k1rakishou.chan.ui.view.widget
 
 import android.content.Context
 import android.util.AttributeSet

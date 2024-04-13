@@ -19,7 +19,7 @@ import com.github.k1rakishou.chan.features.media_viewer.MediaViewerControllerVie
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerToolbar
 import com.github.k1rakishou.chan.features.media_viewer.ViewableMedia
 import com.github.k1rakishou.chan.features.media_viewer.helper.ExoPlayerWrapper
-import com.github.k1rakishou.chan.ui.widget.CancellableToast
+import com.github.k1rakishou.chan.ui.view.widget.CancellableToast
 import com.github.k1rakishou.chan.utils.AnimationUtils.fadeIn
 import com.github.k1rakishou.chan.utils.AnimationUtils.fadeOut
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
