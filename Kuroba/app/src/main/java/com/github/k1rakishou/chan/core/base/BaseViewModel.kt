@@ -8,6 +8,7 @@ import com.github.k1rakishou.chan.Chan
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Stable
@@ -30,15 +31,12 @@ abstract class BaseViewModel : ViewModel() {
   }
 
   protected inline fun <T> MutableStateFlow<T>.updateState(crossinline updater: T.() -> T?) {
-    val prevState = this.value
-    val newState = updater(this.value)
+    update { oldValue ->
+      val newValue = updater(oldValue) ?: return
+      check(oldValue !== newValue) { "State must be copied!" }
 
-    if (newState == null) {
-      return
+      return@update newValue
     }
-
-    check(prevState !== newState) { "State must be copied!" }
-    this.value = newState
   }
 
   abstract fun injectDependencies(component: ViewModelComponent)

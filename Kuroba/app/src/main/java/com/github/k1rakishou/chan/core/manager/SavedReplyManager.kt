@@ -165,7 +165,12 @@ class SavedReplyManager(
       return@let ChanPostUtils.getTitle(chanOriginalPost, postDescriptor.descriptor)
     }
 
-    val savedReply = ChanSavedReply(postDescriptor = postDescriptor, comment = comment, subject = subject)
+    val savedReply = ChanSavedReply(
+      postDescriptor = postDescriptor,
+      comment = comment,
+      subject = subject
+    )
+
     saveReply(savedReply)
   }
 

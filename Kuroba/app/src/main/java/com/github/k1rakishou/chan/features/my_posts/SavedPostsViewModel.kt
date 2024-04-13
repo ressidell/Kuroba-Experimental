@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.features.my_posts
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.chan.R
@@ -11,9 +12,11 @@ import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.SavedReplyManager
+import com.github.k1rakishou.chan.features.reply.left.ReplyTextFieldHelpers
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItemId
 import com.github.k1rakishou.common.isNotNullNorEmpty
+import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanSavedReply
@@ -32,7 +35,8 @@ import javax.inject.Inject
 
 class SavedPostsViewModel(
   private val savedStateHandle: SavedStateHandle,
-  private val savedReplyManager: SavedReplyManager
+  private val savedReplyManager: SavedReplyManager,
+  private val themeEngine: ThemeEngine
 ) : BaseViewModel() {
   private val _myPostsViewModelState = MutableStateFlow(MyPostsViewModelState())
   val myPostsViewModelState: StateFlow<MyPostsViewModelState>
@@ -192,7 +196,17 @@ class SavedPostsViewModel(
           }
         }
 
-        val comment = savedReply.comment ?: "<Empty comment>"
+        val comment = savedReply.comment
+          ?.takeIf { comment -> comment.isNotBlank() }
+          ?.let { comment ->
+            return@let ReplyTextFieldHelpers.colorizeReplyInputText(
+              disabledAlpha = 1f,
+              text = AnnotatedString(comment),
+              replyLayoutEnabled = true,
+              chanTheme = themeEngine.chanTheme
+            )
+          }
+          ?: AnnotatedString("<Empty comment>")
 
         val searchQuery = _searchQuery.value
         if (searchQuery.isNotNullNorEmpty()) {
@@ -280,17 +294,19 @@ class SavedPostsViewModel(
   data class SavedReplyData(
     val postDescriptor: PostDescriptor,
     val postHeader: String,
-    val comment: String,
+    val comment: AnnotatedString,
     val dateTime: String?
   )
 
   class ViewModelFactory @Inject constructor(
-    private val savedReplyManager: SavedReplyManager
+    private val savedReplyManager: SavedReplyManager,
+    private val themeEngine: ThemeEngine
   ) : ViewModelAssistedFactory<SavedPostsViewModel> {
     override fun create(handle: SavedStateHandle): SavedPostsViewModel {
       return SavedPostsViewModel(
         savedStateHandle = handle,
-        savedReplyManager = savedReplyManager
+        savedReplyManager = savedReplyManager,
+        themeEngine = themeEngine
       )
     }
   }

@@ -16,12 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -53,6 +54,7 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.isNotNullNorEmpty
@@ -279,18 +281,32 @@ class SavedPostsController(
       initialFirstVisibleItemScrollOffset = viewModel.rememberedFirstVisibleItemScrollOffset
     )
 
-    DisposableEffect(key1 = Unit, effect = {
-      onDispose {
-        viewModel.updatePrevLazyListState(state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset)
+    DisposableEffect(
+      key1 = Unit,
+      effect = {
+        onDispose {
+          viewModel.updatePrevLazyListState(state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset)
+        }
       }
-    })
+    )
+
+    LaunchedEffect(key1 = Unit) {
+      toolbarState.search.searchQueryState.textAsFlow()
+        .onEach {
+          try {
+            state.scrollToItem(0)
+          } catch (_: Throwable) {
+
+          }
+        }
+        .collect()
+    }
 
     val padding by bottomPadding
     val bottomPadding = remember(key1 = padding) { PaddingValues(bottom = padding.dp) }
 
-    LazyColumn(
+    InsetAwareLazyColumn(
       state = state,
-      contentPadding = bottomPadding,
       modifier = Modifier
         .fillMaxSize()
         .simpleVerticalScrollbar(state, chanTheme, bottomPadding)
@@ -311,22 +327,29 @@ class SavedPostsController(
           }
         }
 
-        return@LazyColumn
+        return@InsetAwareLazyColumn
       }
 
       savedRepliesGrouped.forEachIndexed { groupIndex, groupedSavedReplies ->
         item(key = "card_${groupIndex}") {
-          Card(modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(2.dp)
-          ) {
-            Column(modifier = Modifier
-              .fillMaxSize()
-              .background(chanTheme.backColorSecondaryCompose)
+          Card(
+            modifier = Modifier
+              .fillMaxWidth()
+              .wrapContentHeight()
               .padding(2.dp)
+              .animateItemPlacement()
+          ) {
+            Column(
+              modifier = Modifier
+                .fillMaxSize()
+                .background(chanTheme.backColorSecondaryCompose)
+                .padding(2.dp)
             ) {
-              GroupedSavedReplyHeader(groupedSavedReplies, chanTheme, onHeaderClicked, onHeaderLongClicked)
+              GroupedSavedReplyHeader(
+                groupedSavedReplies = groupedSavedReplies,
+                onHeaderClicked = onHeaderClicked,
+                onHeaderLongClicked = onHeaderLongClicked
+              )
 
               groupedSavedReplies.savedReplyDataList.forEach { groupedSavedReplyData ->
                 Divider(
@@ -348,23 +371,34 @@ class SavedPostsController(
   @Composable
   private fun GroupedSavedReplyHeader(
     groupedSavedReplies: SavedPostsViewModel.GroupedSavedReplies,
-    chanTheme: ChanTheme,
     onHeaderClicked: (ChanDescriptor.ThreadDescriptor) -> Unit,
     onHeaderLongClicked: (ChanDescriptor.ThreadDescriptor) -> Unit
   ) {
-    Box(modifier = Modifier
-      .fillMaxWidth()
-      .wrapContentHeight()
-      .combinedClickable(
-        onClick = { onHeaderClicked(groupedSavedReplies.threadDescriptor) },
-        onLongClick = { onHeaderLongClicked(groupedSavedReplies.threadDescriptor) }
-      )
-      .padding(horizontal = 4.dp, vertical = 4.dp)
-    ) {
-      Column(modifier = Modifier
+    val chanTheme = LocalChanTheme.current
+
+    Box(
+      modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight()
+        .combinedClickable(
+          onClick = { onHeaderClicked(groupedSavedReplies.threadDescriptor) },
+          onLongClick = { onHeaderLongClicked(groupedSavedReplies.threadDescriptor) }
+        )
+        .padding(horizontal = 4.dp, vertical = 4.dp)
+    ) {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight()
       ) {
+        KurobaComposeText(
+          text = groupedSavedReplies.headerThreadInfo,
+          fontSize = 12.ktu,
+          color = chanTheme.textColorHintCompose,
+          modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+        )
 
         if (groupedSavedReplies.headerThreadSubject.isNotNullNorEmpty()) {
           KurobaComposeText(
@@ -379,15 +413,6 @@ class SavedPostsController(
 
           Spacer(modifier = Modifier.height(2.dp))
         }
-
-        KurobaComposeText(
-          text = groupedSavedReplies.headerThreadInfo,
-          fontSize = 12.ktu,
-          color = chanTheme.textColorHintCompose,
-          modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-        )
       }
     }
   }
@@ -409,14 +434,15 @@ class SavedPostsController(
       observeSelectionStateFunc = { viewModel.viewModelSelectionHelper.observeSelectionState(postDescriptor) },
       onSelectionChanged = { viewModel.viewModelSelectionHelper.toggleSelection(postDescriptor) }
     ) {
-      Box(modifier = Modifier
-        .fillMaxSize()
-        .defaultMinSize(minHeight = 42.dp)
-        .combinedClickable(
-          onClick = { onReplyClicked(postDescriptor) },
-          onLongClick = { onReplyLongClicked(postDescriptor) }
-        )
-        .padding(horizontal = 4.dp, vertical = 2.dp)
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .defaultMinSize(minHeight = 42.dp)
+          .combinedClickable(
+            onClick = { onReplyClicked(postDescriptor) },
+            onLongClick = { onReplyLongClicked(postDescriptor) }
+          )
+          .padding(horizontal = 4.dp, vertical = 2.dp)
       ) {
         Column(
           modifier = Modifier
@@ -438,7 +464,6 @@ class SavedPostsController(
           KurobaComposeText(
             text = groupedSavedReplyData.comment,
             fontSize = 14.ktu,
-            maxLines = 5,
             modifier = Modifier
               .fillMaxWidth()
               .wrapContentHeight()
