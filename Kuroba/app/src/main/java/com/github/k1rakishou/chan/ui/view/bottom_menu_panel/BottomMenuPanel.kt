@@ -20,6 +20,9 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
+import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
@@ -36,7 +39,11 @@ class BottomMenuPanel @JvmOverloads constructor(
 ) : FrameLayout(context, attributeSet, defStyleAttr), WindowInsetsListener, ThemeEngine.ThemeChangesListener {
 
   @Inject
+  lateinit var appResources: AppResources
+  @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
+  @Inject
+  lateinit var globalUiStateHolder: GlobalUiStateHolder
   @Inject
   lateinit var themeEngine: ThemeEngine
 
@@ -108,18 +115,18 @@ class BottomMenuPanel @JvmOverloads constructor(
     children.forEach { child -> child.setBackgroundColor(themeEngine.chanTheme.primaryColor) }
   }
 
-  fun onBack(): Boolean {
+  fun onBack(controllerKey: ControllerKey): Boolean {
     Logger.d(TAG, "onBack(${items.size})")
 
     if (state == State.NotInitialized || state == State.Hidden) {
       return false
     }
 
-    hide()
+    hide(controllerKey)
     return true
   }
 
-  fun show(items: List<BottomMenuPanelItem>) {
+  fun show(controllerKey: ControllerKey, items: List<BottomMenuPanelItem>) {
     Logger.d(TAG, "show(${items.size}), prevState=${state}")
 
     if (state == State.Shown) {
@@ -163,11 +170,18 @@ class BottomMenuPanel @JvmOverloads constructor(
         state = State.Shown
         onBottomStateChangedFunc?.invoke(state)
         Logger.d(TAG, "show(${items.size}), state=${state}")
+
+        globalUiStateHolder.updateBottomPanelState {
+          val panelHeightDp = with(appResources.composeDensity) { this@BottomMenuPanel.totalHeight().toDp() }
+          onBottomPanelHeightKnown(panelHeightDp)
+
+          onBottomPanelShown(controllerKey)
+        }
       }
       .start()
   }
 
-  fun hide() {
+  fun hide(controllerKey: ControllerKey) {
     Logger.d(TAG, "hide(${items.size}), prevState=${state}")
 
     if (state == State.Hidden || state == State.NotInitialized) {
@@ -187,6 +201,10 @@ class BottomMenuPanel @JvmOverloads constructor(
         state = State.Hidden
         onBottomStateChangedFunc?.invoke(state)
         Logger.d(TAG, "hide(${items.size}), state=${state}")
+
+        globalUiStateHolder.updateBottomPanelState {
+          onBottomPanelHidden(controllerKey)
+        }
       }
       .start()
   }

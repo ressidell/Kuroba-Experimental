@@ -43,6 +43,7 @@ import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
@@ -499,16 +500,16 @@ class MainController(
     bottomMenuPanel.onBottomPanelStateChanged(func)
   }
 
-  override fun showBottomPanel(items: List<BottomMenuPanelItem>) {
-    bottomMenuPanel.show(items)
+  override fun showBottomPanel(controllerKey: ControllerKey, items: List<BottomMenuPanelItem>) {
+    bottomMenuPanel.show(controllerKey, items)
   }
 
-  override fun hideBottomPanel() {
-    bottomMenuPanel.hide()
+  override fun hideBottomPanel(controllerKey: ControllerKey) {
+    bottomMenuPanel.hide(controllerKey)
   }
 
-  override fun passOnBackToBottomPanel(): Boolean {
-    return bottomMenuPanel.onBack()
+  override fun passOnBackToBottomPanel(controllerKey: ControllerKey): Boolean {
+    return bottomMenuPanel.onBack(controllerKey)
   }
 
   fun onNavigationItemDrawerInfoUpdated(hasDrawer: Boolean) {

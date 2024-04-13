@@ -249,7 +249,7 @@ class LocalArchiveController(
     super.onDestroy()
 
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-    mainControllerCallbacks.hideBottomPanel()
+    mainControllerCallbacks.hideBottomPanel(controllerKey)
 
     viewModel.viewModelSelectionHelper.unselectAll()
   }
@@ -897,11 +897,11 @@ class LocalArchiveController(
     when (selectionEvent) {
       is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
       is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
-        mainControllerCallbacks.showBottomPanel(viewModel.getBottomPanelMenus())
+        mainControllerCallbacks.showBottomPanel(controllerKey, viewModel.getBottomPanelMenus())
         enterSelectionModeOrUpdate()
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
-        mainControllerCallbacks.hideBottomPanel()
+        mainControllerCallbacks.hideBottomPanel(controllerKey)
 
         if (toolbarState.isInSelectionMode()) {
           toolbarState.pop()

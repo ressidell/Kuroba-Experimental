@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 interface IToolbarGlobalState {
   interface Readable {
-    fun toolbarVisibilityStateFlow(): StateFlow<Boolean>
-    fun toolbarHeightStateFlow(): StateFlow<Dp>
+    val toolbarShown: StateFlow<Boolean>
+    val toolbarHeight: StateFlow<Dp>
   }
 
   interface Writeable {
@@ -21,15 +21,11 @@ interface IToolbarGlobalState {
 
 class ToolbarGlobalState : IToolbarGlobalState.Readable, IToolbarGlobalState.Writeable {
   private val _toolbarShown = MutableStateFlow<Boolean>(true)
+  override val toolbarShown: StateFlow<Boolean>
+    get() = _toolbarShown.asStateFlow()
   private val _toolbarHeight = MutableStateFlow<Dp>(0.dp)
-
-  override fun toolbarVisibilityStateFlow(): StateFlow<Boolean> {
-    return _toolbarShown.asStateFlow()
-  }
-
-  override fun toolbarHeightStateFlow(): StateFlow<Dp> {
-    return _toolbarHeight
-  }
+  override val toolbarHeight: StateFlow<Dp>
+    get() = _toolbarHeight.asStateFlow()
 
   override fun updateToolbarVisibilityState(visible: Boolean) {
     Logger.verbose(TAG) { "updateToolbarVisibilityState() visible: ${visible}" }

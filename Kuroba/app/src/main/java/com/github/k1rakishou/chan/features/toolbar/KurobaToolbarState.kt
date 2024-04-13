@@ -91,9 +91,9 @@ class KurobaToolbarState(
     get() = _reply.value
 
   val toolbarVisibleState: Flow<Boolean>
-    get() = globalUiStateHolder.toolbar.toolbarVisibilityStateFlow()
+    get() = globalUiStateHolder.toolbar.toolbarShown
   val toolbarHeightState: StateFlow<Dp?>
-    get() = globalUiStateHolder.toolbar.toolbarHeightStateFlow()
+    get() = globalUiStateHolder.toolbar.toolbarHeight
   val toolbarHeight: Dp?
     get() = toolbarHeightState.value
 

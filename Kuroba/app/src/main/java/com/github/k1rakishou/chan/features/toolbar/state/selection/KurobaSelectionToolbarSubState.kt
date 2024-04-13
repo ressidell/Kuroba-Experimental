@@ -19,6 +19,7 @@ data class KurobaSelectionToolbarParams(
   override val kind: ToolbarStateKind = ToolbarStateKind.Selection
 }
 
+// TODO: Add "Toggle select all/unselect all" button.
 class KurobaSelectionToolbarSubState(
   params: KurobaSelectionToolbarParams = KurobaSelectionToolbarParams()
 ) : KurobaToolbarSubState() {

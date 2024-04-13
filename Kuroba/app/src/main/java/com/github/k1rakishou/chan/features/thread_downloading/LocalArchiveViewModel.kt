@@ -498,8 +498,7 @@ class LocalArchiveViewModel(
     ShowCompleted
   }
 
-  class ArchiveMenuItemId(val menuItemType: MenuItemType) :
-    BottomMenuPanelItemId {
+  class ArchiveMenuItemId(val menuItemType: MenuItemType) : BottomMenuPanelItemId {
     override fun id(): Int {
       return menuItemType.id
     }

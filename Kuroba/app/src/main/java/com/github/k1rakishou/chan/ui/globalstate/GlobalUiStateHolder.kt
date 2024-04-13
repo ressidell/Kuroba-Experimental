@@ -1,5 +1,7 @@
 package com.github.k1rakishou.chan.ui.globalstate
 
+import com.github.k1rakishou.chan.ui.globalstate.bottompanel.BottomPanelGlobalState
+import com.github.k1rakishou.chan.ui.globalstate.bottompanel.IBottomPanelGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.drawer.DrawerGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.drawer.IDrawerGlobalState
 import com.github.k1rakishou.chan.ui.globalstate.fastsroller.FastScrollerGlobalState
@@ -45,6 +47,10 @@ class GlobalUiStateHolder(
   val toolbar: IToolbarGlobalState.Readable
     get() = _toolbar
 
+  private val _bottomPanel = BottomPanelGlobalState()
+  val bottomPanel: IBottomPanelGlobalState.Readable
+    get() = _bottomPanel
+
   private val _threadLayout = ThreadLayoutGlobalState()
   val threadLayout: IThreadLayoutGlobalState.Readable
     get() = _threadLayout
@@ -83,6 +89,10 @@ class GlobalUiStateHolder(
 
   fun updateSnackbarState(updater: ISnackbarGlobalState.Writeable.() -> Unit) {
     updater(_snackbar)
+  }
+
+  fun updateBottomPanelState(updater: IBottomPanelGlobalState.Writeable.() -> Unit) {
+    updater(_bottomPanel)
   }
 
 }

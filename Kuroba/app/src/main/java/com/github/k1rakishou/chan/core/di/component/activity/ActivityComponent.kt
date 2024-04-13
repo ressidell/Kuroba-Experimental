@@ -187,7 +187,6 @@ import com.github.k1rakishou.chan.ui.view.CircularChunkedLoadingBar
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FloatingMenu
 import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
-import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLinearLayout
 import com.github.k1rakishou.chan.ui.view.OptionalSwipeViewPager
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
 import com.github.k1rakishou.chan.ui.view.attach.AttachNewFileButton
@@ -196,6 +195,7 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyCheckableFloa
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyFloatingListMenuRow
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyGroupableFloatingListMenuRow
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyHeaderListMenuRow
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.view.sorting.BookmarkSortingItemView
 import com.github.k1rakishou.chan.ui.view.widget.SnackbarWrapper
 import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertController
@@ -404,7 +404,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(mrSkeletonLayout: MrSkeletonLayout)
   fun inject(kurobaComposeIconPanel: KurobaComposeIconPanel)
   fun inject(postPopupContainer: PostPopupContainer)
-  fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
+  fun inject(insetAwareEpoxyRecyclerView: InsetAwareEpoxyRecyclerView)
   fun inject(replyLayoutView: ReplyLayoutView)
   fun inject(kurobaToolbarView: KurobaToolbarView)
   fun inject(snackbarWrapper: SnackbarWrapper)

@@ -14,7 +14,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyModel
 import com.airbnb.epoxy.EpoxyModelTouchCallback
-import com.airbnb.epoxy.EpoxyRecyclerView
 import com.airbnb.epoxy.EpoxyViewHolder
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
@@ -29,7 +28,6 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PageRequestManager
 import com.github.k1rakishou.chan.core.manager.ThreadBookmarkGroupManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.core.watcher.BookmarkForegroundWatcher
 import com.github.k1rakishou.chan.core.watcher.FilterWatcherCoordinator
 import com.github.k1rakishou.chan.features.bookmarks.data.BookmarksControllerState
@@ -58,7 +56,7 @@ import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isTablet
@@ -66,7 +64,6 @@ import com.github.k1rakishou.chan.utils.RecyclerUtils
 import com.github.k1rakishou.chan.utils.addOneshotModelBuildListener
 import com.github.k1rakishou.common.AndroidUtils.getDisplaySize
 import com.github.k1rakishou.common.exhaustive
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
@@ -89,8 +86,7 @@ class BookmarksController(
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
 ) : Controller(context),
   BookmarksView,
-  BookmarksSelectionHelper.OnBookmarkMenuItemClicked,
-  WindowInsetsListener {
+  BookmarksSelectionHelper.OnBookmarkMenuItemClicked {
 
   @Inject
   lateinit var dialogFactory: DialogFactory
@@ -115,7 +111,7 @@ class BookmarksController(
   @Inject
   lateinit var filterWatcherCoordinator: FilterWatcherCoordinator
 
-  private lateinit var epoxyRecyclerView: EpoxyRecyclerView
+  private lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
   private lateinit var swipeRefreshLayout: SwipeRefreshLayout
   private lateinit var itemTouchHelper: ItemTouchHelper
 
@@ -409,17 +405,12 @@ class BookmarksController(
         .collect()
     }
 
-    mainControllerCallbacks.onBottomPanelStateChanged { state -> onInsetsChanged() }
-
     onViewBookmarksModeChanged()
     updateLayoutManager()
 
     bookmarksPresenter.onCreate(this)
-    onInsetsChanged()
     setupRecycler()
     reloadBookmarks()
-
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
   }
 
   override fun onDestroy() {
@@ -428,11 +419,10 @@ class BookmarksController(
     cleanupFastScroller()
 
     bookmarksPresenter.updateReorderingMode(enterReorderingMode = false)
-    mainControllerCallbacks.hideBottomPanel()
+    mainControllerCallbacks.hideBottomPanel(controllerKey)
 
     epoxyRecyclerView.clear()
     epoxyRecyclerView.removeOnScrollListener(onScrollListener)
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
 
     bookmarksPresenter.onDestroy()
   }
@@ -444,21 +434,12 @@ class BookmarksController(
       }
     }
 
-    val result = mainControllerCallbacks.passOnBackToBottomPanel() ?: false
+    val result = mainControllerCallbacks.passOnBackToBottomPanel(controllerKey)
     if (result) {
       bookmarksSelectionHelper.unselectAll()
     }
 
     return result
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = mainControllerCallbacks
-    )
-
-    epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
   override fun onMenuItemClicked(
@@ -581,13 +562,13 @@ class BookmarksController(
       is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
       is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
         if (selectionEvent is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode) {
-          mainControllerCallbacks.showBottomPanel(bookmarksSelectionHelper.getBottomPanelMenus())
+          mainControllerCallbacks.showBottomPanel(controllerKey, bookmarksSelectionHelper.getBottomPanelMenus())
         }
 
         enterSelectionModeOrUpdate()
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
-        mainControllerCallbacks.hideBottomPanel()
+        mainControllerCallbacks.hideBottomPanel(controllerKey)
 
         if (toolbarState.isInSelectionMode()) {
           toolbarState.pop()
