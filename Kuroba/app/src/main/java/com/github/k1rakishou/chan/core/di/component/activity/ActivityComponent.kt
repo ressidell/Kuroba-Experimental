@@ -198,6 +198,7 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyGroupableFloa
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyHeaderListMenuRow
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLinearLayout
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareRecyclerView
 import com.github.k1rakishou.chan.ui.view.sorting.BookmarkSortingItemView
 import com.github.k1rakishou.chan.ui.view.widget.SnackbarWrapper
 import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertController
@@ -350,6 +351,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(epoxyDuplicateImageView: EpoxyDuplicateImageView)
   fun inject(epoxyReorderableItemView: EpoxyReorderableItemView)
 
+  fun inject(insetAwareRecyclerView: InsetAwareRecyclerView)
   fun inject(insetAwareEpoxyRecyclerView: InsetAwareEpoxyRecyclerView)
   fun inject(colorizableInsetAwareEpoxyRecyclerView: ColorizableInsetAwareEpoxyRecyclerView)
   fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)

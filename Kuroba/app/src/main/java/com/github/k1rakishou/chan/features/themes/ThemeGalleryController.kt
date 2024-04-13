@@ -21,6 +21,7 @@ import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableInsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -52,7 +53,7 @@ class ThemeGalleryController(
     ThemeControllerHelper(themeEngine, postFilterManager, archivesManager)
   }
 
-  private lateinit var themesList: RecyclerView
+  private lateinit var themesList: ColorizableInsetAwareEpoxyRecyclerView
   private lateinit var loadingViewController: LoadingViewController
 
   override fun injectDependencies(component: ActivityComponent) {

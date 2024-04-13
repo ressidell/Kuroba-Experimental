@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.compose.ui.unit.dp
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.viewpager.widget.ViewPager
 import com.github.k1rakishou.ChanSettings
@@ -17,6 +18,7 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
+import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowItem
@@ -35,6 +37,7 @@ import com.github.k1rakishou.chan.utils.awaitUntilGloballyLaidOutAndGetSize
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.exhaustive
+import com.github.k1rakishou.common.updateMargins
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.core_themes.ThemeEngine.Companion.getComplementaryColor
@@ -44,11 +47,13 @@ import com.github.k1rakishou.fsaf.FileManager
 import com.github.k1rakishou.fsaf.callback.FileChooserCallback
 import com.github.k1rakishou.fsaf.callback.FileCreateCallback
 import com.github.k1rakishou.persist_state.PersistableChanState
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
-class ThemeSettingsController(context: Context) : Controller(context) {
+class ThemeSettingsController(context: Context) : Controller(context), WindowInsetsListener {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -135,6 +140,33 @@ class ThemeSettingsController(context: Context) : Controller(context) {
     if (AndroidUtils.isAndroid10()) {
       showIgnoreDayNightModeDialog()
     }
+
+    controllerScope.launch {
+      globalUiStateHolder.bottomPanel.bottomPanelHeight
+        .onEach { onInsetsChanged() }
+        .collect()
+    }
+
+    onInsetsChanged()
+    globalWindowInsetsManager.addInsetsUpdatesListener(this)
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+
+    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
+  }
+
+  override fun onInsetsChanged() {
+    val bottomPadding = with(appResources.composeDensity) {
+      maxOf(
+        globalWindowInsetsManager.bottom(),
+        globalUiStateHolder.bottomPanel.bottomPanelHeight.value.roundToPx()
+      )
+    }
+
+    val fabAdditionalBottomPadding = with(appResources.composeDensity) { 16.dp.roundToPx() }
+    applyThemeFab.updateMargins(bottom = bottomPadding + fabAdditionalBottomPadding)
   }
 
   private fun showIgnoreDayNightModeDialog() {

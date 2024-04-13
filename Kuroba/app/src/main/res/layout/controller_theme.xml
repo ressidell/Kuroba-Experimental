@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
+    <com.github.k1rakishou.chan.ui.view.insets.InsetAwareLinearLayout
         android:id="@+id/root"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -48,7 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             android:paddingRight="16dp"
             android:paddingBottom="48dp" />
 
-    </LinearLayout>
+    </com.github.k1rakishou.chan.ui.view.insets.InsetAwareLinearLayout>
 
     <com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
         android:id="@+id/apply_theme_button"
