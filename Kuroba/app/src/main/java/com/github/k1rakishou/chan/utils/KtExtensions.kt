@@ -27,6 +27,10 @@ import com.airbnb.epoxy.DiffResult
 import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyRecyclerView
 import com.airbnb.epoxy.OnModelBuildFinishedListener
+import com.github.k1rakishou.chan.Chan
+import com.github.k1rakishou.chan.core.di.ActivityDependencies
+import com.github.k1rakishou.chan.core.di.ApplicationDependencies
+import com.github.k1rakishou.chan.core.di.module.activity.IHasActivityComponent
 import com.github.k1rakishou.chan.core.di.module.viewmodel.IHasViewModelProviderFactory
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.ui.activity.SharingActivity
@@ -302,6 +306,17 @@ fun fixImageUrlIfNecessary(requestUrl: String, imageUrl: String?): String? {
 
   Logger.e(TAG, "Unknown kind of broken image url: \"$imageUrl\". If you see this report it to devs!")
   return null
+}
+
+fun appDependencies(): ApplicationDependencies {
+  return Chan.getComponent()
+}
+
+@Composable
+fun activityDependencies(): ActivityDependencies {
+  val context = LocalContext.current
+
+  return (context as IHasActivityComponent).activityComponent
 }
 
 @Composable

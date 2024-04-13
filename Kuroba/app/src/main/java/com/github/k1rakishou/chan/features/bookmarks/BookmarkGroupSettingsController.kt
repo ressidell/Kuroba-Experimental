@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
@@ -57,6 +57,7 @@ import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.SpannableHelper
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -191,14 +192,14 @@ class BookmarkGroupSettingsController(
     }
 
     val bottomPd by bottomPadding
-    val paddingValues = remember(key1 = bottomPd) { PaddingValues(bottom = bottomPd.dp + FAB_SIZE + FAB_MARGIN) }
+    val paddingValues = remember() { PaddingValues(bottom = FAB_SIZE + FAB_MARGIN) }
 
     Column(
       modifier = Modifier
         .wrapContentHeight()
         .align(Alignment.Center)
     ) {
-      LazyColumn(
+      InsetAwareLazyColumn(
         modifier = Modifier
           .fillMaxWidth()
           .weight(1f)
@@ -317,7 +318,7 @@ class BookmarkGroupSettingsController(
   }
 
   @Composable
-  private fun BuildThreadBookmarkGroupItem(
+  private fun LazyItemScope.BuildThreadBookmarkGroupItem(
     threadBookmarkGroupItem: BookmarkGroupSettingsControllerViewModel.ThreadBookmarkGroupItem,
     reoderableState: ReorderableState,
     bookmarkGroupClicked: (String) -> Unit,
@@ -346,7 +347,8 @@ class BookmarkGroupSettingsController(
         .fillMaxWidth()
         .height(48.dp)
         .padding(4.dp)
-        .then(modifier),
+        .then(modifier)
+        .animateItemPlacement(),
       backgroundColor = chanTheme.backColorSecondaryCompose
     ) {
       Row(modifier = Modifier.fillMaxSize()) {

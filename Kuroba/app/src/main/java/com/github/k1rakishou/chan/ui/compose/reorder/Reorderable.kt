@@ -32,11 +32,9 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -47,7 +45,7 @@ import kotlinx.coroutines.launch
  * Taken from https://github.com/aclassen/ComposeReorderable
  * */
 
-
+// TODO: New toolbar. Seems like this thing is broken.
 @Composable
 fun rememberReorderState(
   listState: LazyListState = rememberLazyListState(),
@@ -80,7 +78,6 @@ class ReorderableState(val listState: LazyListState) {
 }
 
 
-@OptIn(ExperimentalCoroutinesApi::class)
 fun Modifier.reorderable(
   state: ReorderableState,
   onMove: suspend (fromPos: Int, toPos: Int) -> (Unit),
@@ -209,7 +206,7 @@ private fun Offset.forOrientation(orientation: Orientation) = if (orientation ==
 private sealed class ReorderAction {
   class Start(val key: Any) : ReorderAction()
   class Drag(val amount: Float) : ReorderAction()
-  object End : ReorderAction()
+  data object End : ReorderAction()
 }
 
 internal data class StartDrag(val id: PointerId, val offet: Offset? = null)
