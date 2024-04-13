@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -140,19 +138,15 @@ class CompositeCatalogsSetupController(
     val reorderState = rememberReorderState()
     val compositeCatalogs = viewModel.compositeCatalogs
 
-    val padding by bottomPadding
-    val bottomPadding = remember(key1 = padding) { PaddingValues(bottom = padding.dp) }
-
     Box(
       modifier = Modifier.fillMaxSize()
     ) {
       if (compositeCatalogs.isNotEmpty()) {
         InsetAwareLazyColumn(
           state = reorderState.listState,
-          contentPadding = bottomPadding,
           modifier = Modifier
             .fillMaxSize()
-            .simpleVerticalScrollbar(reorderState.listState, chanTheme, bottomPadding)
+            .simpleVerticalScrollbar(reorderState.listState, chanTheme)
             .reorderable(
               state = reorderState,
               onMove = { from, to ->

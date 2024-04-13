@@ -8,7 +8,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
@@ -302,14 +300,11 @@ class SavedPostsController(
         .collect()
     }
 
-    val padding by bottomPadding
-    val bottomPadding = remember(key1 = padding) { PaddingValues(bottom = padding.dp) }
-
     InsetAwareLazyColumn(
       state = state,
       modifier = Modifier
         .fillMaxSize()
-        .simpleVerticalScrollbar(state, chanTheme, bottomPadding)
+        .simpleVerticalScrollbar(state, chanTheme)
     ) {
       if (savedRepliesGrouped.isEmpty()) {
         val searchQuery = toolbarState.search.searchQueryState.text

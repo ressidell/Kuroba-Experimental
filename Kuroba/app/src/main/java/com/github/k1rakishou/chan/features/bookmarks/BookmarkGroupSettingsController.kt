@@ -192,7 +192,7 @@ class BookmarkGroupSettingsController(
     }
 
     val bottomPd by bottomPadding
-    val paddingValues = remember() { PaddingValues(bottom = FAB_SIZE + FAB_MARGIN) }
+    val paddingValues = remember { PaddingValues(bottom = FAB_SIZE + FAB_MARGIN) }
 
     Column(
       modifier = Modifier
@@ -203,7 +203,11 @@ class BookmarkGroupSettingsController(
         modifier = Modifier
           .fillMaxWidth()
           .weight(1f)
-          .simpleVerticalScrollbar(reoderableState.listState, chanTheme, paddingValues)
+          .simpleVerticalScrollbar(
+            state = reoderableState.listState,
+            chanTheme = chanTheme,
+            contentPadding = paddingValues
+          )
           .reorderable(
             state = reoderableState,
             onMove = { from, to ->

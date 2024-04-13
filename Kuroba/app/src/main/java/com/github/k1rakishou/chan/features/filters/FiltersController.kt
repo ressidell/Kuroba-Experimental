@@ -1,19 +1,3 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.features.filters
 
 import android.content.Context
@@ -34,15 +18,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -67,7 +51,6 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.FilterEngine
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.core.usecase.ExportFiltersUseCase
 import com.github.k1rakishou.chan.core.usecase.ImportFiltersUseCase
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
@@ -86,6 +69,7 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
 import com.github.k1rakishou.chan.ui.compose.reorder.draggedItem
@@ -96,6 +80,7 @@ import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.theme.SimpleSquarePainter
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.openLink
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -124,9 +109,7 @@ class FiltersController(
   context: Context,
   private val chanFilterMutable: ChanFilterMutable?,
   private val mainControllerCallbacks: MainControllerCallbacks
-) :
-  Controller(context),
-  WindowInsetsListener {
+) : Controller(context) {
 
   @Inject
   lateinit var filterEngine: FilterEngine
@@ -144,8 +127,6 @@ class FiltersController(
   lateinit var exportFiltersUseCase: ExportFiltersUseCase
   @Inject
   lateinit var importFiltersUseCase: ImportFiltersUseCase
-
-  private var bottomPadding = mutableIntStateOf(0)
 
   private val viewModel by lazy {
     requireComponentActivity().viewModelByKey<FiltersControllerViewModel>()
@@ -202,9 +183,6 @@ class FiltersController(
       }
     )
 
-    onInsetsChanged()
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
-
     controllerScope.launch {
       viewModel.viewModelSelectionHelper.selectionMode.collect { selectionEvent ->
         onNewSelectionEvent(selectionEvent)
@@ -228,8 +206,6 @@ class FiltersController(
       viewModel.updateEnableDisableAllFiltersButtonFlow
         .collect { updateEnableDisableAllFiltersButton() }
     }
-
-    mainControllerCallbacks.onBottomPanelStateChanged { onInsetsChanged() }
 
     if (chanFilterMutable != null) {
       controllerScope.launch {
@@ -262,7 +238,6 @@ class FiltersController(
 
     viewModel.viewModelSelectionHelper.unselectAll()
     mainControllerCallbacks.hideBottomPanel(controllerKey)
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
   }
 
   override fun onBack(): Boolean {
@@ -273,22 +248,13 @@ class FiltersController(
     return super.onBack()
   }
 
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = mainControllerCallbacks
-    )
-
-    bottomPadding.intValue = bottomPaddingDp
-  }
-
   @Composable
   private fun BuildContent() {
     val chanTheme = LocalChanTheme.current
+    val windowInsets = LocalWindowInsets.current
+
     val filters = remember { viewModel.filters }
     val coroutineScope = rememberCoroutineScope()
-    val bottomPd by bottomPadding
-    val contentPadding = PaddingValues(bottom = bottomPd.dp + FAB_SIZE + (FAB_MARGIN / 2))
     val reoderableState = rememberReorderState()
 
     Box(
@@ -299,7 +265,6 @@ class FiltersController(
           filters = filters,
           reorderableState = reoderableState,
           chanTheme = chanTheme,
-          contentPadding = contentPadding,
           coroutineScope = coroutineScope
         )
       } else {
@@ -312,11 +277,18 @@ class FiltersController(
         )
       }
 
+      val bottomPanelHeight by globalUiStateHolder.bottomPanel.bottomPanelHeight.collectAsState()
+
+      val fabBottomPadding = maxOf(
+        windowInsets.bottom,
+        bottomPanelHeight
+      )
+
       FloatingActionButton(
         modifier = Modifier
           .size(FAB_SIZE)
           .align(Alignment.BottomEnd)
-          .offset(x = -FAB_MARGIN, y = -(bottomPd.dp + (FAB_MARGIN / 2))),
+          .offset(x = -FAB_MARGIN, y = -(fabBottomPadding + (FAB_MARGIN / 2))),
         backgroundColor = chanTheme.accentColorCompose,
         contentColor = Color.White,
         onClick = {
@@ -337,7 +309,6 @@ class FiltersController(
     filters: List<FiltersControllerViewModel.ChanFilterInfo>,
     reorderableState: ReorderableState,
     chanTheme: ChanTheme,
-    contentPadding: PaddingValues,
     coroutineScope: CoroutineScope
   ) {
     val searchState = rememberSimpleSearchStateV2<FiltersControllerViewModel.ChanFilterInfo>(
@@ -380,7 +351,11 @@ class FiltersController(
       return
     }
 
-    LazyColumn(
+    val contentPadding = remember {
+      PaddingValues(bottom = FAB_SIZE + (FAB_MARGIN / 2))
+    }
+
+    InsetAwareLazyColumn(
       modifier = Modifier
         .fillMaxSize()
         .reorderable(
@@ -432,7 +407,7 @@ class FiltersController(
   }
 
   @Composable
-  private fun BuildChanFilter(
+  private fun LazyItemScope.BuildChanFilter(
     index: Int,
     totalCount: Int,
     reorderableState: ReorderableState,
@@ -457,6 +432,7 @@ class FiltersController(
           onClick = { onFilterClicked(chanFilter) }
         )
         .background(color = chanTheme.backColorCompose)
+        .animateItemPlacement()
     ) {
       SelectableItem(
         isInSelectionMode = isInSelectionMode,

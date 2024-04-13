@@ -275,7 +275,11 @@ private fun ColumnScope.BuildNavigationHistoryList(
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()
-          .simpleVerticalScrollbar(state, chanTheme, contentPadding),
+          .simpleVerticalScrollbar(
+            state = state,
+            chanTheme = chanTheme,
+            contentPadding = contentPadding
+          ),
         contentPadding = contentPadding,
         content = {
           items(count = searchResults.size) { index ->

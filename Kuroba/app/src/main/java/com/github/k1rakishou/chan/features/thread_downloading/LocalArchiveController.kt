@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -30,9 +29,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.runtime.Composable
@@ -40,7 +38,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,7 +65,6 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
@@ -90,6 +86,7 @@ import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.AppConstants
@@ -114,7 +111,7 @@ class LocalArchiveController(
   context: Context,
   private val mainControllerCallbacks: MainControllerCallbacks,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : Controller(context), WindowInsetsListener {
+) : Controller(context) {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -129,7 +126,6 @@ class LocalArchiveController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val bottomPadding = mutableIntStateOf(0)
   private val viewModel by lazy { requireComponentActivity().viewModelByKey<LocalArchiveViewModel>() }
 
   override fun injectDependencies(component: ActivityComponent) {
@@ -214,11 +210,7 @@ class LocalArchiveController(
         .collect()
     }
 
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
-    mainControllerCallbacks.onBottomPanelStateChanged { onInsetsChanged() }
-
     updateControllerTitle(viewModel.controllerTitleInfoUpdatesFlow.value)
-    onInsetsChanged()
 
     view = ComposeView(context).apply {
       setContent {
@@ -248,17 +240,9 @@ class LocalArchiveController(
   override fun onDestroy() {
     super.onDestroy()
 
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     mainControllerCallbacks.hideBottomPanel(controllerKey)
 
     viewModel.viewModelSelectionHelper.unselectAll()
-  }
-
-  override fun onInsetsChanged() {
-    bottomPadding.intValue = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = mainControllerCallbacks
-    )
   }
 
   @Composable
@@ -318,7 +302,7 @@ class LocalArchiveController(
     onThreadDownloadLongClicked: (ChanDescriptor.ThreadDescriptor) -> Unit
   ) {
     val chanTheme = LocalChanTheme.current
-    val state = rememberLazyGridState(
+    val state = rememberLazyListState(
       initialFirstVisibleItemIndex = viewModel.rememberedFirstVisibleItemIndex,
       initialFirstVisibleItemScrollOffset = viewModel.rememberedFirstVisibleItemScrollOffset
     )
@@ -344,40 +328,43 @@ class LocalArchiveController(
       }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-      BuildViewModelSelector(onViewModeChanged = onViewModeChanged)
-
-      val padding by bottomPadding
-      val bottomPadding = remember(key1 = padding) { PaddingValues(bottom = padding.dp) }
-
-      LazyVerticalGrid(
+    Column(
+      modifier = Modifier.fillMaxSize()
+    ) {
+      InsetAwareLazyColumn(
         state = state,
-        columns = GridCells.Adaptive(300.dp),
-        contentPadding = bottomPadding,
         modifier = Modifier
           .fillMaxSize()
-          .simpleVerticalScrollbar(state, chanTheme, bottomPadding)
+          .simpleVerticalScrollbar(state, chanTheme)
       ) {
+        item(key = "selector", contentType = "selector") {
+          BuildViewModelSelector(onViewModeChanged = onViewModeChanged)
+        }
+
         if (threadDownloadViews.isEmpty()) {
           val searchQuery = toolbarState.search.searchQueryState.text
           if (searchQuery.isNullOrEmpty()) {
-            item {
+            item(key = "error_nothing_found", contentType = "error") {
               KurobaComposeErrorMessage(
                 errorMessage = stringResource(id = R.string.search_nothing_found)
               )
             }
           } else {
-            item {
+            item(key = "error_nothing_found_with_query", contentType = "error") {
               KurobaComposeErrorMessage(
                 errorMessage = stringResource(id = R.string.search_nothing_found_with_query, searchQuery)
               )
             }
           }
 
-          return@LazyVerticalGrid
+          return@InsetAwareLazyColumn
         }
 
-        items(threadDownloadViews.size) { index ->
+        items(
+          count = threadDownloadViews.size,
+          key = { index -> threadDownloadViews[index].threadDescriptor },
+          contentType = { "download_item" }
+        ) { index ->
           val threadDownloadView = threadDownloadViews[index]
           BuildThreadDownloadItem(
             animationAtEnd = animationAtEnd,
@@ -396,9 +383,10 @@ class LocalArchiveController(
     val highlightColor = chanTheme.postHighlightedColorCompose
     val viewMode by viewModel.viewMode
 
-    Row(modifier = Modifier
-      .fillMaxWidth()
-      .height(32.dp)
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .height(32.dp)
     ) {
       kotlin.run {
         val backgroundColor = remember(key1 = viewMode) {
@@ -491,7 +479,7 @@ class LocalArchiveController(
 
   @OptIn(ExperimentalFoundationApi::class)
   @Composable
-  private fun BuildThreadDownloadItem(
+  private fun LazyItemScope.BuildThreadDownloadItem(
     animationAtEnd: Boolean,
     threadDownloadView: LocalArchiveViewModel.ThreadDownloadView,
     onThreadDownloadClicked: (ChanDescriptor.ThreadDescriptor) -> Unit,
@@ -501,10 +489,12 @@ class LocalArchiveController(
     val selectionEvent by viewModel.viewModelSelectionHelper.collectSelectionModeAsState()
     val isInSelectionMode = selectionEvent?.isIsSelectionMode() ?: false
 
-    Card(modifier = Modifier
-      .fillMaxWidth()
-      .wrapContentHeight()
-      .padding(2.dp)
+    Card(
+      modifier = Modifier
+        .fillMaxWidth()
+        .wrapContentHeight()
+        .padding(2.dp)
+        .animateItemPlacement()
     ) {
       Box(modifier = Modifier
         .fillMaxWidth()

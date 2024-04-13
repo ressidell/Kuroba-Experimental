@@ -5,19 +5,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.material.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -28,12 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.os.bundleOf
-import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
@@ -46,12 +42,14 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.pxToDp
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -59,7 +57,7 @@ class BoardArchiveController(
   context: Context,
   private val catalogDescriptor: ChanDescriptor.CatalogDescriptor,
   private val onThreadClicked: (ChanDescriptor.ThreadDescriptor) -> Unit
-) : Controller(context), WindowInsetsListener {
+) : Controller(context) {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -67,8 +65,6 @@ class BoardArchiveController(
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
   private var blockClicking = false
-  private val topPadding = mutableIntStateOf(0)
-  private val bottomPadding = mutableIntStateOf(0)
 
   private val viewModel by lazy {
     requireComponentActivity().viewModelByKey<BoardArchiveViewModel>(
@@ -100,9 +96,6 @@ class BoardArchiveController(
       }
     )
 
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
-    onInsetsChanged()
-
     view = ComposeView(context).apply {
       setContent {
         ComposeEntrypoint {
@@ -115,29 +108,6 @@ class BoardArchiveController(
             BuildContent()
           }
         }
-      }
-    }
-  }
-
-  override fun onDestroy() {
-    super.onDestroy()
-
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-  }
-
-  override fun onInsetsChanged() {
-    var toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeight?.toPx()?.toInt() }
-    if (toolbarHeight == null) {
-      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
-    }
-
-    topPadding.intValue = pxToDp(toolbarHeight)
-
-    bottomPadding.intValue = when {
-      ChanSettings.isSplitLayoutMode() -> 0
-      globalWindowInsetsManager.isKeyboardOpened -> pxToDp(globalWindowInsetsManager.keyboardHeight)
-      else -> {
-        pxToDp(globalWindowInsetsManager.bottom())
       }
     }
   }
@@ -172,6 +142,7 @@ class BoardArchiveController(
     onThreadClicked: (Long) -> Unit
   ) {
     val chanTheme = LocalChanTheme.current
+
     val boardArchiveControllerState by viewModel.state
     val page by viewModel.page
     val endReached by viewModel.endReached
@@ -211,18 +182,25 @@ class BoardArchiveController(
           }
         }
       )
+    } else {
+      LaunchedEffect(key1 = Unit) {
+        searchState.textFieldState.textAsFlow()
+          .onEach {
+            try {
+              state.scrollToItem(0)
+            } catch (_: Throwable) {
+
+            }
+          }
+          .collect()
+      }
     }
 
-    val topPd by topPadding
-    val bottomPd by bottomPadding
-    val contentPadding = PaddingValues(top = topPd.dp, bottom = bottomPd.dp)
-
-    LazyColumn(
+    InsetAwareLazyColumn(
       state = state,
-      contentPadding = contentPadding,
       modifier = Modifier
         .fillMaxSize()
-        .simpleVerticalScrollbar(state, chanTheme, contentPadding)
+        .simpleVerticalScrollbar(state, chanTheme)
     ) {
       items(count = searchResults.size + 1) { index ->
         val archiveThreadItem = searchResults.getOrNull(index)
