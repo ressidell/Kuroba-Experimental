@@ -20,98 +20,104 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.github.k1rakishou.chan.ui.layout.PostPopupContainer
+    <com.github.k1rakishou.chan.ui.layout.FloatingControllerFrameContainer
         android:id="@+id/popup_search_layout_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:elevation="4dp"
         android:minWidth="320dp"
-        android:orientation="vertical"
         tools:ignore="UselessParent">
 
-        <LinearLayout
-            android:id="@+id/search_layout_container"
-            android:layout_width="match_parent"
+        <com.github.k1rakishou.chan.ui.theme.widget.ColorizableLinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
-            <com.github.k1rakishou.chan.ui.layout.SearchLayout
-                android:id="@+id/search_layout"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"/>
+            <LinearLayout
+                android:id="@+id/search_layout_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:orientation="horizontal">
 
-            <com.github.k1rakishou.chan.ui.theme.widget.ColorizableTextView
-                android:id="@+id/total_found"
-                android:textSize="14sp"
-                android:layout_width="90dp"
-                android:gravity="center_vertical|end"
-                android:layout_gravity="center_vertical"
-                android:layout_height="match_parent"/>
+                <com.github.k1rakishou.chan.ui.layout.SearchLayout
+                    android:id="@+id/search_layout"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"/>
 
-        </LinearLayout>
+                <com.github.k1rakishou.chan.ui.theme.widget.ColorizableTextView
+                    android:id="@+id/total_found"
+                    android:textSize="14sp"
+                    android:layout_width="90dp"
+                    android:gravity="center_vertical|end"
+                    android:layout_gravity="center_vertical"
+                    android:layout_height="match_parent"/>
 
-        <com.github.k1rakishou.chan.ui.theme.widget.ColorizableRecyclerView
-            android:id="@+id/post_list"
-            android:layout_width="match_parent"
-            android:scrollbars="vertical"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:baselineAligned="false"
-            android:divider="?android:attr/dividerVertical"
-            android:dividerPadding="12dp"
-            android:orientation="horizontal"
-            android:showDividers="middle">
+            <com.github.k1rakishou.chan.ui.theme.widget.ColorizableRecyclerView
+                android:id="@+id/post_list"
+                android:layout_width="match_parent"
+                android:scrollbars="vertical"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-            <FrameLayout
-                android:id="@+id/replies_back"
-                style="?android:actionButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/item_background">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:divider="?android:attr/dividerVertical"
+                android:dividerPadding="12dp"
+                android:orientation="horizontal"
+                android:showDividers="middle">
 
-                <TextView
-                    android:id="@+id/replies_back_icon"
-                    style="?android:actionBarTabTextStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:drawablePadding="8dp"
-                    android:gravity="center_vertical"
-                    android:paddingRight="20dp"
-                    android:text="@string/back" />
-            </FrameLayout>
+                <FrameLayout
+                    android:id="@+id/replies_back"
+                    style="?android:actionButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/item_background">
 
-            <FrameLayout
-                android:id="@+id/replies_close"
-                style="?android:actionButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/item_background">
+                    <TextView
+                        android:id="@+id/replies_back_icon"
+                        style="?android:actionBarTabTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        android:paddingRight="20dp"
+                        android:text="@string/back" />
+                </FrameLayout>
 
-                <TextView
-                    android:id="@+id/replies_close_icon"
-                    style="?android:actionBarTabTextStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:drawablePadding="8dp"
-                    android:gravity="center_vertical"
-                    android:paddingRight="20dp"
-                    android:text="@string/close" />
-            </FrameLayout>
+                <FrameLayout
+                    android:id="@+id/replies_close"
+                    style="?android:actionButtonStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/item_background">
 
-        </LinearLayout>
+                    <TextView
+                        android:id="@+id/replies_close_icon"
+                        style="?android:actionBarTabTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        android:paddingRight="20dp"
+                        android:text="@string/close" />
+                </FrameLayout>
 
-    </com.github.k1rakishou.chan.ui.layout.PostPopupContainer>
+            </LinearLayout>
+
+        </com.github.k1rakishou.chan.ui.theme.widget.ColorizableLinearLayout>
+
+    </com.github.k1rakishou.chan.ui.layout.FloatingControllerFrameContainer>
 
 </FrameLayout>

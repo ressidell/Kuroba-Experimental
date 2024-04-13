@@ -28,6 +28,8 @@ open class FloatingListMenuController @JvmOverloads constructor(
     component.inject(this)
   }
 
+  override fun getLayoutId(): Int = R.layout.controller_floating_list_menu
+
   override fun onCreate() {
     super.onCreate()
 
@@ -93,8 +95,6 @@ open class FloatingListMenuController @JvmOverloads constructor(
       )
     )
   }
-
-  override fun getLayoutId(): Int = R.layout.controller_floating_list_menu
 
   companion object {
     private val TABLET_WIDTH = dp(400f)

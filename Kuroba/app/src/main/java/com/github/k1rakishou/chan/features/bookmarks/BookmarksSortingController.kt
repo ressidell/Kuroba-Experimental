@@ -1,17 +1,21 @@
 package com.github.k1rakishou.chan.features.bookmarks
 
 import android.content.Context
+import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.updateLayoutParams
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController
+import com.github.k1rakishou.chan.ui.misc.ConstraintLayoutBias
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableCheckBox
 import com.github.k1rakishou.chan.ui.view.sorting.BookmarkSortingItemsViewGroup
 
 class BookmarksSortingController(
   context: Context,
+  private val constraintLayoutBias: ConstraintLayoutBias,
   private var bookmarksView: BookmarksView? = null
 ) : BaseFloatingController(context) {
 
@@ -38,6 +42,12 @@ class BookmarksSortingController(
     moveBookmarksWithUnreadRepliesToTop = view.findViewById(R.id.move_bookmarks_with_unread_replies_to_top)
     cancel = view.findViewById(R.id.cancel_button)
     apply = view.findViewById(R.id.apply_button)
+
+    val innerContainer = view.findViewById<FrameLayout>(R.id.inner_container)
+    innerContainer.updateLayoutParams<ConstraintLayout.LayoutParams> {
+      horizontalBias = constraintLayoutBias.horizontalBias
+      verticalBias = constraintLayoutBias.verticalBias
+    }
 
     cancel.setOnClickListener { pop() }
     outsideArea.setOnClickListener { pop() }

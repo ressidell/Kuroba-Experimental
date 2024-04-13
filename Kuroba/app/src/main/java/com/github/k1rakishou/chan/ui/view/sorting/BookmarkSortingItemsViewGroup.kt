@@ -62,6 +62,7 @@ class BookmarkSortingItemsViewGroup @JvmOverloads constructor(
     val sortDirectionDescList = sortingItemViews.map { sortingItemView -> sortingItemView.sortDirectionDesc }
 
     val nullCount = sortDirectionDescList.count { sortDirectionDesc -> sortDirectionDesc == null }
+    // TODO: New toolbar. Crashes.
     check(nullCount == sortDirectionDescList.size - 1)
 
     val sortingItemView = sortingItemViews.firstOrNull { sortingItemView ->

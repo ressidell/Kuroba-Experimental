@@ -9,6 +9,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
+import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.core.site.Site
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
@@ -19,14 +21,20 @@ import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.util.ChanPostUtils.getTitle
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 class WebViewReportController(
   context: Context,
   private val post: ChanPost,
   private val site: Site
-) : Controller(context) {
+) : Controller(context), WindowInsetsListener {
+
+  @Inject
+  lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
+
   private lateinit var frameLayout: FrameLayout
 
   override fun injectDependencies(component: ActivityComponent) {
@@ -46,12 +54,49 @@ class WebViewReportController(
       )
     )
 
+    initUi()
+
     controllerScope.launch {
-      toolbarState.toolbarHeightState
-        .onEach { updatePaddings() }
+      combine(
+        globalUiStateHolder.toolbar.toolbarHeight,
+        globalUiStateHolder.bottomPanel.bottomPanelHeight
+      ) { t1, t2 -> t1 to t2 }
+        .onEach { onInsetsChanged() }
         .collect()
     }
 
+    onInsetsChanged()
+    globalWindowInsetsManager.addInsetsUpdatesListener(this)
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+
+    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
+  }
+
+  override fun onInsetsChanged() {
+    val bottomPadding = with(appResources.composeDensity) {
+      maxOf(
+        globalWindowInsetsManager.bottom(),
+        globalUiStateHolder.bottomPanel.bottomPanelHeight.value.roundToPx()
+      )
+    }
+
+    val topPadding = with(appResources.composeDensity) {
+      maxOf(
+        globalWindowInsetsManager.top(),
+        globalUiStateHolder.toolbar.toolbarHeight.value.roundToPx()
+      )
+    }
+
+    frameLayout.updatePaddings(
+      top = topPadding,
+      bottom = bottomPadding
+    )
+  }
+
+  private fun initUi() {
     val url = site.endpoints().report(post)
 
     frameLayout = FrameLayout(context)
@@ -84,7 +129,7 @@ class WebViewReportController(
       )
 
       view = frameLayout
-      updatePaddings()
+      onInsetsChanged()
     } catch (error: Throwable) {
       var errmsg = ""
 
@@ -92,31 +137,18 @@ class WebViewReportController(
         error is AndroidRuntimeException &&
         error.message != null &&
         error.message?.contains("MissingWebViewPackageException") == true
-        ) {
+      ) {
         errmsg = appResources.string(R.string.fail_reason_webview_is_not_installed)
       } else {
-        errmsg = appResources.string(R.string.fail_reason_some_part_of_webview_not_initialized, error.message ?: "Unknown error")
+        errmsg = appResources.string(
+          R.string.fail_reason_some_part_of_webview_not_initialized,
+          error.message ?: "Unknown error"
+        )
       }
 
       view = AppModuleAndroidUtils.inflate(context, R.layout.layout_webview_error)
       view.findViewById<TextView>(R.id.text).text = errmsg
     }
-  }
-
-  private fun updatePaddings() {
-    val toolbarHeightDp = toolbarState.toolbarHeight
-
-    var toolbarHeight = with(appResources.composeDensity) { toolbarHeightDp?.toPx()?.toInt() }
-    if (toolbarHeight == null) {
-      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
-    }
-
-    frameLayout.updatePaddings(
-      left = null,
-      right = null,
-      top = toolbarHeight,
-      bottom = null
-    )
   }
 
 }

@@ -8,74 +8,86 @@
     android:clickable="true"
     android:focusable="true">
 
-    <com.github.k1rakishou.chan.ui.theme.widget.ColorizableCardView
-        android:layout_width="256dp"
+    <FrameLayout
+        android:id="@+id/inner_container"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth="match_constraint">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <com.github.k1rakishou.chan.ui.theme.widget.ColorizableCardView
+            android:layout_width="256dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <LinearLayout
-                android:id="@+id/sort_options_holder"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                android:layout_height="wrap_content">
 
-                <com.github.k1rakishou.chan.ui.view.sorting.BookmarkSortingItemsViewGroup
-                    android:id="@+id/sorting_items_view_group"
+                <LinearLayout
+                    android:id="@+id/sort_options_holder"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="8dp" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
-                <com.github.k1rakishou.chan.ui.theme.widget.ColorizableCheckBox
-                    android:id="@+id/move_not_active_bookmark_to_bottom"
-                    android:layout_width="match_parent"
-                    android:layout_marginTop="12dp"
+                    <com.github.k1rakishou.chan.ui.view.sorting.BookmarkSortingItemsViewGroup
+                        android:id="@+id/sorting_items_view_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="8dp" />
+
+                    <com.github.k1rakishou.chan.ui.theme.widget.ColorizableCheckBox
+                        android:id="@+id/move_not_active_bookmark_to_bottom"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/controller_bookmarks_move_not_active_bookmarks_to_bottom" />
+
+                    <com.github.k1rakishou.chan.ui.theme.widget.ColorizableCheckBox
+                        android:id="@+id/move_bookmarks_with_unread_replies_to_top"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/controller_bookmarks_move_bookmarks_with_unread_replies_to_top" />
+
+                </LinearLayout>
+
+                <com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
+                    android:id="@+id/cancel_button"
+                    android:layout_width="96dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/controller_bookmarks_move_not_active_bookmarks_to_bottom"/>
+                    android:text="@string/cancel"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/apply_button"
+                    app:layout_constraintTop_toTopOf="@+id/apply_button" />
 
-                <com.github.k1rakishou.chan.ui.theme.widget.ColorizableCheckBox
-                    android:id="@+id/move_bookmarks_with_unread_replies_to_top"
-                    android:layout_width="match_parent"
-                    android:layout_marginTop="12dp"
+                <com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
+                    android:id="@+id/apply_button"
+                    android:layout_width="96dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/controller_bookmarks_move_bookmarks_with_unread_replies_to_top"/>
-
-            </LinearLayout>
-
-            <com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
-                android:id="@+id/cancel_button"
-                android:layout_width="96dp"
-                android:layout_height="wrap_content"
-                android:text="@string/cancel"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/apply_button"
-                app:layout_constraintTop_toTopOf="@+id/apply_button" />
-
-            <com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
-                android:id="@+id/apply_button"
-                android:layout_width="96dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
-                android:text="@string/apply"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/sort_options_holder" />
+                    android:layout_marginEnd="16dp"
+                    android:text="@string/apply"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/sort_options_holder" />
 
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </com.github.k1rakishou.chan.ui.theme.widget.ColorizableCardView>
+        </com.github.k1rakishou.chan.ui.theme.widget.ColorizableCardView>
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

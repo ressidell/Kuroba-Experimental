@@ -151,8 +151,9 @@ import com.github.k1rakishou.chan.ui.epoxy.EpoxySimpleGroupView
 import com.github.k1rakishou.chan.ui.epoxy.EpoxyTextView
 import com.github.k1rakishou.chan.ui.epoxy.EpoxyTextViewWrapHeight
 import com.github.k1rakishou.chan.ui.helper.RemovedPostsHelper
+import com.github.k1rakishou.chan.ui.layout.FloatingControllerFrameContainer
+import com.github.k1rakishou.chan.ui.layout.FloatingControllerLinearContainer
 import com.github.k1rakishou.chan.ui.layout.MrSkeletonLayout
-import com.github.k1rakishou.chan.ui.layout.PostPopupContainer
 import com.github.k1rakishou.chan.ui.layout.SearchLayout
 import com.github.k1rakishou.chan.ui.layout.SplitNavigationControllerLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout
@@ -167,8 +168,10 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableDivider
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEditText
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableInsetAwareEpoxyRecyclerView
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableLinearLayout
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableListView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableProgressBar
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableRadioButton
@@ -314,6 +317,8 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(colorizableTextView: ColorizableTextView)
   fun inject(colorizableTabLayout: ColorizableTabLayout)
   fun inject(colorizableToolbarSearchLayoutEditText: ColorizableToolbarSearchLayoutEditText)
+  fun inject(colorizableFrameLayout: ColorizableFrameLayout)
+  fun inject(colorizableLinearLayout: ColorizableLinearLayout)
 
   fun inject(epoxyGridThreadBookmarkViewHolder: EpoxyGridThreadBookmarkViewHolder)
   fun inject(epoxyListThreadBookmarkViewHolder: EpoxyListThreadBookmarkViewHolder)
@@ -411,7 +416,8 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(lynxchanCaptchaLayout: LynxchanCaptchaLayout)
   fun inject(mrSkeletonLayout: MrSkeletonLayout)
   fun inject(kurobaComposeIconPanel: KurobaComposeIconPanel)
-  fun inject(postPopupContainer: PostPopupContainer)
+  fun inject(floatingControllerLinearContainer: FloatingControllerLinearContainer)
+  fun inject(floatingControllerFrameContainer: FloatingControllerFrameContainer)
   fun inject(replyLayoutView: ReplyLayoutView)
   fun inject(kurobaToolbarView: KurobaToolbarView)
   fun inject(snackbarWrapper: SnackbarWrapper)

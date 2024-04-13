@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     android:clickable="true"
     android:focusable="true">
 
-    <FrameLayout
+    <com.github.k1rakishou.chan.ui.layout.FloatingControllerFrameContainer
         android:id="@+id/inner_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -40,6 +40,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         </com.github.k1rakishou.chan.ui.theme.widget.ColorizableCardView>
 
-    </FrameLayout>
+    </com.github.k1rakishou.chan.ui.layout.FloatingControllerFrameContainer>
 
 </FrameLayout>

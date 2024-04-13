@@ -332,6 +332,7 @@ class BookmarksController(
           onClick = {
             val controller = BookmarksSortingController(
               context = context,
+              constraintLayoutBias = globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
               bookmarksView = this@BookmarksController
             )
 
@@ -598,6 +599,7 @@ class BookmarksController(
     }
   }
 
+  // TODO: New toolbar. This doesn't work.
   private fun onChangeViewModeClicked() {
     PersistableChanState.viewThreadBookmarksGridMode.toggle()
 

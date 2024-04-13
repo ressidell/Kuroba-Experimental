@@ -1,25 +1,10 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.ui.controller
 
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +13,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -133,6 +119,20 @@ class LogsController(context: Context) : Controller(context) {
     val scrollState = rememberScrollState()
     val forceLogReload by forceLogReloadState
 
+    val toolbarHeight by globalUiStateHolder.toolbar.toolbarHeight.collectAsState()
+    val bottomPanelHeight by globalUiStateHolder.bottomPanel.bottomPanelHeight.collectAsState()
+
+    val contentPadding = remember(insets, toolbarHeight, bottomPanelHeight) {
+      insets.asPaddingValues()
+
+      return@remember PaddingValues(
+        start = insets.left,
+        end = insets.right,
+        top = maxOf(insets.top, toolbarHeight),
+        bottom = maxOf(insets.bottom, bottomPanelHeight)
+      )
+    }
+
     LaunchedEffect(
       key1 = forceLogReload,
       block = {
@@ -196,22 +196,22 @@ class LogsController(context: Context) : Controller(context) {
       }
     )
 
-
     Box(
       modifier = Modifier
         .fillMaxSize()
         .background(Color.Black)
         .verticalScrollbar(
           thumbColor = chanTheme.accentColorCompose,
-          contentPadding = remember(insets) { insets.asPaddingValues() },
+          contentPadding = contentPadding,
           scrollState = scrollState
         )
-        .padding(horizontal = 4.dp, vertical = 8.dp)
+        .padding(contentPadding)
     ) {
       Column(
         modifier = Modifier
           .fillMaxSize()
           .verticalScroll(scrollState)
+          .padding(horizontal = 4.dp, vertical = 8.dp)
       ) {
         if (logs.isNullOrBlank()) {
           val text = if (logs == null) {

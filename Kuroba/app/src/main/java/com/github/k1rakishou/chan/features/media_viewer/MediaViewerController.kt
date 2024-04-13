@@ -401,8 +401,6 @@ class MediaViewerController(
 
   override fun onPageSelected(position: Int) {
     mediaViewerAdapter?.let { adapter ->
-      adapter as MediaViewerAdapter
-
       adapter.doBind(position)
       viewModel.updateLastViewedIndex(position)
     }

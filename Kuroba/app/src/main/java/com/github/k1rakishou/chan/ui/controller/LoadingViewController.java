@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.ui.controller;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
-import static com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString;
 
 import android.content.Context;
 import android.widget.ProgressBar;
@@ -32,6 +31,11 @@ public class LoadingViewController extends BaseFloatingController {
     @Override
     protected void injectDependencies(@NotNull ActivityComponent component) {
         component.inject(this);
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.controller_loading_view;
     }
 
     public LoadingViewController(Context context, boolean indeterminate) {
@@ -132,11 +136,6 @@ public class LoadingViewController extends BaseFloatingController {
         loadingControllerMessage.setVisibility(VISIBLE);
         progressBar.setVisibility(GONE);
         loadingControllerMessage.setText(text);
-    }
-
-    @Override
-    protected int getLayoutId() {
-        return R.layout.controller_loading_view;
     }
 
 }

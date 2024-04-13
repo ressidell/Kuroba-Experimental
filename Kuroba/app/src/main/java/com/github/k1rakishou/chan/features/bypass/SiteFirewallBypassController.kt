@@ -158,7 +158,7 @@ class SiteFirewallBypassController(
 
     webViewContainer.addView(webView)
 
-    val clickableArea = view.findViewById<ConstraintLayout>(R.id.clickable_area)
+    val clickableArea = view.findViewById<FrameLayout>(R.id.clickable_area)
     clickableArea.setOnClickListener { pop() }
 
     closeButton = view.findViewById(R.id.close_button)

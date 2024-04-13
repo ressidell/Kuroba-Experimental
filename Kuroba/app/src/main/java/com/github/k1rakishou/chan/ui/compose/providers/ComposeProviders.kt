@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.ui.compose.providers
 
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.github.k1rakishou.chan.utils.activityComponent
@@ -18,7 +19,9 @@ fun ComposeEntrypoint(
     ProvideKurobaViewConfiguration {
       ProvideWindowInsets(activityComponent.globalWindowInsetsManager) {
         ProvideLocalMinimumInteractiveComponentEnforcement {
-          content()
+          ProvideWindowClassSize(context as ComponentActivity) {
+            content()
+          }
         }
       }
     }
