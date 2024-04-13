@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.features.proxies
 
 import android.content.Context
+import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.BaseSelectionHelper
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
@@ -25,8 +26,9 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.common.updateMargins
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.persist_state.PersistableChanState
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -90,14 +92,10 @@ class ProxySetupController(
         .collect { selectionEvent -> onNewSelectionEvent(selectionEvent) }
     }
 
-    drawerCallbacks?.onBottomPanelStateChanged {
-      val paddingBottom = if (drawerCallbacks.isBottomPanelShown) {
-        drawerCallbacks.bottomPanelHeight
-      } else {
-        0
-      }
-
-      epoxyRecyclerView.updatePaddings(bottom = paddingBottom)
+    controllerScope.launch {
+      globalUiStateHolder.bottomPanel.bottomPanelHeight
+        .onEach { onInsetsChanged() }
+        .collect()
     }
 
     onInsetsChanged()
@@ -126,24 +124,18 @@ class ProxySetupController(
   }
 
   override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
-    )
+    val bottomPadding = with(appResources.composeDensity) {
+      maxOf(
+        globalWindowInsetsManager.bottom(),
+        globalUiStateHolder.bottomPanel.bottomPanelHeight.value.roundToPx()
+      )
+    }
 
-    val bottomPaddingPx = dp(bottomPaddingDp.toFloat())
-    val fabSize = dp(64f)
-    val fabBottomMargin = dp(16f)
-    val recyclerBottomPadding = bottomPaddingPx + fabSize + fabBottomMargin
+    val fabSizeDp = 64.dp
+    val fabBottomMarginDp = 16.dp
+    epoxyRecyclerView.additionalBottomPadding(fabSizeDp + fabBottomMarginDp)
 
-    epoxyRecyclerView.updatePaddings(
-      left = null,
-      right = null,
-      top = null,
-      bottom = recyclerBottomPadding
-    )
-
-    addProxyButton.updateMargins(null, null, null, null, null, bottomPaddingPx + fabBottomMargin)
+    addProxyButton.updateMargins(bottom = dp(bottomPadding.toFloat()))
   }
 
   override fun showMessage(message: String) {

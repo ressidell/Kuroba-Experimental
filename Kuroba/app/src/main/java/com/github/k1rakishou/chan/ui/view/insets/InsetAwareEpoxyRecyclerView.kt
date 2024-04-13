@@ -2,6 +2,9 @@ package com.github.k1rakishou.chan.ui.view.insets
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.airbnb.epoxy.EpoxyRecyclerView
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
@@ -31,9 +34,22 @@ open class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
 
   private val coroutineScope = KurobaCoroutineScope()
 
+  private val _additionalTopPaddingDp = mutableStateOf(0.dp)
+  private val _additionalBottomPaddingDp = mutableStateOf(0.dp)
+
   init {
     AppModuleAndroidUtils.extractActivityComponent(context)
       .inject(this)
+  }
+
+  fun additionalTopPadding(padding: Dp) {
+    _additionalTopPaddingDp.value = padding
+    onInsetsChanged()
+  }
+
+  fun additionalBottomPadding(padding: Dp) {
+    _additionalBottomPaddingDp.value = padding
+    onInsetsChanged()
   }
 
   override fun onAttachedToWindow() {
@@ -72,9 +88,12 @@ open class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
       )
     }
 
+    val additionalTopPadding = with(appResources.composeDensity) { _additionalTopPaddingDp.value.roundToPx() }
+    val additionalBottomPadding = with(appResources.composeDensity) { _additionalBottomPaddingDp.value.roundToPx() }
+
     updatePaddings(
-      top = topPadding,
-      bottom = bottomPadding
+      top = topPadding + additionalTopPadding,
+      bottom = bottomPadding + additionalBottomPadding
     )
   }
 

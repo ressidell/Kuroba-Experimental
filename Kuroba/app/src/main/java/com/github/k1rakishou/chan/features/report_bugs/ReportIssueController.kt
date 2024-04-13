@@ -55,6 +55,7 @@ import kotlinx.coroutines.withContext
 import org.joda.time.Duration
 import javax.inject.Inject
 
+// TODO: Fix insets if this controller is ever enabled again.
 class ReportIssueController(
   context: Context
 ) : Controller(context), WindowInsetsListener {
