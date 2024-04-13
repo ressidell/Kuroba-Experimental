@@ -196,6 +196,7 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyFloatingListM
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyGroupableFloatingListMenuRow
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyHeaderListMenuRow
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLinearLayout
 import com.github.k1rakishou.chan.ui.view.sorting.BookmarkSortingItemView
 import com.github.k1rakishou.chan.ui.view.widget.SnackbarWrapper
 import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertController
@@ -405,6 +406,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(kurobaComposeIconPanel: KurobaComposeIconPanel)
   fun inject(postPopupContainer: PostPopupContainer)
   fun inject(insetAwareEpoxyRecyclerView: InsetAwareEpoxyRecyclerView)
+  fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
   fun inject(replyLayoutView: ReplyLayoutView)
   fun inject(kurobaToolbarView: KurobaToolbarView)
   fun inject(snackbarWrapper: SnackbarWrapper)

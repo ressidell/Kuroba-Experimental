@@ -9,6 +9,7 @@ import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
+import com.github.k1rakishou.common.updatePaddings
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
@@ -70,11 +71,9 @@ class InsetAwareEpoxyRecyclerView @JvmOverloads constructor(
       )
     }
 
-    setPadding(
-      paddingLeft,
-      topPadding,
-      paddingRight,
-      bottomPadding
+    updatePaddings(
+      top = topPadding,
+      bottom = bottomPadding
     )
   }
 
