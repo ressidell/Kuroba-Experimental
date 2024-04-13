@@ -4,12 +4,10 @@ import android.content.Context
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.epoxy.EpoxyController
-import com.airbnb.epoxy.EpoxyRecyclerView
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.AppRestarter
 import com.github.k1rakishou.chan.core.manager.SettingsNotificationManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.settings.epoxy.epoxyBooleanSetting
 import com.github.k1rakishou.chan.features.settings.epoxy.epoxyLinkSetting
@@ -29,11 +27,10 @@ import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.ui.settings.SettingNotificationType
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.addOneshotModelBuildListener
 import com.github.k1rakishou.common.exhaustive
-import com.github.k1rakishou.common.updatePaddings
 import dagger.Lazy
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -43,7 +40,7 @@ import javax.inject.Inject
 class MainSettingsControllerV2(
   context: Context,
   private val mainControllerCallbacks: MainControllerCallbacks
-) : BaseSettingsController(context), WindowInsetsListener {
+) : BaseSettingsController(context) {
 
   @Inject
   lateinit var settingsNotificationManager: SettingsNotificationManager
@@ -52,7 +49,7 @@ class MainSettingsControllerV2(
   @Inject
   lateinit var appRestarter: AppRestarter
 
-  lateinit var epoxyRecyclerView: EpoxyRecyclerView
+  lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
 
   private val settingsCoordinator by lazy { SettingsCoordinator(context, requireNavController(), mainControllerCallbacks) }
   private val defaultScreen = MainScreen
@@ -124,10 +121,7 @@ class MainSettingsControllerV2(
       isFirstRebuild = true
     )
 
-    onInsetsChanged()
-
     epoxyRecyclerView.addOnScrollListener(scrollListener)
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
 
     controllerScope.launch {
       toolbarState.search.listenForSearchVisibilityUpdates()
@@ -154,18 +148,8 @@ class MainSettingsControllerV2(
     epoxyRecyclerView.removeOnScrollListener(scrollListener)
     epoxyRecyclerView.clear()
 
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     settingsCoordinator.onDestroy()
     restartAppOrRefreshUiIfNecessary()
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = mainControllerCallbacks
-    )
-
-    epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
   override fun onBack(): Boolean {

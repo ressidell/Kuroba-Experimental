@@ -2,13 +2,11 @@ package com.github.k1rakishou.chan.features.setup
 
 import android.content.Context
 import com.airbnb.epoxy.EpoxyController
-import com.airbnb.epoxy.EpoxyRecyclerView
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.settings.BaseSettingsController
 import com.github.k1rakishou.chan.features.settings.SettingsGroup
 import com.github.k1rakishou.chan.features.settings.epoxy.epoxyBooleanSetting
@@ -26,9 +24,8 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.epoxy.epoxyDividerView
 import com.github.k1rakishou.chan.ui.settings.SettingNotificationType
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
+import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,7 +35,7 @@ import javax.inject.Inject
 class SiteSettingsController(
   context: Context,
   private val siteDescriptor: SiteDescriptor
-) : BaseSettingsController(context), SiteSettingsView, WindowInsetsListener {
+) : BaseSettingsController(context), SiteSettingsView {
 
   @Inject
   lateinit var siteManager: SiteManager
@@ -55,7 +52,7 @@ class SiteSettingsController(
     )
   }
 
-  private lateinit var epoxyRecyclerView: EpoxyRecyclerView
+  private lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -80,9 +77,6 @@ class SiteSettingsController(
     view = inflate(context, R.layout.controller_site_settings)
     epoxyRecyclerView = view.findViewById(R.id.epoxy_recycler_view)
 
-    onInsetsChanged()
-
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
     presenter.onCreate(this)
   }
 
@@ -96,17 +90,7 @@ class SiteSettingsController(
 
     epoxyRecyclerView.clear()
 
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     presenter.onDestroy()
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
-    )
-
-    epoxyRecyclerView.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
   private fun rebuildSettings() {
