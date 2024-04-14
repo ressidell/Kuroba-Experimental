@@ -26,6 +26,12 @@ abstract class NavigationController(context: Context) : Controller(context), Con
     return pushController(to, (if (animated) PushControllerTransition() else null))
   }
 
+  override fun pushController(to: Controller, onFinished: () -> Unit): Boolean {
+    val transition = PushControllerTransition()
+    transition.onTransitionFinished { onFinished() }
+    return pushController(to, transition)
+  }
+
   override fun pushController(to: Controller, transition: ControllerTransition?): Boolean {
     val from = topController
 
@@ -57,6 +63,12 @@ abstract class NavigationController(context: Context) : Controller(context), Con
 
   override fun popController(animated: Boolean): Boolean {
     return popController(if (animated) PopControllerTransition() else null)
+  }
+
+  override fun popController(onFinished: () -> Unit): Boolean {
+    val transition = PopControllerTransition()
+    transition.onTransitionFinished { onFinished() }
+    return popController(transition)
   }
 
   override fun popController(transition: ControllerTransition?): Boolean {

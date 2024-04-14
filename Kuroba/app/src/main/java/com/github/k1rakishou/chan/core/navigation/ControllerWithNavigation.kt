@@ -7,7 +7,10 @@ interface ControllerWithNavigation {
   fun pushController(to: Controller): Boolean
   fun pushController(to: Controller, animated: Boolean): Boolean
   fun pushController(to: Controller, transition: ControllerTransition?): Boolean
+  fun pushController(to: Controller, onFinished: () -> Unit): Boolean
+
   fun popController(): Boolean
   fun popController(animated: Boolean): Boolean
   fun popController(transition: ControllerTransition?): Boolean
+  fun popController(onFinished: () -> Unit): Boolean
 }

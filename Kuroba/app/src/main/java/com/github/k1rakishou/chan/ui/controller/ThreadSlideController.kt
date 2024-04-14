@@ -291,6 +291,10 @@ class ThreadSlideController(
     return navigationController?.pushController(to, animated) ?: false
   }
 
+  override fun pushController(to: Controller, onFinished: () -> Unit): Boolean {
+    return navigationController?.pushController(to, onFinished) ?: false
+  }
+
   override fun pushController(to: Controller, transition: ControllerTransition?): Boolean {
     return navigationController?.pushController(to, transition) ?: false
   }
@@ -301,6 +305,10 @@ class ThreadSlideController(
 
   override fun popController(animated: Boolean): Boolean {
     return navigationController?.popController(animated) ?: false
+  }
+
+  override fun popController(onFinished: () -> Unit): Boolean {
+    return navigationController?.popController(onFinished) ?: false
   }
 
   override fun popController(transition: ControllerTransition?): Boolean {

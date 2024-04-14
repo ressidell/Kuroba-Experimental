@@ -202,7 +202,22 @@ class SearchResultsController(
   }
 
   private fun onSearchPostClicked(postDescriptor: PostDescriptor) {
-    startActivityCallback.loadThreadAndMarkPost(postDescriptor, animated = true)
+    withLayoutMode(
+      phone = {
+        requireNavController().popController {
+          startActivityCallback.loadThreadAndMarkPost(
+            postDescriptor = postDescriptor,
+            animated = true
+          )
+        }
+      },
+      tablet = {
+        startActivityCallback.loadThreadAndMarkPost(
+          postDescriptor = postDescriptor,
+          animated = true
+        )
+      }
+    )
   }
 
   private fun updateTitle(totalFound: Int?) {

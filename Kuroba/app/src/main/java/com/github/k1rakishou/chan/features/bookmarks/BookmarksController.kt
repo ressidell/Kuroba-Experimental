@@ -79,8 +79,6 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
-// TODO: New toolbar. When clicking a bookmark (when using SPLIT mode) the bookmarked thread is not opened.
-//  The same happens on LocalArchiveController, probably on the others too.
 class BookmarksController(
   context: Context,
   private val bookmarksToHighlight: List<ChanDescriptor.ThreadDescriptor>,
@@ -939,7 +937,16 @@ class BookmarksController(
       return
     }
 
-    startActivityCallback.loadThread(threadDescriptor, animated = true)
+    withLayoutMode(
+      phone = {
+        requireNavController().popController {
+          startActivityCallback.loadThread(threadDescriptor, true)
+        }
+      },
+      tablet = {
+        startActivityCallback.loadThread(threadDescriptor, true)
+      }
+    )
   }
 
   private fun onRecyclerViewScrolled(recyclerView: RecyclerView) {

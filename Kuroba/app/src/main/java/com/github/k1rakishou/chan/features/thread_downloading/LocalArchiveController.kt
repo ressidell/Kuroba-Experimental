@@ -281,7 +281,16 @@ class LocalArchiveController(
           return@BuildThreadDownloadsList
         }
 
-        startActivityCallback.loadThread(threadDescriptor, animated = true)
+        withLayoutMode(
+          phone = {
+            requireNavController().popController {
+              startActivityCallback.loadThread(threadDescriptor, true)
+            }
+          },
+          tablet = {
+            startActivityCallback.loadThread(threadDescriptor, true)
+          }
+        )
       },
       onThreadDownloadLongClicked = { threadDescriptor ->
         if (toolbarState.isInSearchMode()) {

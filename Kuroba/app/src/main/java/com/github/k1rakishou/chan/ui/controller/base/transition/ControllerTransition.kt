@@ -9,7 +9,7 @@ abstract class ControllerTransition(
 )  {
   protected val animatorSet = AnimatorSet()
 
-  private var listener: TransitionFinishListener? = null
+  private val listeners = mutableListOf<TransitionFinishListener>()
   private var transitionStarted = false
 
   @JvmField
@@ -50,12 +50,14 @@ abstract class ControllerTransition(
       prevToolbarState.onTransitionProgressFinished()
     }
 
-    listener?.onControllerTransitionCompleted(this)
+    listeners.forEach { listener -> listener.onControllerTransitionCompleted(this) }
+    listeners.clear()
+
     transitionStarted = false
   }
 
-  fun onTransitionFinished(transitionFinishListener: TransitionFinishListener?) {
-    listener = transitionFinishListener
+  fun onTransitionFinished(transitionFinishListener: TransitionFinishListener) {
+    listeners += transitionFinishListener
   }
 
   fun interface TransitionFinishListener {

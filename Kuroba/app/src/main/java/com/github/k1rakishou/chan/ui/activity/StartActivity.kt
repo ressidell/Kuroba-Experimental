@@ -281,21 +281,6 @@ class StartActivity : ControllerHostActivity(),
     }
   }
 
-  override fun loadThreadWithoutFocusing(threadDescriptor: ChanDescriptor.ThreadDescriptor, animated: Boolean) {
-    lifecycleScope.launch {
-      mainController.getViewThreadController()?.let { viewThreadController ->
-        if (viewThreadController.chanDescriptor != threadDescriptor) {
-          viewThreadController.showLoading(animateTransition = false)
-        }
-      }
-
-      mainController.loadThreadWithoutFocusing(
-        threadDescriptor = threadDescriptor,
-        animated = animated
-      )
-    }
-  }
-
   override fun loadThread(threadDescriptor: ChanDescriptor.ThreadDescriptor, animated: Boolean) {
     lifecycleScope.launch {
       mainController.getViewThreadController()?.let { viewThreadController ->

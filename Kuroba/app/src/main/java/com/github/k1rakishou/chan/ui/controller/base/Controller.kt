@@ -412,6 +412,17 @@ abstract class Controller(
     parentView.addView(view, view.layoutParams)
   }
 
+  fun withLayoutMode(
+    phone: () -> Unit,
+    tablet: () -> Unit
+  ) {
+    if (ChanSettings.isSplitLayoutMode()) {
+      tablet()
+    } else {
+      phone()
+    }
+  }
+
   fun popFromNavController(chanDescriptor: ChanDescriptor) {
     popFromNavControllerWithAction(chanDescriptor = chanDescriptor, action = {  })
   }

@@ -678,7 +678,6 @@ class StartActivityStartupHandlerHelper(
 
   interface StartActivityCallbacks {
     fun loadThreadAndMarkPost(postDescriptor: PostDescriptor, animated: Boolean)
-    fun loadThreadWithoutFocusing(threadDescriptor: ChanDescriptor.ThreadDescriptor, animated: Boolean)
     fun loadThread(threadDescriptor: ChanDescriptor.ThreadDescriptor, animated: Boolean)
   }
 

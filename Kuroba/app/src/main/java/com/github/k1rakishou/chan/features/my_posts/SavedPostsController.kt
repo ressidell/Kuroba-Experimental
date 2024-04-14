@@ -229,9 +229,21 @@ class SavedPostsController(
           return@BuildSavedRepliesList
         }
 
-        startActivityCallback.loadThreadAndMarkPost(
-          postDescriptor = threadDescriptor.toOriginalPostDescriptor(),
-          animated = true
+        withLayoutMode(
+          phone = {
+            requireNavController().popController {
+              startActivityCallback.loadThreadAndMarkPost(
+                postDescriptor = threadDescriptor.toOriginalPostDescriptor(),
+                animated = true
+              )
+            }
+          },
+          tablet = {
+            startActivityCallback.loadThreadAndMarkPost(
+              postDescriptor = threadDescriptor.toOriginalPostDescriptor(),
+              animated = true
+            )
+          }
         )
       },
       onReplyClicked = { postDescriptor ->
@@ -241,9 +253,21 @@ class SavedPostsController(
           return@BuildSavedRepliesList
         }
 
-        startActivityCallback.loadThreadAndMarkPost(
-          postDescriptor = postDescriptor,
-          animated = true
+        withLayoutMode(
+          phone = {
+            requireNavController().popController {
+              startActivityCallback.loadThreadAndMarkPost(
+                postDescriptor = postDescriptor,
+                animated = true
+              )
+            }
+          },
+          tablet = {
+            startActivityCallback.loadThreadAndMarkPost(
+              postDescriptor = postDescriptor,
+              animated = true
+            )
+          }
         )
       },
       onHeaderLongClicked = { threadDescriptor ->

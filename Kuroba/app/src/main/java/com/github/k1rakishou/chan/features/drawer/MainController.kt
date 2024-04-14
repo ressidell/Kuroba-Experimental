@@ -148,18 +148,20 @@ class MainController(
 
   private val topThreadController: ThreadController?
     get() {
-      val nav = mainToolbarNavigationController
+      val toolbarNavigationController = mainToolbarNavigationController
         ?: return null
 
-      if (nav.topController is ThreadController) {
-        return nav.topController as ThreadController?
-      }
+      for (topController in toolbarNavigationController.childControllers.asReversed()) {
+        if (topController is ThreadController) {
+          return topController
+        }
 
-      if (nav.topController is ThreadSlideController) {
-        val slideNav = nav.topController as ThreadSlideController?
+        if (topController is ThreadSlideController) {
+          val slideNav = topController as ThreadSlideController?
 
-        if (slideNav?.leftController() is ThreadController) {
-          return slideNav.leftController() as ThreadController
+          if (slideNav?.leftController() is ThreadController) {
+            return slideNav.leftController() as ThreadController
+          }
         }
       }
 
