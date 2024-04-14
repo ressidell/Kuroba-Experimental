@@ -32,6 +32,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -1253,9 +1254,9 @@ inline fun <T, reified R> List<T>.mapArray(mapper: (T) -> R): Array<R> {
   return array as Array<R>
 }
 
-suspend fun <T, R> processDataCollectionConcurrently(
+suspend fun <T, R> parallelForEach(
   dataList: Collection<T>,
-  batchCount: Int = Runtime.getRuntime().availableProcessors(),
+  parallelization: Int = Runtime.getRuntime().availableProcessors(),
   dispatcher: CoroutineDispatcher = Dispatchers.Default,
   rethrowErrors: Boolean = false,
   processFunc: suspend (T) -> R?
@@ -1266,7 +1267,7 @@ suspend fun <T, R> processDataCollectionConcurrently(
 
   return newScope(rethrowErrors) {
     return@newScope dataList
-      .chunked(batchCount)
+      .chunked(parallelization)
       .flatMap { dataChunk ->
         return@flatMap dataChunk
           .map { data ->
@@ -1292,9 +1293,9 @@ suspend fun <T, R> processDataCollectionConcurrently(
 /**
  * @note: indexed doesn't mean ordered!
  * */
-suspend fun <T, R> processDataCollectionConcurrentlyIndexed(
+suspend fun <T, R> parallelForEachIndexed(
   dataList: Collection<T>,
-  batchCount: Int = Runtime.getRuntime().availableProcessors(),
+  parallelization: Int = Runtime.getRuntime().availableProcessors(),
   dispatcher: CoroutineDispatcher = Dispatchers.Default,
   rethrowErrors: Boolean = false,
   processFunc: suspend (Int, T) -> R?
@@ -1307,7 +1308,7 @@ suspend fun <T, R> processDataCollectionConcurrentlyIndexed(
 
   return newScope(rethrowErrors) {
     return@newScope dataList
-      .chunked(batchCount)
+      .chunked(parallelization)
       .flatMap { dataChunk ->
         val results = dataChunk
           .mapIndexed { index, data ->
@@ -1332,6 +1333,50 @@ suspend fun <T, R> processDataCollectionConcurrentlyIndexed(
       }
   }
 }
+
+suspend fun <T, R> parallelForEachOrdered(
+  dataList: Collection<T>,
+  parallelization: Int = Runtime.getRuntime().availableProcessors(),
+  dispatcher: CoroutineDispatcher,
+  processFunc: suspend (Int, T) -> R?
+): List<R> {
+  if (dataList.isEmpty()) {
+    return emptyList()
+  }
+
+  return supervisorScope {
+    val dataListIndexed = mutableListWithCap<DataIndexed<T>>(dataList.size)
+    dataList.forEachIndexed { order, data -> dataListIndexed += DataIndexed(data, order)  }
+
+    return@supervisorScope dataListIndexed
+      .chunked(parallelization)
+      .flatMap { dataChunk ->
+        val deferredWithOrderPairs = dataChunk
+          .map { (data, order) ->
+            val job = async(context = dispatcher, start = CoroutineStart.LAZY) {
+              ensureActive()
+              return@async DataIndexed(processFunc(order, data), order)
+            }
+
+            return@map job to order
+          }
+
+        val deferredList = mutableListWithCap<Deferred<DataIndexed<R?>>>(deferredWithOrderPairs.size)
+        deferredWithOrderPairs
+          .sortedBy { (_, order) -> order }
+          .forEach { (deferred, _) -> deferredList += deferred }
+
+        return@flatMap deferredList.awaitAll()
+      }
+      .sortedBy { (_, order) -> order }
+      .mapNotNull { (data, _) -> data }
+  }
+}
+
+private data class DataIndexed<T>(
+  val data: T,
+  val order: Int
+)
 
 private suspend fun <R> newScope(rethrowErrors: Boolean, block: suspend CoroutineScope.() -> R): R {
   return if (rethrowErrors) {

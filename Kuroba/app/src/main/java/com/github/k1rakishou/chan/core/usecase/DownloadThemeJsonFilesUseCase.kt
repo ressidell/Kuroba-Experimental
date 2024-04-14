@@ -2,7 +2,7 @@ package com.github.k1rakishou.chan.core.usecase
 
 import com.github.k1rakishou.chan.core.base.okhttp.RealProxiedOkHttpClient
 import com.github.k1rakishou.common.ModularResult
-import com.github.k1rakishou.common.processDataCollectionConcurrentlyIndexed
+import com.github.k1rakishou.common.parallelForEachIndexed
 import com.github.k1rakishou.common.suspendCall
 import com.github.k1rakishou.common.suspendConvertIntoJsonObjectWithAdapter
 import com.github.k1rakishou.core_logger.Logger
@@ -52,8 +52,8 @@ class DownloadThemeJsonFilesUseCase(
       return emptyList()
     }
 
-    return processDataCollectionConcurrentlyIndexed<RepoThemeFile, ChanTheme?>(repoFileTree) { _, repoFile ->
-      return@processDataCollectionConcurrentlyIndexed ModularResult
+    return parallelForEachIndexed<RepoThemeFile, ChanTheme?>(repoFileTree) { _, repoFile ->
+      return@parallelForEachIndexed ModularResult
         .Try { downloadThemeFileAndConvertToChanTheme(repoFile) }
         .mapErrorToValue { error ->
           Logger.e(TAG, "downloadThemeFileAndConvertToChanTheme($repoFile) error", error)

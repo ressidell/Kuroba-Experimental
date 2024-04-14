@@ -32,6 +32,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.state.ToolbarInlineContent
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
@@ -46,8 +47,6 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.sp
-import com.github.k1rakishou.chan.utils.SpannableHelper
 import com.github.k1rakishou.common.FirewallType
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.resumeValueSafe
@@ -247,11 +246,7 @@ class BrowseController(
         updateCompositeCatalogNavigationSubtitleJob = controllerScope.launch {
           val newTitle = presenter.getCompositeCatalogNavigationTitle(catalogDescriptor)
 
-          val compositeCatalogSubTitle = SpannableHelper.getCompositeCatalogNavigationSubtitle(
-            siteManager = siteManager,
-            coroutineScope = this,
-            context = context,
-            fontSizePx = sp(12f),
+          val compositeCatalogSubTitle = ToolbarInlineContent.getCompositeCatalogNavigationSubtitle(
             compositeCatalogDescriptor = catalogDescriptor
           )
 

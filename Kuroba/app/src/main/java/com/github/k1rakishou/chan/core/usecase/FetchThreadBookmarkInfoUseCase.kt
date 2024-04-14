@@ -8,7 +8,7 @@ import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.EmptyBodyResponseException
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.ModularResult.Companion.Try
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.common.suspendCall
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.bookmark.ThreadBookmarkInfoObject
@@ -44,17 +44,17 @@ class FetchThreadBookmarkInfoUseCase(
     val batchSize = (appConstants.processorsCount * BATCH_PER_CORE)
       .coerceAtLeast(MIN_BATCHES_COUNT)
 
-    return processDataCollectionConcurrently(watchingBookmarkDescriptors, batchSize, Dispatchers.IO) { threadDescriptor ->
+    return parallelForEach(watchingBookmarkDescriptors, batchSize, Dispatchers.IO) { threadDescriptor ->
       val site = siteManager.bySiteDescriptor(threadDescriptor.siteDescriptor())
       if (site == null) {
         Logger.e(TAG, "Site with descriptor ${threadDescriptor.siteDescriptor()} " +
           "not found in siteRepository!")
-        return@processDataCollectionConcurrently null
+        return@parallelForEach null
       }
 
       val threadJsonEndpoint = site.endpoints().thread(threadDescriptor)
 
-      return@processDataCollectionConcurrently fetchThreadBookmarkInfo(
+      return@parallelForEach fetchThreadBookmarkInfo(
         threadDescriptor,
         threadJsonEndpoint,
         site.chanReader()

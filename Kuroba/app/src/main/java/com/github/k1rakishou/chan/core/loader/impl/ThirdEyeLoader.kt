@@ -17,7 +17,7 @@ import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.isJson
 import com.github.k1rakishou.common.isNotNullNorBlank
 import com.github.k1rakishou.common.mutableListWithCap
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.common.suspendCall
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
@@ -179,19 +179,19 @@ class ThirdEyeLoader(
     boorusSettings: List<BooruSetting>,
     matchedHashes: List<Pair<String, ChanPostImage>>
   ): Boolean {
-    val results = processDataCollectionConcurrently(
+    val results = parallelForEach(
       dataList = matchedHashes,
-      batchCount = 4,
+      parallelization = 4,
       dispatcher = Dispatchers.IO
     ) { (imageHash, postImage) ->
       val cachedThirdEyeImage = thirdEyeManager.imageForPost(postDescriptor)
       if (cachedThirdEyeImage != null) {
         val chanPostImage = cachedThirdEyeImage.chanPostImage
         if (chanPostImage == null) {
-          return@processDataCollectionConcurrently false
+          return@parallelForEach false
         }
 
-        return@processDataCollectionConcurrently chanThreadManager.addImage(chanPostImage)
+        return@parallelForEach chanThreadManager.addImage(chanPostImage)
       }
 
       for (booruSettings in boorusSettings) {
@@ -224,7 +224,7 @@ class ThirdEyeLoader(
               ?: continue
 
             if (!chanThreadManager.addImage(thirdEyeImage)) {
-              return@processDataCollectionConcurrently false
+              return@parallelForEach false
             }
 
             thirdEyeManager.addImage(
@@ -237,7 +237,7 @@ class ThirdEyeLoader(
             // Image found
             Logger.d(TAG, "Found third eye image: ${thirdEyeImage}")
 
-            return@processDataCollectionConcurrently true
+            return@parallelForEach true
           }
         }
       }
@@ -252,7 +252,7 @@ class ThirdEyeLoader(
       )
 
       Logger.d(TAG, "Nothing found imageHash='$imageHash'")
-      return@processDataCollectionConcurrently false
+      return@parallelForEach false
     }
 
     return results.any { success -> success }

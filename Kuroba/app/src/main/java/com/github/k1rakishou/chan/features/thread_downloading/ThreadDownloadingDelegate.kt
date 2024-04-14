@@ -15,7 +15,7 @@ import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.extractFileName
 import com.github.k1rakishou.common.isNotNullNorEmpty
 import com.github.k1rakishou.common.isOutOfDiskSpaceError
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.common.suspendCall
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.fsaf.FileManager
@@ -288,9 +288,9 @@ class ThreadDownloadingDelegate(
     val mutex = Mutex()
     var totalProgress = POSTS_PROCESSED_PROGRESS
 
-    processDataCollectionConcurrently(
+    parallelForEach(
       dataList = chanPostImages,
-      batchCount = batchCount,
+      parallelization = batchCount,
       dispatcher = Dispatchers.IO
     ) { postImage ->
       val isNetworkGoodForMediaDownload = if (ChanSettings.threadDownloaderDownloadMediaOnMeteredNetwork.get()) {
@@ -300,15 +300,15 @@ class ThreadDownloadingDelegate(
       }
 
       if (!isNetworkGoodForMediaDownload) {
-        return@processDataCollectionConcurrently
+        return@parallelForEach
       }
 
       if (outOfDiskSpaceError.get()) {
-        return@processDataCollectionConcurrently
+        return@parallelForEach
       }
 
       if (outputDirError.get()) {
-        return@processDataCollectionConcurrently
+        return@parallelForEach
       }
 
       val thumbnailUrl = postImage.actualThumbnailUrl

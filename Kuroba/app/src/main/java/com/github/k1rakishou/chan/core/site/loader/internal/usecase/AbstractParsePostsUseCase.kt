@@ -8,7 +8,7 @@ import com.github.k1rakishou.chan.core.manager.PostHideManager
 import com.github.k1rakishou.chan.core.manager.SavedReplyManager
 import com.github.k1rakishou.chan.core.site.parser.PostParser
 import com.github.k1rakishou.chan.utils.BackgroundUtils
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.filter.ChanFilter
@@ -43,7 +43,7 @@ abstract class AbstractParsePostsUseCase(
       return
     }
 
-    processDataCollectionConcurrently(postBuildersToParse, THREAD_COUNT * 2, Dispatchers.IO) { postToParse ->
+    parallelForEach(postBuildersToParse, THREAD_COUNT * 2, Dispatchers.IO) { postToParse ->
       // needed for "Apply to own posts" to work correctly
       postToParse.isSavedReply(savedReplyManager.isSaved(postToParse.postDescriptor))
     }
@@ -57,12 +57,12 @@ abstract class AbstractParsePostsUseCase(
       return
     }
 
-    processDataCollectionConcurrently(postBuildersToParse, THREAD_COUNT * 2, Dispatchers.IO) { postToParse ->
+    parallelForEach(postBuildersToParse, THREAD_COUNT * 2, Dispatchers.IO) { postToParse ->
       if (filters.isNotEmpty()) {
         processFilters(postToParse, filters)
       }
 
-      return@processDataCollectionConcurrently
+      return@parallelForEach
     }
 
     Logger.d(TAG, "postParsingProcessFiltersStage() " +

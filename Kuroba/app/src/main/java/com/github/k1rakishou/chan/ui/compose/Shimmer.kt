@@ -43,7 +43,7 @@ import kotlin.math.sqrt
 fun rememberShimmerState(
   rotation: Float = 15f,
   cornerRadius: Dp = 0.dp,
-  bgColor: Color = LocalChanTheme.current.backColorCompose
+  backgroundColor: Color
 ): ShimmerState {
   val cornerRadiusPx = with(LocalDensity.current) {
     remember(key1 = cornerRadius) { cornerRadius.toPx()  }
@@ -52,7 +52,7 @@ fun rememberShimmerState(
   return remember {
     ShimmerState(
       rotation = rotation,
-      bgColor = bgColor,
+      backgroundColor = backgroundColor,
       cornerRadiusPx = cornerRadiusPx
     )
   }
@@ -61,8 +61,9 @@ fun rememberShimmerState(
 @Composable
 fun Shimmer(
   modifier: Modifier = Modifier,
+  backgroundColor: Color = LocalChanTheme.current.backColorCompose,
   selectedOnBackColor: Color = LocalChanTheme.current.selectedOnBackColor,
-  shimmerState: ShimmerState = rememberShimmerState()
+  shimmerState: ShimmerState = rememberShimmerState(backgroundColor = backgroundColor)
 ) {
   val density = LocalDensity.current
 
@@ -98,7 +99,7 @@ fun Shimmer(
 @Stable
 class ShimmerState(
   val rotation: Float,
-  val bgColor: Color,
+  val backgroundColor: Color,
   val cornerRadiusPx: Float
 ) {
   private val animatedState = Animatable(0f)
@@ -117,11 +118,11 @@ class ShimmerState(
   )
 
   private val rectF = RectF()
-  private val bgPaint by lazy {
+  private val backgroundPaint by lazy {
     android.graphics.Paint().apply {
       isAntiAlias = true
       style = android.graphics.Paint.Style.FILL
-      color = bgColor.toArgb()
+      color = backgroundColor.toArgb()
     }
   }
 
@@ -195,7 +196,7 @@ class ShimmerState(
       val shared = paint.shader ?: return@with
 
       rectF.set(0f, 0f, size.width, size.height)
-      drawContext.canvas.nativeCanvas.drawRoundRect(rectF, cornerRadiusPx, cornerRadiusPx, bgPaint)
+      drawContext.canvas.nativeCanvas.drawRoundRect(rectF, cornerRadiusPx, cornerRadiusPx, backgroundPaint)
 
       val traversal = -translationDistance / 2 + translationDistance * progress + pivotPoint.x
 

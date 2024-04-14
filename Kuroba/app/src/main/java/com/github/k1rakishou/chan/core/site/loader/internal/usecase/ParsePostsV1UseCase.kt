@@ -10,7 +10,7 @@ import com.github.k1rakishou.chan.core.manager.SavedReplyManager
 import com.github.k1rakishou.chan.core.site.parser.PostParseWorker
 import com.github.k1rakishou.chan.core.site.parser.PostParser
 import com.github.k1rakishou.chan.utils.BackgroundUtils
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
@@ -100,12 +100,12 @@ class ParsePostsV1UseCase(
     }
 
     val (parsedPosts, parsingDuration) = measureTimedValue {
-      return@measureTimedValue processDataCollectionConcurrently(
+      return@measureTimedValue parallelForEach(
         dataList = postBuildersToParse,
-        batchCount = THREAD_COUNT * 2,
+        parallelization = THREAD_COUNT * 2,
         dispatcher = Dispatchers.IO
       ) { postToParse ->
-        return@processDataCollectionConcurrently PostParseWorker(
+        return@parallelForEach PostParseWorker(
           postBuilder = postToParse,
           postParser = postParser,
           internalIds = internalIds,

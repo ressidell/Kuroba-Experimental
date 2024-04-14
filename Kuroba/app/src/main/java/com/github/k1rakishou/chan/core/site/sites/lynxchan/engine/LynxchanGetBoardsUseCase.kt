@@ -4,7 +4,7 @@ import com.github.k1rakishou.chan.core.base.okhttp.RealProxiedOkHttpClient
 import com.github.k1rakishou.chan.core.usecase.ISuspendUseCase
 import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.ModularResult
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.common.suspendConvertIntoJsonObjectWithAdapter
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.board.ChanBoard
@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import okhttp3.Request
-import java.util.*
 
 class LynxchanGetBoardsUseCase(
   private val appConstants: AppConstants,
@@ -120,9 +119,9 @@ class LynxchanGetBoardsUseCase(
     val pages = (2..pageCount).toList()
     val lynxchanBoardsPageAdapter = moshi.adapter<LynxchanBoardsPage>(LynxchanBoardsPage::class.java)
 
-    return processDataCollectionConcurrently(
+    return parallelForEach(
       dataList = pages,
-      batchCount = appConstants.processorsCount.coerceAtLeast(4),
+      parallelization = appConstants.processorsCount.coerceAtLeast(4),
       dispatcher = Dispatchers.IO
     ) { page ->
       Logger.d(TAG, "loadRestOfBoards() Loading page ${page}...")
@@ -145,7 +144,7 @@ class LynxchanGetBoardsUseCase(
 
       Logger.d(TAG, "loadRestOfBoards() Loading page ${page}...done")
 
-      return@processDataCollectionConcurrently boards
+      return@parallelForEach boards
     }.flatten()
   }
 

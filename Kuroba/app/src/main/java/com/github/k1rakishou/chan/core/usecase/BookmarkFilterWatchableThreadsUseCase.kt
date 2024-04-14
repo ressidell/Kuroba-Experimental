@@ -15,7 +15,7 @@ import com.github.k1rakishou.common.EmptyBodyResponseException
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.isNotNullNorEmpty
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.common.suspendCall
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.bookmark.BookmarkGroupMatchFlag
@@ -420,16 +420,16 @@ class BookmarkFilterWatchableThreadsUseCase(
     val filterWatchCatalogThreadInfoObjectList = filterWatchCatalogInfoObjects
       .flatMap { filterWatchCatalogInfoObject -> filterWatchCatalogInfoObject.catalogThreads }
 
-    return processDataCollectionConcurrently(
+    return parallelForEach(
       dataList = filterWatchCatalogThreadInfoObjectList,
-      batchCount = batchSize,
+      parallelization = batchSize,
       dispatcher = Dispatchers.IO
     ) { catalogThread ->
       if (predicate(catalogThread)) {
-        return@processDataCollectionConcurrently catalogThread
+        return@parallelForEach catalogThread
       }
 
-      return@processDataCollectionConcurrently null
+      return@parallelForEach null
     }
   }
 
@@ -461,17 +461,17 @@ class BookmarkFilterWatchableThreadsUseCase(
     val batchSize = (appConstants.processorsCount * BATCH_PER_CORE)
       .coerceAtLeast(MIN_BATCHES_COUNT)
 
-    return processDataCollectionConcurrently(boardDescriptorsToCheck, batchSize, Dispatchers.IO) { boardDescriptor ->
+    return parallelForEach(boardDescriptorsToCheck, batchSize, Dispatchers.IO) { boardDescriptor ->
       val site = siteManager.bySiteDescriptor(boardDescriptor.siteDescriptor)
       if (site == null) {
         Logger.e(TAG, "Site with descriptor ${boardDescriptor.siteDescriptor} " +
           "not found in siteRepository!")
-        return@processDataCollectionConcurrently null
+        return@parallelForEach null
       }
 
       val catalogJsonEndpoint = site.endpoints().catalog(boardDescriptor)
 
-      return@processDataCollectionConcurrently fetchBoardCatalog(
+      return@parallelForEach fetchBoardCatalog(
         boardDescriptor,
         catalogJsonEndpoint,
         site.chanReader()

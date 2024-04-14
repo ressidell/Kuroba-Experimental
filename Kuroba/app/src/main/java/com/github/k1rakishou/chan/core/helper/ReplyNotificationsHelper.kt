@@ -36,7 +36,7 @@ import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.AndroidUtils.getApplicationLabel
 import com.github.k1rakishou.common.ellipsizeEnd
 import com.github.k1rakishou.common.errorMessageOrClassName
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.common.putIfNotContains
 import com.github.k1rakishou.common.resumeValueSafe
 import com.github.k1rakishou.core_logger.Logger
@@ -516,14 +516,14 @@ class ReplyNotificationsHelper(
   ): Map<ChanDescriptor.ThreadDescriptor, BitmapDrawable> {
     val resultMap = ConcurrentHashMap<ChanDescriptor.ThreadDescriptor, BitmapDrawable>()
 
-    processDataCollectionConcurrently(originalPosts.entries, MAX_THUMBNAIL_REQUESTS_PER_BATCH) { entry ->
+    parallelForEach(originalPosts.entries, MAX_THUMBNAIL_REQUESTS_PER_BATCH) { entry ->
       val (threadDescriptor, originalPost) = entry
 
       val thumbnailUrl = originalPost.postImages.firstOrNull()?.actualThumbnailUrl
-        ?: return@processDataCollectionConcurrently null
+        ?: return@parallelForEach null
 
       val bitmapDrawable = downloadThumbnailForNotification(thumbnailUrl)
-        ?: return@processDataCollectionConcurrently null
+        ?: return@parallelForEach null
 
       resultMap[threadDescriptor] = bitmapDrawable
     }

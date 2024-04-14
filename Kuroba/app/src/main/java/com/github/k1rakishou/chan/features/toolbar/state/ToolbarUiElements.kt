@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material.ContentAlpha
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -86,17 +89,28 @@ internal fun ToolbarTitleWithSubtitle(
     if (subtitle != null) {
       Spacer(modifier = Modifier.height(2.dp))
 
+      var inlineContent by remember { mutableStateOf<Map<String, InlineTextContent>>(emptyMap()) }
+
+      val subtitleText = subtitle.resolve()
+
+      ResolveInlinedContent(
+        fontSize = 14.ktu,
+        subtitleText = subtitleText,
+        onInlineContentReady = { newInlineContent -> inlineContent = newInlineContent }
+      )
+
       KurobaComposeText(
         modifier = Modifier
           .wrapContentWidth()
           .wrapContentHeight()
           .then(marqueeModifier),
-        text = subtitle.resolve(),
+        text = subtitleText,
         fontSize = 14.ktu,
         color = textColor,
         fontWeight = FontWeight.Light,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis
+        overflow = TextOverflow.Ellipsis,
+        inlineContent = inlineContent
       )
     }
   }

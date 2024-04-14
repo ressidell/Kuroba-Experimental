@@ -12,7 +12,7 @@ import com.github.k1rakishou.chan.core.loader.impl.post_comment.SpanUpdateBatch
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.common.ModularResult
-import com.github.k1rakishou.common.processDataCollectionConcurrently
+import com.github.k1rakishou.common.parallelForEach
 import com.github.k1rakishou.common.putIfNotContainsLazy
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_spannable.PostLinkable
@@ -35,8 +35,8 @@ class PostExtraContentLoader(
       return true
     }
 
-    val results = processDataCollectionConcurrently(linkExtraInfoFetchers) { fetcher ->
-      return@processDataCollectionConcurrently videoIds.all { videoId ->
+    val results = parallelForEach(linkExtraInfoFetchers) { fetcher ->
+      return@parallelForEach videoIds.all { videoId ->
         try {
           return@all fetcher.isCached(videoId)
         } catch (error: Throwable) {
@@ -75,7 +75,7 @@ class PostExtraContentLoader(
       return rejected()
     }
 
-    val spanUpdateBatchResultList = processDataCollectionConcurrently(newSpans.entries) { (requestUrl, linkInfoRequest) ->
+    val spanUpdateBatchResultList = parallelForEach(newSpans.entries) { (requestUrl, linkInfoRequest) ->
       fetchExtraLinkInfo(requestUrl, linkInfoRequest)
     }
 

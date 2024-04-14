@@ -5,7 +5,7 @@ import com.github.k1rakishou.chan.core.site.SiteBase
 import com.github.k1rakishou.chan.core.site.SiteResolver
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.common.errorMessageOrClassName
-import com.github.k1rakishou.common.processDataCollectionConcurrentlyIndexed
+import com.github.k1rakishou.common.parallelForEachIndexed
 import com.github.k1rakishou.common.rethrowCancellationException
 import com.github.k1rakishou.core_logger.Logger
 import dagger.Lazy
@@ -141,7 +141,7 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
     activeDownloads.updateChunks(mediaUrl, chunks)
 
     val chunkTerminalEvents = channelFlow<ChunkDownloadEvent> {
-      processDataCollectionConcurrentlyIndexed(
+      parallelForEachIndexed(
         dataList = chunks,
         dispatcher = Dispatchers.IO,
         rethrowErrors = true
