@@ -53,7 +53,6 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
 
-// TODO: New toolbar. Crashes when using Composite catalogs.
 class ReplyLayoutView @JvmOverloads constructor(
   context: Context,
   attributeSet: AttributeSet? = null,
@@ -148,10 +147,6 @@ class ReplyLayoutView @JvmOverloads constructor(
 
   override fun replyLayoutVisibility(): ReplyLayoutVisibility {
     return replyLayoutViewModel.replyLayoutVisibility()
-  }
-
-  override fun isCatalogMode(): Boolean? {
-    return replyLayoutViewModel.isCatalogMode()
   }
 
   override fun isExpanded(): Boolean {

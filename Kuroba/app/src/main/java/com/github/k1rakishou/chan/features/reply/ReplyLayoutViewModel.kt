@@ -256,6 +256,10 @@ class ReplyLayoutViewModel(
   }
 
   suspend fun bindChanDescriptor(chanDescriptor: ChanDescriptor, threadControllerType: ThreadControllerType) {
+    if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
+      return
+    }
+
     replyManager.awaitUntilFilesAreLoaded()
 
     if (_boundChanDescriptor.value == chanDescriptor) {
@@ -330,10 +334,6 @@ class ReplyLayoutViewModel(
           return@mapValue replyFile
         }
     }
-  }
-
-  fun isCatalogMode(): Boolean? {
-    return _boundChanDescriptor.value?.isCatalogDescriptor()
   }
 
   fun replyLayoutVisibility(): ReplyLayoutVisibility {

@@ -1250,7 +1250,6 @@ class ThreadListLayout @JvmOverloads constructor(
     fun quote(post: ChanPost, withText: Boolean)
     fun quote(postDescriptor: PostDescriptor, text: CharSequence)
     fun replyLayoutVisibility(): ReplyLayoutVisibility
-    fun isCatalogMode(): Boolean?
     fun isExpanded(): Boolean
     fun isOpened(): Boolean
     fun isCollapsed(): Boolean
