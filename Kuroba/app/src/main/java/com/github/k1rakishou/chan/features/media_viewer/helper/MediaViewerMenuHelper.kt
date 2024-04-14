@@ -198,7 +198,7 @@ class MediaViewerMenuHelper(
         val reorderableMediaViewerActions = PersistableChanState.reorderableMediaViewerActions.get()
 
         val items = reorderableMediaViewerActions.mediaViewerActionButtons()
-          .map { button -> SimpleListItemsReorderingController.SimpleReorderableItem(button.id, button.title) }
+          .map { button -> SimpleListItemsReorderingController.SimpleListReorderableItem(button.id, button.title) }
 
         val controller = SimpleListItemsReorderingController(
           context = context,

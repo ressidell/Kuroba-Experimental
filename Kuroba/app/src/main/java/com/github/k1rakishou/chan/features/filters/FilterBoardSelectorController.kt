@@ -44,7 +44,7 @@ import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
@@ -311,7 +311,7 @@ class FilterBoardSelectorController(
       return@remember chanTheme.postHighlightedColorCompose
     }
 
-    KurobaComposeCardView(
+    KurobaComposeCard(
       modifier = Modifier
         .height(CELL_HEIGHT)
         .width(CELL_WIDTH)

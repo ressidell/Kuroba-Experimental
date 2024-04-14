@@ -30,7 +30,7 @@ import com.github.k1rakishou.chan.core.site.http.report.PostReportData
 import com.github.k1rakishou.chan.core.site.http.report.PostReportResult
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
 import com.github.k1rakishou.chan.ui.captcha.CaptchaSolution
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
@@ -84,7 +84,7 @@ class Chan4ReportPostController(
       }
     )
     
-    KurobaComposeCardView(
+    KurobaComposeCard(
       modifier = Modifier
         .widthIn(min = 256.dp)
         .wrapContentHeight()
@@ -150,7 +150,7 @@ class Chan4ReportPostController(
     val paddingModifier = Modifier
       .padding(horizontal = 8.dp, vertical = 16.dp)
 
-    KurobaComposeCardView(
+    KurobaComposeCard(
       modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight()

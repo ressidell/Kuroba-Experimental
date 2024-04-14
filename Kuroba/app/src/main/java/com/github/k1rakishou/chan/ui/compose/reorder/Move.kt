@@ -1,13 +1,18 @@
 package com.github.k1rakishou.chan.ui.compose.reorder
 
-import com.github.k1rakishou.common.move
-
-
-/**
- * Taken from https://github.com/aclassen/ComposeReorderable
- * */
-
-
 fun <T> MutableList<T>.move(fromIdx: Int, toIdx: Int): Boolean {
-  return move(fromIdx, toIdx)
+  if (fromIdx == toIdx) {
+    return false
+  }
+
+  if (fromIdx < 0 || fromIdx >= size) {
+    return false
+  }
+
+  if (toIdx < 0 || toIdx >= size) {
+    return false
+  }
+
+  add(toIdx, removeAt(fromIdx))
+  return true
 }

@@ -61,19 +61,21 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.SelectableItem
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableText
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeSwitch
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
+import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
-import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableState
+import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableItem
+import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
-import com.github.k1rakishou.chan.ui.compose.reorder.draggedItem
-import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderState
+import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
@@ -255,7 +257,6 @@ class FiltersController(
 
     val filters = remember { viewModel.filters }
     val coroutineScope = rememberCoroutineScope()
-    val reoderableState = rememberReorderState()
 
     Box(
       modifier = Modifier.fillMaxSize()
@@ -263,7 +264,6 @@ class FiltersController(
       if (filters.isNotEmpty()) {
         BuildFilterList(
           filters = filters,
-          reorderableState = reoderableState,
           chanTheme = chanTheme,
           coroutineScope = coroutineScope
         )
@@ -307,7 +307,6 @@ class FiltersController(
   @Composable
   private fun BuildFilterList(
     filters: List<FiltersControllerViewModel.ChanFilterInfo>,
-    reorderableState: ReorderableState,
     chanTheme: ChanTheme,
     coroutineScope: CoroutineScope
   ) {
@@ -351,6 +350,12 @@ class FiltersController(
       return
     }
 
+    val reorderTask = rememberCancellableCoroutineTask()
+    val reorderableState = rememberReorderableLazyListState(
+      onMove = { from, to -> reorderTask.launch { viewModel.reorderFilterInMemory(from.index, to.index) } },
+      onDragEnd = { _, _ -> reorderTask.launch { viewModel.persistReorderedFilters() } }
+    )
+
     val contentPadding = remember {
       PaddingValues(bottom = FAB_SIZE + (FAB_MARGIN / 2))
     }
@@ -358,11 +363,7 @@ class FiltersController(
     InsetAwareLazyColumn(
       modifier = Modifier
         .fillMaxSize()
-        .reorderable(
-          state = reorderableState,
-          onMove = { from, to -> viewModel.reorderFilterInMemory(from, to) },
-          onDragEnd = { _, _ -> viewModel.persistReorderedFilters() }
-        )
+        .reorderable(reorderableState)
         .simpleVerticalScrollbar(
           state = reorderableState.listState,
           chanTheme = chanTheme,
@@ -410,7 +411,7 @@ class FiltersController(
   private fun LazyItemScope.BuildChanFilter(
     index: Int,
     totalCount: Int,
-    reorderableState: ReorderableState,
+    reorderableState: ReorderableLazyListState,
     chanFilterInfo: FiltersControllerViewModel.ChanFilterInfo,
     coroutineScope: CoroutineScope,
     onFilterClicked: (ChanFilter) -> Unit,
@@ -421,102 +422,106 @@ class FiltersController(
     val isInSelectionMode = selectionEvent?.isIsSelectionMode() ?: false
     val chanFilter = chanFilterInfo.chanFilter
 
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight()
-        .draggedItem(reorderableState.offsetByKey(chanFilterInfo.chanFilter.getDatabaseId()))
-        .kurobaClickable(
-          bounded = true,
-          onLongClick = { onFilterLongClicked(chanFilter) },
-          onClick = { onFilterClicked(chanFilter) }
-        )
-        .background(color = chanTheme.backColorCompose)
-        .animateItemPlacement()
-    ) {
-      SelectableItem(
-        isInSelectionMode = isInSelectionMode,
-        observeSelectionStateFunc = { viewModel.viewModelSelectionHelper.observeSelectionState(chanFilter) },
-        onSelectionChanged = { viewModel.viewModelSelectionHelper.toggleSelection(chanFilter) }
+    ReorderableItem(
+      reorderableState = reorderableState,
+      orientationLocked = false,
+      key = chanFilterInfo.chanFilter.getDatabaseId()
+    ) { isDragging ->
+      KurobaComposeDraggableCard(
+        modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight()
+          .kurobaClickable(
+            bounded = true,
+            onLongClick = { onFilterLongClicked(chanFilter) },
+            onClick = { onFilterClicked(chanFilter) }
+          ),
+        isDragging = isDragging
       ) {
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
+        SelectableItem(
+          isInSelectionMode = isInSelectionMode,
+          observeSelectionStateFunc = { viewModel.viewModelSelectionHelper.observeSelectionState(chanFilter) },
+          onSelectionChanged = { viewModel.viewModelSelectionHelper.toggleSelection(chanFilter) }
         ) {
-          val filterMatchedPostCountMap = viewModel.filterMatchedPostCountMap
-          val filterMatchedPostCount = filterMatchedPostCountMap[chanFilterInfo.chanFilter.getDatabaseId()]
-
-          val squareDrawableInlineContent = remember(key1 = chanFilterInfo) {
-            getFilterInlineContentContent(chanFilterInfo = chanFilterInfo)
-          }
-
-          val fullText = remember(key1 = chanFilterInfo.filterText, key2 = filterMatchedPostCount) {
-            return@remember formatFilterInfo(index, chanFilterInfo, filterMatchedPostCount, chanTheme)
-          }
-
-          KurobaComposeClickableText(
+          Row(
             modifier = Modifier
-              .weight(1f)
+              .fillMaxWidth()
               .wrapContentHeight()
-              .padding(horizontal = 8.dp, vertical = 4.dp),
-            fontSize = 12.ktu,
-            text = fullText,
-            inlineContent = squareDrawableInlineContent,
-            onTextClicked = { textLayoutResult, position -> handleClickedText(textLayoutResult, position) }
-          )
-
-          Column(
-            modifier = Modifier
-              .fillMaxHeight()
-              .wrapContentWidth()
-              .padding(end = 8.dp)
           ) {
-            KurobaComposeSwitch(
-              modifier = Modifier
-                .wrapContentWidth()
-                .wrapContentHeight()
-                .padding(all = 4.dp),
-              initiallyChecked = chanFilter.enabled,
-              onCheckedChange = { nowChecked ->
-                if (reorderableState.draggedIndex != null) {
-                  return@KurobaComposeSwitch
-                }
+            val filterMatchedPostCountMap = viewModel.filterMatchedPostCountMap
+            val filterMatchedPostCount = filterMatchedPostCountMap[chanFilterInfo.chanFilter.getDatabaseId()]
 
-                if (isInSelectionMode) {
-                  return@KurobaComposeSwitch
-                }
-
-                coroutineScope.launch {
-                  viewModel.enableOrDisableFilter(nowChecked, chanFilter)
-                }
-              }
-            )
-
-            val reorderModifier = if (isInSelectionMode) {
-              Modifier
-            } else {
-              Modifier.detectReorder(reorderableState)
+            val squareDrawableInlineContent = remember(key1 = chanFilterInfo) {
+              getFilterInlineContentContent(chanFilterInfo = chanFilterInfo)
             }
 
-            KurobaComposeIcon(
+            val fullText = remember(key1 = chanFilterInfo.filterText, key2 = filterMatchedPostCount) {
+              return@remember formatFilterInfo(index, chanFilterInfo, filterMatchedPostCount, chanTheme)
+            }
+
+            KurobaComposeClickableText(
               modifier = Modifier
-                .size(32.dp)
-                .padding(all = 4.dp)
-                .align(Alignment.CenterHorizontally)
-                .then(reorderModifier),
-              drawableId = R.drawable.ic_baseline_reorder_24
+                .weight(1f)
+                .wrapContentHeight()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+              fontSize = 12.ktu,
+              text = fullText,
+              inlineContent = squareDrawableInlineContent,
+              onTextClicked = { textLayoutResult, position -> handleClickedText(textLayoutResult, position) }
             )
+
+            Column(
+              modifier = Modifier
+                .fillMaxHeight()
+                .wrapContentWidth()
+                .padding(end = 8.dp)
+            ) {
+              KurobaComposeSwitch(
+                modifier = Modifier
+                  .wrapContentWidth()
+                  .wrapContentHeight()
+                  .padding(all = 4.dp),
+                initiallyChecked = chanFilter.enabled,
+                onCheckedChange = { nowChecked ->
+                  if (isDragging) {
+                    return@KurobaComposeSwitch
+                  }
+
+                  if (isInSelectionMode) {
+                    return@KurobaComposeSwitch
+                  }
+
+                  coroutineScope.launch {
+                    viewModel.enableOrDisableFilter(nowChecked, chanFilter)
+                  }
+                }
+              )
+
+              val reorderModifier = if (isInSelectionMode) {
+                Modifier
+              } else {
+                Modifier.detectReorder(reorderableState)
+              }
+
+              KurobaComposeIcon(
+                modifier = Modifier
+                  .size(32.dp)
+                  .padding(all = 4.dp)
+                  .align(Alignment.CenterHorizontally)
+                  .then(reorderModifier),
+                drawableId = R.drawable.ic_baseline_reorder_24
+              )
+            }
+
           }
 
-        }
-
-        if (index in 0 until (totalCount - 1)) {
-          Divider(
-            modifier = Modifier.padding(horizontal = 4.dp),
-            color = chanTheme.dividerColorCompose,
-            thickness = 1.dp
-          )
+          if (index in 0 until (totalCount - 1)) {
+            Divider(
+              modifier = Modifier.padding(horizontal = 4.dp),
+              color = chanTheme.dividerColorCompose,
+              thickness = 1.dp
+            )
+          }
         }
       }
     }

@@ -59,7 +59,7 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory.Builder.Companion.ne
 import com.github.k1rakishou.chan.core.helper.FilterEngine
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.ChanFilterManager
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCollapsableContent
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCustomTextField
@@ -122,7 +122,7 @@ class CreateOrUpdateFilterController(
         .wrapContentHeight()
         .align(Alignment.Center)
     ) {
-      KurobaComposeCardView {
+      KurobaComposeCard {
         val focusManager = LocalFocusManager.current
 
         Column(modifier = Modifier

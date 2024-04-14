@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -41,18 +40,19 @@ import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
+import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableState
+import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableItem
+import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
-import com.github.k1rakishou.chan.ui.compose.reorder.draggedItem
-import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderState
+import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
@@ -168,9 +168,8 @@ class BookmarkGroupSettingsController(
   private fun BoxScope.BuildContentInternal(
     onCreateGroupClicked: () -> Unit
   ) {
-    val reoderableState = rememberReorderState()
-    val onCreateGroupClickedRemembered = rememberUpdatedState(newValue = onCreateGroupClicked)
     val chanTheme = LocalChanTheme.current
+    val onCreateGroupClickedRemembered = rememberUpdatedState(newValue = onCreateGroupClicked)
 
     val loading by viewModel.loading
     if (loading) {
@@ -194,6 +193,21 @@ class BookmarkGroupSettingsController(
     val bottomPd by bottomPadding
     val paddingValues = remember { PaddingValues(bottom = FAB_SIZE + FAB_MARGIN) }
 
+    val reorderTask = rememberCancellableCoroutineTask()
+    val reorderableState = rememberReorderableLazyListState(
+      onMove = { from, to ->
+        reorderTask.launch {
+          val fromGroupId = threadBookmarkGroupItems.getOrNull(from.index)?.groupId
+            ?: return@launch
+          val toGroupId = threadBookmarkGroupItems.getOrNull(to.index)?.groupId
+            ?: return@launch
+
+          viewModel.moveBookmarkGroup(from.index, to.index, fromGroupId, toGroupId)
+        }
+      },
+      onDragEnd = { _, _ -> reorderTask.launch { viewModel.onMoveBookmarkGroupComplete() } }
+    )
+
     Column(
       modifier = Modifier
         .wrapContentHeight()
@@ -204,23 +218,12 @@ class BookmarkGroupSettingsController(
           .fillMaxWidth()
           .weight(1f)
           .simpleVerticalScrollbar(
-            state = reoderableState.listState,
+            state = reorderableState.listState,
             chanTheme = chanTheme,
             contentPadding = paddingValues
           )
-          .reorderable(
-            state = reoderableState,
-            onMove = { from, to ->
-              val fromGroupId = threadBookmarkGroupItems.getOrNull(from)?.groupId
-                ?: return@reorderable
-              val toGroupId = threadBookmarkGroupItems.getOrNull(to)?.groupId
-                ?: return@reorderable
-
-              viewModel.moveBookmarkGroup(from, to, fromGroupId, toGroupId)
-            },
-            onDragEnd = { _, _ -> viewModel.onMoveBookmarkGroupComplete() }
-          ),
-        state = reoderableState.listState,
+          .reorderable(reorderableState),
+        state = reorderableState.listState,
         contentPadding = paddingValues,
         content = {
           items(
@@ -228,9 +231,10 @@ class BookmarkGroupSettingsController(
             key = { index -> threadBookmarkGroupItems.get(index).groupId },
             itemContent = { index ->
               val threadBookmarkGroupItem = threadBookmarkGroupItems.get(index)
+
               BuildThreadBookmarkGroupItem(
                 threadBookmarkGroupItem = threadBookmarkGroupItem,
-                reoderableState = reoderableState,
+                reorderableState = reorderableState,
                 bookmarkGroupClicked = { groupId -> bookmarkGroupClicked(groupId) },
                 removeBookmarkGroupClicked = { groupId ->
                   controllerScope.launch { viewModel.removeBookmarkGroup(groupId) }
@@ -324,13 +328,12 @@ class BookmarkGroupSettingsController(
   @Composable
   private fun LazyItemScope.BuildThreadBookmarkGroupItem(
     threadBookmarkGroupItem: BookmarkGroupSettingsControllerViewModel.ThreadBookmarkGroupItem,
-    reoderableState: ReorderableState,
+    reorderableState: ReorderableLazyListState,
     bookmarkGroupClicked: (String) -> Unit,
     bookmarkGroupSettingsClicked: (String) -> Unit,
     removeBookmarkGroupClicked: (String) -> Unit,
     bookmarkWarningClicked: (String) -> Unit
   ) {
-    val chanTheme = LocalChanTheme.current
     val groupId = threadBookmarkGroupItem.groupId
     val removeBoardClickedRemembered = rememberUpdatedState(newValue = removeBookmarkGroupClicked)
     val bookmarkGroupClickedRemembered = rememberUpdatedState(newValue = bookmarkGroupClicked)
@@ -343,57 +346,27 @@ class BookmarkGroupSettingsController(
         onClick = { bookmarkGroupClickedRemembered.value.invoke(groupId) }
       )
     } else {
-      Modifier.draggedItem(reoderableState.offsetByKey(groupId))
+      Modifier
     }
 
-    KurobaComposeCardView(
-      modifier = Modifier
-        .fillMaxWidth()
-        .height(48.dp)
-        .padding(4.dp)
-        .then(modifier)
-        .animateItemPlacement(),
-      backgroundColor = chanTheme.backColorSecondaryCompose
-    ) {
-      Row(modifier = Modifier.fillMaxSize()) {
-        if (!isBookmarkMoveMode && !threadBookmarkGroupItem.isDefaultGroup()) {
-          Spacer(modifier = Modifier.width(8.dp))
-
-          KurobaComposeIcon(
-            modifier = Modifier
-              .size(28.dp)
-              .align(Alignment.CenterVertically)
-              .kurobaClickable(
-                bounded = false,
-                onClick = { removeBoardClickedRemembered.value.invoke(groupId) }
-              ),
-            drawableId = R.drawable.ic_clear_white_24dp
-          )
-
-          Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        val groupText = remember(key1 = removeBookmarkGroupClicked) {
-          buildString {
-            append(threadBookmarkGroupItem.groupName)
-            appendLine()
-
-            append("Bookmarks count: ")
-            append(threadBookmarkGroupItem.groupEntriesCount)
-          }
-        }
-
-        KurobaComposeText(
+    ReorderableItem(
+      reorderableState = reorderableState,
+      key = groupId
+    ) { isDragging ->
+      KurobaComposeDraggableCard(
+        modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight()
+          .padding(horizontal = 8.dp, vertical = 4.dp)
+          .then(modifier),
+        isDragging = isDragging
+      ) {
+        Row(
           modifier = Modifier
-            .weight(1f)
-            .padding(horizontal = 4.dp)
-            .align(Alignment.CenterVertically),
-          fontSize = 16.ktu,
-          text = groupText
-        )
-
-        if (!isBookmarkMoveMode) {
-          if (threadBookmarkGroupItem.hasNoMatcher && !threadBookmarkGroupItem.isDefaultGroup()) {
+            .fillMaxSize()
+            .padding(horizontal = 4.dp, vertical = 8.dp)
+        ) {
+          if (!isBookmarkMoveMode && !threadBookmarkGroupItem.isDefaultGroup()) {
             Spacer(modifier = Modifier.width(8.dp))
 
             KurobaComposeIcon(
@@ -402,38 +375,76 @@ class BookmarkGroupSettingsController(
                 .align(Alignment.CenterVertically)
                 .kurobaClickable(
                   bounded = false,
-                  onClick = { bookmarkWarningClickedRemembered.value.invoke(groupId) }
+                  onClick = { removeBoardClickedRemembered.value.invoke(groupId) }
                 ),
-              drawableId = R.drawable.ic_alert
+              drawableId = R.drawable.ic_clear_white_24dp
             )
-          }
 
-          if (!threadBookmarkGroupItem.isDefaultGroup()) {
             Spacer(modifier = Modifier.width(8.dp))
-
-            KurobaComposeIcon(
-              modifier = Modifier
-                .size(28.dp)
-                .align(Alignment.CenterVertically)
-                .kurobaClickable(
-                  bounded = false,
-                  onClick = { bookmarkGroupSettingsClickedRemembered.value.invoke(groupId) }
-                ),
-              drawableId = R.drawable.ic_settings_white_24dp
-            )
           }
 
-          Spacer(modifier = Modifier.width(8.dp))
+          val groupText = remember(key1 = removeBookmarkGroupClicked) {
+            buildString {
+              append(threadBookmarkGroupItem.groupName)
+              appendLine()
 
-          KurobaComposeIcon(
+              append("Bookmarks count: ")
+              append(threadBookmarkGroupItem.groupEntriesCount)
+            }
+          }
+
+          KurobaComposeText(
             modifier = Modifier
-              .size(28.dp)
-              .align(Alignment.CenterVertically)
-              .detectReorder(reoderableState),
-            drawableId = R.drawable.ic_baseline_reorder_24
+              .weight(1f)
+              .padding(horizontal = 4.dp)
+              .align(Alignment.CenterVertically),
+            fontSize = 16.ktu,
+            text = groupText
           )
 
-          Spacer(modifier = Modifier.width(8.dp))
+          if (!isBookmarkMoveMode) {
+            if (threadBookmarkGroupItem.hasNoMatcher && !threadBookmarkGroupItem.isDefaultGroup()) {
+              Spacer(modifier = Modifier.width(8.dp))
+
+              KurobaComposeIcon(
+                modifier = Modifier
+                  .size(28.dp)
+                  .align(Alignment.CenterVertically)
+                  .kurobaClickable(
+                    bounded = false,
+                    onClick = { bookmarkWarningClickedRemembered.value.invoke(groupId) }
+                  ),
+                drawableId = R.drawable.ic_alert
+              )
+            }
+
+            if (!threadBookmarkGroupItem.isDefaultGroup()) {
+              Spacer(modifier = Modifier.width(8.dp))
+
+              KurobaComposeIcon(
+                modifier = Modifier
+                  .size(28.dp)
+                  .align(Alignment.CenterVertically)
+                  .kurobaClickable(
+                    bounded = false,
+                    onClick = { bookmarkGroupSettingsClickedRemembered.value.invoke(groupId) }
+                  ),
+                drawableId = R.drawable.ic_settings_white_24dp
+              )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            KurobaComposeIcon(
+              modifier = Modifier
+                .size(28.dp)
+                .align(Alignment.CenterVertically)
+                .detectReorder(reorderableState),
+              drawableId = R.drawable.ic_baseline_reorder_24
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+          }
         }
       }
     }

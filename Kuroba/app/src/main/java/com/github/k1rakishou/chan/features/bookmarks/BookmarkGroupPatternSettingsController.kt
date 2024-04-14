@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCustomTextField
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
@@ -291,7 +291,7 @@ class BookmarkGroupPatternSettingsController(
           Spacer(modifier = Modifier.size(36.dp))
         }
 
-        KurobaComposeCardView(
+        KurobaComposeCard(
           modifier = Modifier
             .wrapContentSize()
             .kurobaClickable(
@@ -336,7 +336,7 @@ class BookmarkGroupPatternSettingsController(
       Spacer(modifier = Modifier.height(10.dp))
 
       if (matcherOperator == null && index < ThreadBookmarkGroup.MAX_MATCH_GROUPS) {
-        KurobaComposeCardView(
+        KurobaComposeCard(
           Modifier
             .wrapContentSize()
             .align(Alignment.CenterHorizontally)
@@ -354,7 +354,7 @@ class BookmarkGroupPatternSettingsController(
           )
         }
       } else if (matcherOperator != null) {
-        KurobaComposeCardView(
+        KurobaComposeCard(
           Modifier
             .wrapContentSize()
             .align(Alignment.CenterHorizontally)

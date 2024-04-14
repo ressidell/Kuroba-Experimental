@@ -32,7 +32,10 @@ import com.github.k1rakishou.chan.features.media_viewer.MediaViewerOptions
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenAlbumHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.report_posts.Chan4ReportPostController
+import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
@@ -682,6 +685,105 @@ abstract class ThreadController(
     }
   }
 
+  protected fun ToolbarOverflowMenuBuilder.withMoreThreadOptions() {
+    withCheckableOverflowMenuItem(
+      id = ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE,
+      stringId = R.string.action_use_scrolling_text_for_thread_title,
+      visible = true,
+      checked = ChanSettings.scrollingTextForThreadTitles.get(),
+      onClick = { item -> onThreadViewOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR,
+      stringId = R.string.action_mark_your_posts_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markYourPostsOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR,
+      stringId = R.string.action_mark_replies_to_your_posts_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markRepliesToYourPostOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR,
+      stringId = R.string.action_mark_cross_thread_quotes_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markCrossThreadQuotesOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR,
+      stringId = R.string.action_mark_deleted_posts_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markDeletedPostsOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_MARK_HOT_POSTS_ON_SCROLLBAR,
+      stringId = R.string.action_mark_hot_posts_on_scrollbar,
+      visible = true,
+      checked = ChanSettings.markHotPostsOnScrollbar.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withCheckableOverflowMenuItem(
+      id = ACTION_GLOBAL_NSFW_MODE,
+      stringId = R.string.action_catalog_thread_nsfw_mode,
+      visible = true,
+      checked = ChanSettings.globalNsfwMode.get(),
+      onClick = { item -> onScrollbarLabelingOptionClicked(item) }
+    )
+    withOverflowMenuItem(
+      id = ACTION_THIRD_EYE_SETTINGS,
+      stringId = R.string.action_third_eye_settings,
+      visible = true,
+      onClick = { presentController(ThirdEyeSettingsController(context)) }
+    )
+  }
+
+  private fun onThreadViewOptionClicked(item: ToolbarMenuCheckableOverflowItem) {
+    val clickedItemId = item.id
+    if (clickedItemId == ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE) {
+      toolbarState.findCheckableOverflowItem(ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE)
+        ?.updateChecked(ChanSettings.scrollingTextForThreadTitles.toggle())
+
+      showToast(R.string.restart_the_app)
+    }
+  }
+
+  private fun onScrollbarLabelingOptionClicked(item: ToolbarMenuCheckableOverflowItem) {
+    when (item.id) {
+      ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR -> {
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markRepliesToYourPostOnScrollbar.toggle())
+      }
+      ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR -> {
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markCrossThreadQuotesOnScrollbar.toggle())
+      }
+      ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR -> {
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markYourPostsOnScrollbar.toggle())
+      }
+      ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR -> {
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markDeletedPostsOnScrollbar.toggle())
+      }
+      ACTION_MARK_HOT_POSTS_ON_SCROLLBAR -> {
+        toolbarState.findCheckableOverflowItem(ACTION_MARK_HOT_POSTS_ON_SCROLLBAR)
+          ?.updateChecked(ChanSettings.markHotPostsOnScrollbar.toggle())
+      }
+      ACTION_GLOBAL_NSFW_MODE -> {
+        toolbarState.findCheckableOverflowItem(ACTION_GLOBAL_NSFW_MODE)
+          ?.updateChecked(ChanSettings.globalNsfwMode.toggle())
+      }
+    }
+
+    threadLayout.presenter.quickReloadFromMemoryCache()
+  }
+
   data class ShowThreadOptions(
     val switchToThreadController: Boolean,
     val pushControllerWithAnimation: Boolean
@@ -694,5 +796,15 @@ abstract class ThreadController(
 
   companion object {
     private const val TAG = "ThreadController"
+
+    const val ACTION_THREAD_MORE_OPTIONS = 9010
+    private const val ACTION_USE_SCROLLING_TEXT_FOR_THREAD_TITLE = 9100
+    private const val ACTION_MARK_YOUR_POSTS_ON_SCROLLBAR = 9101
+    private const val ACTION_MARK_REPLIES_TO_YOU_ON_SCROLLBAR = 9102
+    private const val ACTION_MARK_CROSS_THREAD_REPLIES_ON_SCROLLBAR = 9103
+    private const val ACTION_MARK_DELETED_POSTS_ON_SCROLLBAR = 9104
+    private const val ACTION_MARK_HOT_POSTS_ON_SCROLLBAR = 9105
+    private const val ACTION_GLOBAL_NSFW_MODE = 9106
+    private const val ACTION_THIRD_EYE_SETTINGS = 9107
   }
 }

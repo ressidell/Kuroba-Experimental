@@ -22,7 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
@@ -39,7 +39,7 @@ class ExportBackupOptionsController(
 
   @Composable
   override fun BoxScope.BuildContent() {
-    KurobaComposeCardView(
+    KurobaComposeCard(
       modifier = Modifier
         .align(Alignment.Center)
         .widthIn(max = 600.dp)

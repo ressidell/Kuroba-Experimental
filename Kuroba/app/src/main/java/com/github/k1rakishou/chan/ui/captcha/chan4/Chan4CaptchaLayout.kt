@@ -66,7 +66,7 @@ import com.github.k1rakishou.chan.ui.captcha.AuthenticationLayoutCallback
 import com.github.k1rakishou.chan.ui.captcha.AuthenticationLayoutInterface
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
 import com.github.k1rakishou.chan.ui.captcha.CaptchaSolution
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
@@ -415,7 +415,7 @@ class Chan4CaptchaLayout(
         }
       }
 
-      KurobaComposeCardView(
+      KurobaComposeCard(
         modifier = Modifier
           .wrapContentSize()
           .kurobaClickable(bounded = true, onClick = { onSuggestionClicked(captchaSuggestion) }),

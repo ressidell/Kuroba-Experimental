@@ -30,7 +30,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.site.sites.search.SearchBoard
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.ktu
@@ -73,7 +73,7 @@ class SelectBoardForSearchController(
       0.9f
     }
 
-    KurobaComposeCardView(
+    KurobaComposeCard(
       modifier = Modifier
         .wrapContentHeight()
         .fillMaxWidth(fraction = fraction)

@@ -23,13 +23,13 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 
 class SimpleListItemsReorderingController(
   context: Context,
-  items: List<ReorderableItem>,
-  private val onApplyClicked: (List<ReorderableItem>) -> Unit
+  items: List<ListReorderableItem>,
+  private val onApplyClicked: (List<ListReorderableItem>) -> Unit
 ) : BaseFloatingController(context) {
   private lateinit var epoxyRecyclerView: ColorizableEpoxyRecyclerView
   private lateinit var itemTouchHelper: ItemTouchHelper
 
-  private val currentItems = ArrayList<ReorderableItem>(items)
+  private val currentItems = ArrayList<ListReorderableItem>(items)
   private val controller = ReorderableItemsEpoxyController()
 
   private val touchHelperCallback = object : EpoxyModelTouchCallback<EpoxyModel<*>>(controller, EpoxyModel::class.java) {
@@ -128,15 +128,15 @@ class SimpleListItemsReorderingController(
     controller.requestModelBuild()
   }
 
-  interface ReorderableItem {
+  interface ListReorderableItem {
     val id: Long
     val title: String
   }
 
-  data class SimpleReorderableItem(
+  data class SimpleListReorderableItem(
     override val id: Long,
     override val title: String
-  ) : ReorderableItem
+  ) : ListReorderableItem
 
   private inner class ReorderableItemsEpoxyController : EpoxyController() {
     var callback: EpoxyController.() -> Unit = {}

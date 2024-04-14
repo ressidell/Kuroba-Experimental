@@ -482,7 +482,7 @@ class AppearanceSettingsScreen(
             val reorderableBottomNavViewButtons = PersistableChanState.reorderableBottomNavViewButtons.get()
 
             val items = reorderableBottomNavViewButtons.bottomNavViewButtons()
-              .map { button -> SimpleListItemsReorderingController.SimpleReorderableItem(button.id, button.title) }
+              .map { button -> SimpleListItemsReorderingController.SimpleListReorderableItem(button.id, button.title) }
 
             val controller = SimpleListItemsReorderingController(
               context = context,

@@ -45,21 +45,22 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.ThirdEyeManager
 import com.github.k1rakishou.chan.features.thirdeye.data.BooruSetting
 import com.github.k1rakishou.chan.features.thirdeye.data.ThirdEyeSettings
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
+import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableState
+import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableItem
+import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
-import com.github.k1rakishou.chan.ui.compose.reorder.draggedItem
 import com.github.k1rakishou.chan.ui.compose.reorder.move
-import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderState
+import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
@@ -380,23 +381,24 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
     onBooruSettingLongClicked: (BooruSetting) -> Unit,
   ) {
     val chanTheme = LocalChanTheme.current
-    val reorderableState = rememberReorderState()
+
+    val reorderTask = rememberCancellableCoroutineTask()
+    val reorderableState = rememberReorderableLazyListState(
+      onMove = { from, to -> reorderTask.launch { thirdEyeSettingState.move(from = from.index, to = to.index) } },
+      onDragEnd = { from, to ->
+        reorderTask.launch {
+          if (!thirdEyeManager.onMoved(from = from, to = to)) {
+            thirdEyeSettingState.move(from = to, to = from)
+          }
+        }
+      }
+    )
 
     LazyColumn(
       modifier = Modifier
         .fillMaxWidth()
         .heightIn(min = 128.dp, max = mainContentMaxHeight)
-        .reorderable(
-          state = reorderableState,
-          onMove = { from, to ->
-            thirdEyeSettingState.move(from = from, to = to)
-          },
-          onDragEnd = { from, to ->
-            if (!thirdEyeManager.onMoved(from = from, to = to)) {
-              thirdEyeSettingState.move(from = to, to = from)
-            }
-          }
-        )
+        .reorderable(reorderableState)
         .simpleVerticalScrollbar(
           state = reorderableState.listState,
           chanTheme = chanTheme
@@ -437,7 +439,7 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
 
   @Composable
   private fun LazyItemScope.BuildBooruSettingItem(
-    reorderableState: ReorderableState,
+    reorderableState: ReorderableLazyListState,
     thirdEyeSettingState: ThirdEyeSettingsState,
     booruSetting: BooruSetting,
     onBooruSettingClicked: (BooruSetting) -> Unit,
@@ -452,67 +454,71 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
       ContentAlpha.disabled
     }
 
-    KurobaComposeCardView(
-      modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight()
-        .padding(vertical = 6.dp)
-        .graphicsLayer { alpha = currentAlpha }
-        .draggedItem(reorderableState.offsetByKey(booruSetting.booruUniqueKey))
-        .kurobaClickable(
-          enabled = enabled,
-          bounded = true,
-          onClick = { onBooruSettingClicked(booruSetting) },
-          onLongClick = { onBooruSettingLongClicked(booruSetting) }
-        ),
-      backgroundColor = chanTheme.backColorSecondaryCompose
-    ) {
-      CollapsableContent(
-        enabled = enabled,
-        gradientEndColor = chanTheme.backColorSecondaryCompose
+    ReorderableItem(
+      reorderableState = reorderableState,
+      key = booruSetting.booruUniqueKey
+    ) { isDragging ->
+      KurobaComposeDraggableCard(
+        modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight()
+          .padding(vertical = 6.dp)
+          .graphicsLayer { alpha = currentAlpha }
+          .kurobaClickable(
+            enabled = enabled,
+            bounded = true,
+            onClick = { onBooruSettingClicked(booruSetting) },
+            onLongClick = { onBooruSettingLongClicked(booruSetting) }
+          ),
+        isDragging = isDragging
       ) {
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
+        CollapsableContent(
+          enabled = enabled,
+          gradientEndColor = chanTheme.backColorSecondaryCompose
         ) {
-          Row(
+          Column(
             modifier = Modifier
-              .wrapContentHeight()
               .fillMaxWidth()
           ) {
-            Column(
+            Row(
               modifier = Modifier
                 .wrapContentHeight()
-                .weight(1f)
-                .padding(4.dp)
+                .fillMaxWidth()
             ) {
-              BuildSettingItem(booruSetting.imageFileNameRegex, R.string.third_eye_settings_controller_image_name_regex)
-              Spacer(modifier = Modifier.height(4.dp))
-              BuildSettingItem(booruSetting.apiEndpoint, R.string.third_eye_settings_controller_api_endpoint_url)
-              Spacer(modifier = Modifier.height(4.dp))
-              BuildSettingItem(booruSetting.fullUrlJsonKey, R.string.third_eye_settings_controller_image_full_url_key)
-              Spacer(modifier = Modifier.height(4.dp))
-              BuildSettingItem(booruSetting.previewUrlJsonKey, R.string.third_eye_settings_controller_image_preview_url_key)
-              Spacer(modifier = Modifier.height(4.dp))
-              BuildSettingItem(booruSetting.fileSizeJsonKey, R.string.third_eye_settings_controller_image_size_key)
-              Spacer(modifier = Modifier.height(4.dp))
-              BuildSettingItem(booruSetting.widthJsonKey, R.string.third_eye_settings_controller_image_width_key)
-              Spacer(modifier = Modifier.height(4.dp))
-              BuildSettingItem(booruSetting.heightJsonKey, R.string.third_eye_settings_controller_image_height_key)
-              Spacer(modifier = Modifier.height(4.dp))
-              BuildSettingItem(booruSetting.tagsJsonKey, R.string.third_eye_settings_controller_image_tags_key)
-              Spacer(modifier = Modifier.height(4.dp))
-              BuildSettingItem(booruSetting.bannedTagsAsString, R.string.third_eye_settings_controller_image_banned_tags)
-            }
-
-            if (enabled) {
-              KurobaComposeIcon(
+              Column(
                 modifier = Modifier
-                  .size(32.dp)
-                  .padding(all = 4.dp)
-                  .detectReorder(reorderableState),
-                drawableId = R.drawable.ic_baseline_reorder_24
-              )
+                  .wrapContentHeight()
+                  .weight(1f)
+                  .padding(4.dp)
+              ) {
+                BuildSettingItem(booruSetting.imageFileNameRegex, R.string.third_eye_settings_controller_image_name_regex)
+                Spacer(modifier = Modifier.height(4.dp))
+                BuildSettingItem(booruSetting.apiEndpoint, R.string.third_eye_settings_controller_api_endpoint_url)
+                Spacer(modifier = Modifier.height(4.dp))
+                BuildSettingItem(booruSetting.fullUrlJsonKey, R.string.third_eye_settings_controller_image_full_url_key)
+                Spacer(modifier = Modifier.height(4.dp))
+                BuildSettingItem(booruSetting.previewUrlJsonKey, R.string.third_eye_settings_controller_image_preview_url_key)
+                Spacer(modifier = Modifier.height(4.dp))
+                BuildSettingItem(booruSetting.fileSizeJsonKey, R.string.third_eye_settings_controller_image_size_key)
+                Spacer(modifier = Modifier.height(4.dp))
+                BuildSettingItem(booruSetting.widthJsonKey, R.string.third_eye_settings_controller_image_width_key)
+                Spacer(modifier = Modifier.height(4.dp))
+                BuildSettingItem(booruSetting.heightJsonKey, R.string.third_eye_settings_controller_image_height_key)
+                Spacer(modifier = Modifier.height(4.dp))
+                BuildSettingItem(booruSetting.tagsJsonKey, R.string.third_eye_settings_controller_image_tags_key)
+                Spacer(modifier = Modifier.height(4.dp))
+                BuildSettingItem(booruSetting.bannedTagsAsString, R.string.third_eye_settings_controller_image_banned_tags)
+              }
+
+              if (enabled) {
+                KurobaComposeIcon(
+                  modifier = Modifier
+                    .size(32.dp)
+                    .padding(all = 4.dp)
+                    .detectReorder(reorderableState),
+                  drawableId = R.drawable.ic_baseline_reorder_24
+                )
+              }
             }
           }
         }

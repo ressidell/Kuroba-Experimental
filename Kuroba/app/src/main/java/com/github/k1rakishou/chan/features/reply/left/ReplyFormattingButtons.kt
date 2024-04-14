@@ -14,7 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutState
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
@@ -38,7 +38,7 @@ internal fun ReplyFormattingButtons(
   ) {
     postFormatterButtons.forEach { postFormatterButton ->
       key(postFormatterButton.openTag) {
-        KurobaComposeCardView(
+        KurobaComposeCard(
           modifier = Modifier
             .wrapContentHeight()
             .wrapContentWidth()

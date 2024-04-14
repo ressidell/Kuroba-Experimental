@@ -37,7 +37,7 @@ import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
@@ -45,10 +45,10 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableState
+import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableItem
+import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
-import com.github.k1rakishou.chan.ui.compose.reorder.draggedItem
-import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderState
+import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
@@ -57,7 +57,6 @@ import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.resumeValueSafe
-import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.model.data.catalog.CompositeCatalog
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.coroutines.launch
@@ -106,26 +105,24 @@ class ComposeBoardsController(
     ) {
       BuildHeader()
 
-      val reoderableState = rememberReorderState()
+      val reorderableState = rememberReorderableLazyListState(
+        onMove = { from, to -> viewModel.move(from.index, to.index) }
+      )
 
       LazyColumn(
-        state = reoderableState.listState,
+        state = reorderableState.listState,
         modifier = Modifier
           .fillMaxWidth()
           .weight(1f, false)
-          .simpleVerticalScrollbar(reoderableState.listState, chanTheme)
-          .reorderable(
-            state = reoderableState,
-            onMove = { from, to -> viewModel.move(from, to) }
-          ),
+          .simpleVerticalScrollbar(reorderableState.listState, chanTheme)
+          .reorderable(reorderableState),
         content = {
           items(compositionSlots.size) { index ->
             val compositionSlot = compositionSlots[index]
 
             BuildCompositionSlot(
-              chanTheme = chanTheme,
               index = index,
-              reoderableState = reoderableState,
+              reorderableState = reorderableState,
               catalogCompositionSlot = compositionSlot,
               onAddOrReplaceBoardClicked = { clickedIndex ->
                 val controller = ComposeBoardsSelectorController(
@@ -249,9 +246,8 @@ class ComposeBoardsController(
 
   @Composable
   private fun BuildCompositionSlot(
-    chanTheme: ChanTheme,
     index: Int,
-    reoderableState: ReorderableState,
+    reorderableState: ReorderableLazyListState,
     catalogCompositionSlot: ComposeBoardsControllerViewModel.CatalogCompositionSlot,
     onAddOrReplaceBoardClicked: (Int) -> Unit,
     removeBoardClicked: (Int) -> Unit
@@ -259,106 +255,114 @@ class ComposeBoardsController(
     val onAddOrReplaceBoardClickedRemembered = rememberUpdatedState(newValue = onAddOrReplaceBoardClicked)
     val removeBoardClickedRemembered = rememberUpdatedState(newValue = removeBoardClicked)
 
-    KurobaComposeCardView(
-      modifier = Modifier
-        .fillMaxWidth()
-        .height(COMPOSITION_SLOT_ITEM_HEIGHT)
-        .padding(4.dp)
-        .draggedItem(reoderableState.offsetByIndex(index))
-        .kurobaClickable(bounded = true, onClick = { onAddOrReplaceBoardClickedRemembered.value.invoke(index) }),
-      backgroundColor = chanTheme.backColorSecondaryCompose
-    ) {
-      Box(modifier = Modifier.fillMaxSize()) {
-        when (catalogCompositionSlot) {
-          ComposeBoardsControllerViewModel.CatalogCompositionSlot.Empty -> {
-            KurobaComposeText(
-              modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .align(Alignment.Center),
-              fontSize = 16.ktu,
-              textAlign = TextAlign.Center,
-              text = stringResource(id = R.string.controller_compose_boards_click_to_add_board)
-            )
-          }
-          is ComposeBoardsControllerViewModel.CatalogCompositionSlot.Occupied -> {
-            Row(modifier = Modifier.fillMaxSize()) {
-
-              KurobaComposeIcon(
+    ReorderableItem(
+      state = reorderableState,
+      key = null,
+      index = index
+    ) { isDragging ->
+      KurobaComposeDraggableCard(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(COMPOSITION_SLOT_ITEM_HEIGHT)
+          .padding(horizontal = 8.dp, vertical = 4.dp)
+          .kurobaClickable(
+            bounded = true,
+            onClick = { onAddOrReplaceBoardClickedRemembered.value.invoke(index) }
+          ),
+        isDragging = isDragging
+      ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+          when (catalogCompositionSlot) {
+            ComposeBoardsControllerViewModel.CatalogCompositionSlot.Empty -> {
+              KurobaComposeText(
                 modifier = Modifier
-                  .size(32.dp)
-                  .padding(start = 8.dp)
-                  .align(Alignment.CenterVertically)
-                  .kurobaClickable(
-                    bounded = false,
-                    onClick = { removeBoardClickedRemembered.value.invoke(index) }
-                  ),
-                drawableId = R.drawable.ic_clear_white_24dp
+                  .fillMaxWidth()
+                  .wrapContentHeight()
+                  .align(Alignment.Center),
+                fontSize = 16.ktu,
+                textAlign = TextAlign.Center,
+                text = stringResource(id = R.string.controller_compose_boards_click_to_add_board)
               )
+            }
+            is ComposeBoardsControllerViewModel.CatalogCompositionSlot.Occupied -> {
+              Row(modifier = Modifier.fillMaxSize()) {
 
-              Row(
-                modifier = Modifier
-                  .weight(1f)
-                  .fillMaxHeight()
-              ) {
-                val imageLoaderRequest = remember(key1 = catalogCompositionSlot) {
-                  val siteDescriptor = catalogCompositionSlot.catalogDescriptor.siteDescriptor()
-                  val iconUrl = siteManager.bySiteDescriptor(siteDescriptor)?.icon()?.url!!
+                KurobaComposeIcon(
+                  modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp)
+                    .align(Alignment.CenterVertically)
+                    .kurobaClickable(
+                      bounded = false,
+                      onClick = { removeBoardClickedRemembered.value.invoke(index) }
+                    ),
+                  drawableId = R.drawable.ic_clear_white_24dp
+                )
 
-                  val data = ImageLoaderRequestData.Url(
-                    httpUrl = iconUrl,
-                    cacheFileType = CacheFileType.SiteIcon
+                Row(
+                  modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                ) {
+                  val imageLoaderRequest = remember(key1 = catalogCompositionSlot) {
+                    val siteDescriptor = catalogCompositionSlot.catalogDescriptor.siteDescriptor()
+                    val iconUrl = siteManager.bySiteDescriptor(siteDescriptor)?.icon()?.url!!
+
+                    val data = ImageLoaderRequestData.Url(
+                      httpUrl = iconUrl,
+                      cacheFileType = CacheFileType.SiteIcon
+                    )
+
+                    return@remember ImageLoaderRequest(data)
+                  }
+
+                  KurobaComposeImage(
+                    modifier = Modifier
+                      .size(28.dp)
+                      .padding(horizontal = 4.dp)
+                      .align(Alignment.CenterVertically),
+                    request = imageLoaderRequest,
+                    imageLoaderV2 = imageLoaderV2,
+                    error = {
+                      Image(
+                        modifier = Modifier.fillMaxSize(),
+                        painter = painterResource(id = R.drawable.error_icon),
+                        contentDescription = null
+                      )
+                    }
                   )
 
-                  return@remember ImageLoaderRequest(data)
+                  val text = remember(key1 = catalogCompositionSlot) {
+                    buildString {
+                      append(catalogCompositionSlot.catalogDescriptor.siteDescriptor().siteName)
+                      append("/")
+                      append(catalogCompositionSlot.catalogDescriptor.boardDescriptor.boardCode)
+                      append("/")
+                    }
+                  }
+
+                  Spacer(modifier = Modifier.height(8.dp))
+
+                  KurobaComposeText(
+                    modifier = Modifier
+                      .wrapContentSize()
+                      .padding(horizontal = 4.dp)
+                      .align(Alignment.CenterVertically),
+                    fontSize = 16.ktu,
+                    textAlign = TextAlign.Center,
+                    text = text
+                  )
                 }
 
-                KurobaComposeImage(
+                KurobaComposeIcon(
                   modifier = Modifier
-                    .size(28.dp)
-                    .padding(horizontal = 4.dp)
-                    .align(Alignment.CenterVertically),
-                  request = imageLoaderRequest,
-                  imageLoaderV2 = imageLoaderV2,
-                  error = {
-                    Image(
-                      modifier = Modifier.fillMaxSize(),
-                      painter = painterResource(id = R.drawable.error_icon),
-                      contentDescription = null
-                    )
-                  }
-                )
-
-                val text = remember(key1 = catalogCompositionSlot) {
-                  buildString {
-                    append(catalogCompositionSlot.catalogDescriptor.siteDescriptor().siteName)
-                    append("/")
-                    append(catalogCompositionSlot.catalogDescriptor.boardDescriptor.boardCode)
-                    append("/")
-                  }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                KurobaComposeText(
-                  modifier = Modifier
-                    .wrapContentSize()
-                    .padding(horizontal = 4.dp)
-                    .align(Alignment.CenterVertically),
-                  fontSize = 16.ktu,
-                  textAlign = TextAlign.Center,
-                  text = text
+                    .size(32.dp)
+                    .align(Alignment.CenterVertically)
+                    .detectReorder(reorderableState)
+                    .padding(end = 8.dp),
+                  drawableId = R.drawable.ic_baseline_reorder_24
                 )
               }
-
-              KurobaComposeIcon(
-                modifier = Modifier
-                  .size(32.dp)
-                  .align(Alignment.CenterVertically)
-                  .detectReorder(reoderableState)
-                  .padding(end = 8.dp),
-                drawableId = R.drawable.ic_baseline_reorder_24
-              )
             }
           }
         }

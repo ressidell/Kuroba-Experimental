@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCardView
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
@@ -47,7 +47,7 @@ class FilterTypeSelectionController(
 
   @Composable
   override fun BoxScope.BuildContent() {
-    KurobaComposeCardView(
+    KurobaComposeCard(
       modifier = Modifier
         .widthIn(max = 600.dp)
         .wrapContentHeight()
@@ -55,7 +55,7 @@ class FilterTypeSelectionController(
         .align(Alignment.Center)
         .verticalScroll(rememberScrollState())
     ) {
-      val filterTypes = remember { FilterType.values() }
+      val filterTypes = remember { FilterType.entries.toTypedArray() }
       val checkedFilterTypes = remember {
         val map = mutableMapOf<FilterType, MutableState<Boolean>>()
 

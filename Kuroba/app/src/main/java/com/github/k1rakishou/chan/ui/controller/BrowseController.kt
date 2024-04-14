@@ -843,6 +843,12 @@ class BrowseController(
             onClick = { threadLayout.presenter.showRemovedPostsDialog() }
           )
           withOverflowMenuItem(
+            id = ACTION_THREAD_MORE_OPTIONS,
+            stringId = R.string.action_thread_options,
+            visible = isDevBuild(),
+            builder = { withMoreThreadOptions() }
+          )
+          withOverflowMenuItem(
             id = ACTION_SCROLL_TO_TOP,
             stringId = R.string.action_scroll_to_top,
             onClick = { item -> upClicked(item) }
