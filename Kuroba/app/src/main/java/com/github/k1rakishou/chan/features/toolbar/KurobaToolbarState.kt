@@ -471,8 +471,7 @@ class KurobaToolbarState(
     }
 
     if (_transitionToolbarState.value is KurobaToolbarTransition.Progress) {
-      error("Attempt to cancel Progress transition with Instant animation. " +
-        "Progress transition takes higher priority so it can't be canceled like this.")
+      return
     }
 
     when (instant.transitionMode) {

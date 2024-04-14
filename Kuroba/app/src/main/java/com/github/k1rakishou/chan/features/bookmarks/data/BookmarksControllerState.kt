@@ -8,6 +8,7 @@ sealed class BookmarksControllerState {
 
   data class Data(
     val isReorderingMode: Boolean,
+    val viewThreadBookmarksGridMode: Boolean,
     val groupedBookmarks: List<GroupOfThreadBookmarkItemViews>
   ) : BookmarksControllerState()
 }

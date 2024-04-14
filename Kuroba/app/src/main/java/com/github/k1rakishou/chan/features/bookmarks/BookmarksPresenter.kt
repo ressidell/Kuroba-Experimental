@@ -20,6 +20,7 @@ import com.github.k1rakishou.common.mutableIteration
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.bookmark.ThreadBookmarkView
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
+import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -42,8 +43,6 @@ class BookmarksPresenter(
   private val bookmarksSelectionHelper: BookmarksSelectionHelper,
   private val threadDownloadManager: ThreadDownloadManager
 ) : BasePresenter<BookmarksView>() {
-
-  private val bookmarksRefreshed = AtomicBoolean(false)
   private val isReorderingMode = AtomicBoolean(false)
 
   private val _bookmarksControllerState = MutableStateFlow<BookmarksControllerState>(BookmarksControllerState.Loading)
@@ -354,7 +353,13 @@ class BookmarksPresenter(
       return
     }
 
-    setState(BookmarksControllerState.Data(isReorderingMode.get(), groupedFilteredBookmarks))
+    val dataState = BookmarksControllerState.Data(
+      isReorderingMode = isReorderingMode.get(),
+      viewThreadBookmarksGridMode = PersistableChanState.viewThreadBookmarksGridMode.get(),
+      groupedBookmarks = groupedFilteredBookmarks
+    )
+
+    setState(dataState)
   }
 
   private fun processSearchQuery(

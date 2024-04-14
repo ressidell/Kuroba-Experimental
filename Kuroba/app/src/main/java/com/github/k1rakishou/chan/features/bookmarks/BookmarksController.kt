@@ -597,7 +597,6 @@ class BookmarksController(
     }
   }
 
-  // TODO: New toolbar. This doesn't work.
   private fun onChangeViewModeClicked() {
     PersistableChanState.viewThreadBookmarksGridMode.toggle()
 
