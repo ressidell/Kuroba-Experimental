@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 interface IMainUiState {
   interface Readable {
-    val touchPositionFlow: StateFlow<Offset>
+    val touchPosition: StateFlow<Offset>
     val windowSizeClass: StateFlow<WindowSizeClass?>
   }
 
@@ -21,8 +21,8 @@ interface IMainUiState {
 }
 
 internal class MainUiState : IMainUiState.Readable, IMainUiState.Writeable {
-  private val _touchPosition = MutableStateFlow<Offset>(Offset.Zero)
-  override val touchPositionFlow: StateFlow<Offset>
+  private val _touchPosition = MutableStateFlow<Offset>(Offset.Unspecified)
+  override val touchPosition: StateFlow<Offset>
     get() = _touchPosition.asStateFlow()
 
   private val _windowSizeClass = MutableStateFlow<WindowSizeClass?>(null)

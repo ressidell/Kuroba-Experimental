@@ -276,7 +276,7 @@ class MainController(
       combine(
         flow = globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
         flow2 = globalUiStateHolder.replyLayout.replyLayoutsBoundsFlow,
-        flow3 = globalUiStateHolder.mainUi.touchPositionFlow,
+        flow3 = globalUiStateHolder.mainUi.touchPosition,
         flow4 = mainControllerViewModel.currentNavigationHasDrawer,
         transform = { replyLayoutVisibilityEvents, replyLayoutsBounds, touchPosition, currentNavigationHasDrawer ->
           return@combine DrawerEnableState(

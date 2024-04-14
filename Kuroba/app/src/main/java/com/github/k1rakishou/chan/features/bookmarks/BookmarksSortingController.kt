@@ -44,6 +44,8 @@ class BookmarksSortingController(
     apply = view.findViewById(R.id.apply_button)
 
     val innerContainer = view.findViewById<FrameLayout>(R.id.inner_container)
+
+    // TODO: New toolbar. Doesn't work.
     innerContainer.updateLayoutParams<ConstraintLayout.LayoutParams> {
       horizontalBias = constraintLayoutBias.horizontalBias
       verticalBias = constraintLayoutBias.verticalBias
