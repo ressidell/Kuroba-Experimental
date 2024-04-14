@@ -59,6 +59,7 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.TimeUtils
 import com.github.k1rakishou.chan.utils.findControllerOrNull
+import com.github.k1rakishou.chan.utils.findControllers
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -565,16 +566,25 @@ class MainController(
       )
     }
 
-    if (state.totalUnseenPostsCount <= 0) {
-      mainToolbarNavigationController?.containerToolbarState?.updateBadge(
-        count = 0,
-        highImportance = false
-      )
-    } else {
-      mainToolbarNavigationController?.containerToolbarState?.updateBadge(
-        count = state.totalUnseenPostsCount,
-        highImportance = state.hasUnreadReplies
-      )
+    mainToolbarNavigationController?.let { mainNavController ->
+      val threadControllers = mainNavController.findControllers { controller -> controller is ThreadController }
+      if (threadControllers.isEmpty()) {
+        return@let
+      }
+
+      threadControllers.forEach { threadController ->
+        if (state.totalUnseenPostsCount <= 0) {
+          threadController.toolbarState.updateBadge(
+            count = 0,
+            highImportance = false
+          )
+        } else {
+          threadController.toolbarState.updateBadge(
+            count = state.totalUnseenPostsCount,
+            highImportance = state.hasUnreadReplies
+          )
+        }
+      }
     }
   }
 

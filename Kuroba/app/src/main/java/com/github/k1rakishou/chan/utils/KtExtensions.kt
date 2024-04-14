@@ -188,6 +188,30 @@ fun Controller.findControllerOrNull(predicate: (Controller) -> Boolean): Control
   return null
 }
 
+fun Controller.findControllers(predicate: (Controller) -> Boolean): Set<Controller> {
+  val foundControllers = mutableSetOf<Controller>()
+
+  if (predicate(this)) {
+    foundControllers += this
+  }
+
+  val stack = mutableListOf<Controller>()
+  stack += childControllers
+
+  while (true) {
+    val controller = stack.removeFirstOrNull()
+      ?: break
+
+    if (predicate(controller)) {
+      foundControllers += controller
+    }
+
+    stack += controller.childControllers
+  }
+
+  return foundControllers
+}
+
 fun View.setAlphaFast(newAlpha: Float) {
   if (alpha != newAlpha) {
     alpha = newAlpha

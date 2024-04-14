@@ -73,6 +73,12 @@ class InsetAwareRecyclerView @JvmOverloads constructor(
     coroutineScope.cancelChildren()
   }
 
+  override fun onFinishInflate() {
+    super.onFinishInflate()
+
+    onInsetsChanged()
+  }
+
   override fun onInsetsChanged() {
     val bottomPadding = with(appResources.composeDensity) {
       maxOf(
