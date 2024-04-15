@@ -9,7 +9,6 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.ProxyStorage
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.proxies.data.ProxyEntryView
 import com.github.k1rakishou.chan.features.proxies.data.ProxySetupState
 import com.github.k1rakishou.chan.features.proxies.epoxy.epoxyProxyView
@@ -33,8 +32,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ProxySetupController(
-  context: Context,
-  private val drawerCallbacks: MainControllerCallbacks?
+  context: Context
 ) : Controller(context), ProxySetupView, WindowInsetsListener, ProxySelectionHelper.OnProxyItemClicked {
 
   @Inject

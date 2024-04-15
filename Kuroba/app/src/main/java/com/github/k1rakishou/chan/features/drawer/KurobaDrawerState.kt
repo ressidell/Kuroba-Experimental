@@ -1,9 +1,7 @@
 package com.github.k1rakishou.chan.features.drawer
 
-import androidx.compose.runtime.IntState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -72,17 +70,9 @@ class KurobaDrawerState(
 
   val drawerGridMode = mutableStateOf(ChanSettings.drawerGridMode.get())
 
-  private val _bottomPadding = mutableIntStateOf(0)
-  val bottomPadding: IntState
-    get() = _bottomPadding
-
   private val _drawerOpenedState = mutableStateOf(false)
   val drawerOpenedState: State<Boolean>
     get() = _drawerOpenedState
-
-  fun updateBottomPadding(padding: Int) {
-    _bottomPadding.intValue = padding
-  }
 
   fun updateDrawerOpened(opened: Boolean) {
     _drawerOpenedState.value = opened

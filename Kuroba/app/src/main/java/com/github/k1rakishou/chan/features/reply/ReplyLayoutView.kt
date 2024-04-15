@@ -374,7 +374,6 @@ class ReplyLayoutView @JvmOverloads constructor(
   fun onSearchRemoteMediaButtonClicked(chanDescriptor: ChanDescriptor) {
     val imageSearchController = ImageSearchController(
       context = context,
-      boundChanDescriptor = chanDescriptor,
       onImageSelected = { selectedImageUrl -> replyLayoutViewModel.onRemoteImageSelected(selectedImageUrl) }
     )
 

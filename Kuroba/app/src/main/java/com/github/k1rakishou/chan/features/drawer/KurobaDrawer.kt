@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -179,20 +178,23 @@ private fun ColumnScope.BuildNavigationHistoryList(
   onHistoryEntrySelectionChanged: (Boolean, NavigationHistoryEntry) -> Unit,
   onNavHistoryDeleteClicked: (NavigationHistoryEntry) -> Unit
 ) {
-  LaunchedEffect(key1 = searchState.query, block = {
-    if (searchState.query.isEmpty()) {
-      searchState.results = navHistoryEntryList
-      return@LaunchedEffect
-    }
+  LaunchedEffect(
+    key1 = searchState.query,
+    block = {
+      if (searchState.query.isEmpty()) {
+        searchState.results = navHistoryEntryList
+        return@LaunchedEffect
+      }
 
-    delay(125L)
+      delay(125L)
 
-    withContext(Dispatchers.Default) {
-      searchState.searching = true
-      searchState.results = processSearchQuery(searchState.query, navHistoryEntryList)
-      searchState.searching = false
+      withContext(Dispatchers.Default) {
+        searchState.searching = true
+        searchState.results = processSearchQuery(searchState.query, navHistoryEntryList)
+        searchState.searching = false
+      }
     }
-  })
+  )
 
   if (searchState.searching) {
     KurobaComposeProgressIndicator()
@@ -217,8 +219,6 @@ private fun ColumnScope.BuildNavigationHistoryList(
 
   val selectedHistoryEntries = remember { kurobaDrawerState.selectedHistoryEntries }
   val isLowRamDevice = ChanSettings.isLowRamDevice()
-  val padding by kurobaDrawerState.bottomPadding
-  val contentPadding = remember(key1 = padding) { PaddingValues(bottom = 4.dp + padding.dp) }
 
   BoxWithConstraints(
     modifier = Modifier
@@ -241,8 +241,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()
-          .simpleVerticalScrollbar(state, chanTheme, contentPadding),
-        contentPadding = contentPadding,
+          .simpleVerticalScrollbar(state, chanTheme),
         columns = GridCells.Fixed(count = spanCount),
         content = {
           items(count = searchResults.size) { index ->
@@ -277,10 +276,8 @@ private fun ColumnScope.BuildNavigationHistoryList(
           .wrapContentHeight()
           .simpleVerticalScrollbar(
             state = state,
-            chanTheme = chanTheme,
-            contentPadding = contentPadding
+            chanTheme = chanTheme
           ),
-        contentPadding = contentPadding,
         content = {
           items(count = searchResults.size) { index ->
             val navHistoryEntry = searchResults[index]

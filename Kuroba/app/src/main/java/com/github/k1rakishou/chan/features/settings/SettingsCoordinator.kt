@@ -23,7 +23,6 @@ import com.github.k1rakishou.chan.core.repository.ImportExportRepository
 import com.github.k1rakishou.chan.core.usecase.InstallMpvNativeLibrariesFromGithubUseCase
 import com.github.k1rakishou.chan.core.usecase.InstallMpvNativeLibrariesFromLocalDirectoryUseCase
 import com.github.k1rakishou.chan.core.usecase.TwoCaptchaCheckBalanceUseCase
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.gesture_editor.Android10GesturesExclusionZonesHolder
 import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen
 import com.github.k1rakishou.chan.features.settings.screens.BehaviourSettingsScreen
@@ -73,8 +72,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class SettingsCoordinator(
   private val context: Context,
-  private val navigationController: NavigationController,
-  private val mainControllerCallbacks: MainControllerCallbacks
+  private val navigationController: NavigationController
 ): SettingsCoordinatorCallbacks {
 
   @Inject
@@ -140,13 +138,10 @@ class SettingsCoordinator(
   private val mainSettingsScreen by lazy {
     MainSettingsScreen(
       context,
-      mainControllerCallbacks,
       chanFilterManager,
       siteManager,
       updateManager.get(),
-      reportManager,
-      navigationController,
-      dialogFactory
+      navigationController
     )
   }
 
@@ -231,8 +226,7 @@ class SettingsCoordinator(
     SecuritySettingsScreen(
       context,
       navigationController,
-      proxyStorage,
-      mainControllerCallbacks
+      proxyStorage
     )
   }
 

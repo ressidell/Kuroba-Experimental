@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.material.Card
@@ -24,9 +25,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
@@ -36,8 +38,6 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
@@ -49,10 +49,10 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.isNotNullNorEmpty
@@ -67,9 +67,8 @@ import javax.inject.Inject
 
 class SavedPostsController(
   context: Context,
-  private val mainControllerCallbacks: MainControllerCallbacks,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
-) : Controller(context),  WindowInsetsListener {
+) : Controller(context) {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -78,7 +77,6 @@ class SavedPostsController(
   @Inject
   lateinit var dialogFactory: DialogFactory
 
-  private val bottomPadding = mutableIntStateOf(0)
   private val viewModel by lazy { requireComponentActivity().viewModelByKey<SavedPostsViewModel>() }
 
   override fun injectDependencies(component: ActivityComponent) {
@@ -164,15 +162,6 @@ class SavedPostsController(
         .collect()
     }
 
-    controllerScope.launch {
-      globalUiStateHolder.bottomPanel.listenForBottomPanelVisibilityOnScreen(controllerKey)
-        .onEach { onInsetsChanged() }
-        .collect()
-    }
-
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
-    onInsetsChanged()
-
     view = ComposeView(context).apply {
       setContent {
         ComposeEntrypoint {
@@ -193,17 +182,10 @@ class SavedPostsController(
   override fun onDestroy() {
     super.onDestroy()
 
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     requireBottomPanelContract().hideBottomPanel(controllerKey)
 
     viewModel.updateQueryAndReload()
     viewModel.viewModelSelectionHelper.unselectAll()
-  }
-
-  override fun onInsetsChanged() {
-    bottomPadding.intValue = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager
-    )
   }
 
   @Composable
@@ -301,6 +283,9 @@ class SavedPostsController(
     onReplyLongClicked: (PostDescriptor) -> Unit,
   ) {
     val chanTheme = LocalChanTheme.current
+    val layoutDirection = LocalLayoutDirection.current
+    val contentPaddings = LocalContentPaddings.current
+
     val state = rememberLazyListState(
       initialFirstVisibleItemIndex = viewModel.rememberedFirstVisibleItemIndex,
       initialFirstVisibleItemScrollOffset = viewModel.rememberedFirstVisibleItemScrollOffset
@@ -327,11 +312,21 @@ class SavedPostsController(
         .collect()
     }
 
-    InsetAwareLazyColumn(
+    val paddingValues = remember(contentPaddings, layoutDirection) {
+      contentPaddings
+        .asPaddingValues(controllerKey)
+    }
+
+    LazyColumn(
       state = state,
       modifier = Modifier
         .fillMaxSize()
-        .simpleVerticalScrollbar(state, chanTheme)
+        .simpleVerticalScrollbar(
+          state = state,
+          chanTheme = chanTheme,
+          contentPadding = paddingValues
+        ),
+      contentPadding = paddingValues
     ) {
       if (savedRepliesGrouped.isEmpty()) {
         val searchQuery = toolbarState.search.searchQueryState.text
@@ -349,7 +344,7 @@ class SavedPostsController(
           }
         }
 
-        return@InsetAwareLazyColumn
+        return@LazyColumn
       }
 
       savedRepliesGrouped.forEachIndexed { groupIndex, groupedSavedReplies ->

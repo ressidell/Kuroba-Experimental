@@ -8,7 +8,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material.Divider
@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -53,13 +54,13 @@ import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.usecase.ExportFiltersUseCase
 import com.github.k1rakishou.chan.core.usecase.ImportFiltersUseCase
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.SelectableItem
+import com.github.k1rakishou.chan.ui.compose.addBottom
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
@@ -71,6 +72,7 @@ import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCor
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableItem
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
@@ -82,7 +84,6 @@ import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.theme.SimpleSquarePainter
-import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.openLink
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -109,8 +110,7 @@ import javax.inject.Inject
 
 class FiltersController(
   context: Context,
-  private val chanFilterMutable: ChanFilterMutable?,
-  private val mainControllerCallbacks: MainControllerCallbacks
+  private val chanFilterMutable: ChanFilterMutable?
 ) : Controller(context) {
 
   @Inject
@@ -264,7 +264,6 @@ class FiltersController(
       if (filters.isNotEmpty()) {
         BuildFilterList(
           filters = filters,
-          chanTheme = chanTheme,
           coroutineScope = coroutineScope
         )
       } else {
@@ -307,9 +306,12 @@ class FiltersController(
   @Composable
   private fun BuildFilterList(
     filters: List<FiltersControllerViewModel.ChanFilterInfo>,
-    chanTheme: ChanTheme,
     coroutineScope: CoroutineScope
   ) {
+    val chanTheme = LocalChanTheme.current
+    val layoutDirection = LocalLayoutDirection.current
+    val contentPaddings = LocalContentPaddings.current
+
     val searchState = rememberSimpleSearchStateV2<FiltersControllerViewModel.ChanFilterInfo>(
       textFieldState = toolbarState.search.searchQueryState
     )
@@ -356,21 +358,23 @@ class FiltersController(
       onDragEnd = { _, _ -> reorderTask.launch { viewModel.persistReorderedFilters() } }
     )
 
-    val contentPadding = remember {
-      PaddingValues(bottom = FAB_SIZE + (FAB_MARGIN / 2))
+    val paddingValues = remember(contentPaddings, layoutDirection) {
+      contentPaddings
+        .asPaddingValues(controllerKey)
+        .addBottom(layoutDirection, FAB_SIZE + FAB_MARGIN)
     }
 
-    InsetAwareLazyColumn(
+    LazyColumn(
       modifier = Modifier
         .fillMaxSize()
-        .reorderable(reorderableState)
         .simpleVerticalScrollbar(
           state = reorderableState.listState,
           chanTheme = chanTheme,
-          contentPadding = contentPadding
-        ),
+          contentPadding = paddingValues
+        )
+        .reorderable(reorderableState),
       state = reorderableState.listState,
-      contentPadding = contentPadding
+      contentPadding = paddingValues
     ) {
       items(
         count = searchResults.size,

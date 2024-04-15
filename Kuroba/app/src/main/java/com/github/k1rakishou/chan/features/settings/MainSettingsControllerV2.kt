@@ -8,7 +8,6 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.AppRestarter
 import com.github.k1rakishou.chan.core.manager.SettingsNotificationManager
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.settings.epoxy.epoxyBooleanSetting
 import com.github.k1rakishou.chan.features.settings.epoxy.epoxyLinkSetting
 import com.github.k1rakishou.chan.features.settings.epoxy.epoxyNoSettingsFoundView
@@ -38,8 +37,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class MainSettingsControllerV2(
-  context: Context,
-  private val mainControllerCallbacks: MainControllerCallbacks
+  context: Context
 ) : BaseSettingsController(context) {
 
   @Inject
@@ -51,7 +49,7 @@ class MainSettingsControllerV2(
 
   lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
 
-  private val settingsCoordinator by lazy { SettingsCoordinator(context, requireNavController(), mainControllerCallbacks) }
+  private val settingsCoordinator by lazy { SettingsCoordinator(context, requireNavController()) }
   private val defaultScreen = MainScreen
 
   private var hasPendingRestart = false

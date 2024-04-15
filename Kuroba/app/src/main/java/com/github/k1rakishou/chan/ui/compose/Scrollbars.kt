@@ -6,7 +6,6 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -20,8 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
-import com.github.k1rakishou.chan.utils.appDependencies
 import com.github.k1rakishou.core_themes.ChanTheme
 
 private val DefaultPaddingValues = PaddingValues(0.dp)
@@ -83,12 +80,6 @@ fun Modifier.simpleVerticalScrollbar(
   width: Dp = SCROLLBAR_WIDTH
 ): Modifier {
   return composed {
-    val windowInsets = LocalWindowInsets.current
-    val globalUiStateHolder = appDependencies().globalUiStateHolder
-
-    val toolbarHeight by globalUiStateHolder.toolbar.toolbarHeight.collectAsState()
-    val bottomPanelHeight by globalUiStateHolder.bottomPanel.bottomPanelHeight.collectAsState()
-
     val targetAlpha = if (state.isScrollInProgress) 0.8f else 0f
     val duration = if (state.isScrollInProgress) 10 else 1500
 
@@ -112,18 +103,8 @@ fun Modifier.simpleVerticalScrollbar(
           return@drawWithContent
         }
 
-        val topInset = maxOf(
-          windowInsets.top,
-          toolbarHeight
-        )
-
-        val bottomInset = maxOf(
-          windowInsets.bottom,
-          bottomPanelHeight
-        )
-
-        val topPaddingPx = contentPadding.calculateTopPadding().toPx() + topInset.toPx()
-        val bottomPaddingPx = contentPadding.calculateBottomPadding().toPx() + bottomInset.toPx()
+        val topPaddingPx = contentPadding.calculateTopPadding().toPx()
+        val bottomPaddingPx = contentPadding.calculateBottomPadding().toPx()
         val totalHeightWithoutPaddings = this.size.height - topPaddingPx - bottomPaddingPx
 
         val elementHeight = totalHeightWithoutPaddings / layoutInfo.totalItemsCount

@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,29 +16,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
+import com.github.k1rakishou.chan.ui.compose.addBottom
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
@@ -49,6 +50,7 @@ import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCor
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableItem
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
@@ -57,7 +59,6 @@ import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.SpannableHelper
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -71,7 +72,7 @@ class BookmarkGroupSettingsController(
   context: Context,
   private val bookmarksToMove: List<ChanDescriptor.ThreadDescriptor>? = null,
   private val refreshBookmarksFunc: () -> Unit
-) : Controller(context), WindowInsetsListener {
+) : Controller(context) {
 
   @Inject
   lateinit var dialogFactory: DialogFactory
@@ -79,8 +80,6 @@ class BookmarkGroupSettingsController(
   lateinit var themeEngine: ThemeEngine
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
-
-  private val bottomPadding = mutableStateOf(0)
 
   private val isBookmarkMoveMode: Boolean
     get() = bookmarksToMove != null
@@ -118,8 +117,6 @@ class BookmarkGroupSettingsController(
       }
     )
 
-    onInsetsChanged()
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
     viewModel.reload()
 
     view = ComposeView(context).apply {
@@ -142,16 +139,7 @@ class BookmarkGroupSettingsController(
   override fun onDestroy() {
     super.onDestroy()
 
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     refreshBookmarksFunc.invoke()
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager
-    )
-
-    bottomPadding.value = bottomPaddingDp
   }
 
   @Composable
@@ -168,6 +156,9 @@ class BookmarkGroupSettingsController(
     onCreateGroupClicked: () -> Unit
   ) {
     val chanTheme = LocalChanTheme.current
+    val contentPaddings = LocalContentPaddings.current
+    val layoutDirection = LocalLayoutDirection.current
+
     val onCreateGroupClickedRemembered = rememberUpdatedState(newValue = onCreateGroupClicked)
 
     val loading by viewModel.loading
@@ -189,8 +180,11 @@ class BookmarkGroupSettingsController(
       return
     }
 
-    val bottomPd by bottomPadding
-    val paddingValues = remember { PaddingValues(bottom = FAB_SIZE + FAB_MARGIN) }
+    val paddingValues = remember(contentPaddings, layoutDirection) {
+      contentPaddings
+        .asPaddingValues(controllerKey)
+        .addBottom(layoutDirection, FAB_SIZE + FAB_MARGIN)
+    }
 
     val reorderTask = rememberCancellableCoroutineTask()
     val reorderableState = rememberReorderableLazyListState(
@@ -212,7 +206,7 @@ class BookmarkGroupSettingsController(
         .wrapContentHeight()
         .align(Alignment.Center)
     ) {
-      InsetAwareLazyColumn(
+      LazyColumn(
         modifier = Modifier
           .fillMaxWidth()
           .weight(1f)
@@ -260,7 +254,12 @@ class BookmarkGroupSettingsController(
       modifier = Modifier
         .size(FAB_SIZE)
         .align(Alignment.BottomEnd)
-        .offset(x = -FAB_MARGIN, y = -(bottomPd.dp + (FAB_MARGIN / 2))),
+        .offset {
+          return@offset IntOffset(
+            x = -(FAB_MARGIN.roundToPx()),
+            y = -(contentPaddings.calculateBottomPadding(controllerKey) + (FAB_MARGIN / 2)).roundToPx()
+          )
+        },
       backgroundColor = chanTheme.accentColorCompose,
       contentColor = Color.White,
       onClick = { onCreateGroupClickedRemembered.value.invoke() }

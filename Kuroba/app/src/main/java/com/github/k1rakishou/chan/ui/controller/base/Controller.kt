@@ -13,11 +13,8 @@ import androidx.compose.runtime.mutableStateOf
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.base.ControllerHostActivity
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
-import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.ui.controller.base.transition.FadeTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 import com.github.k1rakishou.chan.ui.controller.navigation.BottomPanelContract
@@ -30,7 +27,6 @@ import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.ui.view.widget.CancellableToast
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.pxToDp
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
@@ -477,73 +473,6 @@ abstract class Controller(
     }
 
     return this
-  }
-
-  /**
-   * Very complex method that checks a lot of stuff. Basically it calculates the bottom padding that
-   * is then used as a content padding of a RecyclerView.
-   * */
-  protected fun calculateBottomPaddingForRecyclerInDp(
-    globalWindowInsetsManager: GlobalWindowInsetsManager
-  ): Int {
-    val isInsidePopupOrFloatingController = isInsidePopupOrFloatingController()
-    val isSplitLayoutMode = ChanSettings.isSplitLayoutMode()
-    val isMainController = this is MainController
-    val isKeyboardOpened = globalWindowInsetsManager.isKeyboardOpened
-
-    // Main controller is a special case (it may or may not have the bottomNavView) so we handle
-    // it separately
-    if (isKeyboardOpened && !isMainController) {
-      return pxToDp(globalWindowInsetsManager.keyboardHeight)
-    }
-
-    // BottomPanel (the one with options like in the BookmarksController) must push the RecyclerView
-    // upward when the bottomNavView is not present (SPLIT layout or it's disabled in the settings)
-    if (globalUiStateHolder.bottomPanel.isShownOnScreen(controllerKey)) {
-      return when {
-        isSplitLayoutMode -> {
-          with(appResources.composeDensity) { globalUiStateHolder.bottomPanel.bottomPanelHeightDp.roundToPx() }
-        }
-        else -> pxToDp(globalWindowInsetsManager.bottom())
-      }
-    }
-
-    if (isSplitLayoutMode) {
-      if (isInsidePopupOrFloatingController) {
-        return 0
-      }
-
-      return pxToDp(globalWindowInsetsManager.bottom())
-    }
-
-    if (isInsidePopupOrFloatingController) {
-      // Floating controllers handle the bottom inset inside the BaseFloatingController
-      return 0
-    }
-
-    if (isMainController) {
-      return 0
-    }
-
-    return pxToDp(globalWindowInsetsManager.bottom())
-  }
-
-  private fun isInsidePopupOrFloatingController(): Boolean {
-    var controller: Controller? = this
-
-    while (true) {
-      if (controller == null) {
-        break
-      }
-
-      if (controller is BaseFloatingComposeController) {
-        return true
-      }
-
-      controller = controller.parentController
-    }
-
-    return false
   }
 
   override fun equals(other: Any?): Boolean {

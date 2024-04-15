@@ -4,7 +4,6 @@ import android.content.Context
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.helper.ProxyStorage
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.proxies.ProxySetupController
 import com.github.k1rakishou.chan.features.settings.SecurityScreen
 import com.github.k1rakishou.chan.features.settings.SettingsGroup
@@ -16,8 +15,7 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 class SecuritySettingsScreen(
   context: Context,
   private val navigationController: NavigationController,
-  private val proxyStorage: ProxyStorage,
-  private val drawerCallbacks: MainControllerCallbacks?
+  private val proxyStorage: ProxyStorage
 ) : BaseSettingsScreen(
   context,
   SecurityScreen,
@@ -47,7 +45,7 @@ class SecuritySettingsScreen(
             val proxiesCount = proxyStorage.getCount()
             getString(R.string.settings_screen_security_proxy_description, proxiesCount)
           },
-          callback = { navigationController.pushController(ProxySetupController(context, drawerCallbacks)) }
+          callback = { navigationController.pushController(ProxySetupController(context)) }
         )
 
         group += BooleanSettingV2.createBuilder(

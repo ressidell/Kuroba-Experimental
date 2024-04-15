@@ -20,7 +20,9 @@ fun ComposeEntrypoint(
       ProvideWindowInsets(activityComponent.globalWindowInsetsManager) {
         ProvideLocalMinimumInteractiveComponentEnforcement {
           ProvideWindowClassSize(context as ComponentActivity) {
-            content()
+            ProvideContentPaddings {
+              content()
+            }
           }
         }
       }

@@ -73,6 +73,15 @@ fun PaddingValues.update(
   )
 }
 
+fun PaddingValues.addBottom(layoutDirection: LayoutDirection, bottom: Dp): PaddingValues {
+  return PaddingValues(
+    start = calculateStartPadding(layoutDirection),
+    end = calculateEndPadding(layoutDirection),
+    top = calculateTopPadding(),
+    bottom = calculateBottomPadding() + bottom
+  )
+}
+
 fun FocusRequester.requestFocusSafe() {
   try {
     // Sometimes crashes

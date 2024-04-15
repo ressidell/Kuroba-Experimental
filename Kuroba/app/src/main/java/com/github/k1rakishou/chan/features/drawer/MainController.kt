@@ -26,7 +26,6 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
 import com.github.k1rakishou.chan.core.manager.SettingsNotificationManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.bookmarks.BookmarksController
 import com.github.k1rakishou.chan.features.drawer.data.NavigationHistoryEntry
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
@@ -77,7 +76,6 @@ class MainController(
 ) : Controller(context),
   MainControllerCallbacks,
   View.OnClickListener,
-  WindowInsetsListener,
   ThemeEngine.ThemeChangesListener,
   DrawerLayout.DrawerListener {
 
@@ -301,8 +299,6 @@ class MainController(
         .collect()
     }
 
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
-
     themeEngine.addListener(this)
     onThemeChanged()
   }
@@ -323,16 +319,7 @@ class MainController(
 
     drawerLayout.removeDrawerListener(this)
     themeEngine.removeListener(this)
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     compositeDisposable.clear()
-  }
-
-  override fun onInsetsChanged() {
-    val bottomPadding = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager
-    )
-
-    kurobaDrawerState.updateBottomPadding(bottomPadding)
   }
 
   override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
@@ -391,12 +378,12 @@ class MainController(
   }
 
   fun openPostsController() {
-    val savedPostsController = SavedPostsController(context, this, startActivityCallback)
+    val savedPostsController = SavedPostsController(context, startActivityCallback)
     mainToolbarNavigationController?.pushController(savedPostsController)
   }
 
   fun openArchiveController() {
-    val localArchiveController = LocalArchiveController(context, this, startActivityCallback)
+    val localArchiveController = LocalArchiveController(context, startActivityCallback)
     mainToolbarNavigationController?.pushController(localArchiveController)
   }
 
@@ -406,7 +393,7 @@ class MainController(
   }
 
   fun openSettingsController() {
-    val mainSettingsControllerV2 = MainSettingsControllerV2(context, this)
+    val mainSettingsControllerV2 = MainSettingsControllerV2(context)
     mainToolbarNavigationController?.pushController(mainSettingsControllerV2)
   }
 

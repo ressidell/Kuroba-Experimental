@@ -301,81 +301,7 @@ class BookmarksController(
       )
     )
 
-    toolbarState.enterDefaultMode(
-      leftItem = BackArrowMenuItem(
-        onClick = { requireNavController().popController() }
-      ),
-      middleContent = ToolbarMiddleContent.Title(
-        title = ToolbarText.Id(R.string.controller_bookmarks)
-      ),
-      iconClickInterceptor = {
-        exitReorderingModeIfActive()
-        return@enterDefaultMode false
-      },
-      menuBuilder = {
-        withMenuItem(
-          id = null,
-          drawableId = R.drawable.ic_search_white_24dp,
-          onClick = { toolbarState.enterSearchMode() }
-        )
-        withMenuItem(
-          id = ACTION_CHANGE_VIEW_BOOKMARK_MODE,
-          drawableId = getBookmarksModeChangeToolbarButtonDrawableId(),
-          onClick = { onChangeViewModeClicked() }
-        )
-        withMenuItem(
-          id = ACTION_OPEN_SORT_SETTINGS,
-          drawableId = R.drawable.ic_baseline_sort_24,
-          onClick = {
-            val controller = BookmarksSortingController(
-              context = context,
-              constraintLayoutBias = globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
-              bookmarksView = this@BookmarksController
-            )
-
-            presentController(controller)
-          }
-        )
-
-        withOverflowMenu {
-          withOverflowMenuItem(
-            id = ACTION_RESTART_FILTER_WATCHER,
-            stringId = R.string.controller_bookmarks_restart_filter_watcher,
-            visible = true,
-            onClick = { restartFilterWatcherClicked() }
-          )
-          withOverflowMenuItem(
-            id = ACTION_MARK_ALL_BOOKMARKS_AS_SEEN,
-            stringId = R.string.controller_bookmarks_mark_all_bookmarks_as_seen,
-            visible = true,
-            onClick = { bookmarksPresenter.markAllAsSeen() })
-          withOverflowMenuItem(
-            id = ACTION_PRUNE_NON_ACTIVE_BOOKMARKS,
-            stringId = R.string.controller_bookmarks_prune_inactive_bookmarks,
-            visible = true,
-            onClick = { subItem -> onPruneNonActiveBookmarksClicked(subItem) }
-          )
-          withOverflowMenuItem(
-            id = ACTION_BOOKMARK_GROUPS_SETTINGS,
-            stringId = R.string.controller_bookmarks_bookmark_groups_settings,
-            visible = true,
-            onClick = { bookmarkGroupsSettings() }
-          )
-          withOverflowMenuItem(
-            id = ACTION_SET_GRID_BOOKMARK_VIEW_WIDTH,
-            stringId = R.string.controller_bookmarks_set_grid_bookmark_view_width,
-            visible = PersistableChanState.viewThreadBookmarksGridMode.get(),
-            onClick = { onSetGridBookmarkViewWidthClicked() }
-          )
-          withOverflowMenuItem(
-            id = ACTION_CLEAR_ALL_BOOKMARKS,
-            stringId = R.string.controller_bookmarks_clear_all_bookmarks,
-            visible = true,
-            onClick = { subItem -> onClearAllBookmarksClicked(subItem) }
-          )
-        }
-      }
-    )
+    initToolbar()
 
     controllerScope.launch {
       bookmarksPresenter.bookmarksControllerState
@@ -1084,6 +1010,85 @@ class BookmarksController(
     toolbarState.selection.updateCounters(
       selectedItemsCount = selectedItemsCount,
       totalItemsCount = totalItemsCount
+    )
+  }
+
+
+  private fun initToolbar() {
+    toolbarState.enterDefaultMode(
+      leftItem = BackArrowMenuItem(
+        onClick = { requireNavController().popController() }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.controller_bookmarks)
+      ),
+      iconClickInterceptor = {
+        exitReorderingModeIfActive()
+        return@enterDefaultMode false
+      },
+      menuBuilder = {
+        withMenuItem(
+          id = null,
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = { toolbarState.enterSearchMode() }
+        )
+        withMenuItem(
+          id = ACTION_CHANGE_VIEW_BOOKMARK_MODE,
+          drawableId = getBookmarksModeChangeToolbarButtonDrawableId(),
+          onClick = { onChangeViewModeClicked() }
+        )
+        withMenuItem(
+          id = ACTION_OPEN_SORT_SETTINGS,
+          drawableId = R.drawable.ic_baseline_sort_24,
+          onClick = {
+            val controller = BookmarksSortingController(
+              context = context,
+              constraintLayoutBias = globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
+              bookmarksView = this@BookmarksController
+            )
+
+            presentController(controller)
+          }
+        )
+
+        withOverflowMenu {
+          withOverflowMenuItem(
+            id = ACTION_RESTART_FILTER_WATCHER,
+            stringId = R.string.controller_bookmarks_restart_filter_watcher,
+            visible = true,
+            onClick = { restartFilterWatcherClicked() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_MARK_ALL_BOOKMARKS_AS_SEEN,
+            stringId = R.string.controller_bookmarks_mark_all_bookmarks_as_seen,
+            visible = true,
+            onClick = { bookmarksPresenter.markAllAsSeen() })
+          withOverflowMenuItem(
+            id = ACTION_PRUNE_NON_ACTIVE_BOOKMARKS,
+            stringId = R.string.controller_bookmarks_prune_inactive_bookmarks,
+            visible = true,
+            onClick = { subItem -> onPruneNonActiveBookmarksClicked(subItem) }
+          )
+          withOverflowMenuItem(
+            id = ACTION_BOOKMARK_GROUPS_SETTINGS,
+            stringId = R.string.controller_bookmarks_bookmark_groups_settings,
+            visible = true,
+            onClick = { bookmarkGroupsSettings() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_SET_GRID_BOOKMARK_VIEW_WIDTH,
+            stringId = R.string.controller_bookmarks_set_grid_bookmark_view_width,
+            visible = PersistableChanState.viewThreadBookmarksGridMode.get(),
+            onClick = { onSetGridBookmarkViewWidthClicked() }
+          )
+          withOverflowMenuItem(
+            id = ACTION_CLEAR_ALL_BOOKMARKS,
+            stringId = R.string.controller_bookmarks_clear_all_bookmarks,
+            visible = true,
+            onClick = { subItem -> onClearAllBookmarksClicked(subItem) }
+          )
+        }
+      }
     )
   }
 

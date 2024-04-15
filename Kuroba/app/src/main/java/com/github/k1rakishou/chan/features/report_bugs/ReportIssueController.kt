@@ -43,10 +43,8 @@ import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.common.ModularResult
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.core_logger.LogStorage
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -263,11 +261,12 @@ class ReportIssueController(
   }
 
   override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager
-    )
-
-    view.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
+    // TODO: if this screen is ever used again
+//    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
+//      globalWindowInsetsManager = globalWindowInsetsManager
+//    )
+//
+//    view.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))
   }
 
   override fun onDestroy() {

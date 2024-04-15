@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +35,7 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressInd
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.controller.base.BaseComposeController
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -68,16 +68,20 @@ class CreateSoundMediaController(
 
   @Composable
   override fun BuildContent() {
+    val contentPadding = LocalContentPaddings.current
+
     val attachments = controllerViewModel.attachments
     val processingAttachments = controllerViewModel.processingAttachments
     val selectedFiles = controllerViewModel.selectedFiles
 
-    val paddingValues by controllerPaddingsState
+    val paddingValues = remember(key1 = contentPadding) {
+      contentPadding.asPaddingValues(controllerKey)
+    }
 
     LazyVerticalGrid(
       modifier = Modifier
-          .fillMaxSize()
-          .padding(4.dp),
+        .fillMaxSize()
+        .padding(4.dp),
       contentPadding = paddingValues,
       verticalArrangement = Arrangement.spacedBy(4.dp),
       horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -122,13 +126,13 @@ class CreateSoundMediaController(
 
     Box(
       modifier = Modifier
-          .fillMaxWidth()
-          .height(256.dp)
-          .kurobaClickable(
-              enabled = processingAttachment !is AsyncData.Loading,
-              bounded = true,
-              onClick = { createSoundMedia(attachment, true) }
-          )
+        .fillMaxWidth()
+        .height(256.dp)
+        .kurobaClickable(
+          enabled = processingAttachment !is AsyncData.Loading,
+          bounded = true,
+          onClick = { createSoundMedia(attachment, true) }
+        )
     ) {
       KurobaComposeImage(
         request = request,
@@ -139,15 +143,15 @@ class CreateSoundMediaController(
 
       KurobaComposeText(
         modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .kurobaClickable(
-                bounded = true,
-                onClick = { showFullAttachmentName(attachment) }
-            )
-            .background(Color.Black.copy(alpha = 0.7f))
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .align(Alignment.BottomCenter),
+          .fillMaxWidth()
+          .wrapContentHeight()
+          .kurobaClickable(
+            bounded = true,
+            onClick = { showFullAttachmentName(attachment) }
+          )
+          .background(Color.Black.copy(alpha = 0.7f))
+          .padding(horizontal = 4.dp, vertical = 2.dp)
+          .align(Alignment.BottomCenter),
         text = attachment.attachmentName,
         maxLines = 5,
         overflow = TextOverflow.Ellipsis,

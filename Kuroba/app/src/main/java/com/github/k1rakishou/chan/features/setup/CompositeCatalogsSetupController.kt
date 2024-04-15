@@ -14,11 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -34,7 +34,6 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.RendezvousCoroutineExecutor
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
@@ -46,6 +45,7 @@ import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCor
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableItem
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
@@ -54,7 +54,6 @@ import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_themes.ChanTheme
@@ -64,7 +63,7 @@ import javax.inject.Inject
 
 class CompositeCatalogsSetupController(
   context: Context
-) : Controller(context), WindowInsetsListener {
+) : Controller(context) {
 
   @Inject
   lateinit var themeEngine: ThemeEngine
@@ -75,7 +74,6 @@ class CompositeCatalogsSetupController(
     requireComponentActivity().viewModelByKey<CompositeCatalogsSetupControllerViewModel>()
   }
 
-  private val bottomPadding = mutableStateOf(0)
   private val rendezvousCoroutineExecutor = RendezvousCoroutineExecutor(controllerScope)
 
   override fun injectDependencies(component: ActivityComponent) {
@@ -100,8 +98,6 @@ class CompositeCatalogsSetupController(
       )
     )
 
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
-    onInsetsChanged()
     viewModel.reload()
 
     view = ComposeView(context).apply {
@@ -121,21 +117,11 @@ class CompositeCatalogsSetupController(
     }
   }
 
-  override fun onDestroy() {
-    super.onDestroy()
-
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-  }
-
-  override fun onInsetsChanged() {
-    bottomPadding.value = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager
-    )
-  }
-
   @Composable
   private fun BuildContent() {
     val chanTheme = LocalChanTheme.current
+    val contentPaddings = LocalContentPaddings.current
+
     val compositeCatalogs = viewModel.compositeCatalogs
 
     val reorderTask = rememberCancellableCoroutineTask()
@@ -158,16 +144,26 @@ class CompositeCatalogsSetupController(
       }
     )
 
+    val paddingValues = remember(contentPaddings) {
+      contentPaddings
+        .asPaddingValues(controllerKey)
+    }
+
     Box(
       modifier = Modifier.fillMaxSize()
     ) {
       if (compositeCatalogs.isNotEmpty()) {
-        InsetAwareLazyColumn(
+        LazyColumn(
           state = reorderableState.listState,
           modifier = Modifier
             .fillMaxSize()
-            .simpleVerticalScrollbar(reorderableState.listState, chanTheme)
+            .simpleVerticalScrollbar(
+              state = reorderableState.listState,
+              chanTheme = chanTheme,
+              contentPadding = paddingValues
+            )
             .reorderable(reorderableState),
+          contentPadding = paddingValues,
           content = {
             items(compositeCatalogs.size) { index ->
               val compositeCatalog = compositeCatalogs.get(index)

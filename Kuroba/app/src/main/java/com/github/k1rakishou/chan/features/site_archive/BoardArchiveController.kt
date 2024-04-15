@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.material.Divider
@@ -39,10 +40,10 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
-import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -136,6 +137,7 @@ class BoardArchiveController(
     onThreadClicked: (Long) -> Unit
   ) {
     val chanTheme = LocalChanTheme.current
+    val contentPaddings = LocalContentPaddings.current
 
     val boardArchiveControllerState by viewModel.state
     val page by viewModel.page
@@ -190,11 +192,21 @@ class BoardArchiveController(
       }
     }
 
-    InsetAwareLazyColumn(
+    val paddingValues = remember(contentPaddings) {
+      contentPaddings
+        .asPaddingValues(controllerKey)
+    }
+
+    LazyColumn(
       state = state,
       modifier = Modifier
         .fillMaxSize()
-        .simpleVerticalScrollbar(state, chanTheme)
+        .simpleVerticalScrollbar(
+          state = state,
+          chanTheme = chanTheme,
+          contentPadding = paddingValues
+        ),
+      contentPadding = paddingValues
     ) {
       items(count = searchResults.size + 1) { index ->
         val archiveThreadItem = searchResults.getOrNull(index)

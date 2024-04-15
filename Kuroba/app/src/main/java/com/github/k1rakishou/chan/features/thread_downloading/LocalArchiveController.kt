@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Card
@@ -65,7 +66,6 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
@@ -80,13 +80,13 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
-import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLazyColumn
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.AppConstants
@@ -109,7 +109,6 @@ import kotlin.time.Duration.Companion.seconds
 
 class LocalArchiveController(
   context: Context,
-  private val mainControllerCallbacks: MainControllerCallbacks,
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
 ) : Controller(context) {
 
@@ -311,6 +310,8 @@ class LocalArchiveController(
     onThreadDownloadLongClicked: (ChanDescriptor.ThreadDescriptor) -> Unit
   ) {
     val chanTheme = LocalChanTheme.current
+    val contentPaddings = LocalContentPaddings.current
+
     val state = rememberLazyListState(
       initialFirstVisibleItemIndex = viewModel.rememberedFirstVisibleItemIndex,
       initialFirstVisibleItemScrollOffset = viewModel.rememberedFirstVisibleItemScrollOffset
@@ -337,14 +338,24 @@ class LocalArchiveController(
       }
     }
 
+    val paddingValues = remember(contentPaddings) {
+      contentPaddings
+        .asPaddingValues(controllerKey)
+    }
+
     Column(
       modifier = Modifier.fillMaxSize()
     ) {
-      InsetAwareLazyColumn(
+      LazyColumn(
         state = state,
         modifier = Modifier
           .fillMaxSize()
-          .simpleVerticalScrollbar(state, chanTheme)
+          .simpleVerticalScrollbar(
+            state = state,
+            chanTheme = chanTheme,
+            contentPadding = paddingValues
+          ),
+        contentPadding = paddingValues
       ) {
         item(key = "selector", contentType = "selector") {
           BuildViewModelSelector(onViewModeChanged = onViewModeChanged)
@@ -366,7 +377,7 @@ class LocalArchiveController(
             }
           }
 
-          return@InsetAwareLazyColumn
+          return@LazyColumn
         }
 
         items(

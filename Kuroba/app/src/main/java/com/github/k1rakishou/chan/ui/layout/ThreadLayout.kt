@@ -47,7 +47,6 @@ import com.github.k1rakishou.chan.core.presenter.ThreadPresenter.ThreadPresenter
 import com.github.k1rakishou.chan.core.site.Site
 import com.github.k1rakishou.chan.core.site.loader.ChanLoaderException
 import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaController
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper
 import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper.ImageReencodingHelperCallback
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
@@ -187,7 +186,6 @@ class ThreadLayout @JvmOverloads constructor(
 
   var threadControllerType: ThreadControllerType? = null
     private set
-  private var drawerCallbacks: MainControllerCallbacks? = null
   private var newPostsNotification: SnackbarWrapper? = null
   private var refreshedFromSwipe = false
   private var deletingDialog: ProgressDialog? = null
@@ -234,10 +232,6 @@ class ThreadLayout @JvmOverloads constructor(
       AppModuleAndroidUtils.extractActivityComponent(context)
         .inject(this)
     }
-  }
-
-  fun setDrawerCallbacks(drawerCallbacks: MainControllerCallbacks?) {
-    this.drawerCallbacks = drawerCallbacks
   }
 
   fun create(
@@ -297,7 +291,6 @@ class ThreadLayout @JvmOverloads constructor(
   fun destroy() {
     Logger.d(TAG, "ThreadLayout.destroy(threadControllerType=$threadControllerType)")
 
-    drawerCallbacks = null
     threadControllerType = null
 
     themeEngine.removeListener(this)

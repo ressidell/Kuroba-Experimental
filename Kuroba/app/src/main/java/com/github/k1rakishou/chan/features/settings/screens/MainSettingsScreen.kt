@@ -3,12 +3,9 @@ package com.github.k1rakishou.chan.features.settings.screens
 import android.content.Context
 import com.github.k1rakishou.chan.BuildConfig
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.ChanFilterManager
-import com.github.k1rakishou.chan.core.manager.ReportManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.UpdateManager
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.filters.FiltersController
 import com.github.k1rakishou.chan.features.report_bugs.ReportIssueController
 import com.github.k1rakishou.chan.features.settings.AppearanceScreen
@@ -42,13 +39,10 @@ import com.github.k1rakishou.persist_state.PersistableChanState
 
 class MainSettingsScreen(
   context: Context,
-  private val mainControllerCallbacks: MainControllerCallbacks,
   private val chanFilterManager: ChanFilterManager,
   private val siteManager: SiteManager,
   private val updateManager: UpdateManager,
-  private val reportManager: ReportManager,
-  private val navigationController: NavigationController,
-  private val dialogFactory: DialogFactory
+  private val navigationController: NavigationController
 ) : BaseSettingsScreen(
   context,
   MainScreen,
@@ -245,8 +239,7 @@ class MainSettingsScreen(
           callback = {
             val filtersController = FiltersController(
               context = context,
-              chanFilterMutable = null,
-              mainControllerCallbacks = mainControllerCallbacks
+              chanFilterMutable = null
             )
 
             navigationController.pushController(filtersController)

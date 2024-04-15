@@ -163,7 +163,6 @@ abstract class ThreadController(
 
     threadLayout = inflate(context, R.layout.layout_thread, null) as ThreadLayout
     threadLayout.create(this, threadControllerType)
-    threadLayout.setDrawerCallbacks(mainControllerCallbacks)
 
     swipeRefreshLayout = SwipeRefreshLayout(context)
 
@@ -471,8 +470,7 @@ abstract class ThreadController(
 
     val filtersController = FiltersController(
       context = context,
-      chanFilterMutable = chanFilterMutable,
-      mainControllerCallbacks = mainControllerCallbacks
+      chanFilterMutable = chanFilterMutable
     )
 
     pushChildController(filtersController)
