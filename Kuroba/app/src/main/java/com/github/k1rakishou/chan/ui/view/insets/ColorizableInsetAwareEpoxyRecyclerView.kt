@@ -1,16 +1,15 @@
-package com.github.k1rakishou.chan.ui.theme.widget
+package com.github.k1rakishou.chan.ui.view.insets
 
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.EdgeEffect
 import androidx.recyclerview.widget.RecyclerView
-import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.core_themes.IColorizableWidget
 import com.github.k1rakishou.core_themes.ThemeEngine
 import javax.inject.Inject
 
-class ColorizableInsetAwareEpoxyRecyclerView  @JvmOverloads constructor(
+class ColorizableInsetAwareEpoxyRecyclerView @JvmOverloads constructor(
   context: Context,
   attrs: AttributeSet? = null,
   defStyleAttr: Int = androidx.recyclerview.R.attr.recyclerViewStyle

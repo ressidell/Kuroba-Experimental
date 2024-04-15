@@ -711,11 +711,11 @@ class BrowseController(
       callback = object : BoardSelectionController.UserSelectionListener {
         override fun onOpenSitesSettingsClicked() {
           sitesSetupControllerOpenNotifier.onSitesSetupControllerOpened()
-          openSitesSetupController()
+          pushChildController(SitesSetupController(context))
         }
 
         override fun onSiteSelected(siteDescriptor: SiteDescriptor) {
-          openSiteSettingsController(siteDescriptor)
+          pushChildController(SiteSettingsController(context, siteDescriptor))
         }
 
         override fun onCatalogSelected(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
@@ -728,24 +728,6 @@ class BrowseController(
       })
 
     requireNavController().presentController(boardSelectionController)
-  }
-
-  private fun openSitesSetupController() {
-    val sitesSetupController = SitesSetupController(context)
-    if (doubleNavigationController != null) {
-      doubleNavigationController!!.pushController(sitesSetupController)
-    } else {
-      requireNavController().pushController(sitesSetupController)
-    }
-  }
-
-  private fun openSiteSettingsController(siteDescriptor: SiteDescriptor) {
-    val siteSettingsController = SiteSettingsController(context, siteDescriptor)
-    if (doubleNavigationController != null) {
-      doubleNavigationController!!.pushController(siteSettingsController)
-    } else {
-      requireNavController().pushController(siteSettingsController)
-    }
   }
 
   @Suppress("MoveLambdaOutsideParentheses")
@@ -770,7 +752,7 @@ class BrowseController(
       ),
       onMainContentClick = {
         if (!siteManager.areSitesSetup()) {
-          openSitesSetupController()
+          pushChildController(SitesSetupController(context))
         } else {
           openBoardSelectionController()
         }

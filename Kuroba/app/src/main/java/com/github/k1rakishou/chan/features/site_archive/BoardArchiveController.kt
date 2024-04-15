@@ -64,8 +64,6 @@ class BoardArchiveController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private var blockClicking = false
-
   private val viewModel by lazy {
     requireComponentActivity().viewModelByKey<BoardArchiveViewModel>(
       key = catalogDescriptor.serializeToString(),
@@ -120,18 +118,14 @@ class BoardArchiveController(
       archiveThreads = archiveThreads,
       viewModel = viewModel
     ) { threadNo ->
-      if (blockClicking) {
-        return@BuildListOfArchiveThreads
-      }
-
       viewModel.currentlySelectedThreadNo.value = threadNo
 
-      popFromNavControllerWithAction(catalogDescriptor) {
-        val threadDescriptor = ChanDescriptor.ThreadDescriptor.create(catalogDescriptor, threadNo)
-        onThreadClicked(threadDescriptor)
-      }
+      val threadDescriptor = ChanDescriptor.ThreadDescriptor.create(catalogDescriptor, threadNo)
+      onThreadClicked(threadDescriptor)
 
-      blockClicking = true
+      withLayoutMode(
+        phone = { requireNavController().popController(false) }
+      )
     }
   }
 

@@ -14,10 +14,10 @@ import com.github.k1rakishou.chan.core.helper.ThumbnailLongtapOptionsHelper
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.core.usecase.FilterOutHiddenImagesUseCase
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerOptions
+import com.github.k1rakishou.chan.features.media_viewer.helper.AlbumThreadControllerHelpers
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToImagePostHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToPostHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenThreadHelper
@@ -29,16 +29,17 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.cell.AlbumViewCell
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.FixedLinearLayoutManager
+import com.github.k1rakishou.chan.ui.view.insets.ColorizableInsetAwareGridRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.isNotNullNorBlank
 import com.github.k1rakishou.common.mutableListWithCap
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.filter.ChanFilterMutable
@@ -46,8 +47,6 @@ import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.util.ChanPostUtils
 import com.github.k1rakishou.persist_state.PersistableChanState.albumLayoutGridMode
 import com.github.k1rakishou.persist_state.PersistableChanState.showAlbumViewsImageDetails
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import javax.inject.Inject
@@ -56,14 +55,17 @@ class AlbumViewController(
   context: Context,
   private val chanDescriptor: ChanDescriptor,
   private val displayingPostDescriptors: List<PostDescriptor>
-) : Controller(context), WindowInsetsListener {
-  private lateinit var recyclerView: ColorizableGridRecyclerView
+) : Controller(context) {
+  private lateinit var recyclerView: ColorizableInsetAwareGridRecyclerView
 
   private val postImages = mutableListOf<ChanPostImage>()
   private var targetIndex = -1
 
   private var fastScroller: FastScroller? = null
   private var albumAdapter: AlbumAdapter? = null
+
+  override val controllerKey: ControllerKey
+    get() = ControllerKey("${this::class.java.name}_${chanDescriptor.userReadableString()}")
 
   private val spanCountAndSpanWidth: SpanInfo
     get() {
@@ -99,6 +101,8 @@ class AlbumViewController(
   lateinit var filterOutHiddenImagesUseCase: FilterOutHiddenImagesUseCase
   @Inject
   lateinit var compositeCatalogManager: CompositeCatalogManager
+  @Inject
+  lateinit var albumThreadControllerHelpers: AlbumThreadControllerHelpers
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -195,8 +199,8 @@ class AlbumViewController(
           val postImage = goToPostEvent.chanPostImage
           val chanDescriptor = goToPostEvent.chanDescriptor
 
-          popFromNavControllerWithAction(chanDescriptor) { threadController ->
-            threadController.selectPostImage(postImage)
+          requireNavController().popController {
+            albumThreadControllerHelpers.highlightPostWithImage(chanDescriptor, postImage)
           }
         }
     }
@@ -208,14 +212,8 @@ class AlbumViewController(
             return@collect
           }
 
-          popFromNavController(postDescriptor.descriptor)
+          requireNavController().popController()
         }
-    }
-
-    controllerScope.launch {
-      toolbarState.toolbarHeightState
-        .onEach { onInsetsChanged() }
-        .collect()
     }
 
     if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
@@ -230,9 +228,6 @@ class AlbumViewController(
         }
       }
     }
-
-    globalWindowInsetsManager.addInsetsUpdatesListener(this)
-    onInsetsChanged()
   }
 
   private fun scrollToInternal(scrollPosition: Int) {
@@ -275,30 +270,11 @@ class AlbumViewController(
 
   override fun onDestroy() {
     super.onDestroy()
-    globalWindowInsetsManager.removeInsetsUpdatesListener(this)
 
     fastScroller?.onCleanup()
     fastScroller = null
 
     recyclerView.swapAdapter(null, true)
-  }
-
-  override fun onInsetsChanged() {
-    var toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeight?.toPx()?.toInt() }
-    if (toolbarHeight == null) {
-      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
-    }
-
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager
-    )
-
-    recyclerView.updatePaddings(
-      left = null,
-      right = FastScrollerHelper.FAST_SCROLLER_WIDTH,
-      top = toolbarHeight,
-      bottom = dp(bottomPaddingDp.toFloat())
-    )
   }
 
   fun tryCollectingImages(initialImageUrl: HttpUrl?): Boolean {
@@ -468,12 +444,15 @@ class AlbumViewController(
       presentControllerFunc = { controller -> presentController(controller) },
       showFiltersControllerFunc = { },
       openThreadFunc = { postDescriptor ->
-        popFromNavController(chanDescriptor)
+        withLayoutMode(
+          phone = { requireNavController().popController(false) }
+        )
+
         mediaViewerOpenThreadHelper.tryToOpenThread(postDescriptor)
       },
       goToPostFunc = {
-        popFromNavControllerWithAction(chanDescriptor) { threadController ->
-          threadController.selectPostImage(postImage)
+        requireNavController().popController {
+          albumThreadControllerHelpers.highlightPostWithImage(chanDescriptor, postImage)
         }
       }
     )

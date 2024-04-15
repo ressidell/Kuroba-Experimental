@@ -215,6 +215,14 @@ class ThreadSlideController(
     switchToControllerInternal(left = false, animated = animated)
   }
 
+  override fun pushToLeftController(controller: Controller, animated: Boolean) {
+    TODO("Not yet implemented (pushToLeftController)")
+  }
+
+  override fun pushToRightController(controller: Controller, animated: Boolean) {
+    TODO("Not yet implemented (pushToRightController)")
+  }
+
   override fun updateLeftController(leftController: Controller?, animated: Boolean) {
     this.leftController?.let { left ->
       left.onHide()

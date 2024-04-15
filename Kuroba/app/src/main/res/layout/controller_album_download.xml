@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
+    <com.github.k1rakishou.chan.ui.view.insets.ColorizableInsetAwareGridRecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ff000000"
         android:clipToPadding="false"
-        android:padding="5dp"
+        android:padding="1dp"
         android:paddingBottom="72dp"
         android:scrollbarStyle="outsideOverlay"
         android:scrollbars="vertical" />

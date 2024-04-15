@@ -18,6 +18,7 @@ import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.site.SiteResolver
 import com.github.k1rakishou.chan.core.site.loader.ChanThreadLoaderCoordinator
 import com.github.k1rakishou.chan.core.site.loader.internal.usecase.ParsePostsV1UseCase
+import com.github.k1rakishou.chan.features.media_viewer.helper.AlbumThreadControllerHelpers
 import com.github.k1rakishou.chan.features.media_viewer.helper.ExoPlayerCache
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToImagePostHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToPostHelper
@@ -287,6 +288,13 @@ class HelperModule {
       postingLimitationsInfoManagerLazy,
       imageLoaderV2Lazy
     )
+  }
+
+  @Provides
+  @Singleton
+  fun provideAlbumThreadControllerHelpers(): AlbumThreadControllerHelpers {
+    Logger.deps("AlbumThreadControllerHelpers")
+    return AlbumThreadControllerHelpers()
   }
 
 }

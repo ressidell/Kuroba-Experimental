@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.ViewParent
 import android.widget.Scroller
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
@@ -59,6 +60,7 @@ class ThreadControllerTracker(
       || navController.isBlockingInput
       || !(navController.topController?.swipeable ?: false)
       || getBelowTop() == null
+      || ChanSettings.isSplitLayoutMode()
 
     if (shouldNotInterceptTouchEvent) {
       return false

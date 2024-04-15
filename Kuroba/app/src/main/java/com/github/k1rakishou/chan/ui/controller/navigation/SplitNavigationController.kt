@@ -8,13 +8,10 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
-import com.github.k1rakishou.chan.ui.controller.PopupController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.PopControllerTransition
-import com.github.k1rakishou.chan.ui.controller.base.transition.PushControllerTransition
 import com.github.k1rakishou.chan.ui.layout.SplitNavigationControllerLayout
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.core_themes.ThemeEngine.ThemeChangesListener
@@ -23,7 +20,6 @@ import javax.inject.Inject
 class SplitNavigationController(
   context: Context,
   private val emptyView: ViewGroup,
-  mainControllerCallbacks: MainControllerCallbacks
 ) : Controller(context), DoubleNavigationController, ThemeChangesListener {
 
   @Inject
@@ -32,19 +28,12 @@ class SplitNavigationController(
   private var _leftController: Controller? = null
   private var _rightController: Controller? = null
 
-  private var mainControllerCallbacks: MainControllerCallbacks?
   private var leftControllerView: FrameLayout? = null
   private var rightControllerView: FrameLayout? = null
   private var selectThreadText: TextView? = null
-  private var popup: PopupController? = null
-  private var popupChild: StyledToolbarNavigationController? = null
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
-  }
-
-  init {
-    this.mainControllerCallbacks = mainControllerCallbacks
   }
 
   override val toolbarState: KurobaToolbarState
@@ -82,7 +71,6 @@ class SplitNavigationController(
     super.onDestroy()
 
     themeEngine.removeListener(this)
-    mainControllerCallbacks = null
   }
 
   override fun onThemeChanged() {
@@ -139,32 +127,40 @@ class SplitNavigationController(
     // both are always visible
   }
 
+  override fun pushToLeftController(controller: Controller, animated: Boolean) {
+    check(controller.doubleControllerType == null) {
+      "doubleControllerType (${doubleControllerType}) was already set for controller: ${controller}."
+    }
+
+    controller.doubleControllerType = DoubleControllerType.Left
+
+    leftController()?.requireNavController()?.pushController(controller, animated)
+  }
+
+  override fun pushToRightController(controller: Controller, animated: Boolean) {
+    check(controller.doubleControllerType == null) {
+      "doubleControllerType (${doubleControllerType}) was already set for controller: ${controller}."
+    }
+
+    controller.doubleControllerType = DoubleControllerType.Right
+
+    rightController()?.requireNavController()?.pushController(controller, animated)
+  }
+
   override fun pushController(to: Controller): Boolean {
-    return pushController(to, true)
+    error("Use pushToLeftController/pushToRightController when in SPLIT mode!")
   }
 
   override fun pushController(to: Controller, animated: Boolean): Boolean {
-    return pushController(to, if (animated) PushControllerTransition() else null)
+    error("Use pushToLeftController/pushToRightController when in SPLIT mode!")
   }
 
   override fun pushController(to: Controller, onFinished: () -> Unit): Boolean {
-    val transition = PushControllerTransition()
-    transition.onTransitionFinished { onFinished() }
-    return pushController(to, transition)
+    error("Use pushToLeftController/pushToRightController when in SPLIT mode!")
   }
 
   override fun pushController(to: Controller, transition: ControllerTransition?): Boolean {
-    if (popup == null) {
-      popup = PopupController(context)
-      presentController(popup!!)
-      popupChild = StyledToolbarNavigationController(context)
-      popup!!.setChildController(popupChild)
-      popupChild!!.pushController(to, false)
-    } else {
-      popupChild!!.pushController(to, transition)
-    }
-
-    return true
+    error("Use pushToLeftController/pushToRightController when in SPLIT mode!")
   }
 
   override fun popController(): Boolean {
@@ -182,32 +178,7 @@ class SplitNavigationController(
   }
 
   override fun popController(transition: ControllerTransition?): Boolean {
-    if (popup == null) {
-      return false
-    }
-
-    if (popupChild?.childControllers?.size == 1) {
-      if (presentingThisController != null) {
-        presentingThisController!!.stopPresenting()
-      }
-      popup = null
-      popupChild = null
-    } else {
-      popupChild!!.popController(transition)
-    }
-
-    return true
-  }
-
-  fun popAll() {
-    if (popup != null) {
-      if (presentingThisController != null) {
-        presentingThisController!!.stopPresenting()
-      }
-
-      popup = null
-      popupChild = null
-    }
+    error("Seems like this is never used?")
   }
 
   override fun onBack(): Boolean {

@@ -1525,7 +1525,7 @@ class ThreadPresenter @Inject constructor(
     threadPresenterCallback?.highlightPost(postDescriptor, blink)
   }
 
-  fun selectPostImage(postImage: ChanPostImage) {
+  fun highlightPostWithImage(postImage: ChanPostImage) {
     val postDescriptors = threadPresenterCallback?.displayingPostDescriptorsInThread
       ?: return
 

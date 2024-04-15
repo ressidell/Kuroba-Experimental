@@ -29,6 +29,7 @@ import com.github.k1rakishou.chan.features.filters.FiltersController
 import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerOptions
+import com.github.k1rakishou.chan.features.media_viewer.helper.AlbumThreadControllerHelpers
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenAlbumHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.report_posts.Chan4ReportPostController
@@ -38,6 +39,8 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowI
 import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.navigation.DoubleControllerType
+import com.github.k1rakishou.chan.ui.controller.navigation.determineDoubleControllerType
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.ui.helper.OpenExternalThreadHelper
@@ -58,10 +61,10 @@ import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.filter.ChanFilterMutable
 import com.github.k1rakishou.model.data.filter.FilterType
 import com.github.k1rakishou.model.data.post.ChanPost
-import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.persist_state.ReplyMode
 import dagger.Lazy
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
@@ -108,6 +111,8 @@ abstract class ThreadController(
   lateinit var currentOpenedDescriptorStateManagerLazy: Lazy<CurrentOpenedDescriptorStateManager>
   @Inject
   lateinit var pageRequestManagerLazy: Lazy<PageRequestManager>
+  @Inject
+  lateinit var albumThreadControllerHelpers: AlbumThreadControllerHelpers
 
   protected val siteManager: SiteManager
     get() = siteManagerLazy.get()
@@ -242,6 +247,13 @@ abstract class ThreadController(
         .collect()
     }
 
+    controllerScope.launch {
+      albumThreadControllerHelpers.highlightPostWithImageEventsFlow
+        .filter { event -> event.chanDescriptor == chanDescriptor }
+        .onEach { event -> threadLayout.presenter.highlightPostWithImage(event.chanPostImage) }
+        .collect()
+    }
+
     onThemeChanged()
     themeEngine.addListener(this)
   }
@@ -349,10 +361,6 @@ abstract class ThreadController(
     openWebViewReportController(post, site)
   }
 
-  fun selectPostImage(postImage: ChanPostImage) {
-    threadLayout.presenter.selectPostImage(postImage)
-  }
-
   override fun openMediaLinkInMediaViewer(link: String) {
     Logger.d(TAG, "openMediaLinkInMediaViewer($link)")
 
@@ -409,11 +417,7 @@ abstract class ThreadController(
   }
 
   override fun pushController(controller: Controller) {
-    if (doubleNavigationController != null) {
-      doubleNavigationController!!.pushController(controller)
-    } else {
-      navigationController!!.pushController(controller)
-    }
+    pushChildController(controller)
   }
 
   override fun onShowPosts() {
@@ -471,11 +475,7 @@ abstract class ThreadController(
       mainControllerCallbacks = mainControllerCallbacks
     )
 
-    if (doubleNavigationController != null) {
-      doubleNavigationController!!.pushController(filtersController)
-    } else {
-      requireNavController().pushController(filtersController)
-    }
+    pushChildController(filtersController)
   }
 
   override fun onLostFocus(wasFocused: ThreadControllerType) {
@@ -682,6 +682,14 @@ abstract class ThreadController(
         postDescriptor = externalArchivePostDescriptor,
         scrollToPost = true
       )
+    }
+  }
+
+  protected fun pushChildController(controller: Controller) {
+    when (doubleNavigationController?.determineDoubleControllerType(this)) {
+      DoubleControllerType.Left -> doubleNavigationController!!.pushToLeftController(controller)
+      DoubleControllerType.Right -> doubleNavigationController!!.pushToRightController(controller)
+      null -> requireNavController().pushController(controller)
     }
   }
 

@@ -303,9 +303,8 @@ class StartActivity : ControllerHostActivity(),
     when (layoutMode) {
       ChanSettings.LayoutMode.SPLIT -> {
         val split = SplitNavigationController(
-          this,
-          inflate(this, R.layout.layout_split_empty),
-          mainController
+          context = this,
+          emptyView = inflate(this, R.layout.layout_split_empty)
         )
 
         mainController.pushChildController(split)

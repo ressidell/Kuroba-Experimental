@@ -7,7 +7,6 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
-import com.github.k1rakishou.chan.ui.controller.PopupController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
@@ -178,11 +177,6 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
 
   override fun onBack(): Boolean {
     if (super.onBack()) {
-      return true
-    }
-
-    if (parentController is PopupController && childControllers.size == 1) {
-      (parentController as PopupController).dismiss()
       return true
     }
 

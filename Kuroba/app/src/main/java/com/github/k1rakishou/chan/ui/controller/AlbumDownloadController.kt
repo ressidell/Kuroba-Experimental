@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,15 +31,16 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
 import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.ThumbnailView.ThumbnailViewOptions
+import com.github.k1rakishou.chan.ui.view.insets.ColorizableInsetAwareGridRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.RecyclerUtils.clearRecyclerCache
 import com.github.k1rakishou.common.updateMargins
-import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.fsaf.FileManager
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.persist_state.ImageSaverV2Options
 import dagger.Lazy
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -56,7 +58,7 @@ class AlbumDownloadController(context: Context) : Controller(context),
   @Inject
   lateinit var fileManager: FileManager
 
-  private lateinit var recyclerView: ColorizableGridRecyclerView
+  private lateinit var recyclerView: ColorizableInsetAwareGridRecyclerView
   private lateinit var download: ColorizableFloatingActionButton
   private lateinit var fastScroller: FastScroller
 
@@ -101,7 +103,7 @@ class AlbumDownloadController(context: Context) : Controller(context),
     download = view.findViewById<ColorizableFloatingActionButton>(R.id.download)
     download.setOnClickListener(this)
 
-    recyclerView = view.findViewById<ColorizableGridRecyclerView>(R.id.recycler_view)
+    recyclerView = view.findViewById<ColorizableInsetAwareGridRecyclerView>(R.id.recycler_view)
     recyclerView.setHasFixedSize(true)
 
     val gridLayoutManager = GridLayoutManager(context, 3)
@@ -120,7 +122,10 @@ class AlbumDownloadController(context: Context) : Controller(context),
     onInsetsChanged()
 
     controllerScope.launch {
-      toolbarState.toolbarHeightState
+      combine(
+        globalUiStateHolder.toolbar.toolbarHeight,
+        globalUiStateHolder.bottomPanel.bottomPanelHeight
+      ) { t1, t2 -> t1 to t2 }
         .onEach { onInsetsChanged() }
         .collect()
     }
@@ -140,30 +145,20 @@ class AlbumDownloadController(context: Context) : Controller(context),
   }
 
   override fun onInsetsChanged() {
-    val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager
-    )
-
-    val bottomPaddingPx = AppModuleAndroidUtils.dp(bottomPaddingDp.toFloat())
-    val fabSize = AppModuleAndroidUtils.dp(64f)
-    val recyclerBottomPadding = bottomPaddingPx + fabSize
-
-    var toolbarHeight = with(appResources.composeDensity) { toolbarState.toolbarHeight?.toPx()?.toInt() }
-    if (toolbarHeight == null) {
-      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
-    }
-
-    recyclerView.updatePaddings(
-      right = FastScrollerHelper.FAST_SCROLLER_WIDTH,
-      top = toolbarHeight,
-      bottom = recyclerBottomPadding
-    )
-
-    if (!ChanSettings.isSplitLayoutMode()) {
-      download.updateMargins(
-        bottom = bottomPaddingPx
+    val bottomPadding = with(appResources.composeDensity) {
+      maxOf(
+        globalWindowInsetsManager.bottom(),
+        globalUiStateHolder.bottomPanel.bottomPanelHeight.value.roundToPx()
       )
     }
+
+    val fabAdditionalBottomPadding = with(appResources.composeDensity) { 16.dp.roundToPx() }
+    val fabAdditionalRightPadding = with(appResources.composeDensity) { 16.dp.roundToPx() }
+
+    download.updateMargins(
+      bottom = bottomPadding + fabAdditionalBottomPadding,
+      right = fabAdditionalRightPadding
+    )
   }
 
   override fun onClick(v: View) {

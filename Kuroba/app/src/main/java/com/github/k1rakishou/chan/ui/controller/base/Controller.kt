@@ -18,15 +18,12 @@ import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
-import com.github.k1rakishou.chan.ui.controller.PopupController
-import com.github.k1rakishou.chan.ui.controller.ThreadController
-import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.base.transition.FadeTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 import com.github.k1rakishou.chan.ui.controller.navigation.BottomPanelContract
+import com.github.k1rakishou.chan.ui.controller.navigation.DoubleControllerType
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
-import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
@@ -39,7 +36,6 @@ import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.core_logger.Logger
-import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -62,7 +58,7 @@ abstract class Controller(
   @Inject
   lateinit var appResources: AppResources
 
-  val controllerKey: ControllerKey
+  open val controllerKey: ControllerKey
     get() = ControllerKey(this::class.java.name)
   open val toolbarState: KurobaToolbarState
     get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
@@ -82,6 +78,8 @@ abstract class Controller(
   var navigationController: NavigationController? = null
   @JvmField
   var doubleNavigationController: DoubleNavigationController? = null
+  @JvmField
+  var doubleControllerType: DoubleControllerType? = null
 
   /**
    * Controller that this controller is presented by.
@@ -417,58 +415,13 @@ abstract class Controller(
   }
 
   fun withLayoutMode(
-    phone: () -> Unit,
-    tablet: () -> Unit
+    phone: (() -> Unit)? = null,
+    tablet: (() -> Unit)? = null
   ) {
     if (ChanSettings.isSplitLayoutMode()) {
-      tablet()
+      tablet?.invoke()
     } else {
-      phone()
-    }
-  }
-
-  fun popFromNavController(chanDescriptor: ChanDescriptor) {
-    popFromNavControllerWithAction(chanDescriptor = chanDescriptor, action = {  })
-  }
-
-  fun popFromNavControllerWithAction(chanDescriptor: ChanDescriptor, action: (ThreadController) -> Unit) {
-    var threadController: ThreadController? = null
-
-    if (previousSiblingController is ThreadController) {
-      // phone mode
-      threadController = previousSiblingController as ThreadController?
-    } else if (previousSiblingController is DoubleNavigationController) {
-      // slide mode
-      val doubleNav = previousSiblingController as DoubleNavigationController
-      if (doubleNav is ThreadSlideController) {
-        if (doubleNav.isLeftOpen()) {
-          threadController = doubleNav.leftController() as ThreadController
-        } else {
-          threadController = doubleNav.rightController() as ThreadController
-        }
-      } else if (doubleNav.rightController() is ThreadController) {
-        threadController = doubleNav.rightController() as ThreadController
-      }
-    } else if (previousSiblingController == null) {
-      // split nav has no "sibling" to look at, so we go WAY back to find the view thread controller
-      val splitNav = parentController?.parentController?.presentedByController as SplitNavigationController?
-
-      threadController = when (chanDescriptor) {
-        is ChanDescriptor.ICatalogDescriptor -> {
-          splitNav?.leftController()?.childControllers?.get(0) as ThreadController?
-        }
-        is ChanDescriptor.ThreadDescriptor -> {
-          splitNav?.rightController()?.childControllers?.get(0) as ThreadController?
-        }
-      }
-
-      // clear the popup here because split nav is weirdly laid out in the stack
-      splitNav?.popController()
-    }
-
-    if (threadController != null) {
-      action(threadController)
-      requireNavController().popController(false)
+      phone?.invoke()
     }
   }
 
@@ -583,7 +536,7 @@ abstract class Controller(
         break
       }
 
-      if (controller is BaseFloatingComposeController || controller is PopupController) {
+      if (controller is BaseFloatingComposeController) {
         return true
       }
 

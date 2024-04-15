@@ -126,7 +126,6 @@ import com.github.k1rakishou.chan.ui.controller.LicensesController
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.LogsController
 import com.github.k1rakishou.chan.ui.controller.OpenUrlInWebViewController
-import com.github.k1rakishou.chan.ui.controller.PopupController
 import com.github.k1rakishou.chan.ui.controller.PostLinksController
 import com.github.k1rakishou.chan.ui.controller.PostOmittedImagesController
 import com.github.k1rakishou.chan.ui.controller.RemovedPostsController
@@ -170,7 +169,6 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
-import com.github.k1rakishou.chan.ui.theme.widget.ColorizableInsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableLinearLayout
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableListView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableProgressBar
@@ -199,6 +197,8 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyCheckableFloa
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyFloatingListMenuRow
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyGroupableFloatingListMenuRow
 import com.github.k1rakishou.chan.ui.view.floating_menu.epoxy.EpoxyHeaderListMenuRow
+import com.github.k1rakishou.chan.ui.view.insets.ColorizableInsetAwareEpoxyRecyclerView
+import com.github.k1rakishou.chan.ui.view.insets.ColorizableInsetAwareGridRecyclerView
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLinearLayout
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareRecyclerView
@@ -232,7 +232,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(licensesController: LicensesController)
   fun inject(loginController: LoginController)
   fun inject(logsController: LogsController)
-  fun inject(popupController: PopupController)
   fun inject(postRepliesPopupController: PostRepliesPopupController)
   fun inject(postSearchPopupController: PostSearchPopupController)
   fun inject(removedPostsController: RemovedPostsController)
@@ -359,6 +358,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(insetAwareRecyclerView: InsetAwareRecyclerView)
   fun inject(insetAwareEpoxyRecyclerView: InsetAwareEpoxyRecyclerView)
   fun inject(colorizableInsetAwareEpoxyRecyclerView: ColorizableInsetAwareEpoxyRecyclerView)
+  fun inject(colorizableInsetAwareGridRecyclerView: ColorizableInsetAwareGridRecyclerView)
   fun inject(insetAwareLinearLayout: InsetAwareLinearLayout)
 
   fun inject(captchaNoJsLayoutV2: CaptchaNoJsLayoutV2)

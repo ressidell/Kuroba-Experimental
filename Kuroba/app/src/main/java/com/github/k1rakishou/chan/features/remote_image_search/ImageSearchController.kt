@@ -300,7 +300,7 @@ class ImageSearchController(
 
             if (searxImage.fullImageUrls.size == 1) {
               onImageSelected(searxImage.fullImageUrls.first())
-              popFromNavController(boundChanDescriptor)
+              requireNavController().popController()
 
               return@BuildImageSearchResults
             }
@@ -595,7 +595,7 @@ class ImageSearchController(
           ?: return@FloatingListMenuController
 
         onImageSelected(clickedItemUrl)
-        popFromNavController(boundChanDescriptor)
+        requireNavController().popController()
       }
     )
 
