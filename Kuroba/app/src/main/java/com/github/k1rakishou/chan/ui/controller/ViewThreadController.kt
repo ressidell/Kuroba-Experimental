@@ -27,7 +27,6 @@ import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoC
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
-import com.github.k1rakishou.chan.ui.controller.navigation.doOnNavigation
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -317,7 +316,7 @@ open class ViewThreadController(
 
         if (showCatalogOptions.switchToCatalogController) {
           // slide layout
-          doubleNavigationController?.switchToController(true, showCatalogOptions.withAnimation)
+          doubleNavigationController?.switchToLeftController(showCatalogOptions.withAnimation)
         }
       }
 
@@ -519,19 +518,9 @@ open class ViewThreadController(
     toolbarState.enterThreadMode(
       leftItem = BackArrowMenuItem(
         onClick = {
-          doubleNavigationController.doOnNavigation(
-            splitNavigation = {
-              doubleNavigationController?.updateRightController(
-                rightController = null,
-                animated = true
-              )
-            },
-            slideNavigation = {
-              doubleNavigationController?.switchToController(
-                leftController = true,
-                animated = true
-              )
-            }
+          withLayoutMode(
+            tablet = { doubleNavigationController?.updateRightController(null, true) },
+            phone = { doubleNavigationController?.switchToLeftController() }
           )
         }
       ),

@@ -6,7 +6,6 @@ import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 
 interface DoubleNavigationController : ControllerWithNavigation, HasNavigation {
-  val navigationType: NavigationType
   val leftControllerToolbarState: KurobaToolbarState?
   val rightControllerToolbarState: KurobaToolbarState?
 
@@ -15,26 +14,6 @@ interface DoubleNavigationController : ControllerWithNavigation, HasNavigation {
   fun leftController(): Controller?
   fun rightController(): Controller?
 
-  fun switchToController(leftController: Boolean, animated: Boolean)
-  fun switchToController(leftController: Boolean)
-
-  enum class NavigationType {
-    Split,
-    Slide
-  }
-}
-
-fun DoubleNavigationController?.doOnNavigation(
-  splitNavigation: (() -> Unit)? = null,
-  slideNavigation: (() -> Unit)? = null
-) {
-  val navigationController = this
-  if (navigationController == null) {
-    return
-  }
-
-  when (navigationController.navigationType) {
-    DoubleNavigationController.NavigationType.Split -> splitNavigation?.invoke()
-    DoubleNavigationController.NavigationType.Slide -> slideNavigation?.invoke()
-  }
+  fun switchToLeftController(animated: Boolean = true)
+  fun switchToRightController(animated: Boolean = true)
 }

@@ -429,8 +429,7 @@ class BrowseController(
           viewThreadController.onGainedFocus(ThreadControllerType.Thread)
         }
 
-        splitNav.switchToController(
-          false,
+        splitNav.switchToRightController(
           showThreadOptions.pushControllerWithAnimation
         )
       }
@@ -453,8 +452,7 @@ class BrowseController(
         }
 
         if (showThreadOptions.switchToThreadController) {
-          slideNav.switchToController(
-            false,
+          slideNav.switchToRightController(
             showThreadOptions.pushControllerWithAnimation
           )
         }
@@ -503,7 +501,7 @@ class BrowseController(
     if (splitNav == null) {
       if (slideNav != null) {
         if (showCatalogOptions.switchToCatalogController) {
-          slideNav.switchToController(true, showCatalogOptions.withAnimation)
+          slideNav.switchToLeftController(showCatalogOptions.withAnimation)
         }
       } else {
         if (navigationController != null) {

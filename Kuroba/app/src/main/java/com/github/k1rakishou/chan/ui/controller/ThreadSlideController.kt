@@ -77,7 +77,7 @@ class ThreadSlideController(
 
     kurobaToolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(
-        onClick = { switchToController(leftController = true, animated = true) }
+        onClick = { switchToLeftController() }
       )
     )
 
@@ -94,8 +94,6 @@ class ThreadSlideController(
 
   override val toolbarState: KurobaToolbarState
     get() = getToolbarState(slidingPaneLayoutOpenState)
-  override val navigationType: DoubleNavigationController.NavigationType
-    get() = DoubleNavigationController.NavigationType.Slide
 
   override val leftControllerToolbarState: KurobaToolbarState?
     get() = leftController()?.toolbarState
@@ -209,20 +207,12 @@ class ThreadSlideController(
     finishToolbarTransition(slidingPaneLayoutOpenState)
   }
 
-  override fun switchToController(leftController: Boolean) {
-    switchToController(leftController, true)
+  override fun switchToLeftController(animated: Boolean) {
+    switchToControllerInternal(left = true, animated = animated)
   }
 
-  override fun switchToController(leftController: Boolean, animated: Boolean) {
-    if (leftController != isLeftOpen()) {
-      if (leftController) {
-        slidingPaneLayout?.openPane()
-      } else {
-        slidingPaneLayout?.closePane()
-      }
-
-      toolbarState.showToolbar()
-    }
+  override fun switchToRightController(animated: Boolean) {
+    switchToControllerInternal(left = false, animated = animated)
   }
 
   override fun updateLeftController(leftController: Controller?, animated: Boolean) {
@@ -322,7 +312,7 @@ class ThreadSlideController(
           return true
         }
 
-        switchToController(true)
+        switchToLeftController()
         return true
       }
 
@@ -340,6 +330,18 @@ class ThreadSlideController(
 
   fun isRightOpen(): Boolean {
     return !isLeftOpen()
+  }
+
+  private fun switchToControllerInternal(left: Boolean, animated: Boolean) {
+    if (left != isLeftOpen()) {
+      if (left) {
+        slidingPaneLayout?.openPane()
+      } else {
+        slidingPaneLayout?.closePane()
+      }
+
+      toolbarState.showToolbar()
+    }
   }
 
   private fun slideStateChanged(animated: Boolean = true) {
