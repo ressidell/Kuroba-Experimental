@@ -93,8 +93,7 @@ abstract class BaseComposeController<VM : ViewModel>(
     }
 
     val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
+      globalWindowInsetsManager = globalWindowInsetsManager
     )
 
     Snapshot.withMutableSnapshot {

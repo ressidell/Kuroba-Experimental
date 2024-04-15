@@ -3,14 +3,21 @@ package com.github.k1rakishou.chan.ui.globalstate.bottompanel
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 interface IBottomPanelGlobalState {
   interface Readable {
     val controllersHoldingBottomPanel: StateFlow<Set<ControllerKey>>
     val bottomPanelHeight: StateFlow<Dp>
+    val bottomPanelHeightDp: Dp
+
+    fun isShownOnScreen(controllerKey: ControllerKey): Boolean
+    fun listenForBottomPanelVisibilityOnScreen(controllerKey: ControllerKey): Flow<Boolean>
   }
 
   interface Writeable {
@@ -28,6 +35,19 @@ class BottomPanelGlobalState : IBottomPanelGlobalState.Readable, IBottomPanelGlo
   private val _bottomPanelHeight = MutableStateFlow<Dp>(0.dp)
   override val bottomPanelHeight: StateFlow<Dp>
     get() = _bottomPanelHeight.asStateFlow()
+
+  override val bottomPanelHeightDp: Dp
+    get() = _bottomPanelHeight.value
+
+  override fun isShownOnScreen(controllerKey: ControllerKey): Boolean {
+    return _controllersHoldingBottomPanel.value.contains(controllerKey)
+  }
+
+  override fun listenForBottomPanelVisibilityOnScreen(controllerKey: ControllerKey): Flow<Boolean> {
+    return _controllersHoldingBottomPanel
+      .map { controllerKeys -> controllerKey in controllerKeys }
+      .distinctUntilChanged()
+  }
 
   override fun onBottomPanelHeightKnown(height: Dp) {
     _bottomPanelHeight.value = height

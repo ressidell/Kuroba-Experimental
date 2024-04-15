@@ -427,7 +427,7 @@ class BookmarksController(
     cleanupFastScroller()
 
     bookmarksPresenter.updateReorderingMode(enterReorderingMode = false)
-    mainControllerCallbacks.hideBottomPanel(controllerKey)
+    requireBottomPanelContract().hideBottomPanel(controllerKey)
 
     epoxyRecyclerView.clear()
     epoxyRecyclerView.removeOnScrollListener(onScrollListener)
@@ -442,7 +442,7 @@ class BookmarksController(
       }
     }
 
-    val result = mainControllerCallbacks.passOnBackToBottomPanel(controllerKey)
+    val result = requireBottomPanelContract().passOnBackToBottomPanel(controllerKey)
     if (result) {
       bookmarksSelectionHelper.unselectAll()
     }
@@ -583,13 +583,13 @@ class BookmarksController(
       is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
       is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
         if (selectionEvent is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode) {
-          mainControllerCallbacks.showBottomPanel(controllerKey, bookmarksSelectionHelper.getBottomPanelMenus())
+          requireBottomPanelContract().showBottomPanel(controllerKey, bookmarksSelectionHelper.getBottomPanelMenus())
         }
 
         enterSelectionModeOrUpdate()
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
-        mainControllerCallbacks.hideBottomPanel(controllerKey)
+        requireBottomPanelContract().hideBottomPanel(controllerKey)
 
         if (toolbarState.isInSelectionMode()) {
           toolbarState.pop()

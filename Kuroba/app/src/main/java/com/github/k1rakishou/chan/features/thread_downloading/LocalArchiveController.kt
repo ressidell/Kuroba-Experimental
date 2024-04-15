@@ -240,7 +240,7 @@ class LocalArchiveController(
   override fun onDestroy() {
     super.onDestroy()
 
-    mainControllerCallbacks.hideBottomPanel(controllerKey)
+    requireBottomPanelContract().hideBottomPanel(controllerKey)
 
     viewModel.viewModelSelectionHelper.unselectAll()
   }
@@ -896,11 +896,11 @@ class LocalArchiveController(
     when (selectionEvent) {
       is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
       is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
-        mainControllerCallbacks.showBottomPanel(controllerKey, viewModel.getBottomPanelMenus())
+        requireBottomPanelContract().showBottomPanel(controllerKey, viewModel.getBottomPanelMenus())
         enterSelectionModeOrUpdate()
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
-        mainControllerCallbacks.hideBottomPanel(controllerKey)
+        requireBottomPanelContract().hideBottomPanel(controllerKey)
 
         if (toolbarState.isInSelectionMode()) {
           toolbarState.pop()

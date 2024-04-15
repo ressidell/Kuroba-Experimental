@@ -264,8 +264,7 @@ class ReportIssueController(
 
   override fun onInsetsChanged() {
     val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
+      globalWindowInsetsManager = globalWindowInsetsManager
     )
 
     view.updatePaddings(bottom = dp(bottomPaddingDp.toFloat()))

@@ -15,7 +15,6 @@ import com.github.k1rakishou.chan.core.base.ControllerHostActivity
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.features.drawer.MainController
-import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
@@ -24,6 +23,7 @@ import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.base.transition.FadeTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
+import com.github.k1rakishou.chan.ui.controller.navigation.BottomPanelContract
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
@@ -149,6 +149,10 @@ abstract class Controller(
     }
 
     return navController
+  }
+
+  fun requireBottomPanelContract(): BottomPanelContract {
+    return requireToolbarNavController() as BottomPanelContract
   }
 
   fun requireNavController(): NavigationController {
@@ -527,8 +531,7 @@ abstract class Controller(
    * is then used as a content padding of a RecyclerView.
    * */
   protected fun calculateBottomPaddingForRecyclerInDp(
-    globalWindowInsetsManager: GlobalWindowInsetsManager,
-    mainControllerCallbacks: MainControllerCallbacks?
+    globalWindowInsetsManager: GlobalWindowInsetsManager
   ): Int {
     val isInsidePopupOrFloatingController = isInsidePopupOrFloatingController()
     val isSplitLayoutMode = ChanSettings.isSplitLayoutMode()
@@ -543,9 +546,11 @@ abstract class Controller(
 
     // BottomPanel (the one with options like in the BookmarksController) must push the RecyclerView
     // upward when the bottomNavView is not present (SPLIT layout or it's disabled in the settings)
-    if (mainControllerCallbacks?.isBottomPanelShown == true) {
+    if (globalUiStateHolder.bottomPanel.isShownOnScreen(controllerKey)) {
       return when {
-        isSplitLayoutMode -> pxToDp(mainControllerCallbacks.bottomPanelHeight)
+        isSplitLayoutMode -> {
+          with(appResources.composeDensity) { globalUiStateHolder.bottomPanel.bottomPanelHeightDp.roundToPx() }
+        }
         else -> pxToDp(globalWindowInsetsManager.bottom())
       }
     }

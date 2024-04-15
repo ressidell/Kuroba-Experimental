@@ -290,8 +290,7 @@ class AlbumViewController(
     }
 
     val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
+      globalWindowInsetsManager = globalWindowInsetsManager
     )
 
     recyclerView.updatePaddings(

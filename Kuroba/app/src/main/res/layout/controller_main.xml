@@ -35,12 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanel
-                android:id="@+id/bottom_menu_panel"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/navigation_view_size"
-                android:layout_alignParentBottom="true" />
-
         </RelativeLayout>
 
         <com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground

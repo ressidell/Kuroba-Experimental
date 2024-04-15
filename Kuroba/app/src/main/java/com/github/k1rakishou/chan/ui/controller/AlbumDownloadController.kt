@@ -141,8 +141,7 @@ class AlbumDownloadController(context: Context) : Controller(context),
 
   override fun onInsetsChanged() {
     val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager,
-      null
+      globalWindowInsetsManager
     )
 
     val bottomPaddingPx = AppModuleAndroidUtils.dp(bottomPaddingDp.toFloat())

@@ -43,19 +43,15 @@ import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
-import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground
-import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanel
-import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.TimeUtils
 import com.github.k1rakishou.chan.utils.findControllerOrNull
@@ -123,9 +119,6 @@ class MainController(
   private lateinit var container: TouchBlockingFrameLayoutNoBackground
   private lateinit var drawerLayout: DrawerLayout
   private lateinit var drawer: TouchBlockingLinearLayoutNoBackground
-  // TODO: New toolbar. Move this thing away from MainController and into a StyledToolbarNavigationController so that
-  //  it doesn't take the whole screen width in SPLIT layout.
-  private lateinit var bottomMenuPanel: BottomMenuPanel
 
   private val _latestDrawerEnableState = MutableStateFlow<DrawerEnableState?>(null)
 
@@ -191,12 +184,6 @@ class MainController(
       return navigationController
     }
 
-  override val isBottomPanelShown: Boolean
-    get() = bottomMenuPanel.isBottomPanelShown
-
-  override val bottomPanelHeight: Int
-    get() = bottomMenuPanel.totalHeight()
-
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
   }
@@ -212,10 +199,6 @@ class MainController(
     drawerLayout = view.findViewById(R.id.drawer_layout)
     drawerLayout.setDrawerShadow(R.drawable.panel_shadow, GravityCompat.START)
     drawer = view.findViewById(R.id.drawer_part)
-    bottomMenuPanel = view.findViewById(R.id.bottom_menu_panel)
-
-    // Must be above bottomNavView
-    bottomMenuPanel.elevation = dp(6f).toFloat()
 
     drawerLayout.addDrawerListener(this)
 
@@ -348,8 +331,7 @@ class MainController(
 
   override fun onInsetsChanged() {
     val bottomPadding = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = this
+      globalWindowInsetsManager = globalWindowInsetsManager
     )
 
     kurobaDrawerState.updateBottomPadding(bottomPadding)
@@ -497,22 +479,6 @@ class MainController(
 
   override fun passMotionEventIntoDrawer(event: MotionEvent): Boolean {
     return drawerLayout.onTouchEvent(event)
-  }
-
-  override fun onBottomPanelStateChanged(func: (BottomMenuPanel.State) -> Unit) {
-    bottomMenuPanel.onBottomPanelStateChanged(func)
-  }
-
-  override fun showBottomPanel(controllerKey: ControllerKey, items: List<BottomMenuPanelItem>) {
-    bottomMenuPanel.show(controllerKey, items)
-  }
-
-  override fun hideBottomPanel(controllerKey: ControllerKey) {
-    bottomMenuPanel.hide(controllerKey)
-  }
-
-  override fun passOnBackToBottomPanel(controllerKey: ControllerKey): Boolean {
-    return bottomMenuPanel.onBack(controllerKey)
   }
 
   fun onNavigationItemDrawerInfoUpdated(hasDrawer: Boolean) {

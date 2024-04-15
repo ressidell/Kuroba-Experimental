@@ -111,11 +111,11 @@ class ProxySetupController(
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
     epoxyRecyclerView.clear()
     presenter.onDestroy()
-    drawerCallbacks?.hideBottomPanel(controllerKey)
+    requireBottomPanelContract().hideBottomPanel(controllerKey)
   }
 
   override fun onBack(): Boolean {
-    val result = drawerCallbacks?.passOnBackToBottomPanel(controllerKey) ?: false
+    val result = requireBottomPanelContract().passOnBackToBottomPanel(controllerKey)
     if (result) {
       proxySelectionHelper.unselectAll()
     }
@@ -147,14 +147,14 @@ class ProxySetupController(
       is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
       is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
         if (selectionEvent is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode) {
-          drawerCallbacks?.showBottomPanel(controllerKey, proxySelectionHelper.getBottomPanelMenus())
+          requireBottomPanelContract().showBottomPanel(controllerKey, proxySelectionHelper.getBottomPanelMenus())
           addProxyButton.hide()
         }
 
         enterSelectionModeOrUpdate()
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
-        drawerCallbacks?.hideBottomPanel(controllerKey)
+        requireBottomPanelContract().hideBottomPanel(controllerKey)
 
         if (toolbarState.isInSelectionMode()) {
           toolbarState.pop()

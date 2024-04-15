@@ -239,7 +239,7 @@ class FiltersController(
     super.onDestroy()
 
     viewModel.viewModelSelectionHelper.unselectAll()
-    mainControllerCallbacks.hideBottomPanel(controllerKey)
+    requireBottomPanelContract().hideBottomPanel(controllerKey)
   }
 
   override fun onBack(): Boolean {
@@ -729,11 +729,11 @@ class FiltersController(
     when (selectionEvent) {
       is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
       is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
-        mainControllerCallbacks.showBottomPanel(controllerKey, viewModel.getBottomPanelMenus())
+        requireBottomPanelContract().showBottomPanel(controllerKey, viewModel.getBottomPanelMenus())
         enterSelectionModeOrUpdate()
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
-        mainControllerCallbacks.hideBottomPanel(controllerKey)
+        requireBottomPanelContract().hideBottomPanel(controllerKey)
 
         if (toolbarState.isInSelectionMode()) {
           toolbarState.pop()

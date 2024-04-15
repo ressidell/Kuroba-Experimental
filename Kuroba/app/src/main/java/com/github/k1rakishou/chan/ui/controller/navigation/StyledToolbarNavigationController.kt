@@ -10,13 +10,22 @@ import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.controller.PopupController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransition
 import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
+import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanel
+import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 
-class StyledToolbarNavigationController(context: Context) : ToolbarNavigationController(context) {
+class StyledToolbarNavigationController(context: Context) : ToolbarNavigationController(context), BottomPanelContract {
 
   private lateinit var toolbar: KurobaToolbarView
+  private lateinit var bottomMenuPanel: BottomMenuPanel
+
+  override val isBottomPanelShown: Boolean
+    get() = bottomMenuPanel.isBottomPanelShown
+  override val bottomPanelHeight: Int
+    get() = bottomMenuPanel.totalHeight()
 
   private val mainController: MainController?
     get() {
@@ -41,6 +50,10 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
 
     view = AppModuleAndroidUtils.inflate(context, R.layout.controller_navigation_toolbar)
     container = view.findViewById<ViewGroup>(R.id.toolbar_navigation_controller_container)
+    bottomMenuPanel = view.findViewById(R.id.bottom_menu_panel)
+
+    // Must be above bottomNavView
+    bottomMenuPanel.elevation = AppModuleAndroidUtils.dp(6f).toFloat()
 
     toolbar = view.findViewById<KurobaToolbarView>(R.id.toolbar)
     toolbar.init(this)
@@ -145,6 +158,22 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
       val mainController = mainController
       mainController?.onNavigationItemDrawerInfoUpdated(to.hasDrawer)
     }
+  }
+
+  override fun onBottomPanelStateChanged(func: (BottomMenuPanel.State) -> Unit) {
+    bottomMenuPanel.onBottomPanelStateChanged(func)
+  }
+
+  override fun showBottomPanel(controllerKey: ControllerKey, items: List<BottomMenuPanelItem>) {
+    bottomMenuPanel.show(controllerKey, items)
+  }
+
+  override fun hideBottomPanel(controllerKey: ControllerKey) {
+    bottomMenuPanel.hide(controllerKey)
+  }
+
+  override fun passOnBackToBottomPanel(controllerKey: ControllerKey): Boolean {
+    return bottomMenuPanel.onBack(controllerKey)
   }
 
   override fun onBack(): Boolean {

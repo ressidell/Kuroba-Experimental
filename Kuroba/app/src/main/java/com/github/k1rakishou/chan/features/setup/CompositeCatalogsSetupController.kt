@@ -129,8 +129,7 @@ class CompositeCatalogsSetupController(
 
   override fun onInsetsChanged() {
     bottomPadding.value = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
+      globalWindowInsetsManager = globalWindowInsetsManager
     )
   }
 

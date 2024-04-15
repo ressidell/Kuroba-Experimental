@@ -148,8 +148,7 @@ class BookmarkGroupSettingsController(
 
   override fun onInsetsChanged() {
     val bottomPaddingDp = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = null
+      globalWindowInsetsManager = globalWindowInsetsManager
     )
 
     bottomPadding.value = bottomPaddingDp

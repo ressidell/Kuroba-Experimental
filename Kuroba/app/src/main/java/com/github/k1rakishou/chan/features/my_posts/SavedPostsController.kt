@@ -164,7 +164,11 @@ class SavedPostsController(
         .collect()
     }
 
-    mainControllerCallbacks.onBottomPanelStateChanged { onInsetsChanged() }
+    controllerScope.launch {
+      globalUiStateHolder.bottomPanel.listenForBottomPanelVisibilityOnScreen(controllerKey)
+        .onEach { onInsetsChanged() }
+        .collect()
+    }
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
     onInsetsChanged()
@@ -190,7 +194,7 @@ class SavedPostsController(
     super.onDestroy()
 
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
-    mainControllerCallbacks.hideBottomPanel(controllerKey)
+    requireBottomPanelContract().hideBottomPanel(controllerKey)
 
     viewModel.updateQueryAndReload()
     viewModel.viewModelSelectionHelper.unselectAll()
@@ -198,8 +202,7 @@ class SavedPostsController(
 
   override fun onInsetsChanged() {
     bottomPadding.intValue = calculateBottomPaddingForRecyclerInDp(
-      globalWindowInsetsManager = globalWindowInsetsManager,
-      mainControllerCallbacks = mainControllerCallbacks
+      globalWindowInsetsManager = globalWindowInsetsManager
     )
   }
 
@@ -523,11 +526,11 @@ class SavedPostsController(
     when (selectionEvent) {
       is BaseSelectionHelper.SelectionEvent.EnteredSelectionMode,
       is BaseSelectionHelper.SelectionEvent.ItemSelectionToggled -> {
-        mainControllerCallbacks.showBottomPanel(controllerKey, viewModel.getBottomPanelMenus())
+        requireBottomPanelContract().showBottomPanel(controllerKey, viewModel.getBottomPanelMenus())
         enterSelectionModeOrUpdate()
       }
       BaseSelectionHelper.SelectionEvent.ExitedSelectionMode -> {
-        mainControllerCallbacks.hideBottomPanel(controllerKey)
+        requireBottomPanelContract().hideBottomPanel(controllerKey)
 
         if (toolbarState.isInSelectionMode()) {
           toolbarState.pop()

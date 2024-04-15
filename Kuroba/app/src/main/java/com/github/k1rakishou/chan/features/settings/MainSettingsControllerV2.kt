@@ -143,7 +143,7 @@ class MainSettingsControllerV2(
   override fun onDestroy() {
     super.onDestroy()
 
-    mainControllerCallbacks.hideBottomPanel(controllerKey)
+    requireBottomPanelContract().hideBottomPanel(controllerKey)
 
     epoxyRecyclerView.removeOnScrollListener(scrollListener)
     epoxyRecyclerView.clear()
