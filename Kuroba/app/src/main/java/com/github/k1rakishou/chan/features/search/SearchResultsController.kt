@@ -41,7 +41,8 @@ class SearchResultsController(
   context: Context,
   private val siteDescriptor: SiteDescriptor,
   private val searchParameters: SearchParameters,
-  private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
+  private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks,
+  private val onSearchResultClicked: (PostDescriptor) -> Unit
 ) : Controller(context), SearchResultsView {
 
   @Inject
@@ -205,10 +206,7 @@ class SearchResultsController(
     withLayoutMode(
       phone = {
         requireNavController().popController {
-          startActivityCallback.loadThreadAndMarkPost(
-            postDescriptor = postDescriptor,
-            animated = true
-          )
+          onSearchResultClicked(postDescriptor)
         }
       },
       tablet = {

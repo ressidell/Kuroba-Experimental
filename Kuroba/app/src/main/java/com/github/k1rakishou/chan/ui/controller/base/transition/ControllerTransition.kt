@@ -56,6 +56,10 @@ abstract class ControllerTransition(
     transitionStarted = false
   }
 
+  fun forceEndTransition() {
+    animatorSet.end()
+  }
+
   fun onTransitionFinished(transitionFinishListener: TransitionFinishListener) {
     listeners += transitionFinishListener
   }

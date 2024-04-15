@@ -36,6 +36,21 @@ abstract class NavigationController(context: Context) : Controller(context), Con
     val from = topController
 
     if (isBlockingInput) {
+      val currentControllerTransition = controllerTransition
+      if (currentControllerTransition != null) {
+        Logger.debug(TAG) {
+          "pushController() to: ${to.controllerKey}, from: ${from?.controllerKey} isBlockingInput is true. " +
+            "Attaching to active transition and forcibly ending it."
+        }
+
+        currentControllerTransition.forceEndTransition()
+        currentControllerTransition.onTransitionFinished {
+          pushController(to, transition)
+        }
+
+        return true
+      }
+
       Logger.error(TAG) {
         "pushController() to: ${to.controllerKey}, from: ${from?.controllerKey} isBlockingInput is true"
       }
@@ -79,6 +94,18 @@ abstract class NavigationController(context: Context) : Controller(context), Con
     }
 
     if (isBlockingInput) {
+      val currentControllerTransition = controllerTransition
+      if (currentControllerTransition != null) {
+        Logger.debug(TAG) { "popController() isBlockingInput is true. Attaching to active transition and forcibly ending it." }
+
+        currentControllerTransition.forceEndTransition()
+        currentControllerTransition.onTransitionFinished {
+          popController(transition)
+        }
+
+        return true
+      }
+
       Logger.error(TAG) { "popController() isBlockingInput is true" }
       return false
     }

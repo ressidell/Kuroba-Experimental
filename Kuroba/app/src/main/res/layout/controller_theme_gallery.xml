@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.github.k1rakishou.chan.ui.theme.widget.ColorizableInsetAwareEpoxyRecyclerView
+    <com.github.k1rakishou.chan.ui.view.insets.ColorizableInsetAwareEpoxyRecyclerView
         android:id="@+id/themes_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

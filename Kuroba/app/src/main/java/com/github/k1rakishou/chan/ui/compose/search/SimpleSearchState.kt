@@ -54,7 +54,6 @@ class SimpleSearchStateV2<T>(
   var results by mutableStateOf(results)
   var searching by mutableStateOf(searching)
 
-  // TODO: New toolbar. Check if this works.
   val usingSearch: Boolean
     get() = textFieldState.undoState.canUndo
 

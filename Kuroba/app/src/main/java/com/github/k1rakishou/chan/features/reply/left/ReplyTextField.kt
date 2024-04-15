@@ -51,6 +51,7 @@ internal fun ReplyTextField(
 
   val disabledAlpha = ContentAlpha.disabled
 
+  // TODO: New reply layout. Implement this thing once it's supported.
   val replyInputVisualTransformation = remember(key1 = chanTheme, key2 = replyLayoutEnabled, key3 = disabledAlpha) {
     return@remember VisualTransformation { text ->
       val spannedText = ReplyTextFieldHelpers.colorizeReplyInputText(

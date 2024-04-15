@@ -33,7 +33,9 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.core_themes.ThemeEngine
+import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import javax.inject.Inject
 
@@ -126,9 +128,17 @@ class GlobalSearchController(
   ) {
     hideKeyboard()
 
+    val searchResultsController = SearchResultsController(
+      context = context,
+      siteDescriptor = siteDescriptor,
+      searchParameters = searchParameters,
+      startActivityCallback = startActivityCallback,
+      onSearchResultClicked = { postDescriptor -> handleOnSearchResultClicked(postDescriptor) }
+    )
+
     requireNavController().pushController(
-      SearchResultsController(context, siteDescriptor, searchParameters, startActivityCallback),
-      false
+      to = searchResultsController,
+      animated = false
     )
   }
 
@@ -139,9 +149,27 @@ class GlobalSearchController(
     hideKeyboard()
 
     presenter.resetSearchResultsSavedState()
-    requireNavController().pushController(
-      SearchResultsController(context, siteDescriptor, searchParameters, startActivityCallback)
+
+    val searchResultsController = SearchResultsController(
+      context = context,
+      siteDescriptor = siteDescriptor,
+      searchParameters = searchParameters,
+      startActivityCallback = startActivityCallback,
+      onSearchResultClicked = { postDescriptor -> handleOnSearchResultClicked(postDescriptor) }
     )
+
+    requireNavController().pushController(searchResultsController)
+  }
+
+  private fun handleOnSearchResultClicked(postDescriptor: PostDescriptor) {
+    controllerScope.launch {
+      requireNavController().popController {
+        startActivityCallback.loadThreadAndMarkPost(
+          postDescriptor = postDescriptor,
+          animated = true
+        )
+      }
+    }
   }
 
   private fun onStateChanged(state: GlobalSearchControllerState) {

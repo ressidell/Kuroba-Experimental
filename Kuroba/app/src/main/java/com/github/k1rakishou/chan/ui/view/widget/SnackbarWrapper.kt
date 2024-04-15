@@ -51,13 +51,12 @@ class SnackbarWrapper private constructor(
     val snackbarClass = when (threadControllerType) {
       ThreadControllerType.Catalog -> SnackbarClass.Catalog
       ThreadControllerType.Thread -> SnackbarClass.Thread
-      // TODO: SnackbarClass.Generic
+      // TODO: New snackbars. SnackbarClass.Generic
     }
 
     val isReplyLayoutOpened = globalUiStateHolder.replyLayout.state(threadControllerType).isOpenedOrExpanded()
     if (isReplyLayoutOpened) {
-      // TODO: New toolbar. We probably want to show snackbars when reply layout is opened. Need to remove this check.
-      // Do not show the snackbar when the reply layout is opened
+      // TODO: New snackbars. We probably want to show snackbars when reply layout is opened. Need to remove this check.
       return
     }
 

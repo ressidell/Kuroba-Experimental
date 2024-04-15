@@ -78,7 +78,6 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
-// TODO: New toolbar. Check if clicking a reply notification correctly navigates to this screen.
 class BookmarksController(
   context: Context,
   private val bookmarksToHighlight: List<ChanDescriptor.ThreadDescriptor>,
