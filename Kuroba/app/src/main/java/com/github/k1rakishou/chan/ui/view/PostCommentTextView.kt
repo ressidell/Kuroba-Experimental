@@ -53,6 +53,56 @@ class PostCommentTextView @JvmOverloads constructor(
     endEmulatingDoubleTapJob = null
   }
 
+  override fun onTouchEvent(event: MotionEvent): Boolean {
+    val action = event.actionMasked
+
+    if (needToCancelOtherEvents) {
+      needToCancelOtherEvents = false
+
+      val motionEvent = MotionEvent.obtain(0, SystemClock.uptimeMillis(), MotionEvent.ACTION_CANCEL, event.x, event.y, 0)
+      touchEventListener?.onTouch(this, motionEvent)
+      motionEvent.recycle()
+    }
+
+    if (selectionMode) {
+      if (emulatingDoubleTap && event.downTime != DOWN_TIME_TAGGED) {
+        return false
+      }
+
+      return super.onTouchEvent(event)
+    }
+
+    if (action == MotionEvent.ACTION_DOWN || linkConsumesEvents) {
+      val spannableText = if (text is Spannable) {
+        text as Spannable
+      } else {
+        SpannableString.valueOf(text) as Spannable
+      }
+
+      linkConsumesEvents = customMovementMethod?.onTouchEvent(this, spannableText, event) == true
+    }
+
+    if (event.isActionUpOrCancel()) {
+      linkConsumesEvents = false
+    }
+
+    if (linkConsumesEvents) {
+      return true
+    }
+
+    touchEventListener?.onTouch(this, event)
+
+    return true
+  }
+
+  override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
+    try {
+      super.onFocusChanged(focused, direction, previouslyFocusedRect)
+    } catch (error: IndexOutOfBoundsException) {
+      // java.lang.IndexOutOfBoundsException: setSpan (-1 ... -1) starts before 0
+    }
+  }
+
   fun customTouchEventListener(listener: OnTouchListener?) {
     this.touchEventListener = listener
   }
@@ -106,56 +156,6 @@ class PostCommentTextView @JvmOverloads constructor(
 
   fun endSelectionMode() {
     selectionMode = false
-  }
-
-  override fun onTouchEvent(event: MotionEvent): Boolean {
-    val action = event.actionMasked
-
-    if (needToCancelOtherEvents) {
-      needToCancelOtherEvents = false
-
-      val motionEvent = MotionEvent.obtain(0, SystemClock.uptimeMillis(), MotionEvent.ACTION_CANCEL, event.x, event.y, 0)
-      touchEventListener?.onTouch(this, motionEvent)
-      motionEvent.recycle()
-    }
-
-    if (selectionMode) {
-      if (emulatingDoubleTap && event.downTime != DOWN_TIME_TAGGED) {
-        return false
-      }
-
-      return super.onTouchEvent(event)
-    }
-
-    if (action == MotionEvent.ACTION_DOWN || linkConsumesEvents) {
-      val spannableText = if (text is Spannable) {
-        text as Spannable
-      } else {
-        SpannableString.valueOf(text) as Spannable
-      }
-
-      linkConsumesEvents = customMovementMethod?.onTouchEvent(this, spannableText, event) == true
-    }
-
-    if (event.isActionUpOrCancel()) {
-      linkConsumesEvents = false
-    }
-
-    if (linkConsumesEvents) {
-      return true
-    }
-
-    touchEventListener?.onTouch(this, event)
-
-    return true
-  }
-
-  override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
-    try {
-      super.onFocusChanged(focused, direction, previouslyFocusedRect)
-    } catch (error: IndexOutOfBoundsException) {
-      // java.lang.IndexOutOfBoundsException: setSpan (-1 ... -1) starts before 0
-    }
   }
 
   companion object {

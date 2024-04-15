@@ -5,6 +5,8 @@ import android.text.SpannableStringBuilder
 import android.text.TextUtils
 import android.text.format.DateUtils
 import android.text.style.UnderlineSpan
+import androidx.core.text.BidiFormatter
+import androidx.core.text.TextDirectionHeuristicsCompat
 import androidx.core.text.buildSpannedString
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
@@ -89,6 +91,8 @@ data class PostCellData(
   private var commentTextPrecalculated: CharSequence? = null
   private var repliesToThisPostTextPrecalculated: CharSequence? = null
 
+  private val bidiFormatter = BidiFormatter.getInstance(false)
+
   val iconSizePx = sp(textSizeSp - 2.toFloat())
 
   val postNo: Long
@@ -167,14 +171,14 @@ data class PostCellData(
 
   private val _detailsSizePx = RecalculatableLazy { sp(ChanSettings.detailsSizeSp()) }
   private val _fontSizePx = RecalculatableLazy { sp(ChanSettings.fontSize.get().toInt()) }
-  private val _postTitleStub = RecalculatableLazy { postTitleStubPrecalculated ?: calculatePostTitleStub() }
-  private val _postTitle = RecalculatableLazy { postTitlePrecalculated ?: calculatePostTitle() }
+  private val _postTitleStub = RecalculatableLazy { postTitleStubPrecalculated ?: forceLtr(calculatePostTitleStub()) }
+  private val _postTitle = RecalculatableLazy { postTitlePrecalculated ?: forceLtr(calculatePostTitle()) }
   private val _postFileInfoMap = RecalculatableLazy { postFileInfoPrecalculated ?: calculatePostFileInfo() }
   private val _postFileInfoMapForThumbnailWrapper = RecalculatableLazy {
     postFileInfoMapForThumbnailWrapperPrecalculated ?: calculatePostFileInfoMapForThumbnailWrapper()
   }
   private val _postFileInfoMapHash = RecalculatableLazy { postFileInfoHashPrecalculated ?: calculatePostFileInfoHash(_postFileInfoMap) }
-  private val _commentText = RecalculatableLazy { commentTextPrecalculated ?: calculateCommentText() }
+  private val _commentText = RecalculatableLazy { commentTextPrecalculated ?: forceLtr(calculateCommentText()) }
   private val _repliesToThisPostText = RecalculatableLazy { repliesToThisPostTextPrecalculated ?: calculateRepliesToThisPostText() }
 
   val detailsSizePx: Int
@@ -931,6 +935,10 @@ data class PostCellData(
     }
 
     return hash
+  }
+
+  private fun forceLtr(text: CharSequence): CharSequence {
+    return bidiFormatter.unicodeWrap(text, TextDirectionHeuristicsCompat.LTR)
   }
 
   enum class PostViewMode {
