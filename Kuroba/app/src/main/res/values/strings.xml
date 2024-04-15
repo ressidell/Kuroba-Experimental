@@ -1472,6 +1472,7 @@ The simplest way to do that is to fully reinstall them (Go to Settings -> Plugin
 \n\n
 Actual error: \'%1$s\'</string>
 
+    <string name="export_backup_options_title">Export backup options</string>
     <string name="export_backup_options_export_thread_download_media_option">Export downloaded thread media (Might make the backup file very large)</string>
 
     <string name="bookmark_groups_controller_title">Bookmark groups</string>

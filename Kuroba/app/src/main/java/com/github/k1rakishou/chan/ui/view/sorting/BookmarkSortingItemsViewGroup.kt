@@ -21,7 +21,8 @@ class BookmarkSortingItemsViewGroup @JvmOverloads constructor(
     require(childCount == 0) { "Bad child count: ${childCount}" }
     val bookmarksSortOrder = ChanSettings.bookmarksSortOrder.get()
 
-    repeat(SORT_SETTINGS_COUNT) { index ->
+    val sortSettingsCount = ChanSettings.BookmarksSortOrder.entries.size / 2
+    repeat(sortSettingsCount) { index ->
       val sortingItemView = BookmarkSortingItemView(context)
       sortingItemView.init(index, bookmarksSortOrder)
       sortingItemView.setOnClickListener(this)
@@ -62,7 +63,6 @@ class BookmarkSortingItemsViewGroup @JvmOverloads constructor(
     val sortDirectionDescList = sortingItemViews.map { sortingItemView -> sortingItemView.sortDirectionDesc }
 
     val nullCount = sortDirectionDescList.count { sortDirectionDesc -> sortDirectionDesc == null }
-    // TODO: New toolbar. Crashes.
     check(nullCount == sortDirectionDescList.size - 1)
 
     val sortingItemView = sortingItemViews.firstOrNull { sortingItemView ->
@@ -115,9 +115,5 @@ class BookmarkSortingItemsViewGroup @JvmOverloads constructor(
       }
       else -> throw IllegalStateException("Unknown tag: ${sortingItemView.tag}")
     }
-  }
-
-  companion object {
-    private const val SORT_SETTINGS_COUNT = 4
   }
 }

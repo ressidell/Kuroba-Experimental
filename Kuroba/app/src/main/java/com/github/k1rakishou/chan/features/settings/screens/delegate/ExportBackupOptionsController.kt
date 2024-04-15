@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -24,6 +24,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 
@@ -42,17 +43,45 @@ class ExportBackupOptionsController(
     KurobaComposeCard(
       modifier = Modifier
         .align(Alignment.Center)
-        .widthIn(max = 600.dp)
         .wrapContentHeight()
-        .padding(8.dp),
+        .padding(vertical = 16.dp, horizontal = 8.dp),
     ) {
       LazyColumn(
+        modifier = Modifier
+          .padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.Center,
         content = {
+          item("spacer1") {
+            Spacer(modifier = Modifier.height(16.dp))
+          }
+
+          BuildExportBackupOptionsControllerTitle()
+
+          item("spacer2") {
+            Spacer(modifier = Modifier.height(24.dp))
+          }
+          
           BuildExportDownloadedThreadMediaOption()
 
+          item("spacer3") {
+            Spacer(modifier = Modifier.height(24.dp))
+          }
+
           BuildCancelOkButtons()
-        })
+
+          item("spacer4") {
+            Spacer(modifier = Modifier.height(16.dp))
+          }
+        }
+      )
+    }
+  }
+
+  private fun LazyListScope.BuildExportBackupOptionsControllerTitle() {
+    item("title") {
+      KurobaComposeText(
+        text = stringResource(id = R.string.export_backup_options_title)
+      )
     }
   }
 
@@ -63,8 +92,7 @@ class ExportBackupOptionsController(
       KurobaComposeCheckbox(
         modifier = Modifier
           .fillMaxWidth()
-          .wrapContentHeight()
-          .padding(horizontal = 8.dp),
+          .wrapContentHeight(),
         currentlyChecked = exportBackupOptions.exportDownloadedThreadsMedia,
         onCheckChanged = { isChecked ->
           exportBackupOptions = exportBackupOptions.copy(exportDownloadedThreadsMedia = isChecked)
