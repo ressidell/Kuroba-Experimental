@@ -8,12 +8,11 @@ import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStat
 internal data class DrawerEnableState(
   val replyLayoutVisibilityStates: ReplyLayoutVisibilityStates,
   val replyLayoutsBounds: ReplyLayoutBoundsStates,
-  val touchPosition: Offset,
-  val currentNavigationHasDrawer: Boolean
+  val touchPosition: Offset
 ) {
 
   fun isDrawerEnabled(): Boolean {
-    if (replyLayoutVisibilityStates.anyExpanded() || !currentNavigationHasDrawer) {
+    if (replyLayoutVisibilityStates.anyExpanded()) {
       return false
     }
 

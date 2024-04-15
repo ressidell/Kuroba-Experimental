@@ -263,13 +263,11 @@ class MainController(
         flow = globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
         flow2 = globalUiStateHolder.replyLayout.replyLayoutsBoundsFlow,
         flow3 = globalUiStateHolder.mainUi.touchPosition,
-        flow4 = mainControllerViewModel.currentNavigationHasDrawer,
-        transform = { replyLayoutVisibilityEvents, replyLayoutsBounds, touchPosition, currentNavigationHasDrawer ->
+        transform = { replyLayoutVisibilityEvents, replyLayoutsBounds, touchPosition ->
           return@combine DrawerEnableState(
             replyLayoutVisibilityStates = replyLayoutVisibilityEvents,
             replyLayoutsBounds = replyLayoutsBounds,
-            touchPosition = touchPosition,
-            currentNavigationHasDrawer = currentNavigationHasDrawer
+            touchPosition = touchPosition
           )
         }
       )
@@ -403,7 +401,7 @@ class MainController(
   }
 
   fun openBookmarksController(threadDescriptors: List<ChanDescriptor.ThreadDescriptor>) {
-    val bookmarksController = BookmarksController(context, threadDescriptors, this, startActivityCallback)
+    val bookmarksController = BookmarksController(context, threadDescriptors, startActivityCallback)
     mainToolbarNavigationController?.pushController(bookmarksController)
   }
 
