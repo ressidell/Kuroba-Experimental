@@ -800,6 +800,11 @@ abstract class ThreadController(
     val withAnimation: Boolean
   )
 
+  protected data class ThreadSearchData(
+    val searchToolbarVisibility: Boolean,
+    val searchQuery: String
+  )
+
   companion object {
     private const val TAG = "ThreadController"
 

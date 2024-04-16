@@ -113,7 +113,8 @@ class PostRepliesAdapter(
   }
 
   fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
-    threadCellData.setSearchQuery(searchQuery)
+    // TODO: New catalog/thread search.
+//    threadCellData.setSearchQuery(searchQuery)
 
     notifyDataSetChanged()
   }

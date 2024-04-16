@@ -29,7 +29,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 class ThreadCellData(
@@ -145,7 +144,6 @@ class ThreadCellData(
     return updatedAtLeastOne
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun updateThreadData(
     postCellCallback: PostCellInterface.PostCellCallback,
     chanDescriptor: ChanDescriptor,
@@ -408,18 +406,24 @@ class ThreadCellData(
     _chanDescriptor = null
   }
 
-  fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
+  suspend fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
+    postViewMode = PostCellData.PostViewMode.Search
     defaultSearchQuery = searchQuery
 
-    postCellDataLazyList.forEach { postCellDataLazy ->
-      if (postCellDataLazy.isInitialized) {
-        val postCellData = postCellDataLazy.postCellDataCalculated
+    val posts = postCellDataLazyList.map { it.post }
+    onPostsUpdated(posts)
+  }
 
-        postCellData.resetCommentTextCache()
-        postCellData.resetPostTitleCache()
-        postCellData.resetPostFileInfoCache()
-      }
+  suspend fun clearSearchQuery() {
+    if (postViewMode != PostCellData.PostViewMode.Search) {
+      return
     }
+
+    postViewMode = PostCellData.PostViewMode.Normal
+    defaultSearchQuery = PostCellData.SearchQuery()
+
+    val posts = postCellDataLazyList.map { it.post }
+    onPostsUpdated(posts)
   }
 
   fun setBoardPostViewMode(boardPostViewMode: ChanSettings.BoardPostViewMode) {

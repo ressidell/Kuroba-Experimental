@@ -13,6 +13,7 @@ import com.github.k1rakishou.chan.features.bookmarks.data.ThreadBookmarkItemView
 import com.github.k1rakishou.chan.features.bookmarks.data.ThreadBookmarkSelection
 import com.github.k1rakishou.chan.features.bookmarks.data.ThreadBookmarkStats
 import com.github.k1rakishou.chan.utils.BackgroundUtils
+import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.isNotNullNorEmpty
@@ -275,7 +276,7 @@ class BookmarksPresenter(
     val isWatcherEnabled = ChanSettings.watchEnabled.get()
     val searchQuery = searchFlow.value as? SearchQuery.Searching
 
-    val query = if (searchQuery?.query?.length ?: 0 >= MIN_QUERY_LENGTH) {
+    val query = if (searchQuery?.query?.length ?: 0 >= AppConstants.MIN_QUERY_LENGTH) {
       searchQuery?.query
     } else {
       null
@@ -516,7 +517,6 @@ class BookmarksPresenter(
 
   companion object {
     private const val TAG = "BookmarksPresenter"
-    private const val MIN_QUERY_LENGTH = 3
 
     private val BOOKMARK_CREATED_ON_ASC_COMPARATOR =
       compareBy<ThreadBookmarkItemView> { bookmarkItemView -> bookmarkItemView.createdOn }

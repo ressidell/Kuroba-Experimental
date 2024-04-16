@@ -277,7 +277,7 @@ class SettingsCoordinator(
         .collect { query ->
           screensBuiltOnce.awaitUntilInitialized()
 
-          if (query.length < MIN_QUERY_LENGTH) {
+          if (query.length < AppConstants.MIN_QUERY_LENGTH) {
             rebuildCurrentScreen(BuildOptions.Default)
             return@collect
           }
@@ -522,7 +522,5 @@ class SettingsCoordinator(
 
   companion object {
     private const val TAG = "SettingsCoordinator"
-
-    private const val MIN_QUERY_LENGTH = 3
   }
 }

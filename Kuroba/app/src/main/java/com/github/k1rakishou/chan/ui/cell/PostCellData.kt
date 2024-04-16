@@ -17,6 +17,7 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getQuantityString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.sp
 import com.github.k1rakishou.chan.utils.SpannableHelper
+import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.MurmurHashUtils
 import com.github.k1rakishou.common.StringUtils
 import com.github.k1rakishou.common.buildSpannableString
@@ -139,7 +140,6 @@ data class PostCellData(
     get() = postViewMode == PostViewMode.RepliesPopup
       || postViewMode == PostViewMode.ExternalPostsPopup
       || postViewMode == PostViewMode.MediaViewerPostsPopup
-      || postViewMode == PostViewMode.Search
   val isSelectionMode: Boolean
     get() = postViewMode == PostViewMode.PostSelection
   val threadPreviewMode: Boolean
@@ -966,7 +966,7 @@ data class PostCellData(
     }
 
     fun canShowGoToPostButton(): Boolean {
-      if (this == RepliesPopup || this == ExternalPostsPopup || this == MediaViewerPostsPopup || this == Search) {
+      if (this == RepliesPopup || this == ExternalPostsPopup || this == MediaViewerPostsPopup) {
         return true
       }
 
@@ -994,7 +994,10 @@ data class PostCellData(
 
   }
 
-  data class SearchQuery(val query: String = "", val queryMinValidLength: Int = 0) {
+  data class SearchQuery(
+    val query: String = "",
+    val queryMinValidLength: Int = AppConstants.MIN_QUERY_LENGTH
+  ) {
     fun isEmpty(): Boolean = query.isEmpty()
   }
 

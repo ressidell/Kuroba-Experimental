@@ -427,6 +427,14 @@ class ThreadLayout @JvmOverloads constructor(
     threadListLayout.setBoardPostViewMode(boardPostViewMode)
   }
 
+  suspend fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
+    threadListLayout.setSearchQuery(searchQuery)
+  }
+
+  suspend fun clearSearchQuery() {
+    threadListLayout.clearSearchQuery()
+  }
+
   override fun showImageReencodingWindow(fileUuid: UUID, supportsReencode: Boolean) {
     presenter.showImageReencodingWindow(fileUuid, supportsReencode)
   }

@@ -23,6 +23,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
+import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
@@ -43,8 +44,12 @@ import com.github.k1rakishou.model.util.ChanPostUtils
 import com.github.k1rakishou.persist_state.PersistableChanState
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -110,6 +115,33 @@ open class ViewThreadController(
         .filter { bookmarkChange: BookmarkChange? -> bookmarkChange !is BookmarksInitialized }
         .debounce(350.milliseconds)
         .collect { bookmarkChange -> updatePinIconStateIfNeeded(bookmarkChange) }
+    }
+
+    controllerScope.launch {
+      combine(
+        toolbarState.threadSearch.listenForSearchVisibilityUpdates(),
+        toolbarState.threadSearch.listenForSearchQueryUpdates()
+      ) { visibility, searchQuery ->
+        return@combine ThreadSearchData(
+          searchToolbarVisibility = visibility,
+          searchQuery = searchQuery
+        )
+      }
+        .onEach { threadSearchData ->
+          if (!threadSearchData.searchToolbarVisibility) {
+            threadLayout.clearSearchQuery()
+            return@onEach
+          }
+
+          delay(300)
+
+          threadLayout.setSearchQuery(
+            searchQuery = PostCellData.SearchQuery(
+              query = threadSearchData.searchQuery
+            )
+          )
+        }
+        .collect()
     }
 
     controllerScope.launch(Dispatchers.Main) { loadThread(threadDescriptor) }

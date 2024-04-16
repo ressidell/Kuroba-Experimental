@@ -401,6 +401,16 @@ class PostAdapter(
     notifyDataSetChanged()
   }
 
+  suspend fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
+    threadCellData.setSearchQuery(searchQuery)
+    notifyDataSetChanged()
+  }
+
+  suspend fun clearSearchQuery() {
+    threadCellData.clearSearchQuery()
+    notifyDataSetChanged()
+  }
+
   fun getScrollPosition(displayPosition: Int): Int {
     return threadCellData.getScrollPosition(displayPosition)
   }

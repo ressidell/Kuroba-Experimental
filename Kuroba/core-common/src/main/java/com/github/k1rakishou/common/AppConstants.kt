@@ -160,7 +160,6 @@ open class AppConstants(
       return field
     }
 
-
   init {
     val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
 
@@ -253,5 +252,7 @@ open class AppConstants(
 
     val SOUND_POST_PATTERN by lazy { Pattern.compile("\\[sound=(.*?)\\]") }
     val SOUND_POST_PATTERN_WHOLE by lazy { Pattern.compile("(\\[sound=.*?\\])") }
+
+    val MIN_QUERY_LENGTH = 2
   }
 }

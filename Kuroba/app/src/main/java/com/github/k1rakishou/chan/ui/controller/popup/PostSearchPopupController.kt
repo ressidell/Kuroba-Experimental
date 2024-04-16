@@ -21,6 +21,7 @@ import com.github.k1rakishou.chan.utils.RecyclerUtils
 import com.github.k1rakishou.chan.utils.RecyclerUtils.restoreScrollPosition
 import com.github.k1rakishou.chan.utils.awaitUntilGloballyLaidOutAndGetSize
 import com.github.k1rakishou.common.AndroidUtils
+import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.StringUtils
 import com.github.k1rakishou.common.isNotNullNorBlank
 import com.github.k1rakishou.common.mutableListWithCap
@@ -224,7 +225,7 @@ class PostSearchPopupController(
           return@iteratePostsWhile false
         }
 
-        if (query.length < MIN_QUERY_LENGTH) {
+        if (query.length < AppConstants.MIN_QUERY_LENGTH) {
           resultPosts += chanPost.deepCopy()
           return@iteratePostsWhile true
         }
@@ -244,7 +245,7 @@ class PostSearchPopupController(
       return
     }
 
-    if (query.length < MIN_QUERY_LENGTH) {
+    if (query.length < AppConstants.MIN_QUERY_LENGTH) {
       totalFoundTextView.text = context.getString(R.string.search_found_unknown)
     } else {
       totalFoundTextView.text = context.getString(R.string.search_found_count, resultPosts.size)
@@ -265,7 +266,7 @@ class PostSearchPopupController(
     this@PostSearchPopupController.indexedPosts.clear()
     this@PostSearchPopupController.indexedPosts.addAll(indexedPosts)
 
-    repliesAdapter.setSearchQuery(PostCellData.SearchQuery(query, MIN_QUERY_LENGTH))
+    repliesAdapter.setSearchQuery(PostCellData.SearchQuery(query))
     repliesAdapter.setOrUpdateData(width, indexedPosts, themeEngine.chanTheme)
 
     postsView.post {
@@ -365,7 +366,6 @@ class PostSearchPopupController(
 
   companion object {
     private const val TAG = "PostSearchPopupController"
-    const val MIN_QUERY_LENGTH = 2
 
     val scrollPositionCache = LruCache<ChanDescriptor, IndexAndTop>(128)
 
