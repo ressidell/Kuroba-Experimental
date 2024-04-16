@@ -543,6 +543,7 @@ Usually that means that you forgot to remove a space from the beginning or the e
     <string name="reply_layout_reply_modes">Reply modes</string>
     <string name="reply_layout_ignore_reply_cooldowns">Ignore reply cooldowns</string>
     <string name="reply_layout_check_if_post_was_actually_acknowledged_by_4chan">Check if post was actually acknowledged by 4chan</string>
+    <string name="reply_layout_reset_remembered_file_picker">Reset remembered file picker</string>
     <string name="reply_layout_comment_change_history_cleared">Comment change history cleared</string>
     <string name="reply_layout_loading_flags">Loading flags…</string>
     <string name="reply_layout_dialog_title">Reply layout</string>

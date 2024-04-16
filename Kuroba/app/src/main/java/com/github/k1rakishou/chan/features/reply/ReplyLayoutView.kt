@@ -45,6 +45,7 @@ import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanPost
+import com.github.k1rakishou.persist_state.PersistableChanState
 import com.github.k1rakishou.persist_state.ReplyMode
 import com.github.k1rakishou.prefs.BooleanSetting
 import com.github.k1rakishou.prefs.OptionsSetting
@@ -590,12 +591,12 @@ class ReplyLayoutView @JvmOverloads constructor(
 
     menuItems += FloatingListMenuItem(
       key = ACTION_REPLY_MODES,
-      name = context.getString(R.string.reply_layout_reply_modes),
+      name = appResources.string(R.string.reply_layout_reply_modes),
       more = availableReplyModes
     )
     menuItems += CheckableFloatingListMenuItem(
       key = ACTION_IGNORE_REPLY_COOLDOWNS,
-      name = context.getString(R.string.reply_layout_ignore_reply_cooldowns),
+      name = appResources.string(R.string.reply_layout_ignore_reply_cooldowns),
       checked = ignoreReplyCooldowns?.get() == true
     )
 
@@ -603,11 +604,16 @@ class ReplyLayoutView @JvmOverloads constructor(
       check4chanPostAcknowledgedSetting?.get()?.let { check4chanPostAcknowledged ->
         menuItems += CheckableFloatingListMenuItem(
           key = ACTION_CHECK_4CHAN_POST_ACKNOWLEDGED,
-          name = context.getString(R.string.reply_layout_check_if_post_was_actually_acknowledged_by_4chan),
+          name = appResources.string(R.string.reply_layout_check_if_post_was_actually_acknowledged_by_4chan),
           checked = check4chanPostAcknowledged
         )
       }
     }
+
+    menuItems += FloatingListMenuItem(
+      key = ACTION_RESET_REMEMBERED_FILE_PICKER,
+      name = appResources.string(R.string.reply_layout_reset_remembered_file_picker)
+    )
 
     val floatingListMenuController = FloatingListMenuController(
       context = context,
@@ -616,14 +622,14 @@ class ReplyLayoutView @JvmOverloads constructor(
       itemClickListener = { clickedItem ->
         if (clickedItem.key is Int) {
           when (clickedItem.key) {
-            ACTION_REPLY_MODES -> {
-              // ???
-            }
             ACTION_IGNORE_REPLY_COOLDOWNS -> {
               ignoreReplyCooldowns?.toggle()
             }
             ACTION_CHECK_4CHAN_POST_ACKNOWLEDGED -> {
               check4chanPostAcknowledgedSetting?.toggle()
+            }
+            ACTION_RESET_REMEMBERED_FILE_PICKER -> {
+              PersistableChanState.lastRememberedFilePicker.remove()
             }
           }
         } else if (clickedItem.key is ReplyMode) {
@@ -701,6 +707,7 @@ class ReplyLayoutView @JvmOverloads constructor(
     private const val ACTION_REPLY_MODES = 100
     private const val ACTION_IGNORE_REPLY_COOLDOWNS = 101
     private const val ACTION_CHECK_4CHAN_POST_ACKNOWLEDGED = 102
+    private const val ACTION_RESET_REMEMBERED_FILE_PICKER = 103
   }
 
 }
