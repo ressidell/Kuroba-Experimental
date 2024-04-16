@@ -158,6 +158,7 @@ import com.github.k1rakishou.chan.ui.layout.SplitNavigationControllerLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadListLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadSlidingPaneLayout
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableAlternativeCardView
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableCardView
@@ -298,6 +299,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(colorizableBarButton: ColorizableBarButton)
   fun inject(colorizableButton: ColorizableButton)
   fun inject(colorizableCardView: ColorizableCardView)
+  fun inject(colorizableAlternativeCardView: ColorizableAlternativeCardView)
   fun inject(colorizableCheckBox: ColorizableCheckBox)
   fun inject(colorizableChip: ColorizableChip)
   fun inject(colorizableEditText: ColorizableEditText)

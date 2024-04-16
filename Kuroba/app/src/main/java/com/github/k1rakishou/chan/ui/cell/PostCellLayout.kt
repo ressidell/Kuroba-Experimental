@@ -4,11 +4,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
-import androidx.appcompat.widget.AppCompatImageView
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailViewsContainer
 import com.github.k1rakishou.chan.ui.helper.KurobaViewGroup
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableAlternativeCardView
 import com.github.k1rakishou.chan.ui.view.DashedLineView
 import com.github.k1rakishou.chan.ui.view.PostCommentTextView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
@@ -39,7 +39,7 @@ open class PostCellLayout @JvmOverloads constructor(
   private lateinit var icons: PostIcons
   private lateinit var comment: PostCommentTextView
   private lateinit var replies: TextView
-  private lateinit var goToPostButton: AppCompatImageView
+  private lateinit var goToPostButton: ColorizableAlternativeCardView
   private lateinit var divider: View
   private lateinit var postAttentionLabel: DashedLineView
 
@@ -75,7 +75,7 @@ open class PostCellLayout @JvmOverloads constructor(
     icons: PostIcons,
     comment: PostCommentTextView,
     replies: TextView,
-    goToPostButton: AppCompatImageView,
+    goToPostButton: ColorizableAlternativeCardView,
     divider: View,
     postAttentionLabel: DashedLineView,
     imageFileName: TextView?

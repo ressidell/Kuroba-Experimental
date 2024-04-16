@@ -58,6 +58,7 @@ import com.github.k1rakishou.chan.ui.animation.PostUnseenIndicatorFadeAnimator
 import com.github.k1rakishou.chan.ui.animation.PostUnseenIndicatorFadeAnimator.createUnseenPostIndicatorFadeAnimation
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface.PostCellCallback
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailViewsContainer
+import com.github.k1rakishou.chan.ui.theme.widget.ColorizableAlternativeCardView
 import com.github.k1rakishou.chan.ui.view.DashedLineView
 import com.github.k1rakishou.chan.ui.view.PostCommentTextView
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
@@ -119,7 +120,8 @@ class PostCell @JvmOverloads constructor(
   private lateinit var icons: PostIcons
   private lateinit var comment: PostCommentTextView
   private lateinit var replies: TextView
-  private lateinit var goToPostButton: AppCompatImageView
+  private lateinit var goToPostButton: ColorizableAlternativeCardView
+  private lateinit var goToPostButtonIcon: AppCompatImageView
   private lateinit var divider: View
   private lateinit var postAttentionLabel: DashedLineView
 
@@ -286,9 +288,9 @@ class PostCell @JvmOverloads constructor(
     comment.invalidate()
     replies.invalidate()
 
-    goToPostButton.setImageDrawable(
+    goToPostButtonIcon.setImageDrawable(
       themeEngine.tintDrawable(
-        goToPostButton.drawable,
+        goToPostButtonIcon.drawable,
         themeEngine.chanTheme.isBackColorDark
       )
     )
@@ -429,18 +431,19 @@ class PostCell @JvmOverloads constructor(
       return
     }
 
-    postImageThumbnailViewsContainer = findViewById(R.id.thumbnails_container)
+    postImageThumbnailViewsContainer = findViewById(com.github.k1rakishou.chan.R.id.thumbnails_container)
 
     val textSizeSp = postCellData.textSizeSp
 
-    title = findViewById(R.id.title)
-    imageFileName = findViewById(R.id.image_filename)
-    icons = findViewById(R.id.icons)
-    comment = findViewById(R.id.comment)
-    replies = findViewById(R.id.replies)
-    divider = findViewById(R.id.divider)
-    postAttentionLabel = findViewById(R.id.post_attention_label)
-    goToPostButton = findViewById(R.id.go_to_post_button)
+    title = findViewById(com.github.k1rakishou.chan.R.id.title)
+    imageFileName = findViewById(com.github.k1rakishou.chan.R.id.image_filename)
+    icons = findViewById(com.github.k1rakishou.chan.R.id.icons)
+    comment = findViewById(com.github.k1rakishou.chan.R.id.comment)
+    replies = findViewById(com.github.k1rakishou.chan.R.id.replies)
+    divider = findViewById(com.github.k1rakishou.chan.R.id.divider)
+    postAttentionLabel = findViewById(com.github.k1rakishou.chan.R.id.post_attention_label)
+    goToPostButton = findViewById(com.github.k1rakishou.chan.R.id.go_to_post_button)
+    goToPostButtonIcon = findViewById(com.github.k1rakishou.chan.R.id.go_to_post_button_icon)
 
     title.textSize = textSizeSp.toFloat()
     title.gravity = GravityCompat.START
