@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.features.toolbar.state
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -11,9 +12,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.material.ContentAlpha
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,11 +30,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
+import com.github.k1rakishou.chan.ui.compose.clearText
+import com.github.k1rakishou.chan.ui.compose.components.IconTint
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.core_themes.ChanTheme
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -161,4 +170,34 @@ internal fun ToolbarClickableIcon(
     alpha = alpha,
     contentDescription = null
   )
+}
+
+@Composable
+fun SearchIcon(
+  searchQueryState: TextFieldState,
+  onCloseSearchToolbarButtonClicked: () -> Unit
+) {
+  val chanTheme = LocalChanTheme.current
+
+  val searchQuery by searchQueryState
+    .textAsFlow()
+    .collectAsState(initial = "")
+
+  val iconTintColor = chanTheme.resolveIconTint(forColor = chanTheme.toolbarBackgroundComposeColor)
+
+  AnimatedContent(targetState = searchQuery.isEmpty()) { searchQueryEmpty ->
+    if (searchQueryEmpty) {
+      KurobaComposeClickableIcon(
+        drawableId = R.drawable.ic_arrow_back_white_24dp,
+        iconTint = IconTint.TintWithColor(iconTintColor),
+        onClick = onCloseSearchToolbarButtonClicked
+      )
+    } else {
+      KurobaComposeClickableIcon(
+        drawableId = R.drawable.ic_baseline_clear_24,
+        iconTint = IconTint.TintWithColor(iconTintColor),
+        onClick = { searchQueryState.edit { clearText() } }
+      )
+    }
+  }
 }

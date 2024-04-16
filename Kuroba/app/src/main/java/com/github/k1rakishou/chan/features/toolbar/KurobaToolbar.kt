@@ -7,6 +7,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.github.k1rakishou.chan.features.toolbar.state.catalog.KurobaCatalogSearchToolbarContent
+import com.github.k1rakishou.chan.features.toolbar.state.catalog.KurobaCatalogSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.catalog.KurobaCatalogToolbarContent
 import com.github.k1rakishou.chan.features.toolbar.state.catalog.KurobaCatalogToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.container.KurobaContainerToolbarContent
@@ -19,6 +21,8 @@ import com.github.k1rakishou.chan.features.toolbar.state.search.KurobaSearchTool
 import com.github.k1rakishou.chan.features.toolbar.state.search.KurobaSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.selection.KurobaSelectionToolbarContent
 import com.github.k1rakishou.chan.features.toolbar.state.selection.KurobaSelectionToolbarSubState
+import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadSearchToolbarContent
+import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadToolbarContent
 import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadToolbarSubState
 import com.github.k1rakishou.chan.ui.compose.providers.KurobaWindowInsets
@@ -89,6 +93,18 @@ fun KurobaToolbar(
           showFloatingMenu = showFloatingMenu
         )
       }
+      is KurobaThreadSearchToolbarSubState -> {
+        KurobaThreadSearchToolbarContent(
+          modifier = Modifier.fillMaxSize(),
+          chanTheme = chanTheme,
+          state = childToolbarState,
+          onCloseSearchToolbarButtonClicked = {
+            if (kurobaToolbarState.isInThreadSearchMode()) {
+              kurobaToolbarState.pop()
+            }
+          }
+        )
+      }
       is KurobaDefaultToolbarSubState -> {
         KurobaDefaultToolbarContent(
           modifier = Modifier.fillMaxSize(),
@@ -104,6 +120,18 @@ fun KurobaToolbar(
           state = childToolbarState,
           onCloseSearchToolbarButtonClicked = {
             if (kurobaToolbarState.isInSearchMode()) {
+              kurobaToolbarState.pop()
+            }
+          }
+        )
+      }
+      is KurobaCatalogSearchToolbarSubState -> {
+        KurobaCatalogSearchToolbarContent(
+          modifier = Modifier.fillMaxSize(),
+          chanTheme = chanTheme,
+          state = childToolbarState,
+          onCloseSearchToolbarButtonClicked = {
+            if (kurobaToolbarState.isInCatalogSearchMode()) {
               kurobaToolbarState.pop()
             }
           }

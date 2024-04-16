@@ -257,12 +257,14 @@ open class ViewThreadController(
     check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
 
     viewThreadControllerToolbarState.invokeAfterTransitionFinished {
-      popUntil(withAnimation = false) { topToolbar ->
-        if (topToolbar.kind != ToolbarStateKind.Thread) {
-          return@popUntil true
-        }
+      if (viewThreadControllerToolbarState.isInReplyMode()) {
+        popUntil(withAnimation = false) { topToolbar ->
+          if (topToolbar.kind != ToolbarStateKind.Thread) {
+            return@popUntil true
+          }
 
-        return@popUntil false
+          return@popUntil false
+        }
       }
     }
   }
@@ -528,6 +530,12 @@ open class ViewThreadController(
       scrollableTitle = ChanSettings.scrollingTextForThreadTitles.get(),
       menuBuilder = {
         withMenuItem(
+          id = ACTION_SEARCH,
+          drawableId = R.drawable.ic_search_white_24dp,
+          onClick = { item -> searchClicked(item) }
+        )
+
+        withMenuItem(
           id = ACTION_ALBUM,
           drawableId = R.drawable.ic_image_white_24dp,
           onClick = { item -> albumClicked(item) }
@@ -547,11 +555,6 @@ open class ViewThreadController(
             )
           }
 
-          withOverflowMenuItem(
-            id = ACTION_SEARCH,
-            stringId = R.string.action_search,
-            onClick = { item -> searchClicked(item) }
-          )
           withOverflowMenuItem(
             id = ACTION_RELOAD,
             stringId = action_reload,
@@ -618,14 +621,29 @@ open class ViewThreadController(
   }
 
   private fun replyClicked(item: ToolbarMenuOverflowItem) {
+    val presenter = threadLayout.presenter
+    if (!presenter.isBoundAndCached || chanDescriptor == null) {
+      return
+    }
+
     threadLayout.openOrCloseReply(true)
   }
 
   private fun albumClicked(item: ToolbarMenuItem) {
+    val presenter = threadLayout.presenter
+    if (!presenter.isBoundAndCached || chanDescriptor == null) {
+      return
+    }
+
     threadLayout.presenter.showAlbum()
   }
 
   private fun pinClicked(item: ToolbarMenuItem) {
+    val presenter = threadLayout.presenter
+    if (!presenter.isBoundAndCached || chanDescriptor == null) {
+      return
+    }
+
     controllerScope.launch {
       if (threadLayout.presenter.pin()) {
         setPinIconState(true)
@@ -633,15 +651,21 @@ open class ViewThreadController(
     }
   }
 
-  private fun searchClicked(item: ToolbarMenuOverflowItem) {
-    if (chanDescriptor == null) {
+  private fun searchClicked(item: ToolbarMenuItem) {
+    val presenter = threadLayout.presenter
+    if (!presenter.isBoundAndCached || chanDescriptor == null) {
       return
     }
 
-    threadLayout.popupHelper.showSearchPopup(chanDescriptor!!)
+    toolbarState.enterThreadSearchMode()
   }
 
   private fun reloadClicked(item: ToolbarMenuOverflowItem) {
+    val presenter = threadLayout.presenter
+    if (!presenter.isBoundAndCached || chanDescriptor == null) {
+      return
+    }
+
     threadLayout.presenter.resetTicker()
     threadLayout.presenter.normalLoad(
       showLoading = true,

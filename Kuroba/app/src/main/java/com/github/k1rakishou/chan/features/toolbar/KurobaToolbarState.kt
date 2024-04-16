@@ -10,6 +10,8 @@ import androidx.compose.ui.unit.Dp
 import com.github.k1rakishou.chan.features.toolbar.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
+import com.github.k1rakishou.chan.features.toolbar.state.catalog.KurobaCatalogSearchToolbarParams
+import com.github.k1rakishou.chan.features.toolbar.state.catalog.KurobaCatalogSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.catalog.KurobaCatalogToolbarParams
 import com.github.k1rakishou.chan.features.toolbar.state.catalog.KurobaCatalogToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.container.KurobaContainerToolbarParams
@@ -22,6 +24,8 @@ import com.github.k1rakishou.chan.features.toolbar.state.search.KurobaSearchTool
 import com.github.k1rakishou.chan.features.toolbar.state.search.KurobaSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.selection.KurobaSelectionToolbarParams
 import com.github.k1rakishou.chan.features.toolbar.state.selection.KurobaSelectionToolbarSubState
+import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadSearchToolbarParams
+import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadToolbarParams
 import com.github.k1rakishou.chan.features.toolbar.state.thread.KurobaThreadToolbarSubState
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
@@ -71,12 +75,21 @@ class KurobaToolbarState(
   private val _container by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaContainerToolbarSubState()) }
   val container: KurobaContainerToolbarSubState
     get() = _container.value
+
   private val _catalog by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaCatalogToolbarSubState()) }
   val catalog: KurobaCatalogToolbarSubState
     get() = _catalog.value
+  private val _catalogSearch by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaCatalogSearchToolbarSubState()) }
+  val catalogSearch: KurobaCatalogSearchToolbarSubState
+    get() = _catalogSearch.value
+
   private val _thread by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaThreadToolbarSubState()) }
   val thread: KurobaThreadToolbarSubState
     get() = _thread.value
+  private val _threadSearch by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaThreadSearchToolbarSubState()) }
+  val threadSearch: KurobaThreadSearchToolbarSubState
+    get() = _threadSearch.value
+
   private val _default by lazy(LazyThreadSafetyMode.NONE) { mutableStateOf(KurobaDefaultToolbarSubState()) }
   val default: KurobaDefaultToolbarSubState
     get() = _default.value
@@ -250,6 +263,28 @@ class KurobaToolbarState(
     )
   }
 
+  fun enterCatalogSearchMode(
+    withAnimation: Boolean = true,
+    initialSearchQuery: String? = null,
+    menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
+  ) {
+    val toolbarMenuBuilder = ToolbarMenuBuilder()
+    menuBuilder?.invoke(toolbarMenuBuilder)
+
+    enterToolbarMode(
+      params = KurobaCatalogSearchToolbarParams(
+        initialSearchQuery = initialSearchQuery,
+        toolbarMenu = toolbarMenuBuilder.build(),
+      ),
+      state = _catalogSearch.value,
+      withAnimation = withAnimation
+    )
+  }
+
+  fun isInCatalogSearchMode(): Boolean {
+    return topToolbar?.kind == ToolbarStateKind.CatalogSearch
+  }
+
   fun enterThreadMode(
     leftItem: ToolbarMenuItem?,
     scrollableTitle: Boolean = false,
@@ -269,6 +304,28 @@ class KurobaToolbarState(
       state = _thread.value,
       withAnimation = false
     )
+  }
+
+  fun enterThreadSearchMode(
+    withAnimation: Boolean = true,
+    initialSearchQuery: String? = null,
+    menuBuilder: (ToolbarMenuBuilder.() -> Unit)? = null,
+  ) {
+    val toolbarMenuBuilder = ToolbarMenuBuilder()
+    menuBuilder?.invoke(toolbarMenuBuilder)
+
+    enterToolbarMode(
+      params = KurobaThreadSearchToolbarParams(
+        initialSearchQuery = initialSearchQuery,
+        toolbarMenu = toolbarMenuBuilder.build(),
+      ),
+      state = _threadSearch.value,
+      withAnimation = withAnimation
+    )
+  }
+
+  fun isInThreadSearchMode(): Boolean {
+    return topToolbar?.kind == ToolbarStateKind.ThreadSearch
   }
 
   fun enterDefaultMode(

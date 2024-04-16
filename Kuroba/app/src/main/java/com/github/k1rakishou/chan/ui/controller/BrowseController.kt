@@ -368,12 +368,14 @@ class BrowseController(
     check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
 
     browseControllerToolbarState.invokeAfterTransitionFinished {
-      popUntil(withAnimation = false) { topToolbar ->
-        if (topToolbar.kind != ToolbarStateKind.Catalog) {
-          return@popUntil true
-        }
+      if (browseControllerToolbarState.isInReplyMode()) {
+        popUntil(withAnimation = false) { topToolbar ->
+          if (topToolbar.kind != ToolbarStateKind.Catalog) {
+            return@popUntil true
+          }
 
-        return@popUntil false
+          return@popUntil false
+        }
       }
     }
   }
@@ -960,7 +962,7 @@ class BrowseController(
       return
     }
 
-    threadLayout.popupHelper.showSearchPopup(chanDescriptor!!)
+    toolbarState.enterCatalogSearchMode()
   }
 
   private fun reloadClicked(item: ToolbarMenuItem) {
@@ -978,10 +980,20 @@ class BrowseController(
   }
 
   private fun replyClicked(item: ToolbarMenuOverflowItem) {
+    val presenter = threadLayout.presenter
+    if (!presenter.isBoundAndCached || chanDescriptor == null) {
+      return
+    }
+
     threadLayout.openOrCloseReply(true)
   }
 
   private fun viewModeClicked(item: ToolbarMenuOverflowItem) {
+    val presenter = threadLayout.presenter
+    if (!presenter.isBoundAndCached || chanDescriptor == null) {
+      return
+    }
+
     var postViewMode = ChanSettings.boardPostViewMode.get()
 
     postViewMode = when (postViewMode) {

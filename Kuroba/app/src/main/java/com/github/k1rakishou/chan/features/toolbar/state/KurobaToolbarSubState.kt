@@ -124,8 +124,10 @@ enum class ToolbarStateKind {
   Container,
   Catalog,
   Thread,
+  ThreadSearch,
   Default,
   Search,
+  CatalogSearch,
   Selection,
   Reply
 }
