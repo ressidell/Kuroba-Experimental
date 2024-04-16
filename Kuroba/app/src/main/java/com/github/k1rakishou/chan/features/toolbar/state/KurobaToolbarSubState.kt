@@ -7,14 +7,15 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenu
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
+import com.github.k1rakishou.chan.ui.compose.badge.ToolbarBadgeData
 
 abstract class KurobaToolbarSubState {
   abstract val kind: ToolbarStateKind
   abstract val leftMenuItem: ToolbarMenuItem?
   abstract val rightToolbarMenu: ToolbarMenu?
 
-  private val _toolbarBadgeState = mutableStateOf<ToolbarBadge?>(null)
-  val toolbarBadgeState: State<ToolbarBadge?>
+  private val _toolbarBadgeState = mutableStateOf<ToolbarBadgeData?>(null)
+  val toolbarBadgeState: State<ToolbarBadgeData?>
     get() = _toolbarBadgeState
 
   abstract fun update(params: IKurobaToolbarParams)
@@ -107,7 +108,7 @@ abstract class KurobaToolbarSubState {
   }
 
   fun updateBadge(counter: Int, highImportance: Boolean) {
-    _toolbarBadgeState.value = ToolbarBadge(
+    _toolbarBadgeState.value = ToolbarBadgeData(
       counter = counter,
       highlight = highImportance
     )
@@ -128,8 +129,3 @@ enum class ToolbarStateKind {
   Selection,
   Reply
 }
-
-data class ToolbarBadge(
-  val counter: Int,
-  val highlight: Boolean
-)

@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.toComposeRect
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.window.layout.WindowMetricsCalculator
 import com.github.k1rakishou.chan.ui.compose.window.WindowSizeClass
@@ -15,13 +16,14 @@ import com.github.k1rakishou.chan.utils.appDependencies
 val LocalWindowSizeClass = staticCompositionLocalOf<WindowSizeClass> { error("LocalWindowSizeClass not initialized") }
 
 @Composable
-fun ProvideWindowClassSize(activity: ComponentActivity, content: @Composable () -> Unit) {
+fun ProvideWindowClassSize(content: @Composable () -> Unit) {
   val globalUiStateHolder = appDependencies().globalUiStateHolder
+  val context = LocalContext.current
 
   @Suppress("UNUSED_VARIABLE") val configuration = LocalConfiguration.current
 
   val density = LocalDensity.current
-  val metrics = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(activity)
+  val metrics = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(context as ComponentActivity)
   val size = with(density) { metrics.bounds.toComposeRect().size.toDpSize() }
   val windowClassSize = WindowSizeClass.calculateFromSize(size)
 

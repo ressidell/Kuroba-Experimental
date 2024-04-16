@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.github.k1rakishou.chan.utils.appDependencies
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 
@@ -18,9 +19,10 @@ val LocalChanTheme = staticCompositionLocalOf<ChanTheme> { error("Theme not prov
 
 @Composable
 fun ProvideChanTheme(
-  themeEngine: ThemeEngine,
   content: @Composable () -> Unit
 ) {
+  val themeEngine = appDependencies().themeEngine
+
   var chanTheme by remember { mutableStateOf(themeEngine.chanTheme) }
 
   DisposableEffect(themeEngine.chanTheme) {

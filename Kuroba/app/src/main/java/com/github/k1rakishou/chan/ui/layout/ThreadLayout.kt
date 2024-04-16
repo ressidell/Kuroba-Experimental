@@ -369,7 +369,6 @@ class ThreadLayout @JvmOverloads constructor(
     threadListLayout.onPickLocalMediaButtonClicked()
   }
 
-  // TODO: New reply layout.
   fun onPickLocalMediaButtonLongClicked() {
     threadListLayout.onPickLocalMediaButtonLongClicked()
   }

@@ -1,25 +1,16 @@
 package com.github.k1rakishou.chan.ui.compose.providers
 
-import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import com.github.k1rakishou.chan.utils.activityComponent
-import com.github.k1rakishou.chan.utils.applicationComponent
 
 @Composable
 fun ComposeEntrypoint(
   content: @Composable () -> Unit
 ) {
-  val context = LocalContext.current
-
-  val appComponent = context.applicationComponent()
-  val activityComponent = context.activityComponent()
-
-  ProvideChanTheme(appComponent.themeEngine) {
+  ProvideChanTheme {
     ProvideKurobaViewConfiguration {
-      ProvideWindowInsets(activityComponent.globalWindowInsetsManager) {
+      ProvideWindowInsets {
         ProvideLocalMinimumInteractiveComponentEnforcement {
-          ProvideWindowClassSize(context as ComponentActivity) {
+          ProvideWindowClassSize {
             ProvideContentPaddings {
               content()
             }

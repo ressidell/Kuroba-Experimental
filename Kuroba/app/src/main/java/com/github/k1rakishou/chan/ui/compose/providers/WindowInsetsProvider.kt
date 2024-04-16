@@ -8,15 +8,16 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
+import com.github.k1rakishou.chan.utils.activityDependencies
 
 val LocalWindowInsets = compositionLocalOf<KurobaWindowInsets> { error("LocalWindowInsets not initialized") }
 
 @Composable
 fun ProvideWindowInsets(
-    globalWindowInsetsManager: GlobalWindowInsetsManager,
     content: @Composable () -> Unit
 ) {
+    val globalWindowInsetsManager = activityDependencies().globalWindowInsetsManager
+
     val currentWindowInsets by globalWindowInsetsManager.currentWindowInsets
 
     CompositionLocalProvider(LocalWindowInsets provides currentWindowInsets) {

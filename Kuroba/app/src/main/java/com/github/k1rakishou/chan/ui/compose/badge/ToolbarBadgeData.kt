@@ -17,7 +17,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.ChanSettings
-import com.github.k1rakishou.chan.features.toolbar.state.ToolbarBadge
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.helper.PinHelper
@@ -25,11 +24,15 @@ import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import kotlinx.coroutines.reactive.asFlow
 
+data class ToolbarBadgeData(
+  val counter: Int,
+  val highlight: Boolean
+)
 
 @Composable
 fun BoxScope.ToolbarBadge(
   chanTheme: ChanTheme,
-  toolbarBadge: ToolbarBadge
+  toolbarBadge: ToolbarBadgeData
 ) {
   val counter by animateIntAsState(
     targetValue = toolbarBadge.counter,
