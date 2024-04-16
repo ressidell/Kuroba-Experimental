@@ -28,6 +28,7 @@ import com.github.k1rakishou.chan.ui.compose.components.IconTint
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.freeFocusSafe
+import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.requestFocusSafe
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -111,19 +112,25 @@ private fun SearchIcon(
   searchQueryState: TextFieldState,
   onCloseSearchToolbarButtonClicked: () -> Unit
 ) {
-  val searchQuery by searchQueryState.textAsFlow().collectAsState(initial = "")
+  val chanTheme = LocalChanTheme.current
+
+  val searchQuery by searchQueryState
+    .textAsFlow()
+    .collectAsState(initial = "")
+
+  val iconTintColor = chanTheme.resolveIconTint(forColor = chanTheme.toolbarBackgroundComposeColor)
 
   AnimatedContent(targetState = searchQuery.isEmpty()) { searchQueryEmpty ->
     if (searchQueryEmpty) {
       KurobaComposeClickableIcon(
         drawableId = com.github.k1rakishou.chan.R.drawable.ic_arrow_back_white_24dp,
-        iconTint = IconTint.Tint,
+        iconTint = IconTint.TintWithColor(iconTintColor),
         onClick = onCloseSearchToolbarButtonClicked
       )
     } else {
       KurobaComposeClickableIcon(
         drawableId = com.github.k1rakishou.chan.R.drawable.ic_baseline_clear_24,
-        iconTint = IconTint.Tint,
+        iconTint = IconTint.TintWithColor(iconTintColor),
         onClick = { searchQueryState.edit { clearText() } }
       )
     }

@@ -71,7 +71,6 @@ class GlobalSearchController(
 
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false,
         hasDrawer = true,
         hasBack = false
       )

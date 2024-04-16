@@ -79,7 +79,6 @@ class MainSettingsControllerV2(
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
         hasBack = false,
-        swipeable = false,
         hasDrawer = true
       )
     )

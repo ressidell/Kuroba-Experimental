@@ -55,7 +55,9 @@ abstract class BaseComposeController<VM : ViewModel>(
   }
 
   open fun setupNavigation() {
-    updateNavigationFlags(DeprecatedNavigationFlags(swipeable = false))
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags()
+    )
 
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(

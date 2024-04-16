@@ -88,9 +88,7 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
     super.onCreate()
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false
-      )
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     toolbarState.enterDefaultMode(

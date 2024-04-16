@@ -101,7 +101,7 @@ class ImageSearchController(
 
   override fun setupNavigation() {
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(swipeable = false)
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     toolbarState.enterDefaultMode(
@@ -280,31 +280,25 @@ class ImageSearchController(
 
       Spacer(modifier = Modifier.height(8.dp))
 
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .weight(1f)
-      ) {
-        BuildImageSearchResults(
-          lastUsedSearchInstance = lastUsedSearchInstance,
-          onImageClicked = { searxImage ->
-            focusManager.clearFocus(force = true)
+      BuildImageSearchResults(
+        lastUsedSearchInstance = lastUsedSearchInstance,
+        onImageClicked = { searxImage ->
+          focusManager.clearFocus(force = true)
 
-            if (searxImage.fullImageUrls.isEmpty()) {
-              return@BuildImageSearchResults
-            }
-
-            if (searxImage.fullImageUrls.size == 1) {
-              onImageSelected(searxImage.fullImageUrls.first())
-              requireNavController().popController()
-
-              return@BuildImageSearchResults
-            }
-
-            showOptions(searxImage.fullImageUrls)
+          if (searxImage.fullImageUrls.isEmpty()) {
+            return@BuildImageSearchResults
           }
-        )
-      }
+
+          if (searxImage.fullImageUrls.size == 1) {
+            onImageSelected(searxImage.fullImageUrls.first())
+            requireNavController().popController()
+
+            return@BuildImageSearchResults
+          }
+
+          showOptions(searxImage.fullImageUrls)
+        }
+      )
     }
   }
 

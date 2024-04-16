@@ -125,6 +125,7 @@ class BrowseController(
     // Navigation
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
+        swipeable = false,
         hasBack = false,
         hasDrawer = true
       )

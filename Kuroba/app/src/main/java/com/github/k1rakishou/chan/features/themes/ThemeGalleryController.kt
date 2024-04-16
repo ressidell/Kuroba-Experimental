@@ -70,9 +70,7 @@ class ThemeGalleryController(
     }
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false
-      )
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     toolbarState.enterDefaultMode(

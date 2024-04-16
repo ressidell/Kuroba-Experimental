@@ -116,9 +116,7 @@ class SitesSetupController(context: Context) : Controller(context), SitesSetupVi
     super.onCreate()
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false
-      )
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     view = inflate(context, R.layout.controller_sites_setup)

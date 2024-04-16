@@ -4,6 +4,5 @@ package com.github.k1rakishou.chan.ui.controller.base
 data class DeprecatedNavigationFlags(
   val hasBack: Boolean = true,
   val hasDrawer: Boolean = false,
-  val replyOpened: Boolean = false,
   val swipeable: Boolean = true
 )

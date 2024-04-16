@@ -96,7 +96,7 @@ class BookmarkGroupSettingsController(
     super.onCreate()
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(swipeable = false)
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     val titleStringId = if (isBookmarkMoveMode) {

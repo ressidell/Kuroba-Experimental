@@ -71,9 +71,7 @@ class SearchResultsController(
     super.onCreate()
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false
-      )
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     toolbarState.enterDefaultMode(

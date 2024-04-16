@@ -141,7 +141,7 @@ class FiltersController(
     super.onCreate()
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(swipeable = false)
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     toolbarState.enterDefaultMode(

@@ -136,7 +136,6 @@ class LocalArchiveController(
 
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false,
         hasDrawer = true,
         hasBack = false
       )

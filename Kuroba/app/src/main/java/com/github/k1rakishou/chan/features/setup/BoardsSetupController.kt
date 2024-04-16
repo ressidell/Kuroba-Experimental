@@ -132,9 +132,7 @@ class BoardsSetupController(
     val syntheticSite = site.isSynthetic
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false
-      )
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     toolbarState.enterDefaultMode(

@@ -63,9 +63,7 @@ class SiteSettingsController(
     super.onCreate()
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags(
-        swipeable = false
-      )
+      newNavigationFlags = DeprecatedNavigationFlags()
     )
 
     val siteName = siteManager.bySiteDescriptor(siteDescriptor)

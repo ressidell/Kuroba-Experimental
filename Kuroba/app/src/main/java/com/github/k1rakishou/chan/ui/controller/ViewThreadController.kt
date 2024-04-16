@@ -98,6 +98,7 @@ open class ViewThreadController(
 
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
+        swipeable = false,
         hasDrawer = true
       )
     )

@@ -97,8 +97,7 @@ class SavedPostsController(
     updateNavigationFlags(
       newNavigationFlags = DeprecatedNavigationFlags(
         hasDrawer = true,
-        hasBack = false,
-        swipeable = false
+        hasBack = false
       )
     )
 
