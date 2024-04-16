@@ -17,9 +17,6 @@ import com.github.k1rakishou.chan.features.bookmarks.epoxy.EpoxyListThreadBookma
 import com.github.k1rakishou.chan.features.bypass.SiteFirewallBypassController
 import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaController
 import com.github.k1rakishou.chan.features.drawer.MainController
-import com.github.k1rakishou.chan.features.drawer.epoxy.EpoxyHistoryGridEntryView
-import com.github.k1rakishou.chan.features.drawer.epoxy.EpoxyHistoryHeaderView
-import com.github.k1rakishou.chan.features.drawer.epoxy.EpoxyHistoryListEntryView
 import com.github.k1rakishou.chan.features.filters.CreateOrUpdateFilterController
 import com.github.k1rakishou.chan.features.filters.FilterBoardSelectorController
 import com.github.k1rakishou.chan.features.filters.FilterTypeSelectionController
@@ -323,8 +320,6 @@ interface ActivityComponent : ActivityDependencies {
 
   fun inject(epoxyGridThreadBookmarkViewHolder: EpoxyGridThreadBookmarkViewHolder)
   fun inject(epoxyListThreadBookmarkViewHolder: EpoxyListThreadBookmarkViewHolder)
-  fun inject(epoxyHistoryListEntryView: EpoxyHistoryListEntryView)
-  fun inject(epoxyHistoryGridEntryView: EpoxyHistoryGridEntryView)
   fun inject(epoxyProxyView: EpoxyProxyView)
   fun inject(epoxySearchEndOfResultsView: EpoxySearchEndOfResultsView)
   fun inject(epoxySearchErrorView: EpoxySearchErrorView)
@@ -349,7 +344,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(epoxyGroupableFloatingListMenuRow: EpoxyGroupableFloatingListMenuRow)
   fun inject(epoxyFloatingListMenuRow: EpoxyFloatingListMenuRow)
   fun inject(epoxyHeaderListMenuRow: EpoxyHeaderListMenuRow)
-  fun inject(epoxyHistoryHeaderView: EpoxyHistoryHeaderView)
   fun inject(epoxyTextViewWrapHeight: EpoxyTextViewWrapHeight)
   fun inject(epoxyPostLink: EpoxyPostLink)
   fun inject(epoxyBoardSelectionButtonView: EpoxyBoardSelectionButtonView)

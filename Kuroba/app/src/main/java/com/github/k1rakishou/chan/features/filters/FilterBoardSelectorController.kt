@@ -22,9 +22,10 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -52,16 +53,19 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.search.SimpleSearchState
-import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchState
+import com.github.k1rakishou.chan.ui.compose.search.SimpleSearchStateV2
+import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.utils.InputWithQuerySorter
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_themes.ChanTheme
+import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -91,8 +95,10 @@ class FilterBoardSelectorController(
   @Composable
   override fun BoxScope.BuildContent() {
     val chanTheme = LocalChanTheme.current
-    val backgroundColor = chanTheme.backColorCompose
-    val searchState = rememberSimpleSearchState<FilterBoardSelectorControllerViewModel.CellData>()
+
+    val searchState = rememberSimpleSearchStateV2<FilterBoardSelectorControllerViewModel.CellData>(
+      textFieldState = viewModel.searchTextFieldState
+    )
 
     Column(
       modifier = Modifier
@@ -100,9 +106,11 @@ class FilterBoardSelectorController(
         .wrapContentHeight()
         .consumeClicks()
         .align(Alignment.Center)
-        .background(backgroundColor)
+        .background(chanTheme.backColorCompose)
     ) {
-      BuildContentInternal(searchState, chanTheme, backgroundColor)
+      BuildContentInternal(
+        searchState = searchState
+      )
 
       Row(modifier = Modifier
         .fillMaxWidth()
@@ -112,7 +120,7 @@ class FilterBoardSelectorController(
           modifier = Modifier
             .wrapContentSize()
             .padding(horizontal = 8.dp, vertical = 4.dp),
-          onClick = { viewModel.toggleSelectUnselectAll(searchState.results) },
+          onClick = { viewModel.toggleSelectUnselectAll(searchState.results.value) },
           text = stringResource(id = R.string.filter_toggle_select_unselect_all_boards)
         )
 
@@ -155,42 +163,9 @@ class FilterBoardSelectorController(
 
   @Composable
   private fun ColumnScope.BuildContentInternal(
-    searchState: SimpleSearchState<FilterBoardSelectorControllerViewModel.CellData>,
-    chanTheme: ChanTheme,
-    backgroundColor: Color
+    searchState: SimpleSearchStateV2<FilterBoardSelectorControllerViewModel.CellData>,
   ) {
-    val cellDataList = remember { viewModel.cellDataList }
-    val listState = rememberLazyGridState()
-
-    BuildSearchInput(
-      backgroundColor = backgroundColor,
-      searchQuery = searchState.queryState,
-      onSearchQueryChanged = { newQuery -> searchState.query = newQuery }
-    )
-
-    LaunchedEffect(key1 = searchState.query, block = {
-      if (searchState.query.isEmpty()) {
-        searchState.results = cellDataList
-        return@LaunchedEffect
-      }
-
-      delay(125L)
-
-      withContext(Dispatchers.Default) {
-        searchState.searching = true
-        searchState.results = processSearchQuery(searchState.query, cellDataList)
-        searchState.searching = false
-      }
-    })
-
-    val searchQuery = searchState.query
-    val searching = searchState.searching
-    val searchResults = if (searching) {
-      cellDataList
-    } else {
-      searchState.results
-    }
-
+    val cellDataList = viewModel.cellDataList
     if (cellDataList.isEmpty()) {
       KurobaComposeText(
         modifier = Modifier
@@ -200,9 +175,50 @@ class FilterBoardSelectorController(
         textAlign = TextAlign.Center,
         text = stringResource(id = R.string.search_nothing_to_display_make_sure_sites_boards_active)
       )
+
       return
     }
 
+
+    val chanTheme = LocalChanTheme.current
+    val listState = rememberLazyGridState()
+
+    val kurobaSearchInputColor = if (ThemeEngine.isDarkColor(chanTheme.backColor)) {
+      Color.LightGray
+    } else {
+      Color.DarkGray
+    }
+
+    KurobaSearchInput(
+      modifier = Modifier
+        .wrapContentHeight()
+        .fillMaxWidth()
+        .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+      color = kurobaSearchInputColor,
+      searchQueryState = searchState.textFieldState
+    )
+
+    LaunchedEffect(
+      key1 = searchState,
+      block = {
+        searchState.textFieldState.textAsFlow()
+          .onEach { query ->
+            delay(125)
+
+            if (query.isEmpty()) {
+              searchState.results.value = cellDataList
+              return@onEach
+            }
+
+            withContext(Dispatchers.Default) {
+              searchState.results.value = processSearchQuery(searchState.searchQuery, cellDataList)
+            }
+          }
+          .collect()
+      }
+    )
+
+    val searchResults by searchState.results
     if (searchResults.isEmpty()) {
       KurobaComposeText(
         modifier = Modifier
@@ -210,8 +226,9 @@ class FilterBoardSelectorController(
           .fillMaxWidth()
           .padding(8.dp),
         textAlign = TextAlign.Center,
-        text = stringResource(id = R.string.search_nothing_found_with_query, searchQuery)
+        text = stringResource(id = R.string.search_nothing_found_with_query, searchState.searchQuery)
       )
+
       return
     }
 
@@ -240,7 +257,7 @@ class FilterBoardSelectorController(
   }
 
   private fun processSearchQuery(
-    inputSearchQuery: String,
+    inputSearchQuery: CharSequence,
     cellDataList: List<FilterBoardSelectorControllerViewModel.CellData>
   ): List<FilterBoardSelectorControllerViewModel.CellData> {
     if (inputSearchQuery.isEmpty() || inputSearchQuery.isBlank()) {
@@ -267,28 +284,6 @@ class FilterBoardSelectorController(
       input = filteredCellDataList,
       query = splitSearchQuery.first(),
       textSelector = { cellData -> cellData.catalogCellData.boardCodeFormatted }
-    )
-  }
-
-  @Composable
-  private fun BuildSearchInput(
-    backgroundColor: Color,
-    searchQuery: MutableState<String>,
-    onSearchQueryChanged: (String) -> Unit
-  ) {
-    val chanTheme = LocalChanTheme.current
-    val onSearchQueryChangedRemembered = rememberUpdatedState(newValue = onSearchQueryChanged)
-
-    KurobaSearchInput(
-      modifier = Modifier
-        .wrapContentHeight()
-        .fillMaxWidth()
-        .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
-      chanTheme = chanTheme,
-      onBackgroundColor = backgroundColor,
-      searchQueryState = searchQuery,
-      labelText = stringResource(id = R.string.search_hint),
-      onSearchQueryChanged = { newQuery -> onSearchQueryChangedRemembered.value.invoke(newQuery) }
     )
   }
 

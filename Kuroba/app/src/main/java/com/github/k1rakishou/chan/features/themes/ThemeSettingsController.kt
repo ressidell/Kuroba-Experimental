@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.features.themes
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
 import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
@@ -40,7 +41,6 @@ import com.github.k1rakishou.common.exhaustive
 import com.github.k1rakishou.common.updateMargins
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
-import com.github.k1rakishou.core_themes.ThemeEngine.Companion.getComplementaryColor
 import com.github.k1rakishou.core_themes.ThemeParser
 import com.github.k1rakishou.fsaf.FileChooser
 import com.github.k1rakishou.fsaf.FileManager
@@ -428,8 +428,12 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
     val theme = adapter.themeMap[position]
       ?: return
 
-    val compositeColor = (theme.backColor.toLong() + theme.primaryColor.toLong()) / 2
-    val backgroundColor = getComplementaryColor(compositeColor.toInt())
+    val backgroundColor = if (ThemeEngine.isDarkColor(theme.toolbarBackgroundComposeColor)) {
+      Color.LTGRAY
+    } else {
+      Color.DKGRAY
+    }
+
     root.setBackgroundColor(backgroundColor)
 
     updateCurrentThemeIndicator(theme.isLightTheme)
@@ -494,7 +498,7 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
         context = context,
         theme = chanTheme,
         kurobaToolbarState = kurobaToolbarState,
-        navigationController = requireNavController(),
+        navigationController = requireToolbarNavController(),
         options = ThemeControllerHelper.Options(
           showMoreThemesButton = true,
           refreshThemesControllerFunc = { reload(postCellDataWidthNoPaddings = pager.width) }

@@ -10,7 +10,7 @@ object InputWithQuerySorter {
 
   fun <T> sort(
     input: List<T>,
-    query: String,
+    query: CharSequence,
     textSelector: (T) -> String,
   ): List<T> {
     val weightedInputList = input.mapIndexed { index, data ->
@@ -31,7 +31,7 @@ object InputWithQuerySorter {
       .map { weightedInput -> weightedInput.data }
   }
 
-  private fun queryOccurrenceLengthAndPosition(query: String, boardCode: String): Pair<Int, Int> {
+  private fun queryOccurrenceLengthAndPosition(query: CharSequence, boardCode: String): Pair<Int, Int> {
     var maxLen = 0
     var position = 0
     var index = 0

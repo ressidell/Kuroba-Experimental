@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.features.drawer
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
@@ -67,6 +68,8 @@ class KurobaDrawerState(
   private val _selectedHistoryEntries = mutableStateMapOf<ChanDescriptor, Unit>()
   val selectedHistoryEntries: Map<ChanDescriptor, Unit>
     get() = _selectedHistoryEntries
+
+  val searchTextFieldState = TextFieldState(initialText = "")
 
   val drawerGridMode = mutableStateOf(ChanSettings.drawerGridMode.get())
 

@@ -64,7 +64,6 @@ import com.github.k1rakishou.chan.ui.compose.addBottom
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeSwitch
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
@@ -320,26 +319,18 @@ class FiltersController(
 
     LaunchedEffect(key1 = searchQuery, block = {
       if (searchQuery.isEmpty()) {
-        searchState.results = filters
+        searchState.results.value = filters
         return@LaunchedEffect
       }
 
       delay(125L)
 
       withContext(Dispatchers.Default) {
-        searchState.searching = true
-        searchState.results = processSearchQuery(searchQuery, filters)
-        searchState.searching = false
+        searchState.results.value = processSearchQuery(searchQuery, filters)
       }
     })
 
-    if (searchState.searching) {
-      KurobaComposeProgressIndicator()
-      return
-    }
-
-    val searchResults = searchState.results
-
+    val searchResults by searchState.results
     if (searchResults.isEmpty()) {
       KurobaComposeText(
         modifier = Modifier

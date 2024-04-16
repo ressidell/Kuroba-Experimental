@@ -61,6 +61,7 @@ import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.persist_state.PersistableChanState
 import dagger.Lazy
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
@@ -123,7 +124,7 @@ class MainController(
   private val kurobaDrawerState: KurobaDrawerState
     get() = mainControllerViewModel.kurobaDrawerState
 
-  private val kurobaComposeBottomPanel by lazy {
+  private val kurobaComposeBottomPanel by lazy(LazyThreadSafetyMode.NONE) {
     KurobaComposeIconPanel(
       context = context,
       orientation = KurobaComposeIconPanel.Orientation.Horizontal,
@@ -652,7 +653,12 @@ class MainController(
       return
     }
 
-    rootLayout.postDelayed({ themeEngine.toggleTheme() }, 125L)
+    controllerScope.launch {
+      delay(125)
+
+      themeEngine.toggleTheme()
+      showToast(appResources.string(R.string.drawer_controller_switched_to_theme, themeEngine.chanTheme.name))
+    }
   }
 
   private fun onHistoryEntryViewClicked(navHistoryEntry: NavigationHistoryEntry) {

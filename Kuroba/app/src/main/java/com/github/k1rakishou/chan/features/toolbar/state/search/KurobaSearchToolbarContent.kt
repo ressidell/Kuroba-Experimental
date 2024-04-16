@@ -21,13 +21,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.ui.compose.clearText
+import com.github.k1rakishou.chan.ui.compose.components.IconTint
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.freeFocusSafe
 import com.github.k1rakishou.chan.ui.compose.requestFocusSafe
 import com.github.k1rakishou.core_themes.ChanTheme
+import com.github.k1rakishou.core_themes.ThemeEngine
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -47,6 +50,12 @@ fun KurobaSearchToolbarContent(
   }
 
   val searchQueryState = state.searchQueryState
+
+  val kurobaSearchInputColor = if (ThemeEngine.isDarkColor(chanTheme.toolbarBackgroundComposeColor)) {
+    Color.White
+  } else {
+    Color.Black
+  }
 
   DisposableEffect(
     key1 = Unit,
@@ -70,7 +79,6 @@ fun KurobaSearchToolbarContent(
     Spacer(modifier = Modifier.width(12.dp))
 
     SearchIcon(
-      chanTheme = chanTheme,
       searchQueryState = searchQueryState,
       onCloseSearchToolbarButtonClicked = onCloseSearchToolbarButtonClicked
     )
@@ -88,8 +96,9 @@ fun KurobaSearchToolbarContent(
           .fillMaxSize()
           .focusable()
           .focusRequester(focusRequester),
+        displayClearButton = false,
+        color = kurobaSearchInputColor,
         searchQueryState = searchQueryState,
-        onBackgroundColor = chanTheme.toolbarBackgroundComposeColor,
       )
     }
 
@@ -99,7 +108,6 @@ fun KurobaSearchToolbarContent(
 
 @Composable
 private fun SearchIcon(
-  chanTheme: ChanTheme,
   searchQueryState: TextFieldState,
   onCloseSearchToolbarButtonClicked: () -> Unit
 ) {
@@ -109,13 +117,13 @@ private fun SearchIcon(
     if (searchQueryEmpty) {
       KurobaComposeClickableIcon(
         drawableId = com.github.k1rakishou.chan.R.drawable.ic_arrow_back_white_24dp,
-        colorBehindIcon = chanTheme.toolbarBackgroundComposeColor,
+        iconTint = IconTint.Tint,
         onClick = onCloseSearchToolbarButtonClicked
       )
     } else {
       KurobaComposeClickableIcon(
         drawableId = com.github.k1rakishou.chan.R.drawable.ic_baseline_clear_24,
-        colorBehindIcon = chanTheme.toolbarBackgroundComposeColor,
+        iconTint = IconTint.Tint,
         onClick = { searchQueryState.edit { clearText() } }
       )
     }

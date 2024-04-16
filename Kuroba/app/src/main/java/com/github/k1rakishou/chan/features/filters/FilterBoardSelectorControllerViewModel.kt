@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.features.filters
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -40,6 +41,8 @@ class FilterBoardSelectorControllerViewModel(
   private val _filtersAdditionalSectionCollapsed = mutableStateOf(false)
   val filtersAdditionalSectionCollapsed: State<Boolean>
     get() = _filtersAdditionalSectionCollapsed
+
+  val searchTextFieldState = TextFieldState(initialText = "")
 
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)

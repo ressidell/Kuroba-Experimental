@@ -48,14 +48,14 @@ fun <T> rememberSimpleSearchState(
 
 class SimpleSearchStateV2<T>(
   val textFieldState: TextFieldState,
-  results: List<T>,
-  searching: Boolean
+  results: List<T>
 ) : RememberObserver {
-  var results by mutableStateOf(results)
-  var searching by mutableStateOf(searching)
+  val results = mutableStateOf(results)
 
   val usingSearch: Boolean
     get() = textFieldState.undoState.canUndo
+  val searchQuery: CharSequence
+    get() = textFieldState.text
 
   fun reset() {
     textFieldState.edit { clearText() }
@@ -78,14 +78,12 @@ class SimpleSearchStateV2<T>(
 @Composable
 fun <T> rememberSimpleSearchStateV2(
   textFieldState: TextFieldState,
-  results: List<T> = emptyList(),
-  searching: Boolean = false
+  results: List<T> = emptyList()
 ): SimpleSearchStateV2<T> {
   return remember(textFieldState) {
     SimpleSearchStateV2(
       textFieldState = textFieldState,
-      results = results,
-      searching = searching
+      results = results
     )
   }
 }

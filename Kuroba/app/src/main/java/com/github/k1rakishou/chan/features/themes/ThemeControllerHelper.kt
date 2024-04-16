@@ -33,7 +33,7 @@ import com.github.k1rakishou.chan.ui.cell.PostCell
 import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface
 import com.github.k1rakishou.chan.ui.cell.ThreadStatusCell
-import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
+import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -126,7 +126,7 @@ class ThemeControllerHelper(
     context: Context,
     theme: ChanTheme,
     kurobaToolbarState: KurobaToolbarState,
-    navigationController: NavigationController,
+    navigationController: ToolbarNavigationController,
     options: Options,
     postCellDataWidthNoPaddings: Int
   ): CoordinatorLayout {
@@ -267,7 +267,7 @@ class ThemeControllerHelper(
     postsView.adapter = adapter
 
     val toolbar = KurobaToolbarView(context)
-    toolbar.init(kurobaToolbarState)
+    toolbar.init(kurobaToolbarState, navigationController)
 
     val fab = FloatingActionButton(context)
     fab.id = R.id.theme_view_fab_id
@@ -281,7 +281,11 @@ class ThemeControllerHelper(
     showMoreThemesButton.setTextColor(Color.WHITE)
     showMoreThemesButton.setText(getString(R.string.theme_settings_controller_more_themes))
     showMoreThemesButton.setOnClickListener {
-      val themeGalleryController = ThemeGalleryController(context, theme.isLightTheme, options.refreshThemesControllerFunc)
+      val themeGalleryController = ThemeGalleryController(
+        context = context,
+        lightThemes = theme.isLightTheme,
+        refreshThemesControllerFunc = options.refreshThemesControllerFunc
+      )
       navigationController.pushController(themeGalleryController)
     }
 

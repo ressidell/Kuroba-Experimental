@@ -15,9 +15,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +41,10 @@ import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isTablet
 import com.github.k1rakishou.chan.utils.InputWithQuerySorter
+import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 class SelectBoardForSearchController(
@@ -57,7 +62,7 @@ class SelectBoardForSearchController(
   private val oneCellSpan = GridItemSpan(1)
   private val twoCellsSpan = GridItemSpan(2)
 
-  private val searchQuery = mutableStateOf("")
+  private val searchTextFieldState = TextFieldState()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -84,8 +89,18 @@ class SelectBoardForSearchController(
           .fillMaxWidth()
           .wrapContentHeight()
       ) {
-        val query by searchQuery
-        val boardsSupportingSearch = remember(key1 = query) { collectBoardsSupportingSearch(query) }
+        val boardsSupportingSearch = remember { mutableStateListOf<SearchBoard>() }
+
+        LaunchedEffect(key1 = searchTextFieldState) {
+          searchTextFieldState.textAsFlow()
+            .onEach { query ->
+              val boards = collectBoardsSupportingSearch(query)
+
+              boardsSupportingSearch.clear()
+              boardsSupportingSearch.addAll(boards)
+            }
+            .collect()
+        }
 
         val minSize = if (isTablet) {
           120.dp
@@ -94,6 +109,12 @@ class SelectBoardForSearchController(
         }
 
         val listState = rememberLazyGridState()
+
+        val kurobaSearchInputColor = if (ThemeEngine.isDarkColor(chanTheme.backColor)) {
+          Color.LightGray
+        } else {
+          Color.DarkGray
+        }
 
         LazyVerticalGrid(
           state = listState,
@@ -108,12 +129,9 @@ class SelectBoardForSearchController(
                   modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .background(chanTheme.primaryColorCompose)
                     .padding(horizontal = 4.dp, vertical = 8.dp),
-                  chanTheme = chanTheme,
-                  onBackgroundColor = chanTheme.primaryColorCompose,
-                  searchQueryState = searchQuery,
-                  onSearchQueryChanged = { query -> searchQuery.value = query }
+                  color = kurobaSearchInputColor,
+                  searchQueryState = searchTextFieldState
                 )
               }
             )
@@ -122,7 +140,7 @@ class SelectBoardForSearchController(
               item(
                 span = { GridItemSpan(this.maxCurrentLineSpan) },
                 content = {
-                  val text = if (query.isEmpty()) {
+                  val text = if (searchTextFieldState.text.isEmpty()) {
                     stringResource(
                       R.string.select_board_for_search_controller_no_boards_found,
                       siteDescriptor.siteName
@@ -131,7 +149,7 @@ class SelectBoardForSearchController(
                     stringResource(
                       R.string.select_board_for_search_controller_no_boards_found_with_query,
                       siteDescriptor.siteName,
-                      query
+                      searchTextFieldState.text
                     )
                   }
 
@@ -219,7 +237,7 @@ class SelectBoardForSearchController(
     }
   }
 
-  private fun collectBoardsSupportingSearch(query: String): List<SearchBoard> {
+  private fun collectBoardsSupportingSearch(query: CharSequence): List<SearchBoard> {
     val boardsSupportingSearch = mutableListOf<SearchBoard>()
 
     if (supportsAllBoardsSearch) {
@@ -235,7 +253,7 @@ class SelectBoardForSearchController(
     return boardsSupportingSearch
   }
 
-  private fun applySearchQueryAndSortBoards(query: String): List<SearchBoard> {
+  private fun applySearchQueryAndSortBoards(query: CharSequence): List<SearchBoard> {
     val boards = searchBoardProvider().filter { searchBoard ->
       if (query.isEmpty()) {
         return@filter true

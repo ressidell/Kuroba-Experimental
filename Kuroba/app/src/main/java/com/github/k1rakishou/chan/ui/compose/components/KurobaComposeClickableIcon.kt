@@ -18,15 +18,22 @@ fun KurobaComposeClickableIcon(
   @DrawableRes drawableId: Int,
   modifier: Modifier = Modifier,
   enabled: Boolean = true,
-  colorBehindIcon: Color? = null,
+  iconTint: IconTint = IconTint.Tint,
   onClick: () -> Unit
 ) {
   val chanTheme = LocalChanTheme.current
-  val tintColor = remember(key1 = chanTheme) {
-    if (colorBehindIcon == null) {
-      Color(ThemeEngine.resolveDrawableTintColor(chanTheme))
-    } else {
-      Color(ThemeEngine.resolveDrawableTintColor(ThemeEngine.isDarkColor(colorBehindIcon.value)))
+
+  val colorFilter = remember(key1 = chanTheme, key2 = iconTint) {
+    return@remember when (iconTint) {
+      is IconTint.DoNotTint -> null
+      is IconTint.Tint -> {
+        val tintColor = Color(ThemeEngine.resolveDrawableTintColor(chanTheme))
+        ColorFilter.tint(tintColor)
+      }
+      is IconTint.TintWithColor -> {
+        val tintColor = iconTint.color
+        ColorFilter.tint(tintColor)
+      }
     }
   }
 
@@ -44,7 +51,7 @@ fun KurobaComposeClickableIcon(
   Image(
     modifier = clickModifier.then(modifier),
     painter = painterResource(id = drawableId),
-    colorFilter = ColorFilter.tint(tintColor),
+    colorFilter = colorFilter,
     alpha = alpha,
     contentDescription = null
   )

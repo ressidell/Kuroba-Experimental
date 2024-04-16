@@ -108,8 +108,9 @@ class KurobaToolbarView @JvmOverloads constructor(
     }
   }
 
-  fun init(kurobaToolbarState: KurobaToolbarState) {
+  fun init(kurobaToolbarState: KurobaToolbarState, controller: ToolbarNavigationController) {
     _kurobaToolbarState.value = kurobaToolbarState
+    _attachedController = controller
   }
 
   fun destroy() {

@@ -430,11 +430,6 @@ open class ThemeEngine(
     }
 
     @JvmStatic
-    fun getComplementaryColor(color: Int): Int {
-      return Color.rgb(255 - Color.red(color), 255 - Color.green(color), 255 - Color.blue(color))
-    }
-
-    @JvmStatic
     fun updateAlphaForColor(color: Int, @FloatRange(from = 0.0, to = 1.0) newAlpha: Float): Int {
       return ColorUtils.setAlphaComponent(color, (newAlpha * 255f).toInt())
     }

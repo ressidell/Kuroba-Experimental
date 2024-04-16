@@ -8,13 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.forEachTextValue
+import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,151 +32,74 @@ import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.OverrideChanTheme
 import com.github.k1rakishou.core_themes.ChanTheme
-import com.github.k1rakishou.core_themes.ThemeEngine
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun KurobaSearchInput(
   modifier: Modifier = Modifier,
-  chanTheme: ChanTheme,
-  onBackgroundColor: Color,
-  searchQueryState: MutableState<String>,
-  onSearchQueryChanged: (String) -> Unit,
-  labelText: String = stringResource(id = R.string.search_hint)
-) {
-  var localQuery by remember { searchQueryState }
-
-  Row(modifier = modifier) {
-    Row(modifier = Modifier.wrapContentHeight()) {
-      Box(
-        modifier = Modifier
-          .wrapContentHeight()
-          .weight(1f)
-          .align(Alignment.CenterVertically)
-          .padding(horizontal = 4.dp)
-      ) {
-        val interactionSource = remember { MutableInteractionSource() }
-
-        val textColor = remember(key1 = onBackgroundColor) {
-          if (ThemeEngine.isDarkColor(onBackgroundColor)) {
-            Color.White
-          } else {
-            Color.Black
-          }
-        }
-
-        KurobaComposeCustomTextField(
-          modifier = Modifier
-            .wrapContentHeight()
-            .fillMaxWidth(),
-          textColor = textColor,
-          parentBackgroundColor = onBackgroundColor,
-          fontSize = 16.ktu,
-          singleLine = true,
-          maxLines = 1,
-          value = localQuery,
-          labelText = labelText,
-          onValueChange = { newValue ->
-            localQuery = newValue
-            onSearchQueryChanged(newValue)
-          },
-          interactionSource = interactionSource
-        )
-      }
-
-      AnimatedVisibility(
-        visible = localQuery.isNotEmpty(),
-        enter = fadeIn(),
-        exit = fadeOut()
-      ) {
-        KurobaComposeIcon(
-          modifier = Modifier
-            .align(Alignment.CenterVertically)
-            .kurobaClickable(
-              bounded = false,
-              onClick = {
-                localQuery = ""
-                onSearchQueryChanged("")
-              }
-            ),
-          drawableId = R.drawable.ic_clear_white_24dp,
-          iconTint = IconTint.TintWithColor(chanTheme.primaryColorCompose)
-        )
-      }
-    }
-  }
-}
-
-@Composable
-fun KurobaSearchInput(
-  modifier: Modifier = Modifier,
-  onBackgroundColor: Color,
+  displayClearButton: Boolean = true,
+  color: Color,
   searchQueryState: TextFieldState,
   interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
   val chanTheme = LocalChanTheme.current
 
-  Row(modifier = modifier) {
-    Row(modifier = Modifier.wrapContentHeight()) {
-      Box(
+  var searchQueryIsEmpty by remember { mutableStateOf(true) }
+
+  LaunchedEffect(key1 = searchQueryState) {
+    searchQueryState.textAsFlow()
+      .onEach { query -> searchQueryIsEmpty = query.isEmpty() }
+      .collect()
+  }
+
+  Row(
+    modifier = modifier,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    if (displayClearButton) {
+      KurobaComposeClickableIcon(
         modifier = Modifier
-          .wrapContentHeight()
-          .weight(1f)
-          .align(Alignment.CenterVertically)
-          .padding(horizontal = 4.dp)
-      ) {
-        val textColor = remember(key1 = onBackgroundColor) {
-          if (ThemeEngine.isDarkColor(onBackgroundColor)) {
-            Color.White
-          } else {
-            Color.Black
-          }
-        }
+          .size(32.dp),
+        enabled = !searchQueryIsEmpty,
+        drawableId = R.drawable.ic_clear_white_24dp,
+        iconTint = IconTint.TintWithColor(color),
+        onClick = { searchQueryState.edit { clearText() } }
+      )
+    }
 
-        OverrideChanTheme(
-          chanTheme = chanTheme.overrideForSearchInputOnToolbar(
-            newAccentColor = ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor),
-            newTextColorPrimary = ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)
-          )
-        ) {
-          var isSearchQueryEmpty by remember { mutableStateOf(true) }
-
-          LaunchedEffect(key1 = Unit) {
-            searchQueryState.forEachTextValue { textFieldCharSequence ->
-              isSearchQueryEmpty = textFieldCharSequence.isEmpty()
-            }
-          }
-
-          Box(
-            contentAlignment = Alignment.CenterStart
-          ) {
-            TextFieldWithHint(
-              isSearchQueryEmpty = isSearchQueryEmpty,
-              chanTheme = chanTheme,
-              searchQueryState = searchQueryState,
-              textColor = textColor,
-              interactionSource = interactionSource
-            )
-          }
-        }
-      }
-
-      AnimatedVisibility(
-        visible = searchQueryState.text.isNotEmpty(),
-        enter = fadeIn(),
-        exit = fadeOut()
-      ) {
-        KurobaComposeIcon(
-          modifier = Modifier
-            .align(Alignment.CenterVertically)
-            .kurobaClickable(
-              bounded = false,
-              onClick = {
-                searchQueryState.edit { clearText() }
-              }
-            ),
-          drawableId = R.drawable.ic_clear_white_24dp,
-          iconTint = IconTint.TintWithColor(chanTheme.primaryColorCompose)
+    Box(
+      modifier = Modifier
+        .wrapContentHeight()
+        .weight(1f)
+        .align(Alignment.CenterVertically)
+        .padding(horizontal = 4.dp)
+    ) {
+      OverrideChanTheme(
+        chanTheme = chanTheme.overrideForSearchInputOnToolbar(
+          newAccentColor = color,
+          newTextColorPrimary = color
         )
+      ) {
+        var isSearchQueryEmpty by remember { mutableStateOf(true) }
+
+        LaunchedEffect(key1 = Unit) {
+          searchQueryState.forEachTextValue { textFieldCharSequence ->
+            isSearchQueryEmpty = textFieldCharSequence.isEmpty()
+          }
+        }
+
+        Box(
+          contentAlignment = Alignment.CenterStart
+        ) {
+          TextFieldWithHint(
+            isSearchQueryEmpty = isSearchQueryEmpty,
+            chanTheme = chanTheme,
+            searchQueryState = searchQueryState,
+            textColor = color,
+            interactionSource = interactionSource
+          )
+        }
       }
     }
   }
@@ -209,10 +133,7 @@ private fun TextFieldWithHint(
   ) {
     KurobaComposeText(
       text = stringResource(id = R.string.type_to_search_hint),
-      color = remember(chanTheme) {
-        ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)
-          .copy(alpha = 0.7f)
-      }
+      color = remember(chanTheme) { textColor.copy(alpha = 0.7f) }
     )
   }
 }

@@ -11,7 +11,7 @@ sealed class SearchBoard {
     override fun boardCode(): String = boardDescriptor.boardCode
   }
 
-  object AllBoards : SearchBoard() {
+  data object AllBoards : SearchBoard() {
     override fun boardCode(): String = "GLOBAL"
   }
 

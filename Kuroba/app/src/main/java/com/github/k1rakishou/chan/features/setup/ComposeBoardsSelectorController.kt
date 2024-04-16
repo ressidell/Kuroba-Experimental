@@ -18,9 +18,10 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -49,14 +50,17 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchState
+import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_themes.ChanTheme
+import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -98,7 +102,7 @@ class ComposeBoardsSelectorController(
     ) {
       val focusManager = LocalFocusManager.current
 
-      BuildContentInternal(chanTheme, backgroundColor)
+      BuildContentInternal()
 
       KurobaComposeTextBarButton(
         modifier = Modifier
@@ -115,40 +119,10 @@ class ComposeBoardsSelectorController(
   }
 
   @Composable
-  private fun ColumnScope.BuildContentInternal(chanTheme: ChanTheme, backgroundColor: Color) {
-    val searchState = rememberSimpleSearchState<ComposeBoardsSelectorControllerViewModel.CellData>()
-    val cellDataList = remember { viewModel.cellDataList }
-    val listState = rememberLazyGridState()
+  private fun ColumnScope.BuildContentInternal() {
+    val chanTheme = LocalChanTheme.current
 
-    BuildSearchInput(
-      backgroundColor = backgroundColor,
-      searchQuery = searchState.queryState,
-      onSearchQueryChanged = { newQuery -> searchState.query = newQuery }
-    )
-
-    LaunchedEffect(key1 = searchState.query, block = {
-      if (searchState.query.isEmpty()) {
-        searchState.results = cellDataList
-        return@LaunchedEffect
-      }
-
-      delay(125L)
-
-      withContext(Dispatchers.Default) {
-        searchState.searching = true
-        searchState.results = processSearchQuery(searchState.query, cellDataList)
-        searchState.searching = false
-      }
-    })
-
-    val searchQuery = searchState.query
-    val searching = searchState.searching
-    val searchResults = if (searching) {
-      cellDataList
-    } else {
-      searchState.results
-    }
-
+    val cellDataList = viewModel.cellDataList
     if (cellDataList.isEmpty()) {
       KurobaComposeText(
         modifier = Modifier
@@ -158,9 +132,51 @@ class ComposeBoardsSelectorController(
         textAlign = TextAlign.Center,
         text = stringResource(id = R.string.search_nothing_to_display_make_sure_sites_boards_active)
       )
+
       return
     }
 
+    val searchState = rememberSimpleSearchStateV2<ComposeBoardsSelectorControllerViewModel.CellData>(
+      textFieldState = viewModel.searchTextFieldState
+    )
+    val listState = rememberLazyGridState()
+
+    val kurobaSearchInputColor = if (ThemeEngine.isDarkColor(chanTheme.backColor)) {
+      Color.LightGray
+    } else {
+      Color.DarkGray
+    }
+
+    KurobaSearchInput(
+      modifier = Modifier
+        .wrapContentHeight()
+        .fillMaxWidth()
+        .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+      color = kurobaSearchInputColor,
+      searchQueryState = searchState.textFieldState
+    )
+
+    LaunchedEffect(
+      key1 = searchState,
+      block = {
+        searchState.textFieldState.textAsFlow()
+          .onEach { query ->
+            delay(125)
+
+            if (query.isEmpty()) {
+              searchState.results.value = cellDataList
+              return@onEach
+            }
+
+            withContext(Dispatchers.Default) {
+              searchState.results.value = processSearchQuery(query, cellDataList)
+            }
+          }
+          .collect()
+      }
+    )
+
+    val searchResults by searchState.results
     if (searchResults.isEmpty()) {
       KurobaComposeText(
         modifier = Modifier
@@ -168,8 +184,9 @@ class ComposeBoardsSelectorController(
           .fillMaxWidth()
           .padding(8.dp),
         textAlign = TextAlign.Center,
-        text = stringResource(id = R.string.search_nothing_found_with_query, searchQuery)
+        text = stringResource(id = R.string.search_nothing_found_with_query, searchState.searchQuery)
       )
+
       return
     }
 
@@ -199,7 +216,7 @@ class ComposeBoardsSelectorController(
   }
 
   private fun processSearchQuery(
-    searchQuery: String,
+    searchQuery: CharSequence,
     cellDataList: List<ComposeBoardsSelectorControllerViewModel.CellData>
   ): List<ComposeBoardsSelectorControllerViewModel.CellData> {
     if (searchQuery.isEmpty()) {
@@ -210,27 +227,6 @@ class ComposeBoardsSelectorController(
       return@filter navigationHistoryEntry.formattedSiteAndBoardFullNameForSearch
         .contains(other = searchQuery, ignoreCase = true)
     }
-  }
-
-  @Composable
-  private fun BuildSearchInput(
-    backgroundColor: Color,
-    searchQuery: MutableState<String>,
-    onSearchQueryChanged: (String) -> Unit
-  ) {
-    val chanTheme = LocalChanTheme.current
-    val onSearchQueryChangedRemembered = rememberUpdatedState(newValue = onSearchQueryChanged)
-
-    KurobaSearchInput(
-      modifier = Modifier
-        .wrapContentHeight()
-        .fillMaxWidth()
-        .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
-      chanTheme = chanTheme,
-      onBackgroundColor = backgroundColor,
-      searchQueryState = searchQuery,
-      onSearchQueryChanged = { newQuery -> onSearchQueryChangedRemembered.value.invoke(newQuery) }
-    )
   }
 
   @Composable

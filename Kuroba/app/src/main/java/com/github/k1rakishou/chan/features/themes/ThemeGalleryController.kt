@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.features.themes
 
 import android.content.Context
+import android.graphics.Color
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -172,7 +173,7 @@ class ThemeGalleryController(
           context = context,
           theme = chanTheme,
           kurobaToolbarState = kurobaToolbarState,
-          navigationController = requireNavController(),
+          navigationController = requireToolbarNavController(),
           options = ThemeControllerHelper.Options(),
           postCellDataWidthNoPaddings = postCellDataWidthNoPaddings
         )
@@ -205,8 +206,12 @@ class ThemeGalleryController(
 
       container.updatePaddings(left = PADDING, right = PADDING, top = PADDING, bottom = PADDING)
 
-      val compositeColor = (chanTheme.backColor.toLong() + chanTheme.primaryColor.toLong()) / 2
-      val backgroundColor = ThemeEngine.getComplementaryColor(compositeColor.toInt())
+      val backgroundColor = if (ThemeEngine.isDarkColor(chanTheme.toolbarBackgroundComposeColor)) {
+        Color.LTGRAY
+      } else {
+        Color.DKGRAY
+      }
+
       container.setBackgroundColor(backgroundColor)
     }
 

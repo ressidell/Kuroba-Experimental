@@ -32,15 +32,18 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,14 +76,16 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
-import com.github.k1rakishou.chan.ui.compose.search.SimpleSearchState
-import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchState
+import com.github.k1rakishou.chan.ui.compose.search.SimpleSearchStateV2
+import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -100,8 +105,9 @@ fun KurobaDrawer(
 
   val kurobaDrawerState = mainControllerViewModel.kurobaDrawerState
   val historyControllerState by kurobaDrawerState.historyControllerState
-  val searchState = rememberSimpleSearchState<NavigationHistoryEntry>()
+  val searchTextFieldState = kurobaDrawerState.searchTextFieldState
 
+  val searchState = rememberSimpleSearchStateV2<NavigationHistoryEntry>(textFieldState = searchTextFieldState)
   val coroutineScope = rememberCoroutineScope()
 
   Column(
@@ -110,8 +116,7 @@ fun KurobaDrawer(
       .background(bgColor)
   ) {
     BuildNavigationHistoryListHeader(
-      searchQuery = searchState.queryState,
-      onSearchQueryChanged = { newQuery -> searchState.query = newQuery },
+      textFieldState = searchState.textFieldState,
       onSwitchDayNightThemeIconClick = onSwitchDayNightThemeIconClick,
       onShowDrawerOptionsIconClick = { onShowDrawerOptionIconClick() }
     )
@@ -172,38 +177,37 @@ private fun ColumnScope.BuildNavigationHistoryList(
   mainControllerViewModel: MainControllerViewModel,
   kurobaDrawerState: KurobaDrawerState,
   navHistoryEntryList: List<NavigationHistoryEntry>,
-  searchState: SimpleSearchState<NavigationHistoryEntry>,
+  searchState: SimpleSearchStateV2<NavigationHistoryEntry>,
   onHistoryEntryViewClicked: (NavigationHistoryEntry) -> Unit,
   onHistoryEntryViewLongClicked: (NavigationHistoryEntry) -> Unit,
   onHistoryEntrySelectionChanged: (Boolean, NavigationHistoryEntry) -> Unit,
   onNavHistoryDeleteClicked: (NavigationHistoryEntry) -> Unit
 ) {
+  var searchQueryIsEmpty by remember { mutableStateOf(false) }
+  val currentNavHistoryEntryList by rememberUpdatedState(newValue = navHistoryEntryList)
+
   LaunchedEffect(
-    key1 = searchState.query,
+    key1 = searchState,
     block = {
-      if (searchState.query.isEmpty()) {
-        searchState.results = navHistoryEntryList
-        return@LaunchedEffect
-      }
+      searchState.textFieldState.textAsFlow()
+        .onEach { query ->
+          delay(125)
+          searchQueryIsEmpty = query.isEmpty()
 
-      delay(125L)
+          if (query.isEmpty()) {
+            searchState.results.value = currentNavHistoryEntryList
+            return@onEach
+          }
 
-      withContext(Dispatchers.Default) {
-        searchState.searching = true
-        searchState.results = processSearchQuery(searchState.query, navHistoryEntryList)
-        searchState.searching = false
-      }
+          withContext(Dispatchers.Default) {
+            searchState.results.value = processSearchQuery(query, currentNavHistoryEntryList)
+          }
+        }
+        .collect()
     }
   )
 
-  if (searchState.searching) {
-    KurobaComposeProgressIndicator()
-    return
-  }
-
-  val query = searchState.query
-  val searchResults = searchState.results
-
+  val searchResults by searchState.results
   if (searchResults.isEmpty()) {
     KurobaComposeText(
       modifier = Modifier
@@ -211,7 +215,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
         .weight(1f)
         .padding(8.dp),
       textAlign = TextAlign.Center,
-      text = stringResource(id = R.string.search_nothing_found_with_query, query)
+      text = stringResource(id = R.string.search_nothing_found_with_query, searchState.searchQuery)
     )
 
     return
@@ -253,7 +257,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
               BuildNavigationHistoryListEntryGridMode(
                 mainControllerViewModel = mainControllerViewModel,
                 kurobaDrawerState = kurobaDrawerState,
-                searchQuery = query,
+                searchQueryIsNotEmpty = !searchQueryIsEmpty,
                 navHistoryEntry = navHistoryEntry,
                 isSelectionMode = isSelectionMode,
                 isSelected = isSelected,
@@ -265,7 +269,8 @@ private fun ColumnScope.BuildNavigationHistoryList(
               )
             }
           }
-        })
+        }
+      )
     } else {
       val state = rememberLazyListState()
 
@@ -288,7 +293,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
               BuildNavigationHistoryListEntryListMode(
                 mainControllerViewModel = mainControllerViewModel,
                 kurobaDrawerState = kurobaDrawerState,
-                searchQuery = query,
+                searchQueryIsNotEmpty = !searchQueryIsEmpty,
                 navHistoryEntry = navHistoryEntry,
                 isSelectionMode = isSelectionMode,
                 isSelected = isSelected,
@@ -300,28 +305,34 @@ private fun ColumnScope.BuildNavigationHistoryList(
               )
             }
           }
-        })
+        }
+      )
     }
   }
 }
 
 @Composable
 private fun BuildNavigationHistoryListHeader(
-  searchQuery: MutableState<String>,
-  onSearchQueryChanged: (String) -> Unit,
+  textFieldState: TextFieldState,
   onSwitchDayNightThemeIconClick: () -> Unit,
   onShowDrawerOptionsIconClick: () -> Unit
 ) {
   val chanTheme = LocalChanTheme.current
   val windowInsets = LocalWindowInsets.current
-  val backgroundColor = chanTheme.primaryColorCompose
+  val toolbarBackgroundComposeColor = chanTheme.toolbarBackgroundComposeColor
 
   val topInset = windowInsets.top
   val toolbarHeight = dimensionResource(id = R.dimen.toolbar_height)
 
+  val kurobaSearchInputColor = if (ThemeEngine.isDarkColor(toolbarBackgroundComposeColor)) {
+    Color.White
+  } else {
+    Color.Black
+  }
+
   Row(
     modifier = Modifier
-      .background(backgroundColor)
+      .background(toolbarBackgroundComposeColor)
   ) {
     Column(
       modifier = Modifier
@@ -339,28 +350,31 @@ private fun BuildNavigationHistoryListHeader(
         Row(
           modifier = Modifier
             .wrapContentHeight()
-            .weight(1f)
+            .weight(1f),
+          verticalAlignment = Alignment.CenterVertically
         ) {
           KurobaSearchInput(
             modifier = Modifier
               .wrapContentHeight()
               .fillMaxWidth()
               .padding(start = 4.dp, end = 4.dp, top = 8.dp),
-            chanTheme = chanTheme,
-            onBackgroundColor = backgroundColor,
-            searchQueryState = searchQuery,
-            onSearchQueryChanged = onSearchQueryChanged
+            color = kurobaSearchInputColor,
+            searchQueryState = textFieldState
           )
         }
 
         Spacer(modifier = Modifier.width(8.dp))
 
         KurobaComposeIcon(
-          drawableId = R.drawable.ic_baseline_wb_sunny_24,
+          drawableId = if (chanTheme.isDarkTheme){
+            R.drawable.ic_baseline_dark_mode_24
+          } else {
+            R.drawable.ic_baseline_light_mode_24
+          },
           modifier = Modifier
             .align(Alignment.CenterVertically)
             .kurobaClickable(onClick = onSwitchDayNightThemeIconClick),
-          iconTint = IconTint.TintWithColor(ThemeEngine.resolveDrawableTintColorCompose(backgroundColor))
+          iconTint = IconTint.TintWithColor(kurobaSearchInputColor)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -370,7 +384,7 @@ private fun BuildNavigationHistoryListHeader(
           modifier = Modifier
             .align(Alignment.CenterVertically)
             .kurobaClickable(onClick = onShowDrawerOptionsIconClick),
-          iconTint = IconTint.TintWithColor(ThemeEngine.resolveDrawableTintColorCompose(backgroundColor))
+          iconTint = IconTint.TintWithColor(kurobaSearchInputColor)
         )
       }
     }
@@ -381,7 +395,7 @@ private fun BuildNavigationHistoryListHeader(
 private fun BuildNavigationHistoryListEntryListMode(
   mainControllerViewModel: MainControllerViewModel,
   kurobaDrawerState: KurobaDrawerState,
-  searchQuery: String,
+  searchQueryIsNotEmpty: Boolean,
   navHistoryEntry: NavigationHistoryEntry,
   isSelectionMode: Boolean,
   isSelected: Boolean,
@@ -543,7 +557,7 @@ private fun BuildNavigationHistoryListEntryListMode(
         kurobaDrawerState = kurobaDrawerState,
         isLowRamDevice = isLowRamDevice,
         isListMode = true,
-        searchQuery = searchQuery,
+        searchQueryIsNotEmpty = searchQueryIsNotEmpty,
         additionalInfo = navHistoryEntry.additionalInfo,
         chanTheme = chanTheme
       )
@@ -555,7 +569,7 @@ private fun BuildNavigationHistoryListEntryListMode(
 private fun BuildNavigationHistoryListEntryGridMode(
   mainControllerViewModel: MainControllerViewModel,
   kurobaDrawerState: KurobaDrawerState,
-  searchQuery: String,
+  searchQueryIsNotEmpty: Boolean,
   navHistoryEntry: NavigationHistoryEntry,
   isSelectionMode: Boolean,
   isSelected: Boolean,
@@ -692,7 +706,7 @@ private fun BuildNavigationHistoryListEntryGridMode(
         kurobaDrawerState = kurobaDrawerState,
         isLowRamDevice = isLowRamDevice,
         isListMode = false,
-        searchQuery = searchQuery,
+        searchQueryIsNotEmpty = searchQueryIsNotEmpty,
         additionalInfo = navHistoryEntry.additionalInfo,
         chanTheme = chanTheme,
       )
@@ -715,7 +729,7 @@ private fun BuildAdditionalBookmarkInfoText(
   kurobaDrawerState: KurobaDrawerState,
   isLowRamDevice: Boolean,
   isListMode: Boolean,
-  searchQuery: String,
+  searchQueryIsNotEmpty: Boolean,
   additionalInfo: NavHistoryBookmarkAdditionalInfo,
   chanTheme: ChanTheme
 ) {
@@ -742,7 +756,7 @@ private fun BuildAdditionalBookmarkInfoText(
   )
 
   val animationDisabled = isLowRamDevice
-    || searchQuery.isNotEmpty()
+    || searchQueryIsNotEmpty
     || !drawerOpened
     || prevAdditionalInfo == currentAdditionalInfo
 
@@ -848,7 +862,7 @@ private fun BuildAdditionalBookmarkInfoText(
 }
 
 private fun processSearchQuery(
-  query: String,
+  query: CharSequence,
   navHistoryEntryList: List<NavigationHistoryEntry>
 ): List<NavigationHistoryEntry> {
   if (query.isEmpty()) {

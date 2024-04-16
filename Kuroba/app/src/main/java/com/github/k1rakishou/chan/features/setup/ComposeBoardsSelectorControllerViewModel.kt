@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.features.setup
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
@@ -32,6 +33,8 @@ class ComposeBoardsSelectorControllerViewModel(
   private val _cellDataList = mutableStateListOf<CellData>()
   val cellDataList: List<CellData>
     get() = _cellDataList
+
+  val searchTextFieldState = TextFieldState()
 
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)
