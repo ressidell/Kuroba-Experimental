@@ -19,9 +19,9 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.toolbar.AbstractToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.MoreVerticalMenuItem
-import com.github.k1rakishou.chan.features.toolbar.state.ToolbarBadgeContent
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarClickableIcon
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarTitleWithSubtitle
+import com.github.k1rakishou.chan.ui.compose.badge.ToolbarBadge
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.core_themes.ChanTheme
 
@@ -71,7 +71,7 @@ fun KurobaCatalogToolbarContent(
         )
 
         if (toolbarBadge != null) {
-          ToolbarBadgeContent(
+          ToolbarBadge(
             chanTheme = chanTheme,
             toolbarBadge = toolbarBadge
           )
