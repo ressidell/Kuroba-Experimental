@@ -16,7 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 open class PostHideManager(
@@ -61,7 +60,6 @@ open class PostHideManager(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun preloadForThread(threadDescriptor: ChanDescriptor.ThreadDescriptor) {
     // TODO(KurobaEx): this may not be correct, probably should use the previous solution but also
     //  check whether the post hide is for the OP.
@@ -81,7 +79,6 @@ open class PostHideManager(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun preloadForCatalog(catalogDescriptor: ChanDescriptor.CatalogDescriptor) {
     val alreadyPreloaded = lock.read { postHideMap.contains(catalogDescriptor) }
     if (alreadyPreloaded) {

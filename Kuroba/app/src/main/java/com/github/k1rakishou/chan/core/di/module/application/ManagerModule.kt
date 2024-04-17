@@ -69,6 +69,7 @@ import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.ThirdEyeManager
 import com.github.k1rakishou.chan.core.manager.ThreadBookmarkGroupManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
+import com.github.k1rakishou.chan.core.manager.ThreadPostSearchManager
 import com.github.k1rakishou.chan.core.site.ParserRepository
 import com.github.k1rakishou.chan.core.site.SiteRegistry
 import com.github.k1rakishou.chan.core.site.SiteResolver
@@ -992,6 +993,21 @@ class ManagerModule {
   fun provideKurobaToolbarStateManager(globalUiStateHolder: GlobalUiStateHolder): KurobaToolbarStateManager {
     Logger.deps("KurobaToolbarStateManager")
     return KurobaToolbarStateManager(globalUiStateHolder)
+  }
+
+  @Singleton
+  @Provides
+  fun provideThreadPostSearchManager(
+    chanThreadsCache: ChanThreadsCache,
+    postFilterManager: PostFilterManager,
+    postHideManager: PostHideManager
+  ): ThreadPostSearchManager {
+    Logger.deps("ThreadPostSearchManager")
+    return ThreadPostSearchManager(
+      chanThreadsCache = chanThreadsCache,
+      postFilterManager = postFilterManager,
+      postHideManager = postHideManager
+    )
   }
 
 }

@@ -578,14 +578,6 @@ class ThreadListLayout @JvmOverloads constructor(
     onThemeChanged()
   }
 
-  suspend fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
-    postAdapter.setSearchQuery(searchQuery)
-  }
-
-  suspend fun clearSearchQuery() {
-    postAdapter.clearSearchQuery()
-  }
-
   fun sendKeyEvent(event: KeyEvent): Boolean {
     when (event.keyCode) {
       KeyEvent.KEYCODE_VOLUME_UP,

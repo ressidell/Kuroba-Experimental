@@ -1,22 +1,7 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.ui.cell
 
 import android.content.Context
+import android.text.Spannable
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.View
@@ -31,6 +16,7 @@ import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.manager.PostHighlightManager
 import com.github.k1rakishou.chan.core.manager.SeenPostsManager
+import com.github.k1rakishou.chan.core.manager.ThreadPostSearchManager
 import com.github.k1rakishou.chan.ui.animation.PostBackgroundBlinkAnimator.createPostBackgroundBlinkAnimation
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface.PostCellCallback
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailView
@@ -40,10 +26,12 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
+import com.github.k1rakishou.chan.utils.SpannableHelper
 import com.github.k1rakishou.chan.utils.setAlphaFast
 import com.github.k1rakishou.chan.utils.setBackgroundColorFast
 import com.github.k1rakishou.chan.utils.setOnThrottlingClickListener
 import com.github.k1rakishou.chan.utils.setOnThrottlingLongClickListener
+import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.modifyCurrentAlpha
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -51,6 +39,9 @@ import com.github.k1rakishou.core_themes.ThemeEngine.ThemeChangesListener
 import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import dagger.Lazy
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -59,15 +50,30 @@ class CardPostCell : ConstraintLayout,
   ThemeChangesListener {
 
   @Inject
-  lateinit var postFilterManager: PostFilterManager
+  lateinit var postFilterManagerLazy: Lazy<PostFilterManager>
   @Inject
-  lateinit var themeEngine: ThemeEngine
+  lateinit var themeEngineLazy: Lazy<ThemeEngine>
   @Inject
-  lateinit var postHighlightManager: PostHighlightManager
+  lateinit var postHighlightManagerLazy: Lazy<PostHighlightManager>
   @Inject
-  lateinit var imageLoaderV2: Lazy<ImageLoaderV2>
+  lateinit var imageLoaderV2Lazy: Lazy<ImageLoaderV2>
   @Inject
-  lateinit var seenPostsManager: Lazy<SeenPostsManager>
+  lateinit var seenPostsManagerLazy: Lazy<SeenPostsManager>
+  @Inject
+  lateinit var threadPostSearchManagerLazy: Lazy<ThreadPostSearchManager>
+
+  private val postFilterManager: PostFilterManager
+    get() = postFilterManagerLazy.get()
+  private val themeEngine: ThemeEngine
+    get() = themeEngineLazy.get()
+  private val postHighlightManager: PostHighlightManager
+    get() = postHighlightManagerLazy.get()
+  private val imageLoaderV2: ImageLoaderV2
+    get() = imageLoaderV2Lazy.get()
+  private val seenPostsManager: SeenPostsManager
+    get() = seenPostsManagerLazy.get()
+  private val threadPostSearchManager: ThreadPostSearchManager
+    get() = threadPostSearchManagerLazy.get()
 
   private var postCellData: PostCellData? = null
   private var callback: PostCellCallback? = null
@@ -174,7 +180,7 @@ class CardPostCell : ConstraintLayout,
 
     if (postCellData.markSeenThreads && postCellData.isViewingCatalog) {
       scope.launch {
-        seenPostsManager.get().seenThreadUpdatesFlow.collect { seenThread ->
+        seenPostsManager.seenThreadUpdatesFlow.collect { seenThread ->
           val threadOriginalPostBecameSeen = seenThread == postCellData.postDescriptor.threadDescriptor()
           if (!threadOriginalPostBecameSeen) {
             return@collect
@@ -183,6 +189,13 @@ class CardPostCell : ConstraintLayout,
           bindBackgroundColor(themeEngine.chanTheme)
         }
       }
+    }
+
+    scope.launch {
+      threadPostSearchManager.listenForSearchQueryUpdates(postCellData.chanDescriptor)
+        .onStart { onSearchQueryUpdated(threadPostSearchManager.currentSearchQuery(postCellData.chanDescriptor)) }
+        .onEach { searchQuery -> onSearchQueryUpdated(searchQuery) }
+        .collect()
     }
 
     bindPost(postCellData)
@@ -393,7 +406,7 @@ class CardPostCell : ConstraintLayout,
     var alpha = 1f
 
     if (postData != null && postData.markSeenThreads && postData.isViewingCatalog) {
-      val alreadySeen = seenPostsManager.get().isThreadAlreadySeen(postData.postDescriptor.threadDescriptor())
+      val alreadySeen = seenPostsManager.isThreadAlreadySeen(postData.postDescriptor.threadDescriptor())
       if (alreadySeen) {
         alpha = 0.65f
       }
@@ -509,13 +522,29 @@ class CardPostCell : ConstraintLayout,
     icons.set(PostIcons.HTTP_ICONS, postIcons.isNotEmpty())
 
     if (postIcons.isNotEmpty()) {
-      icons.setHttpIcons(imageLoaderV2, postIcons, theme, postCellData.iconSizePx)
+      icons.setHttpIcons(imageLoaderV2Lazy, postIcons, theme, postCellData.iconSizePx)
     }
 
     icons.apply()
   }
 
+  private fun onSearchQueryUpdated(currentSearchQuery: String?) {
+    val commentText = comment.text
+    if (commentText !is Spannable) {
+      return
+    }
+
+    SpannableHelper.findAllQueryEntriesInsideSpannableStringAndMarkThem(
+      inputQueries = listOf(currentSearchQuery ?: ""),
+      spannableString = commentText,
+      bgColor = themeEngine.chanTheme.accentColor,
+      minQueryLength = AppConstants.MIN_QUERY_LENGTH
+    )
+  }
+
   companion object {
+    private const val TAG = "CardPostCell"
+
     private const val SMALL_FONT_SIZE_SPAN_COUNT = 4
     private const val POST_ICONS_COMPACT_MODE_SPAN_COUNT = 4
     private const val COMPACT_MODE_TEXT_REDUCTION_SP = 2

@@ -9,7 +9,7 @@ import kotlin.concurrent.write
 open class GenericCacheSource<Key, Value>(
   private val capacity: Int = DEFAULT_CAPACITY,
   private val maxSize: Int = DEFAULT_MAX_SIZE,
-  private val cacheEntriesToRemovePerTrim: Int = maxSize / 20
+  private val cacheEntriesToRemovePerTrim: Int = (maxSize.toFloat() * 0.3f).toInt()
 ) : CacheSource<Key, Value> {
   protected val lock = ReentrantReadWriteLock()
   protected val actualCache = LinkedHashMap<Key, Value>(capacity)
@@ -31,6 +31,7 @@ open class GenericCacheSource<Key, Value>(
         return@write prevValue
       }
 
+      trimCache()
       val newValue = valueFunc()
       actualCache[key] = newValue
 

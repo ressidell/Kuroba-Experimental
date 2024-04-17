@@ -23,6 +23,7 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PageRequestManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.ThreadFollowHistoryManager
+import com.github.k1rakishou.chan.core.manager.ThreadPostSearchManager
 import com.github.k1rakishou.chan.core.site.Site
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.filters.FiltersController
@@ -113,6 +114,8 @@ abstract class ThreadController(
   lateinit var pageRequestManagerLazy: Lazy<PageRequestManager>
   @Inject
   lateinit var albumThreadControllerHelpers: AlbumThreadControllerHelpers
+  @Inject
+  lateinit var threadPostSearchManagerLazy: Lazy<ThreadPostSearchManager>
 
   protected val siteManager: SiteManager
     get() = siteManagerLazy.get()
@@ -134,6 +137,8 @@ abstract class ThreadController(
     get() = currentOpenedDescriptorStateManagerLazy.get()
   protected val pageRequestManager: PageRequestManager
     get() = pageRequestManagerLazy.get()
+  private val threadPostSearchManager: ThreadPostSearchManager
+    get() = threadPostSearchManagerLazy.get()
 
   private val applicationVisibilityManager: ApplicationVisibilityManager
     get() = applicationVisibilityManagerLazy.get()
@@ -681,6 +686,29 @@ abstract class ThreadController(
         scrollToPost = true
       )
     }
+  }
+
+  protected suspend fun onThreadSearchDataUpdated(
+    chanDescriptor: ChanDescriptor,
+    threadSearchData: ThreadSearchData
+  ): List<PostDescriptor> {
+    if (!threadSearchData.searchToolbarVisibility) {
+      threadPostSearchManager.updateSearchQuery(
+        chanDescriptor = chanDescriptor,
+        postDescriptors = emptyList(),
+        searchQuery = null
+      )
+
+      return emptyList()
+    }
+
+    val displayingPostDescriptors = threadLayout.displayingPostDescriptorsInThread
+
+    return threadPostSearchManager.updateSearchQuery(
+      chanDescriptor = chanDescriptor,
+      postDescriptors = displayingPostDescriptors,
+      searchQuery = threadSearchData.searchQuery
+    )
   }
 
   protected fun pushChildController(controller: Controller) {

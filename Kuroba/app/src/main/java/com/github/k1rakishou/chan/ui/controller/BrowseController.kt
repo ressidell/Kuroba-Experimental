@@ -35,7 +35,6 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarInlineContent
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
-import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
@@ -63,9 +62,8 @@ import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.HttpUrl
@@ -189,21 +187,15 @@ class BrowseController(
           searchQuery = searchQuery
         )
       }
-        .onEach { threadSearchData ->
-          if (!threadSearchData.searchToolbarVisibility) {
-            threadLayout.clearSearchQuery()
-            return@onEach
-          }
+        .collectLatest { threadSearchData ->
+          val currentChanDescriptor = chanDescriptor
+            ?: return@collectLatest
 
-          delay(300)
+          delay(200)
 
-          threadLayout.setSearchQuery(
-            searchQuery = PostCellData.SearchQuery(
-              query = threadSearchData.searchQuery
-            )
-          )
+          val matchedPosts = onThreadSearchDataUpdated(currentChanDescriptor, threadSearchData)
+          toolbarState.catalogSearch.updateMatchedPostsCounter(matchedPosts.size)
         }
-        .collect()
     }
 
     controllerScope.launch {

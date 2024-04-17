@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Typeface
 import android.text.Spannable
-import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.text.style.BackgroundColorSpan
 import android.text.style.CharacterStyle
@@ -64,7 +63,7 @@ object SpannableHelper {
 
   fun findAllFilterHighlightQueryEntriesInsideSpannableStringAndMarkThem(
     inputQueries: Collection<String>,
-    spannableString: SpannableString,
+    spannableString: Spannable,
     minQueryLength: Int,
     keywordsToHighlightMap: Map<String, HighlightFilterKeyword>
   ) {
@@ -98,7 +97,7 @@ object SpannableHelper {
 
   fun findAllQueryEntriesInsideSpannableStringAndMarkThem(
     inputQueries: Collection<String>,
-    spannableString: SpannableString,
+    spannableString: Spannable,
     bgColor: Int,
     minQueryLength: Int,
     shouldDeleteSpanFunc: (CharacterStyle) -> Boolean = { style ->

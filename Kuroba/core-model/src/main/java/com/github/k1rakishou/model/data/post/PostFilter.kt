@@ -74,6 +74,9 @@ data class PostFilter(
       || filterReplies
   }
 
+  val isPostHiddenOrRemoved: Boolean
+    get() = enabled && (stub || remove)
+
   val enabled: Boolean
     get() = filterEnabled
 

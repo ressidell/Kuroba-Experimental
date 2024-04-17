@@ -52,6 +52,10 @@ class KurobaCatalogSearchToolbarSubState (
     _toolbarMenu.value = params.toolbarMenu
   }
 
+  fun updateMatchedPostsCounter(size: Int) {
+    // TODO: New catalog/thread search. Update toolbarState.threadSearch with the amount of matched posts
+  }
+
   override fun onPushed() {
     _searchVisibleState.value = true
   }

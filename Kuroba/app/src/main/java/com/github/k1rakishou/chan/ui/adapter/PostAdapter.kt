@@ -42,6 +42,7 @@ import com.github.k1rakishou.chan.ui.cell.ThreadCellData
 import com.github.k1rakishou.chan.ui.cell.ThreadStatusCell
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.BackgroundUtils
+import com.github.k1rakishou.common.mutableListWithCap
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -98,11 +99,10 @@ class PostAdapter(
         return ArrayList()
       }
 
-      val size = Math.min(16, threadCellData.postsCount())
-      val postDescriptors: MutableList<PostDescriptor> = ArrayList(size)
+      val postDescriptors = mutableListWithCap<PostDescriptor>(threadCellData.postsCount())
 
       for (postCellData in threadCellData) {
-        postDescriptors.add(postCellData.postDescriptor)
+        postDescriptors += postCellData.postDescriptor
       }
 
       return postDescriptors
@@ -398,16 +398,6 @@ class PostAdapter(
 
   fun setBoardPostViewMode(boardPostViewMode: BoardPostViewMode) {
     threadCellData.setBoardPostViewMode(boardPostViewMode)
-    notifyDataSetChanged()
-  }
-
-  suspend fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
-    threadCellData.setSearchQuery(searchQuery)
-    notifyDataSetChanged()
-  }
-
-  suspend fun clearSearchQuery() {
-    threadCellData.clearSearchQuery()
     notifyDataSetChanged()
   }
 
