@@ -529,17 +529,27 @@ class CardPostCell : ConstraintLayout,
   }
 
   private fun onSearchQueryUpdated(currentSearchQuery: String?) {
+    // TODO: New catalog/thread search. Add more matchers.
+
     val commentText = comment.text
-    if (commentText !is Spannable) {
-      return
+    if (commentText is Spannable) {
+      SpannableHelper.findAllQueryEntriesInsideSpannableStringAndMarkThem(
+        inputQueries = listOf(currentSearchQuery ?: ""),
+        spannableString = commentText,
+        bgColor = themeEngine.chanTheme.accentColor,
+        minQueryLength = AppConstants.MIN_QUERY_LENGTH
+      )
     }
 
-    SpannableHelper.findAllQueryEntriesInsideSpannableStringAndMarkThem(
-      inputQueries = listOf(currentSearchQuery ?: ""),
-      spannableString = commentText,
-      bgColor = themeEngine.chanTheme.accentColor,
-      minQueryLength = AppConstants.MIN_QUERY_LENGTH
-    )
+    val titleText = title.text
+    if (titleText is Spannable) {
+      SpannableHelper.findAllQueryEntriesInsideSpannableStringAndMarkThem(
+        inputQueries = listOf(currentSearchQuery ?: ""),
+        spannableString = titleText,
+        bgColor = themeEngine.chanTheme.accentColor,
+        minQueryLength = AppConstants.MIN_QUERY_LENGTH
+      )
+    }
   }
 
   companion object {
