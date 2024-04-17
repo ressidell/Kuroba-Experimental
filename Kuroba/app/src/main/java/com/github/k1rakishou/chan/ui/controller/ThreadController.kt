@@ -66,6 +66,8 @@ import com.github.k1rakishou.persist_state.ReplyMode
 import dagger.Lazy
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
@@ -167,7 +169,7 @@ abstract class ThreadController(
     super.onCreate()
 
     threadLayout = inflate(context, R.layout.layout_thread, null) as ThreadLayout
-    threadLayout.create(this, threadControllerType)
+    threadLayout.create(this, threadControllerType, controllerKey)
 
     swipeRefreshLayout = SwipeRefreshLayout(context)
 
@@ -255,6 +257,15 @@ abstract class ThreadController(
       albumThreadControllerHelpers.highlightPostWithImageEventsFlow
         .filter { event -> event.chanDescriptor == chanDescriptor }
         .onEach { event -> threadLayout.presenter.highlightPostWithImage(event.chanPostImage) }
+        .collect()
+    }
+
+    controllerScope.launch {
+      threadLayout.presenter.currentChanDescriptorFlow
+        .filterNotNull()
+        .flatMapLatest { chanDescriptor -> threadPostSearchManager.listenForScrollAnchorPostDescriptor(chanDescriptor) }
+        .filterNotNull()
+        .onEach { scrollAnchorPostDescriptor -> threadLayout.scrollToPost(scrollAnchorPostDescriptor) }
         .collect()
     }
 
@@ -692,23 +703,31 @@ abstract class ThreadController(
     chanDescriptor: ChanDescriptor,
     threadSearchData: ThreadSearchData
   ): List<PostDescriptor> {
-    if (!threadSearchData.searchToolbarVisibility) {
+    if (!threadSearchData.searchToolbarVisible) {
       threadPostSearchManager.updateSearchQuery(
         chanDescriptor = chanDescriptor,
         postDescriptors = emptyList(),
         searchQuery = null
       )
 
+      threadLayout.hideThreadSearchNavigationButtonsView()
+
       return emptyList()
     }
 
-    val displayingPostDescriptors = threadLayout.displayingPostDescriptorsInThread
-
-    return threadPostSearchManager.updateSearchQuery(
+    val matchedPostDescriptors = threadPostSearchManager.updateSearchQuery(
       chanDescriptor = chanDescriptor,
-      postDescriptors = displayingPostDescriptors,
+      postDescriptors = threadLayout.displayingPostDescriptorsInThread,
       searchQuery = threadSearchData.searchQuery
     )
+
+    if (matchedPostDescriptors.isNotEmpty()) {
+      threadLayout.showThreadSearchNavigationButtonsView()
+    } else {
+      threadLayout.hideThreadSearchNavigationButtonsView()
+    }
+
+    return matchedPostDescriptors
   }
 
   protected fun pushChildController(controller: Controller) {
@@ -829,7 +848,7 @@ abstract class ThreadController(
   )
 
   protected data class ThreadSearchData(
-    val searchToolbarVisibility: Boolean,
+    val searchToolbarVisible: Boolean,
     val searchQuery: String
   )
 

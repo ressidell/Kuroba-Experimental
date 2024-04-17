@@ -13,6 +13,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -33,6 +36,8 @@ class ChanThreadTicker(
 
   val currentChanDescriptor: ChanDescriptor?
     get() = chanTickerData.currentChanDescriptor()
+  val currentChanDescriptorFlow: StateFlow<ChanDescriptor?>
+    get() = chanTickerData.currentChanDescriptorFlow()
 
   private val actor = scope.actor<TickerAction>(capacity = Channel.UNLIMITED) {
     consumeEach { tickerAction ->
@@ -247,10 +252,10 @@ class ChanThreadTicker(
     }
 
     // Once a thread reaches 1000+ posts we want to switch to more rare updates because the amount
-    // of posts become really huge and it takes a lot of time to process it with the regular intervals.
-    // So we want to multiple the current timeout by amount of posts in thousands divided by
+    // of posts becomes really huge and it takes a lot of time to process them with regular intervals.
+    // So we want to multiply the current timeout by the amount of posts in thousands divided by
     // LONG_TIMEOUT_DIVIDER. Which means that if a thread has 10000 posts and current timeout is
-    // 20seconds it will be converted into:
+    // 20 seconds it will be converted into:
     //
     // multiplier: (5000 / 1000) / 2.5 = 2
     // new timeout: 15 * 2 = 30 seconds
@@ -261,16 +266,15 @@ class ChanThreadTicker(
     // multiplier: (100000 / 1000) / 2.5 = 40
     // new timeout: 15 * 40 = 600 seconds
     //
-    // Threads this big usually pinned threads with tons of replies per second and that is not good
+    // Threads this big usually are pinned threads with tons of replies per second and that is not good
     // for us.
     return ((timeoutSec.toFloat() * multiplier).toLong()).coerceAtMost(MAX_ADAPTIVE_TIMER_TIMEOUT_SEC)
   }
 
-  private class ChanTickerData(
-    private var currentChanDescriptor: ChanDescriptor? = null,
-    private var currentTimeoutIndex: Int = 0,
+  private class ChanTickerData {
+    private val _currentChanDescriptor = MutableStateFlow<ChanDescriptor?>(null)
+    private var currentTimeoutIndex: Int = 0
     private var tickerJob: Job? = null
-  ) {
     private var waitTimeSeconds: Long = 0
     private var lastLoadTime: Long = 0
 
@@ -330,23 +334,26 @@ class ChanThreadTicker(
     fun getCurrentTimeoutIndex(): Int = this.currentTimeoutIndex
 
     @Synchronized
-    fun currentChanDescriptor(): ChanDescriptor? = currentChanDescriptor
+    fun currentChanDescriptor(): ChanDescriptor? = _currentChanDescriptor.value
+
+    @Synchronized
+    fun currentChanDescriptorFlow(): StateFlow<ChanDescriptor?> = _currentChanDescriptor.asStateFlow()
 
     @Synchronized
     fun updateCurrentChanDescriptor(newChanDescriptor: ChanDescriptor) {
-      this.currentChanDescriptor = newChanDescriptor
+      this._currentChanDescriptor.value = newChanDescriptor
     }
 
     @Synchronized
     fun resetCurrentChanDescriptor() {
-      this.currentChanDescriptor = null
+      this._currentChanDescriptor.value = null
     }
 
   }
 
   private sealed class TickerAction {
     class StartOrResetTicker(val chanDescriptor: ChanDescriptor.ThreadDescriptor): TickerAction()
-    object StopTicker : TickerAction()
+    data object StopTicker : TickerAction()
   }
 
   companion object {

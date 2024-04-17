@@ -460,8 +460,13 @@ class KurobaToolbarState(
     }
 
     if (!withAnimation) {
+      val prevTop = _toolbarList.lastOrNull()
       _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
-      topToolbar.onPopped()
+      val newTop = _toolbarList.lastOrNull()
+
+      prevTop?.onHidden()
+      newTop?.onShown()
+      prevTop?.onDestroyed()
     } else {
       val belowTop = _toolbarList.getOrNull(_toolbarList.lastIndex - 1)
       if (belowTop == null) {
@@ -533,15 +538,25 @@ class KurobaToolbarState(
 
     when (instant.transitionMode) {
       TransitionMode.In -> {
+        val prevTop = _toolbarList.lastOrNull()
         _toolbarStateList.value = _toolbarList.add(instant.transitionToolbarState)
-        instant.transitionToolbarState.onPushed()
+        val newTop = _toolbarList.lastOrNull()
+
+        newTop?.onCreated()
+        prevTop?.onHidden()
+        newTop?.onShown()
       }
       TransitionMode.Out -> {
-        val topToolbar = _toolbarList.lastOrNull()
-        if (topToolbar != null) {
+        val prevTop = _toolbarList.lastOrNull()
+        if (prevTop != null) {
           _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
-          topToolbar.onPopped()
         }
+
+        val newTop = _toolbarList.lastOrNull()
+
+        prevTop?.onHidden()
+        newTop?.onShown()
+        prevTop?.onDestroyed()
       }
     }
 
@@ -564,8 +579,13 @@ class KurobaToolbarState(
       Snapshot.withMutableSnapshot { state.update(params) }
 
       if (topToolbar == null || !withAnimation) {
+        val prevTop = _toolbarList.lastOrNull()
         _toolbarStateList.value = _toolbarList.add(state)
-        state.onPushed()
+        val newTop = _toolbarList.lastOrNull()
+
+        newTop?.onCreated()
+        prevTop?.onHidden()
+        newTop?.onShown()
       } else {
         _transitionToolbarState.value = KurobaToolbarTransition.Instant(
           transitionMode = TransitionMode.In,

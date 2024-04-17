@@ -1,20 +1,13 @@
 package com.github.k1rakishou.chan.features.toolbar.state.search
 
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshotFlow
+import com.github.k1rakishou.chan.features.toolbar.KurobaBaseSearchToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenu
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.state.IKurobaToolbarParams
-import com.github.k1rakishou.chan.features.toolbar.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
-import com.github.k1rakishou.chan.ui.compose.clearText
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
 
 data class KurobaSearchToolbarParams(
   val initialSearchQuery: String? = null,
@@ -26,18 +19,10 @@ data class KurobaSearchToolbarParams(
 @Stable
 class KurobaSearchToolbarSubState(
   params: KurobaSearchToolbarParams = KurobaSearchToolbarParams()
-) : KurobaToolbarSubState() {
+) : KurobaBaseSearchToolbarSubState(initialSearchQuery = params.initialSearchQuery) {
   private val _toolbarMenu = mutableStateOf<ToolbarMenu?>(params.toolbarMenu)
   val toolbarMenu: State<ToolbarMenu?>
     get() = _toolbarMenu
-
-  private val _searchVisibleState = mutableStateOf(false)
-  val searchVisibleState: State<Boolean>
-    get() = _searchVisibleState
-
-  private val _searchQueryState = TextFieldState(initialText = params.initialSearchQuery ?: "")
-  val searchQueryState: TextFieldState
-    get() = _searchQueryState
 
   override val kind: ToolbarStateKind = params.kind
 
@@ -50,33 +35,6 @@ class KurobaSearchToolbarSubState(
     params as KurobaSearchToolbarParams
 
     _toolbarMenu.value = params.toolbarMenu
-  }
-
-  override fun onPushed() {
-    _searchVisibleState.value = true
-  }
-
-  override fun onPopped() {
-    _searchVisibleState.value = false
-    _searchQueryState.edit { clearText() }
-  }
-
-  fun listenForSearchQueryUpdates(): Flow<String> {
-    return _searchQueryState.textAsFlow()
-      .map { textFieldCharSequence -> textFieldCharSequence.toString() }
-      .filter { isInSearchMode() }
-  }
-
-  fun listenForSearchVisibilityUpdates(): Flow<Boolean> {
-    return snapshotFlow { _searchVisibleState.value }
-  }
-
-  fun isInSearchMode(): Boolean {
-    return _searchVisibleState.value
-  }
-
-  fun clearSearchQuery() {
-    _searchQueryState.edit { clearText() }
   }
 
   override fun toString(): String {

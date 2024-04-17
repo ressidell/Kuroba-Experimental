@@ -62,7 +62,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.SelectableItem
 import com.github.k1rakishou.chan.ui.compose.addBottom
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableText
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableElementContainer
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeSwitch
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
@@ -422,7 +422,7 @@ class FiltersController(
       orientationLocked = false,
       key = chanFilterInfo.chanFilter.getDatabaseId()
     ) { isDragging ->
-      KurobaComposeDraggableCard(
+      KurobaComposeDraggableElementContainer(
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()

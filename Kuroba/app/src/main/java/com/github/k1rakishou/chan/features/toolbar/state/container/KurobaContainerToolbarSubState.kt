@@ -27,14 +27,6 @@ class KurobaContainerToolbarSubState(
     // no-op
   }
 
-  override fun onPushed() {
-    // no-op
-  }
-
-  override fun onPopped() {
-    // no-op
-  }
-
   override fun toString(): String {
     return "KurobaContainerToolbarSubState()"
   }

@@ -230,7 +230,8 @@ android {
         freeCompilerArgs = [
                 "-Xopt-in=kotlin.RequiresOptIn",
                 "-Xopt-in=androidx.compose.foundation.ExperimentalFoundationApi",
-                "-Xopt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi"
+                "-Xopt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
+                "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
         ]
     }
 

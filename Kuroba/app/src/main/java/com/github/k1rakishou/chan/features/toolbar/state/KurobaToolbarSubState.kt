@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.features.toolbar.state
 
+import androidx.annotation.CallSuper
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import com.github.k1rakishou.chan.features.toolbar.AbstractToolbarMenuOverflowItem
@@ -8,6 +9,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowI
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.ui.compose.badge.ToolbarBadgeData
+import com.github.k1rakishou.core_logger.Logger
 
 abstract class KurobaToolbarSubState {
   abstract val kind: ToolbarStateKind
@@ -19,8 +21,26 @@ abstract class KurobaToolbarSubState {
     get() = _toolbarBadgeState
 
   abstract fun update(params: IKurobaToolbarParams)
-  abstract fun onPushed()
-  abstract fun onPopped()
+
+  @CallSuper
+  open fun onCreated() {
+    Logger.verbose(tag()) { "onCreated()" }
+  }
+
+  @CallSuper
+  open fun onShown() {
+    Logger.verbose(tag()) { "onShown()" }
+  }
+
+  @CallSuper
+  open fun onHidden() {
+    Logger.verbose(tag()) { "onHidden()" }
+  }
+
+  @CallSuper
+  open fun onDestroyed() {
+    Logger.verbose(tag()) { "onDestroyed()" }
+  }
 
   fun findItem(id: Int): ToolbarMenuItem? {
     if (leftMenuItem?.id == id) {
@@ -116,6 +136,10 @@ abstract class KurobaToolbarSubState {
 
   fun hideBadge() {
     _toolbarBadgeState.value = null
+  }
+
+  private fun tag(): String {
+    return "KurobaToolbarSubState_${kind}"
   }
 
 }

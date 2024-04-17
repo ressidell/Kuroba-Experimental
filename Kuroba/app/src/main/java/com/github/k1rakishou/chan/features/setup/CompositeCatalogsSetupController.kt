@@ -37,7 +37,7 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableElementContainer
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
@@ -248,7 +248,7 @@ class CompositeCatalogsSetupController(
       key = null,
       index = index
     ) { isDragging ->
-      KurobaComposeDraggableCard(
+      KurobaComposeDraggableElementContainer(
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()

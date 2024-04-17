@@ -68,12 +68,6 @@ class KurobaThreadToolbarSubState(
     _iconClickInterceptor = params.iconClickInterceptor
   }
 
-  override fun onPushed() {
-  }
-
-  override fun onPopped() {
-  }
-
   fun updateTitle(
     newTitle: ToolbarText? = _title.value,
     newSubTitle: ToolbarText? = _subtitle.value

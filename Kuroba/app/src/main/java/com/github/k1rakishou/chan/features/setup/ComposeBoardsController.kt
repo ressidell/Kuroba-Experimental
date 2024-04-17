@@ -37,7 +37,7 @@ import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableElementContainer
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
@@ -260,7 +260,7 @@ class ComposeBoardsController(
       key = null,
       index = index
     ) { isDragging ->
-      KurobaComposeDraggableCard(
+      KurobaComposeDraggableElementContainer(
         modifier = Modifier
           .fillMaxWidth()
           .height(COMPOSITION_SLOT_ITEM_HEIGHT)

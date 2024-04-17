@@ -121,7 +121,7 @@ open class ViewThreadController(
         toolbarState.threadSearch.listenForSearchQueryUpdates()
       ) { visibility, searchQuery ->
         return@combine ThreadSearchData(
-          searchToolbarVisibility = visibility,
+          searchToolbarVisible = visibility,
           searchQuery = searchQuery
         )
       }
@@ -803,11 +803,11 @@ open class ViewThreadController(
   }
 
   private fun upClicked(item: ToolbarMenuOverflowItem) {
-    threadLayout.scrollTo(0, false)
+    threadLayout.scrollTo(0)
   }
 
   private fun downClicked(item: ToolbarMenuOverflowItem) {
-    threadLayout.scrollTo(-1, false)
+    threadLayout.scrollTo(-1)
   }
 
   companion object {

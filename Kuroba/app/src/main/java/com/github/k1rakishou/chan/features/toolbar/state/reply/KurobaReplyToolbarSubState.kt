@@ -47,12 +47,6 @@ class KurobaReplyToolbarSubState(
     _toolbarMenu.value = params.toolbarMenu
   }
 
-  override fun onPushed() {
-  }
-
-  override fun onPopped() {
-  }
-
   override fun toString(): String {
     return "KurobaReplyToolbarSubState(chanDescriptor: ${_chanDescriptor.value})"
   }

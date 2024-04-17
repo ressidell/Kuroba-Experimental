@@ -39,7 +39,11 @@ fun KurobaComposeCard(
 }
 
 @Composable
-fun KurobaComposeDraggableCard(modifier: Modifier, isDragging: Boolean, content: @Composable () -> Unit) {
+fun KurobaComposeDraggableElementContainer(
+  modifier: Modifier,
+  isDragging: Boolean,
+  content: @Composable () -> Unit
+) {
   val chanTheme = LocalChanTheme.current
   val density = LocalDensity.current
 

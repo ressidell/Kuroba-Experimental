@@ -2,13 +2,11 @@ package com.github.k1rakishou.common
 
 import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class SuspendableInitializerTest {
 
   @Test

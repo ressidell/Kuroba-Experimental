@@ -183,7 +183,7 @@ class BrowseController(
         toolbarState.catalogSearch.listenForSearchQueryUpdates()
       ) { visibility, searchQuery ->
         return@combine ThreadSearchData(
-          searchToolbarVisibility = visibility,
+          searchToolbarVisible = visibility,
           searchQuery = searchQuery
         )
       }
@@ -1201,11 +1201,11 @@ class BrowseController(
   }
 
   private fun upClicked(item: ToolbarMenuOverflowItem) {
-    threadLayout.presenter.scrollTo(0, false)
+    threadLayout.presenter.scrollTo(0)
   }
 
   private fun downClicked(item: ToolbarMenuOverflowItem) {
-    threadLayout.presenter.scrollTo(-1, false)
+    threadLayout.presenter.scrollTo(-1)
   }
 
   override fun onReplyViewShouldClose() {

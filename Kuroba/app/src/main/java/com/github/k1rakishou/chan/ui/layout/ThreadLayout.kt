@@ -1,19 +1,3 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.ui.layout
 
 import android.annotation.SuppressLint
@@ -52,9 +36,11 @@ import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper.ImageRe
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.ui.cell.PostCellData
+import com.github.k1rakishou.chan.ui.compose.ThreadSearchNavigationButtonsView
 import com.github.k1rakishou.chan.ui.controller.PostLinksController
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.PostPopupHelper
 import com.github.k1rakishou.chan.ui.helper.PostPopupHelper.PostPopupHelperCallback
@@ -101,6 +87,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
@@ -174,6 +162,7 @@ class ThreadLayout @JvmOverloads constructor(
   private lateinit var progressStepText: ColorizableTextView
   private lateinit var loadView: LoadView
   private lateinit var replyButton: HidingFloatingActionButton
+  private lateinit var threadSearchNavigationButtonsView: ThreadSearchNavigationButtonsView
   private lateinit var threadListLayout: ThreadListLayout
   private lateinit var errorLayout: LinearLayout
   private lateinit var errorText: TextView
@@ -186,6 +175,7 @@ class ThreadLayout @JvmOverloads constructor(
 
   var threadControllerType: ThreadControllerType? = null
     private set
+  private var controllerKey: ControllerKey? = null
   private var newPostsNotification: SnackbarWrapper? = null
   private var refreshedFromSwipe = false
   private var deletingDialog: ProgressDialog? = null
@@ -237,31 +227,35 @@ class ThreadLayout @JvmOverloads constructor(
   fun create(
     callback: ThreadLayoutCallback,
     threadControllerType: ThreadControllerType,
+    controllerKey: ControllerKey
   ) {
     this.callback = callback
     this.serializedCoroutineExecutor = SerializedCoroutineExecutor(coroutineScope)
     this.threadControllerType = threadControllerType
+    this.controllerKey = controllerKey
 
-    Logger.d(TAG, "ThreadLayout.create(threadControllerType=$threadControllerType)")
+    Logger.d(TAG, "ThreadLayout.create(threadControllerType: ${threadControllerType}, controllerKey: ${controllerKey})")
 
     // View binding
-    loadView = findViewById(R.id.loadview)
-    replyButton = findViewById(R.id.reply_button)
+    loadView = findViewById(com.github.k1rakishou.chan.R.id.loadview)
+    replyButton = findViewById(com.github.k1rakishou.chan.R.id.reply_button)
     replyButton.setThreadControllerType(threadControllerType)
     replyButton.setSnackbarClass(SnackbarClass.from(threadControllerType))
+
+    threadSearchNavigationButtonsView = findViewById(com.github.k1rakishou.chan.R.id.thread_search_navigation_buttons)
 
     // Inflate ThreadListLayout
     threadListLayout = inflate(context, R.layout.layout_thread_list, this, false) as ThreadListLayout
 
     // Inflate error layout
-    errorLayout = inflate(context, R.layout.layout_thread_error, this, false) as LinearLayout
-    errorText = errorLayout.findViewById(R.id.text)
-    errorRetryButton = errorLayout.findViewById(R.id.retry_button)
-    openThreadInArchiveButton = errorLayout.findViewById(R.id.open_in_archive_button)
+    errorLayout = inflate(context, com.github.k1rakishou.chan.R.layout.layout_thread_error, this, false) as LinearLayout
+    errorText = errorLayout.findViewById(com.github.k1rakishou.chan.R.id.text)
+    errorRetryButton = errorLayout.findViewById(com.github.k1rakishou.chan.R.id.retry_button)
+    openThreadInArchiveButton = errorLayout.findViewById(com.github.k1rakishou.chan.R.id.open_in_archive_button)
 
     // Inflate thread loading layout
-    progressLayout = inflate(context, R.layout.layout_thread_progress, this, false)
-    progressStepText = progressLayout.findViewById(R.id.loading_step)
+    progressLayout = inflate(context, com.github.k1rakishou.chan.R.layout.layout_thread_progress, this, false)
+    progressStepText = progressLayout.findViewById(com.github.k1rakishou.chan.R.id.loading_step)
 
     // View setup
     presenter.create(context, this)
@@ -283,6 +277,19 @@ class ThreadLayout @JvmOverloads constructor(
 
         handleLoadProgressEvent(chanLoadProgressEvent)
       }
+    }
+
+    coroutineScope.launch {
+      presenter.currentChanDescriptorFlow
+        .onEach { currentChanDescriptor ->
+          threadSearchNavigationButtonsView.updateParameters(
+            parameters = ThreadSearchNavigationButtonsView.Parameters(
+              chanDescriptor = currentChanDescriptor,
+              controllerKey = controllerKey
+            )
+          )
+        }
+        .collect()
     }
 
     themeEngine.addListener(this)
@@ -425,6 +432,14 @@ class ThreadLayout @JvmOverloads constructor(
 
   fun setBoardPostViewMode(boardPostViewMode: BoardPostViewMode) {
     threadListLayout.setBoardPostViewMode(boardPostViewMode)
+  }
+
+  fun showThreadSearchNavigationButtonsView() {
+    threadSearchNavigationButtonsView.show()
+  }
+
+  fun hideThreadSearchNavigationButtonsView() {
+    threadSearchNavigationButtonsView.hide()
   }
 
   override fun showImageReencodingWindow(fileUuid: UUID, supportsReencode: Boolean) {
@@ -748,9 +763,9 @@ class ThreadLayout @JvmOverloads constructor(
     callback.showAlbum(initialImageUrl, displayingPostDescriptors)
   }
 
-  override fun scrollTo(displayPosition: Int, smooth: Boolean) {
+  override fun scrollTo(displayPosition: Int) {
     if (postPopupHelper.isOpen) {
-      postPopupHelper.scrollTo(displayPosition, smooth)
+      postPopupHelper.scrollTo(displayPosition)
     } else if (state == State.CONTENT) {
       threadListLayout.scrollTo(displayPosition)
     }
@@ -810,7 +825,7 @@ class ThreadLayout @JvmOverloads constructor(
 
   override fun confirmPostDelete(post: ChanPost) {
     val view = inflate(context, R.layout.dialog_post_delete, null)
-    val checkBox = view.findViewById<CheckBox>(R.id.image_only)
+    val checkBox = view.findViewById<CheckBox>(com.github.k1rakishou.chan.R.id.image_only)
 
     dialogFactory.createSimpleConfirmationDialog(
       context = context,
@@ -1241,7 +1256,7 @@ class ThreadLayout @JvmOverloads constructor(
   @SuppressLint("InflateParams")
   private fun inflateEmptyView(): View {
     val view = inflate(context, R.layout.layout_empty_setup, null)
-    val tv = view.findViewById<TextView>(R.id.feature)
+    val tv = view.findViewById<TextView>(com.github.k1rakishou.chan.R.id.feature)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       // This unicode symbol crashes app on APIs below 23
@@ -1259,8 +1274,8 @@ class ThreadLayout @JvmOverloads constructor(
     threadListLayout.highlightPost(postDescriptor, blink)
   }
 
-  override fun scrollToPost(postDescriptor: PostDescriptor, smooth: Boolean) {
-    presenter.scrollToPost(postDescriptor, smooth)
+  override fun scrollToPost(postDescriptor: PostDescriptor) {
+    presenter.scrollToPost(postDescriptor)
   }
 
   override fun presentReencodeOptionsController(controller: Controller) {

@@ -263,7 +263,7 @@ class MediaViewerController(
   private val postPopupHelperCallback = object : PostPopupHelper.PostPopupHelperCallback {
     override fun presentRepliesController(controller: Controller) = presentController(controller)
     override fun highlightPost(postDescriptor: PostDescriptor?, blink: Boolean) {}
-    override fun scrollToPost(postDescriptor: PostDescriptor, smooth: Boolean) {}
+    override fun scrollToPost(postDescriptor: PostDescriptor) {}
   }
 
   private val postPopupHelper by lazy {

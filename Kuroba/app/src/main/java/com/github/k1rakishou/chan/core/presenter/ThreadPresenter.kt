@@ -125,6 +125,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -385,6 +386,8 @@ class ThreadPresenter @Inject constructor(
 
   override val currentChanDescriptor: ChanDescriptor?
     get() = chanThreadTicker.currentChanDescriptor
+  val currentChanDescriptorFlow: StateFlow<ChanDescriptor?>
+    get() = chanThreadTicker.currentChanDescriptorFlow
 
   init {
     launch {
@@ -982,7 +985,7 @@ class ThreadPresenter @Inject constructor(
   suspend fun setOrder(order: PostsFilter.Order, isManuallyChangedOrder: Boolean) {
     if (isBound) {
       if (isManuallyChangedOrder) {
-        scrollTo(0, false)
+        scrollTo(0)
       }
 
       showPosts()
@@ -1277,7 +1280,7 @@ class ThreadPresenter @Inject constructor(
 
       if (BackgroundUtils.isInForeground()) {
         BackgroundUtils.runOnMainThread(
-          { scrollToPost(markedPost.postDescriptor, false) },
+          { scrollToPost(markedPost.postDescriptor) },
           SCROLL_TO_POST_DELAY_MS
         )
       }
@@ -1471,8 +1474,8 @@ class ThreadPresenter @Inject constructor(
     }
   }
 
-  fun scrollTo(displayPosition: Int, smooth: Boolean) {
-    threadPresenterCallback?.scrollTo(displayPosition, smooth)
+  fun scrollTo(displayPosition: Int) {
+    threadPresenterCallback?.scrollTo(displayPosition)
   }
 
   fun scrollToImage(postImage: ChanPostImage, smooth: Boolean) {
@@ -1494,12 +1497,11 @@ class ThreadPresenter @Inject constructor(
     }
 
     if (position >= 0) {
-      scrollTo(position, smooth)
+      scrollTo(position)
     }
   }
 
-  @JvmOverloads
-  fun scrollToPost(needle: PostDescriptor, smooth: Boolean = true) {
+  fun scrollToPost(needle: PostDescriptor) {
     var position = -1
 
     val posts = threadPresenterCallback?.displayingPostDescriptorsInThread
@@ -1517,7 +1519,7 @@ class ThreadPresenter @Inject constructor(
     }
 
     if (position >= 0) {
-      scrollTo(position, smooth)
+      scrollTo(position)
     }
   }
 
@@ -1535,7 +1537,7 @@ class ThreadPresenter @Inject constructor(
 
       for (image in post.postImages) {
         if (image.equalUrl(postImage)) {
-          scrollToPost(post.postDescriptor, false)
+          scrollToPost(post.postDescriptor)
           highlightPost(post.postDescriptor, blink = true)
           return
         }
@@ -1593,8 +1595,11 @@ class ThreadPresenter @Inject constructor(
   override fun onGoToPostButtonLongClicked(post: ChanPost, postViewMode: PostCellData.PostViewMode) {
     threadPresenterCallback?.hidePostsPopup()
 
-    scrollToPost(needle = post.postDescriptor, smooth = true)
-    highlightPost(post.postDescriptor, blink = true)
+    scrollToPost(post.postDescriptor)
+    highlightPost(
+      postDescriptor = post.postDescriptor,
+      blink = true
+    )
   }
 
   override fun onThumbnailClicked(
@@ -2984,7 +2989,7 @@ class ThreadPresenter @Inject constructor(
     fun pushController(controller: Controller)
     fun showImages(chanDescriptor: ChanDescriptor, initialImageUrl: String?, transitionThumbnailUrl: String)
     fun showAlbum(initialImageUrl: HttpUrl?, displayingPostDescriptors: List<PostDescriptor>)
-    fun scrollTo(displayPosition: Int, smooth: Boolean)
+    fun scrollTo(displayPosition: Int)
     fun smoothScrollNewPosts(displayPosition: Int)
     fun filterPostTripcode(tripcode: CharSequence)
     fun filterPostName(posterName: CharSequence)

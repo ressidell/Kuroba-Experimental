@@ -46,7 +46,7 @@ import com.github.k1rakishou.chan.core.manager.ThirdEyeManager
 import com.github.k1rakishou.chan.features.thirdeye.data.BooruSetting
 import com.github.k1rakishou.chan.features.thirdeye.data.ThirdEyeSettings
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableCard
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableElementContainer
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
@@ -458,7 +458,7 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
       reorderableState = reorderableState,
       key = booruSetting.booruUniqueKey
     ) { isDragging ->
-      KurobaComposeDraggableCard(
+      KurobaComposeDraggableElementContainer(
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()

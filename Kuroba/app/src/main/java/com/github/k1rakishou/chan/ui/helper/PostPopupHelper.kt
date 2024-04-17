@@ -179,7 +179,7 @@ class PostPopupHelper(
     dismiss()
   }
 
-  fun scrollTo(displayPosition: Int, smooth: Boolean) {
+  fun scrollTo(displayPosition: Int) {
     presentingPostRepliesController?.scrollTo(displayPosition)
   }
 
@@ -194,7 +194,7 @@ class PostPopupHelper(
   fun postClicked(postDescriptor: PostDescriptor) {
     popAll()
     callback.highlightPost(postDescriptor, blink = true)
-    callback.scrollToPost(postDescriptor, smooth = true)
+    callback.scrollToPost(postDescriptor)
   }
 
   private fun dismiss() {
@@ -226,6 +226,6 @@ class PostPopupHelper(
   interface PostPopupHelperCallback {
     fun presentRepliesController(controller: Controller)
     fun highlightPost(postDescriptor: PostDescriptor?, blink: Boolean)
-    fun scrollToPost(postDescriptor: PostDescriptor, smooth: Boolean)
+    fun scrollToPost(postDescriptor: PostDescriptor)
   }
 }

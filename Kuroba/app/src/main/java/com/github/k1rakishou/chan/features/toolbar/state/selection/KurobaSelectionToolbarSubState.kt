@@ -45,12 +45,6 @@ class KurobaSelectionToolbarSubState(
   override val rightToolbarMenu: ToolbarMenu?
     get() = _toolbarMenu.value
 
-  override fun onPushed() {
-  }
-
-  override fun onPopped() {
-  }
-
   override fun update(params: IKurobaToolbarParams) {
     params as KurobaSelectionToolbarParams
 
