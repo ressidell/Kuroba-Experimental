@@ -11,6 +11,7 @@ import com.github.k1rakishou.chan.core.base.SerializedCoroutineExecutor
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.SitesSetupControllerOpenNotifier
+import com.github.k1rakishou.chan.core.manager.CurrentFocusedController
 import com.github.k1rakishou.chan.core.manager.FirewallBypassManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
 import com.github.k1rakishou.chan.core.presenter.BrowsePresenter
@@ -37,6 +38,7 @@ import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
@@ -111,6 +113,9 @@ class BrowseController(
 
   val browseControllerToolbarState: KurobaToolbarState
     get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
+
+  override val controllerKey: ControllerKey
+    get() = BrowseController.catalogControllerKey
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -414,9 +419,7 @@ class BrowseController(
       }
     }
 
-    currentOpenedDescriptorStateManager.updateCurrentFocusedController(
-      ThreadPresenter.CurrentFocusedController.Catalog
-    )
+    currentOpenedDescriptorStateManager.updateCurrentFocusedController(CurrentFocusedController.Catalog)
   }
 
   private suspend fun showThreadInternal(descriptor: ThreadDescriptor, showThreadOptions: ShowThreadOptions) {
@@ -1280,5 +1283,7 @@ class BrowseController(
 
     private const val DEV_BOOKMARK_EVERY_THREAD = 2000
     private const val DEV_CACHE_EVERY_THREAD = 2001
+
+    val catalogControllerKey by lazy(LazyThreadSafetyMode.NONE) { ControllerKey(BrowseController::class.java.name) }
   }
 }

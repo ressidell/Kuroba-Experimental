@@ -42,13 +42,13 @@ import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChang
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleControllerType
 import com.github.k1rakishou.chan.ui.controller.navigation.determineDoubleControllerType
-import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.helper.AppSettingsUpdateAppRefreshHelper
 import com.github.k1rakishou.chan.ui.helper.OpenExternalThreadHelper
 import com.github.k1rakishou.chan.ui.helper.ShowPostsInExternalThreadHelper
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
+import com.github.k1rakishou.chan.ui.viewstate.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString

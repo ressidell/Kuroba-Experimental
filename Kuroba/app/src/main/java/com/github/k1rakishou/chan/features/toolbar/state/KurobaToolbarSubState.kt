@@ -153,5 +153,34 @@ enum class ToolbarStateKind {
   Search,
   CatalogSearch,
   Selection,
-  Reply
+  Reply;
+
+  fun needForceShowToolbar(): Boolean {
+    return when (this) {
+      Container,
+      Catalog,
+      Thread,
+      Default -> false
+      ThreadSearch,
+      Search,
+      CatalogSearch,
+      Selection,
+      Reply -> true
+    }
+  }
+
+  fun needForceHideFab(): Boolean {
+    return when (this) {
+      Container,
+      Catalog,
+      Thread,
+      Default -> false
+      ThreadSearch,
+      Search,
+      CatalogSearch,
+      Selection,
+      Reply -> true
+    }
+  }
+
 }

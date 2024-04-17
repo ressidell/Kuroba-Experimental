@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.ui.globalstate.reply
 
 import androidx.compose.ui.geometry.Offset
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
+import com.github.k1rakishou.chan.ui.viewstate.ReplyLayoutVisibilityStates
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 

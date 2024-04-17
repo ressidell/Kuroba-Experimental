@@ -40,6 +40,7 @@ import com.github.k1rakishou.chan.core.manager.ChanFilterManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
+import com.github.k1rakishou.chan.core.manager.CurrentFocusedController
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
@@ -2927,12 +2928,6 @@ class ThreadPresenter @Inject constructor(
     return siteManager.bySiteDescriptor(chanDescriptor.siteDescriptor())
       ?.getSettingBySettingId<OptionsSetting<ReplyMode>>(SiteSetting.SiteSettingId.LastUsedReplyMode)
       ?.get()
-  }
-
-  enum class CurrentFocusedController {
-    Catalog,
-    Thread,
-    None
   }
 
   enum class ChanThreadLoadingState {

@@ -17,6 +17,7 @@ class KurobaToolbarStateManager(
 
   fun remove(controllerKey: ControllerKey) {
     kurobaToolbarStates.remove(controllerKey)
+    globalUiStateHolder.updateToolbarState { onToolbarStateRemoved(controllerKey) }
   }
 
 }

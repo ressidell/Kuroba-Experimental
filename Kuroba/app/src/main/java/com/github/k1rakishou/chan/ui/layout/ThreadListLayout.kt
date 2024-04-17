@@ -20,6 +20,7 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.LastViewedPostNoInfoHolder
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
+import com.github.k1rakishou.chan.core.manager.CurrentFocusedController
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PostHighlightManager
 import com.github.k1rakishou.chan.core.presenter.ThreadPresenter
@@ -592,19 +593,19 @@ class ThreadListLayout @JvmOverloads constructor(
         }
 
         val currentFocusedController = threadPresenter?.currentFocusedController()
-          ?: ThreadPresenter.CurrentFocusedController.None
+          ?: CurrentFocusedController.None
 
         val currentChanDescriptor = threadPresenter?.currentChanDescriptor
           ?: return false
 
         val canScroll = when (currentFocusedController) {
-          ThreadPresenter.CurrentFocusedController.Catalog -> {
+          CurrentFocusedController.Catalog -> {
             currentChanDescriptor is ChanDescriptor.ICatalogDescriptor
           }
-          ThreadPresenter.CurrentFocusedController.Thread -> {
+          CurrentFocusedController.Thread -> {
             currentChanDescriptor is ThreadDescriptor
           }
-          ThreadPresenter.CurrentFocusedController.None -> false
+          CurrentFocusedController.None -> false
         }
 
         if (!canScroll) {

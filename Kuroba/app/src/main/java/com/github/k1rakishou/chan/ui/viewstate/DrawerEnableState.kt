@@ -1,11 +1,10 @@
-package com.github.k1rakishou.chan.features.drawer
+package com.github.k1rakishou.chan.ui.viewstate
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutBoundsStates
-import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 
-internal data class DrawerEnableState(
+data class DrawerEnableState(
   val replyLayoutVisibilityStates: ReplyLayoutVisibilityStates,
   val replyLayoutsBounds: ReplyLayoutBoundsStates,
   val touchPosition: Offset

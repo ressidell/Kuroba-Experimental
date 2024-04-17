@@ -1,6 +1,5 @@
 package com.github.k1rakishou.chan.core.manager
 
-import com.github.k1rakishou.chan.core.presenter.ThreadPresenter
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,14 +18,18 @@ class CurrentOpenedDescriptorStateManager {
   val currentThreadDescriptor: ChanDescriptor.ThreadDescriptor?
     get() = currentThreadDescriptorFlow.value
 
-  private var currentFocusedController = ThreadPresenter.CurrentFocusedController.None
+  private val _currentFocusedController = MutableStateFlow<CurrentFocusedController>(
+    CurrentFocusedController.None
+  )
+  val currentFocusedController: StateFlow<CurrentFocusedController>
+    get() = _currentFocusedController.asStateFlow()
 
   val currentFocusedDescriptor: ChanDescriptor?
     get() {
-      return when (currentFocusedController) {
-        ThreadPresenter.CurrentFocusedController.Catalog -> currentCatalogDescriptor as ChanDescriptor?
-        ThreadPresenter.CurrentFocusedController.Thread -> currentThreadDescriptor
-        ThreadPresenter.CurrentFocusedController.None -> null
+      return when (_currentFocusedController.value) {
+        CurrentFocusedController.Catalog -> currentCatalogDescriptor as ChanDescriptor?
+        CurrentFocusedController.Thread -> currentThreadDescriptor
+        CurrentFocusedController.None -> null
       }
     }
 
@@ -38,8 +41,14 @@ class CurrentOpenedDescriptorStateManager {
     _currentThreadDescriptorFlow.value = threadDescriptor
   }
 
-  fun updateCurrentFocusedController(focusedController: ThreadPresenter.CurrentFocusedController) {
-    this.currentFocusedController = focusedController
+  fun updateCurrentFocusedController(focusedController: CurrentFocusedController) {
+    _currentFocusedController.value = focusedController
   }
 
+}
+
+enum class CurrentFocusedController {
+  Catalog,
+  Thread,
+  None
 }

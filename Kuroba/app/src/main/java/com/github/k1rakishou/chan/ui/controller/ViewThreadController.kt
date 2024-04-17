@@ -12,6 +12,7 @@ import com.github.k1rakishou.chan.core.manager.BookmarksManager.BookmarkChange
 import com.github.k1rakishou.chan.core.manager.BookmarksManager.BookmarkChange.BookmarksCreated
 import com.github.k1rakishou.chan.core.manager.BookmarksManager.BookmarkChange.BookmarksDeleted
 import com.github.k1rakishou.chan.core.manager.BookmarksManager.BookmarkChange.BookmarksInitialized
+import com.github.k1rakishou.chan.core.manager.CurrentFocusedController
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.presenter.ThreadPresenter
@@ -24,6 +25,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
@@ -88,6 +90,9 @@ open class ViewThreadController(
 
   val viewThreadControllerToolbarState: KurobaToolbarState
     get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
+
+  override val controllerKey: ControllerKey
+    get() = ViewThreadController.threadControllerKey
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -303,7 +308,7 @@ open class ViewThreadController(
       }
     }
 
-    currentOpenedDescriptorStateManager.updateCurrentFocusedController(ThreadPresenter.CurrentFocusedController.Thread)
+    currentOpenedDescriptorStateManager.updateCurrentFocusedController(CurrentFocusedController.Thread)
     updateLeftPaneHighlighting(threadDescriptor)
   }
 
@@ -826,5 +831,7 @@ open class ViewThreadController(
     private const val ACTION_SCROLL_TO_TOP = 9011
     private const val ACTION_SCROLL_TO_BOTTOM = 9012
     private const val ACTION_DOWNLOAD_THREAD = 9013
+
+    val threadControllerKey by lazy(LazyThreadSafetyMode.NONE) { ControllerKey(ViewThreadController::class.java.name) }
   }
 }

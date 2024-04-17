@@ -239,7 +239,7 @@ class ThreadLayout @JvmOverloads constructor(
     // View binding
     loadView = findViewById(com.github.k1rakishou.chan.R.id.loadview)
     replyButton = findViewById(com.github.k1rakishou.chan.R.id.reply_button)
-    replyButton.setThreadControllerType(threadControllerType)
+    replyButton.setThreadControllerType(threadControllerType, controllerKey)
     replyButton.setSnackbarClass(SnackbarClass.from(threadControllerType))
 
     threadSearchNavigationButtonsView = findViewById(com.github.k1rakishou.chan.R.id.thread_search_navigation_buttons)

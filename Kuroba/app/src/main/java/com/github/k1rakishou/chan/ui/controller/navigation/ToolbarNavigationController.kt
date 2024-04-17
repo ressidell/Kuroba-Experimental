@@ -10,9 +10,11 @@ import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 abstract class ToolbarNavigationController(context: Context) : NavigationController(context) {
   private val _containerToolbarStateUpdatedListeners = mutableListOf<ContainerToolbarStateUpdatedListener>()
 
-  private val _containerToolbarState = mutableStateOf<KurobaToolbarState>(
-    kurobaToolbarStateManager.getOrCreate(controllerKey)
-  )
+  private val _containerToolbarState by lazy(LazyThreadSafetyMode.NONE) {
+    mutableStateOf<KurobaToolbarState>(
+      kurobaToolbarStateManager.getOrCreate(controllerKey)
+    )
+  }
 
   final override val toolbarState: KurobaToolbarState
     get() = _containerToolbarState.value

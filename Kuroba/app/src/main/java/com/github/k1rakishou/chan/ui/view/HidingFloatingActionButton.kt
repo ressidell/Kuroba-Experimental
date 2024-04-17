@@ -19,13 +19,14 @@ import androidx.core.view.updatePadding
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
+import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
-import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
-import com.github.k1rakishou.chan.ui.layout.ThreadLayout
 import com.github.k1rakishou.chan.ui.view.widget.SnackbarClass
+import com.github.k1rakishou.chan.ui.viewstate.FabVisibilityState
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getDimen
@@ -49,6 +50,7 @@ class HidingFloatingActionButton
 
   private var _listeningForInsetsChanges = false
   private var _threadControllerType: ThreadControllerType? = null
+  private var _controllerKey: ControllerKey? = null
   private var _snackbarClass: SnackbarClass? = null
 
   private val padding = dp(12f)
@@ -63,6 +65,8 @@ class HidingFloatingActionButton
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
   @Inject
   lateinit var themeEngine: ThemeEngine
+  @Inject
+  lateinit var currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager
 
   private val coroutineScope = KurobaCoroutineScope()
   private val christmasHat by lazy(LazyThreadSafetyMode.NONE) { BitmapFactory.decodeResource(resources, R.drawable.christmashat)!! }
@@ -116,12 +120,13 @@ class HidingFloatingActionButton
     setAlphaFast(0f)
   }
 
-  fun setThreadControllerType(threadControllerType: ThreadControllerType) {
+  fun setThreadControllerType(threadControllerType: ThreadControllerType, controllerKey: ControllerKey) {
     check(_threadControllerType == null) {
       "Attempt to set threadControllerType twice! current: ${_threadControllerType}, new: ${threadControllerType}"
     }
 
     _threadControllerType = threadControllerType
+    _controllerKey = controllerKey
   }
 
   fun setSnackbarClass(snackbarClass: SnackbarClass) {
@@ -196,14 +201,17 @@ class HidingFloatingActionButton
   private fun listenForFabVisibilityFlags() {
     coroutineScope.cancelChildren()
     coroutineScope.launch {
-      while (_snackbarClass == null && _threadControllerType == null && isActive) {
+      while (_snackbarClass == null || _threadControllerType == null || _controllerKey == null) {
+        if (!isActive) {
+          return@launch
+        }
+
         delay(100)
       }
 
-      val snackbarClass = _snackbarClass
-        ?: return@launch
-      val threadControllerType = _threadControllerType
-        ?: return@launch
+      val snackbarClass = _snackbarClass ?: return@launch
+      val threadControllerType = _threadControllerType ?: return@launch
+      val controllerKey = _controllerKey ?: return@launch
 
       combineMany(
         ChanSettings.layoutMode.listenForChanges().asFlow(),
@@ -214,30 +222,35 @@ class HidingFloatingActionButton
         snapshotFlow { globalUiStateHolder.threadLayout.focusedControllerState.value },
         snapshotFlow { globalUiStateHolder.fastScroller.isDraggingFastScrollerState.value },
         snapshotFlow { globalUiStateHolder.scroll.scrollTransitionProgress.floatValue },
-        snapshotFlow { globalUiStateHolder.snackbar.snackbarVisibilityState(snackbarClass).value }
-      ) { _, _, enableFab, replyLayoutState, threadLayout, focusedController, draggingFastScroller, scroll, snackbarVisible ->
-        return@combineMany FabVisibilityInfo(
+        snapshotFlow { globalUiStateHolder.snackbar.snackbarVisibilityState(snackbarClass).value },
+        globalUiStateHolder.toolbar.currentToolbarStates,
+        currentOpenedDescriptorStateManager.currentFocusedController
+      ) { _, _, enableFab, replyLayoutState, threadLayout, focusedController, draggingFastScroller, scroll,
+          snackbarVisible, currentToolbarStates, currentFocusedController ->
+        return@combineMany FabVisibilityState(
           fabEnabled = enableFab,
           replyLayoutVisibilityStates = replyLayoutState,
           threadLayoutState = threadLayout,
           focusedController = focusedController,
           scrollProgress = scroll,
           isDraggingFastScroller = draggingFastScroller,
-          snackbarVisible = snackbarVisible
+          snackbarVisible = snackbarVisible,
+          currentToolbarStates = currentToolbarStates,
+          currentFocusedController = currentFocusedController
         )
       }
-        .onEach { fabVisibilityInfo ->
-          if (fabVisibilityInfo.isFabForceVisible(threadControllerType)) {
+        .onEach { fabVisibilityState ->
+          if (fabVisibilityState.isFabForceVisible(threadControllerType, controllerKey)) {
             setAlphaFast(1f)
             return@onEach
           }
 
-          if (fabVisibilityInfo.needToHideFab(threadControllerType)) {
+          if (fabVisibilityState.isFabForceHidden(threadControllerType, controllerKey)) {
             setAlphaFast(0f)
             return@onEach
           }
 
-          setAlphaFast(fabVisibilityInfo.fabAlpha)
+          setAlphaFast(fabVisibilityState.fabAlpha)
         }
         .collect()
     }
@@ -284,87 +297,6 @@ class HidingFloatingActionButton
   private fun updatePaddings() {
     val fabBottomMargin = getDimen(R.dimen.hiding_fab_margin)
     updateMargins(bottom = fabBottomMargin + globalWindowInsetsManager.bottom())
-  }
-
-  private data class FabVisibilityInfo(
-    val fabEnabled: Boolean,
-    val replyLayoutVisibilityStates: ReplyLayoutVisibilityStates,
-    val threadLayoutState: ThreadLayout.State,
-    val focusedController: ThreadControllerType,
-    val scrollProgress: Float,
-    val isDraggingFastScroller: Boolean,
-    val snackbarVisible: Boolean
-  ) {
-    val fabAlpha: Float
-      get() = scrollProgress
-
-    fun isFabForceVisible(threadControllerType: ThreadControllerType): Boolean {
-      if (!fabEnabled) {
-        return false
-      }
-
-      if (ChanSettings.isSplitLayoutMode()) {
-        if (isCurrentReplyLayoutOpened(threadControllerType)) {
-          return false
-        }
-
-        if (threadLayoutState.isNotInContentState()) {
-          return false
-        }
-
-        // fallthrough
-      }
-
-      return !ChanSettings.canCollapseToolbar()
-    }
-
-    fun needToHideFab(threadControllerType: ThreadControllerType): Boolean {
-      if (!fabEnabled) {
-        return true
-      }
-
-      if (ChanSettings.isSplitLayoutMode()) {
-        if (isCurrentReplyLayoutOpened(threadControllerType)) {
-          return true
-        }
-
-        if (threadLayoutState.isNotInContentState()) {
-          return true
-        }
-
-        return false
-      }
-
-      if (threadLayoutState.isNotInContentState()) {
-        return true
-      }
-
-      if (focusedController != threadControllerType) {
-        return true
-      }
-
-      if (isDraggingFastScroller) {
-        return true
-      }
-
-      if (isCurrentReplyLayoutOpened(threadControllerType)) {
-        return true
-      }
-
-      if (snackbarVisible) {
-        return true
-      }
-
-      return false
-    }
-
-    private fun isCurrentReplyLayoutOpened(threadControllerType: ThreadControllerType): Boolean {
-      return when (threadControllerType) {
-        ThreadControllerType.Catalog -> replyLayoutVisibilityStates.catalog.isOpenedOrExpanded()
-        ThreadControllerType.Thread -> replyLayoutVisibilityStates.thread.isOpenedOrExpanded()
-      }
-    }
-
   }
 
   private class FabOutlineProvider(

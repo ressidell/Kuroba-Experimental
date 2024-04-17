@@ -15,6 +15,9 @@ import com.github.k1rakishou.chan.ui.controller.base.transition.PopControllerTra
 import com.github.k1rakishou.chan.ui.layout.SplitNavigationControllerLayout
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.core_themes.ThemeEngine.ThemeChangesListener
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 class SplitNavigationController(
@@ -25,8 +28,13 @@ class SplitNavigationController(
   @Inject
   lateinit var themeEngine: ThemeEngine
 
-  private var _leftController: Controller? = null
-  private var _rightController: Controller? = null
+  private val _leftController = MutableStateFlow<Controller?>(null)
+  override val leftControllerFlow: StateFlow<Controller?>
+    get() = _leftController.asStateFlow()
+
+  private val _rightController = MutableStateFlow<Controller?>(null)
+  override val rightControllerFlow: StateFlow<Controller?>
+    get() = _rightController.asStateFlow()
 
   private var leftControllerView: FrameLayout? = null
   private var rightControllerView: FrameLayout? = null
@@ -77,46 +85,48 @@ class SplitNavigationController(
     selectThreadText?.setTextColor(themeEngine.chanTheme.textColorSecondary)
   }
 
-  override fun updateLeftController(leftController: Controller?, animated: Boolean) {
-    if (leftController() != null) {
-      leftController()?.onHide()
-      removeChildController(leftController())
+  override fun updateLeftController(newLeftController: Controller?, animated: Boolean) {
+    val currentLeftController = leftController()
+    if (currentLeftController != null) {
+      currentLeftController.onHide()
+      removeChildController(currentLeftController)
     }
 
-    this._leftController = leftController
+    _leftController.value = newLeftController
 
-    if (leftController != null) {
-      addChildController(leftController)
-      leftController.attachToParentView(leftControllerView)
-      leftController.onShow()
+    if (newLeftController != null) {
+      addChildController(newLeftController)
+      newLeftController.attachToParentView(leftControllerView)
+      newLeftController.onShow()
     }
   }
 
-  override fun updateRightController(rightController: Controller?, animated: Boolean) {
-    if (rightController() != null) {
-      rightController()?.onHide()
-      removeChildController(rightController())
+  override fun updateRightController(newRightController: Controller?, animated: Boolean) {
+    val currentRightController = rightController()
+    if (currentRightController != null) {
+      currentRightController.onHide()
+      removeChildController(currentRightController)
     } else {
       rightControllerView?.removeAllViews()
     }
 
-    this._rightController = rightController
+    _rightController.value = newRightController
 
-    if (rightController != null) {
-      addChildController(rightController)
-      rightController.attachToParentView(rightControllerView)
-      rightController.onShow()
+    if (newRightController != null) {
+      addChildController(newRightController)
+      newRightController.attachToParentView(rightControllerView)
+      newRightController.onShow()
     } else {
       rightControllerView?.addView(emptyView)
     }
   }
 
   override fun leftController(): Controller? {
-    return _leftController
+    return _leftController.value
   }
 
   override fun rightController(): Controller? {
-    return _rightController
+    return _rightController.value
   }
 
   override fun switchToLeftController(animated: Boolean) {

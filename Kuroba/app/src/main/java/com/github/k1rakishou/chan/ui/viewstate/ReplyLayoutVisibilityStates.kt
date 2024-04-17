@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.ui.globalstate.reply
+package com.github.k1rakishou.chan.ui.viewstate
 
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutVisibility
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor

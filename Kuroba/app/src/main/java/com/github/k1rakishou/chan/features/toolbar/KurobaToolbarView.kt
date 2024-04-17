@@ -7,21 +7,29 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ComposeView
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
+import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
+import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.navigation.ContainerToolbarStateUpdatedListener
+import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
-import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
+import com.github.k1rakishou.chan.ui.viewstate.ToolbarVisibilityState
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
+import com.github.k1rakishou.chan.utils.combineMany
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
@@ -37,6 +45,8 @@ class KurobaToolbarView @JvmOverloads constructor(
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
   @Inject
   lateinit var globalUiStateHolder: GlobalUiStateHolder
+  @Inject
+  lateinit var currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager
 
   private val coroutineScope = KurobaCoroutineScope()
 
@@ -82,27 +92,40 @@ class KurobaToolbarView @JvmOverloads constructor(
     controller.addOrReplaceContainerToolbarStateUpdated(this)
 
     coroutineScope.launch {
-      combine(
+      combineMany(
         ChanSettings.layoutMode.listenForChanges().asFlow(),
         ChanSettings.neverHideToolbar.listenForChanges().asFlow(),
         globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow,
         snapshotFlow { globalUiStateHolder.fastScroller.isDraggingFastScrollerState.value },
-        snapshotFlow { globalUiStateHolder.scroll.scrollTransitionProgress.floatValue }
-      ) { _, _, replyLayoutVisibilityStates, isDraggingFastScroller, scrollProgress ->
-        return@combine ToolbarVisibilityInfo(
+        snapshotFlow { globalUiStateHolder.scroll.scrollTransitionProgress.floatValue },
+        globalUiStateHolder.toolbar.currentToolbarStates,
+        currentOpenedDescriptorStateManager.currentFocusedController,
+        controller.topControllerState.flatMapLatest { controller -> mapTopControllerIntoKeys(controller) }
+      ) { _, _, replyLayoutVisibilityStates, isDraggingFastScroller, scrollProgress,
+          currentToolbarStates, currentFocusedController, topControllerKeys ->
+        return@combineMany ToolbarVisibilityState(
           replyLayoutVisibilityStates = replyLayoutVisibilityStates,
           isDraggingFastScroller = isDraggingFastScroller,
-          scrollProgress = scrollProgress
+          scrollProgress = scrollProgress,
+          currentToolbarStates = currentToolbarStates,
+          currentFocusedController = currentFocusedController,
+          topControllerKeys = topControllerKeys
         )
       }
-        .onEach { toolbarVisibilityInfo ->
-          if (toolbarVisibilityInfo.cannotHideToolbar()) {
+        .onEach { toolbarVisibilityState ->
+          if (toolbarVisibilityState.isToolbarForceVisible()) {
             currentToolbarState?.updateToolbarAlpha(1f)
             globalUiStateHolder.updateScrollState { resetScrollState() }
             return@onEach
           }
 
-          currentToolbarState?.updateToolbarAlpha(toolbarVisibilityInfo.toolbarAlpha)
+          if (toolbarVisibilityState.isToolbarForceHidden()) {
+            currentToolbarState?.updateToolbarAlpha(0f)
+            globalUiStateHolder.updateScrollState { resetScrollState() }
+            return@onEach
+          }
+
+          currentToolbarState?.updateToolbarAlpha(toolbarVisibilityState.toolbarAlpha)
         }
         .collect()
     }
@@ -211,35 +234,40 @@ class KurobaToolbarView @JvmOverloads constructor(
     return null
   }
 
-  private data class ToolbarVisibilityInfo(
-    val replyLayoutVisibilityStates: ReplyLayoutVisibilityStates,
-    val isDraggingFastScroller: Boolean,
-    val scrollProgress: Float
-  ) {
-
-    val toolbarAlpha: Float
-      get() = scrollProgress
-
-    fun cannotHideToolbar(): Boolean {
-      if (isDraggingFastScroller) {
-        return true
+  // Holy shit, what a hack!
+  // Basically, what it does: each time ToolbarNavigationController's top controller changes
+  // we check what kind of a controller it is. If it's a regular controller then we return just that controller.
+  // If it's a DoubleNavigationController then we need to listen to top controllers from both left/right parts so we
+  // return a flow of child controllers.
+  private fun mapTopControllerIntoKeys(controller: Controller?): Flow<List<ControllerKey>> {
+    return flow {
+      if (controller == null) {
+        emit(emptyList())
+        return@flow
       }
 
-      if (replyLayoutVisibilityStates.anyOpenedOrExpanded()) {
-        return true
+      if (controller is DoubleNavigationController) {
+        val flowOfChildControllers = combine(
+          controller.leftControllerFlow,
+          controller.rightControllerFlow
+        ) { left, right ->
+          return@combine buildList {
+            if (left != null) {
+              add(left.controllerKey)
+            }
+
+            if (right != null) {
+              add(right.controllerKey)
+            }
+          }
+        }
+
+        emitAll(flowOfChildControllers)
+        return@flow
       }
 
-      if (!ChanSettings.canCollapseToolbar()) {
-        return true
-      }
-
-      return false
+      emit(listOf(controller.controllerKey))
     }
   }
 
-  companion object {
-    val ToolbarAnimationInterpolator = FastOutSlowInInterpolator()
-    const val ToolbarAnimationDurationMs = 250L
-  }
-  
 }

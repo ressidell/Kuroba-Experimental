@@ -50,6 +50,7 @@ import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBack
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
+import com.github.k1rakishou.chan.ui.viewstate.DrawerEnableState
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.TimeUtils

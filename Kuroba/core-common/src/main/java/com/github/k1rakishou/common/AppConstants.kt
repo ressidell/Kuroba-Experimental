@@ -254,5 +254,9 @@ open class AppConstants(
     val SOUND_POST_PATTERN_WHOLE by lazy { Pattern.compile("(\\[sound=.*?\\])") }
 
     val MIN_QUERY_LENGTH = 2
+
+    object Animations {
+      const val ToolbarAnimationDurationMs = 250L
+    }
   }
 }

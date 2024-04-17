@@ -21,12 +21,15 @@ import com.github.k1rakishou.chan.ui.controller.base.transition.ControllerTransi
 import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutBoundsStates
-import com.github.k1rakishou.chan.ui.globalstate.reply.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.ui.layout.ThreadSlidingPaneLayout
 import com.github.k1rakishou.chan.ui.view.widget.SlidingPaneLayoutEx
+import com.github.k1rakishou.chan.ui.viewstate.ReplyLayoutVisibilityStates
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.core_themes.ThemeEngine.ThemeChangesListener
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
@@ -45,8 +48,14 @@ class ThreadSlideController(
   @Inject
   lateinit var themeEngine: ThemeEngine
 
-  private var leftController: BrowseController? = null
-  private var rightController: ViewThreadController? = null
+  private val _leftController = MutableStateFlow<BrowseController?>(null)
+  override val leftControllerFlow: StateFlow<Controller?>
+    get() = _leftController.asStateFlow()
+
+  private val _rightController = MutableStateFlow<ViewThreadController?>(null)
+  override val rightControllerFlow: StateFlow<Controller?>
+    get() = _rightController.asStateFlow()
+
   private var mainControllerCallbacks: MainControllerCallbacks?
   private var slidingPaneLayout: ThreadSlidingPaneLayout? = null
   private var slidingPaneLayoutOpenState = SlidingPaneLayoutOpenState.LeftOpened
@@ -131,8 +140,8 @@ class ThreadSlideController(
       slidingPane.openPane()
     }
 
-    updateLeftController(leftController = null, animated = false)
-    updateRightController(rightController = null, animated = false)
+    updateLeftController(newLeftController = null, animated = false)
+    updateRightController(newRightController = null, animated = false)
 
     val textView = emptyView.findViewById<TextView>(R.id.select_thread_text)
     textView?.setTextColor(themeEngine.chanTheme.textColorSecondary)
@@ -223,18 +232,19 @@ class ThreadSlideController(
     TODO("Not yet implemented (pushToRightController)")
   }
 
-  override fun updateLeftController(leftController: Controller?, animated: Boolean) {
-    this.leftController?.let { left ->
-      left.onHide()
-      removeChildController(left)
+  override fun updateLeftController(newLeftController: Controller?, animated: Boolean) {
+    val currentLeftController = leftController()
+    if (currentLeftController != null) {
+      currentLeftController.onHide()
+      removeChildController(currentLeftController)
     }
 
-    this.leftController = leftController as BrowseController?
+    _leftController.value = newLeftController as BrowseController?
 
-    if (leftController != null && slidingPaneLayout != null) {
-      addChildController(leftController)
-      leftController.attachToParentView(slidingPaneLayout!!.leftPane)
-      leftController.onShow()
+    if (newLeftController != null && slidingPaneLayout != null) {
+      addChildController(newLeftController)
+      newLeftController.attachToParentView(slidingPaneLayout!!.leftPane)
+      newLeftController.onShow()
 
       if (isLeftOpen()) {
         updateContainerToolbarStateWithChildToolbarState(
@@ -245,21 +255,22 @@ class ThreadSlideController(
     }
   }
 
-  override fun updateRightController(rightController: Controller?, animated: Boolean) {
-    if (this.rightController != null) {
-      this.rightController!!.onHide()
-      removeChildController(this.rightController!!)
+  override fun updateRightController(newRightController: Controller?, animated: Boolean) {
+    val currentRightController = rightController()
+    if (currentRightController != null) {
+      currentRightController.onHide()
+      removeChildController(currentRightController)
     } else {
       slidingPaneLayout?.rightPane?.removeAllViews()
     }
 
-    this.rightController = rightController as ViewThreadController?
+    _rightController.value = newRightController as ViewThreadController?
 
-    if (rightController != null) {
+    if (newRightController != null) {
       if (slidingPaneLayout != null) {
-        addChildController(rightController)
-        rightController.attachToParentView(slidingPaneLayout!!.rightPane)
-        rightController.onShow()
+        addChildController(newRightController)
+        newRightController.attachToParentView(slidingPaneLayout!!.rightPane)
+        newRightController.onShow()
 
         if (!isLeftOpen()) {
           updateContainerToolbarStateWithChildToolbarState(
@@ -274,11 +285,11 @@ class ThreadSlideController(
   }
 
   override fun leftController(): BrowseController? {
-    return leftController
+    return _leftController.value
   }
 
   override fun rightController(): ViewThreadController? {
-    return rightController
+    return _rightController.value
   }
 
   override fun pushController(to: Controller): Boolean {
@@ -316,7 +327,7 @@ class ThreadSlideController(
   override fun onBack(): Boolean {
     if (slidingPaneLayout != null) {
       if (isRightOpen()) {
-        if (rightController != null && rightController?.onBack() == true) {
+        if (rightController()?.onBack() == true) {
           return true
         }
 
@@ -324,7 +335,7 @@ class ThreadSlideController(
         return true
       }
 
-      if (leftController != null && leftController?.onBack() == true) {
+      if (leftController()?.onBack() == true) {
         return true
       }
     }
@@ -357,6 +368,9 @@ class ThreadSlideController(
       slidingPaneLayoutOpenState = slidingPaneLayoutOpenState,
       animate = animated
     )
+
+    val rightController = rightController()
+    val leftController = leftController()
 
     if (slidingPaneLayoutOpenState.leftOpenedOrOpening && rightController != null) {
       (rightController as ReplyAutoCloseListener).onReplyViewShouldClose()
@@ -428,9 +442,9 @@ class ThreadSlideController(
 
   private fun getToolbarState(slidingPaneLayoutOpenState: SlidingPaneLayoutOpenState): KurobaToolbarState {
     var kurobaToolbarState = if (slidingPaneLayoutOpenState.leftOpenedOrOpening) {
-      leftController?.toolbarState
+      leftController()?.toolbarState
     } else {
-      rightController?.toolbarState
+      rightController()?.toolbarState
     }
 
     if (kurobaToolbarState == null) {

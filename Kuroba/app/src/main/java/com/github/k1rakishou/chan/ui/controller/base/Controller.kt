@@ -38,6 +38,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @Suppress("LeakingThis")
@@ -95,6 +98,10 @@ abstract class Controller(
     } else {
       null
     }
+
+  private val _topControllerState = MutableStateFlow<Controller?>(null)
+  val topControllerState: StateFlow<Controller?>
+    get() = _topControllerState.asStateFlow()
 
   private var _alive = false
   val alive: Boolean
@@ -258,6 +265,8 @@ abstract class Controller(
     if (controller.navigationController is StyledToolbarNavigationController) {
       (controller.navigationController as StyledToolbarNavigationController).onChildControllerPushed(controller)
     }
+
+    _topControllerState.value = topController
   }
 
   fun removeChildController(controller: Controller?) {
@@ -280,6 +289,7 @@ abstract class Controller(
     }
 
     kurobaToolbarStateManager.remove(controller.controllerKey)
+    _topControllerState.value = topController
   }
 
   fun attachToParentView(parentView: ViewGroup?) {

@@ -467,6 +467,10 @@ class KurobaToolbarState(
       prevTop?.onHidden()
       newTop?.onShown()
       prevTop?.onDestroyed()
+
+      if (newTop != null) {
+        globalUiStateHolder.updateToolbarState { onToolbarTopStateChanged(controllerKey, newTop.kind) }
+      }
     } else {
       val belowTop = _toolbarList.getOrNull(_toolbarList.lastIndex - 1)
       if (belowTop == null) {
@@ -545,6 +549,10 @@ class KurobaToolbarState(
         newTop?.onCreated()
         prevTop?.onHidden()
         newTop?.onShown()
+
+        if (newTop != null) {
+          globalUiStateHolder.updateToolbarState { onToolbarTopStateChanged(controllerKey, newTop.kind) }
+        }
       }
       TransitionMode.Out -> {
         val prevTop = _toolbarList.lastOrNull()
@@ -557,6 +565,10 @@ class KurobaToolbarState(
         prevTop?.onHidden()
         newTop?.onShown()
         prevTop?.onDestroyed()
+
+        if (newTop != null) {
+          globalUiStateHolder.updateToolbarState { onToolbarTopStateChanged(controllerKey, newTop.kind) }
+        }
       }
     }
 
@@ -586,6 +598,10 @@ class KurobaToolbarState(
         newTop?.onCreated()
         prevTop?.onHidden()
         newTop?.onShown()
+
+        if (newTop != null) {
+          globalUiStateHolder.updateToolbarState { onToolbarTopStateChanged(controllerKey, newTop.kind) }
+        }
       } else {
         _transitionToolbarState.value = KurobaToolbarTransition.Instant(
           transitionMode = TransitionMode.In,

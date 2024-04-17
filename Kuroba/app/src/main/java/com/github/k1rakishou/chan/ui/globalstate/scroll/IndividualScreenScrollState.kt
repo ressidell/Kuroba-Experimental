@@ -7,8 +7,8 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.unit.dp
 import androidx.core.animation.addListener
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
-import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.helper.AppResources
+import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.quantize
 import com.github.k1rakishou.common.resumeValueSafe
 import kotlinx.coroutines.Job
@@ -96,7 +96,7 @@ internal class IndividualScreenScrollState(
 
     suspendCancellableCoroutine<Unit> { continuation ->
       val animator = ObjectAnimator.ofFloat(from, to)
-      animator.duration = KurobaToolbarView.ToolbarAnimationDurationMs
+      animator.duration = AppConstants.Companion.Animations.ToolbarAnimationDurationMs
       animator.interpolator = interpolator
       animator.addUpdateListener { valueAnimator ->
         block((valueAnimator.animatedValue as Float).quantize(fps))
