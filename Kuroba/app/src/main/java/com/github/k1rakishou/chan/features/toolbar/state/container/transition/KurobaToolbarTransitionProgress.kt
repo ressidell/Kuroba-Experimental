@@ -18,13 +18,13 @@ internal fun KurobaToolbarTransitionProgress(
   toolbarHeight: Dp,
   transitionToolbarState: KurobaToolbarTransition?,
   topToolbarState: KurobaToolbarSubState?,
-  childToolbarMovable: @Composable (KurobaToolbarSubState?) -> Unit,
-  childToolbar: @Composable (KurobaToolbarSubState?) -> Unit
+  topToolbarContent: @Composable (KurobaToolbarSubState?) -> Unit,
+  transitionToolbarContent: @Composable (KurobaToolbarSubState?) -> Unit
 ) {
   transitionToolbarState as KurobaToolbarTransition.Progress?
 
   if (transitionToolbarState == null || transitionToolbarState.progress < 0f) {
-    childToolbarMovable(topToolbarState)
+    topToolbarContent(topToolbarState)
   } else {
     ToolbarTransitionContainer(
       toolbarHeight = toolbarHeight,
@@ -32,8 +32,8 @@ internal fun KurobaToolbarTransitionProgress(
       transitionProgress = transitionToolbarState.progress,
       transitionToolbarState = transitionToolbarState.transitionToolbarState,
       topToolbarState = topToolbarState,
-      childToolbarMovable = childToolbarMovable,
-      childToolbar = childToolbar
+      topToolbarContent = topToolbarContent,
+      transitionToolbarContent = transitionToolbarContent
     )
   }
 }
@@ -45,8 +45,8 @@ private fun ToolbarTransitionContainer(
   transitionProgress: Float,
   transitionToolbarState: KurobaToolbarSubState?,
   topToolbarState: KurobaToolbarSubState?,
-  childToolbarMovable: @Composable (KurobaToolbarSubState?) -> Unit,
-  childToolbar: @Composable (KurobaToolbarSubState?) -> Unit
+  topToolbarContent: @Composable (KurobaToolbarSubState?) -> Unit,
+  transitionToolbarContent: @Composable (KurobaToolbarSubState?) -> Unit
 ) {
   val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.toPx() }
 
@@ -67,7 +67,7 @@ private fun ToolbarTransitionContainer(
           )
         }
     ) {
-      childToolbarMovable(topToolbarState)
+      topToolbarContent(topToolbarState)
     }
 
     Box(
@@ -82,7 +82,7 @@ private fun ToolbarTransitionContainer(
           )
         }
     ) {
-      childToolbar(transitionToolbarState)
+      transitionToolbarContent(transitionToolbarState)
     }
   }
 }

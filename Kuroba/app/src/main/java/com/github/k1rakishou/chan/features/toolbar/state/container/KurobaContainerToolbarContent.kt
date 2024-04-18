@@ -49,9 +49,9 @@ fun KurobaContainerToolbarContent(
   val transitionToolbarMut by kurobaToolbarState.transitionToolbarState
   val transitionToolbar = transitionToolbarMut
 
-  val childToolbarMovable = remember {
-    movableContentOf { topToolbarState: KurobaToolbarSubState? ->
-      childToolbar(topToolbarState)
+  val toolbarContentMovable = remember {
+    movableContentOf { toolbarSubState: KurobaToolbarSubState? ->
+      childToolbar(toolbarSubState)
     }
   }
 
@@ -71,8 +71,8 @@ fun KurobaContainerToolbarContent(
           toolbarHeight = toolbarHeight,
           transitionToolbarState = transitionToolbar,
           topToolbarState = topToolbarState,
-          childToolbarMovable = childToolbarMovable,
-          childToolbar = childToolbar
+          topToolbarContent = toolbarContentMovable,
+          transitionToolbarContent = toolbarContentMovable
         )
       }
       is KurobaToolbarTransition.Instant -> {
@@ -80,8 +80,8 @@ fun KurobaContainerToolbarContent(
           toolbarHeight = toolbarHeight,
           transitionToolbarState = transitionToolbar,
           topToolbarState = topToolbarState,
-          childToolbarMovable = childToolbarMovable,
-          childToolbar = childToolbar,
+          childToolbarMovable = toolbarContentMovable,
+          childToolbar = toolbarContentMovable,
           onAnimationFinished = { kurobaToolbarState.onKurobaToolbarTransitionInstantFinished(transitionToolbar) }
         )
       }
