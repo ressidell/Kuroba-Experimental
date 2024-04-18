@@ -12,6 +12,10 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.RecalculatableLazy
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
+import com.github.k1rakishou.chan.ui.cell.helpers.PostNumberClickableSpan
+import com.github.k1rakishou.chan.ui.cell.helpers.PosterIdClickableSpan
+import com.github.k1rakishou.chan.ui.cell.helpers.PosterNameClickableSpan
+import com.github.k1rakishou.chan.ui.cell.helpers.PosterTripcodeClickableSpan
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getQuantityString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -456,7 +460,7 @@ data class PostCellData(
       append(postNoTextFull)
 
       if (tapNoReply) {
-        setSpan(PostCell.PostNumberClickableSpan(postCellCallback, post), 0, this.length, 0)
+        setSpan(PostNumberClickableSpan(postCellCallback, post), 0, this.length, 0)
       }
 
       setSpan(ForegroundColorSpanHashed(theme.postDetailsColor), 0, this.length, 0)
@@ -513,7 +517,7 @@ data class PostCellData(
 
     val nameSpan = SpannableString.valueOf(name)
     nameSpan.setSpan(ForegroundColorIdSpan(ChanThemeColorId.PostNameColor), 0, nameSpan.length, 0)
-    nameSpan.setSpan(PostCell.PosterNameClickableSpan(postCellCallback, post), 0, nameSpan.length, 0)
+    nameSpan.setSpan(PosterNameClickableSpan(postCellCallback, post), 0, nameSpan.length, 0)
 
     return nameSpan
   }
@@ -526,7 +530,7 @@ data class PostCellData(
 
     val tripcodeSpan = SpannableString.valueOf(tripcode)
     tripcodeSpan.setSpan(ForegroundColorIdSpan(ChanThemeColorId.PostNameColor), 0, tripcodeSpan.length, 0)
-    tripcodeSpan.setSpan(PostCell.PosterTripcodeClickableSpan(postCellCallback, post), 0, tripcodeSpan.length, 0)
+    tripcodeSpan.setSpan(PosterTripcodeClickableSpan(postCellCallback, post), 0, tripcodeSpan.length, 0)
 
     return tripcodeSpan
   }
@@ -551,7 +555,7 @@ data class PostCellData(
 
     val posterIdSpan = SpannableString.valueOf(posterId)
     posterIdSpan.setSpan(ForegroundColorSpanHashed(updatedPosterIdColor), 0, posterIdSpan.length, 0)
-    posterIdSpan.setSpan(PostCell.PosterIdClickableSpan(postCellCallback, post), 0, posterIdSpan.length, 0)
+    posterIdSpan.setSpan(PosterIdClickableSpan(postCellCallback, post), 0, posterIdSpan.length, 0)
 
     return posterIdSpan
   }

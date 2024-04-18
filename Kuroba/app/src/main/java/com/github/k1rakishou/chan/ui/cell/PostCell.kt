@@ -5,33 +5,21 @@ import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
-import android.os.Handler
-import android.os.Looper
-import android.os.SystemClock
-import android.text.Layout
 import android.text.Spannable
-import android.text.SpannableString
 import android.text.Spanned
-import android.text.TextPaint
-import android.text.method.LinkMovementMethod
 import android.text.style.BackgroundColorSpan
-import android.text.style.ClickableSpan
 import android.util.AttributeSet
 import android.view.ActionMode
 import android.view.GestureDetector
-import android.view.HapticFeedbackConstants
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.GravityCompat
 import androidx.core.widget.TextViewCompat
-import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
@@ -42,6 +30,10 @@ import com.github.k1rakishou.chan.ui.animation.PostBackgroundBlinkAnimator.creat
 import com.github.k1rakishou.chan.ui.animation.PostUnseenIndicatorFadeAnimator
 import com.github.k1rakishou.chan.ui.animation.PostUnseenIndicatorFadeAnimator.createUnseenPostIndicatorFadeAnimation
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface.PostCellCallback
+import com.github.k1rakishou.chan.ui.cell.helpers.PostCellDoubleTapDetector
+import com.github.k1rakishou.chan.ui.cell.helpers.PostCommentLongtapDetector
+import com.github.k1rakishou.chan.ui.cell.helpers.PostViewFastMovementMethod
+import com.github.k1rakishou.chan.ui.cell.helpers.PostViewMovementMethod
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailViewsContainer
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableAlternativeCardView
 import com.github.k1rakishou.chan.ui.view.DashedLineView
@@ -140,12 +132,12 @@ class PostCell @JvmOverloads constructor(
   private val linkClickSpan: BackgroundColorIdSpan
   private val quoteClickSpan: BackgroundColorIdSpan
   private val spoilerClickSpan: BackgroundColorSpan
+  private val commentMovementMethod: PostViewMovementMethod
+  private val titleMovementMethod: PostViewFastMovementMethod
+  private val postCommentLongtapDetector: PostCommentLongtapDetector
+  private val doubleTapGestureDetector: GestureDetector
 
   private val scope = KurobaCoroutineScope()
-  private val commentMovementMethod = PostViewMovementMethod()
-  private val titleMovementMethod = PostViewFastMovementMethod()
-  private val postCommentLongtapDetector = PostCommentLongtapDetector(context)
-  private val doubleTapGestureDetector = GestureDetector(context, PostCellDoubleTapDetector())
 
   private val unseenPostIndicatorFadeOutAnimation = lazy(LazyThreadSafetyMode.NONE) {
     createUnseenPostIndicatorFadeAnimation()
@@ -247,6 +239,32 @@ class PostCell @JvmOverloads constructor(
     linkClickSpan = BackgroundColorIdSpan(ChanThemeColorId.PostLinkColor, 1.3f)
     quoteClickSpan = BackgroundColorIdSpan(ChanThemeColorId.PostQuoteColor, 1.3f)
     spoilerClickSpan = BackgroundColorSpan(themeEngine.chanTheme.postSpoilerColor)
+
+    commentMovementMethod = PostViewMovementMethod(
+      linkClickSpan = linkClickSpan,
+      quoteClickSpan = quoteClickSpan,
+      spoilerClickSpan = spoilerClickSpan,
+      postCellDataFunc = { postCellData },
+      commentFunc = { comment },
+      postCellCallbackFunc = { postCellCallback },
+      performPostCellLongtap = { this@PostCell.performLongClick() }
+    )
+
+    postCommentLongtapDetector = PostCommentLongtapDetector(
+      context = context,
+      commentFunc = { comment }
+    )
+
+    titleMovementMethod = PostViewFastMovementMethod(postCommentLongtapDetector)
+
+    doubleTapGestureDetector = GestureDetector(
+      context,
+      PostCellDoubleTapDetector(
+        commentMovementMethod = commentMovementMethod,
+        commentFunc = { comment },
+        performRequestParentDisallowInterceptTouchEvents = { this@PostCell.requestDisallowInterceptTouchEvent(true) }
+      )
+    )
   }
 
   override fun onAttachedToWindow() {
@@ -1031,565 +1049,6 @@ class PostCell @JvmOverloads constructor(
         bgColor = themeEngine.chanTheme.accentColor,
         minQueryLength = AppConstants.MIN_QUERY_LENGTH
       )
-    }
-  }
-
-  private inner class PostCommentLongtapDetector(
-    private val context: Context
-  ) {
-    private val scaledTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
-
-    private var blocking = false
-    private var upOrCancelSent = false
-    private var initialTouchEvent: MotionEvent? = null
-
-    var postCellContainer: ViewGroup? = null
-    var commentView: View? = null
-
-    fun passTouchEvent(event: MotionEvent) {
-      if (event.pointerCount != 1) {
-        return
-      }
-
-      val action = event.actionMasked
-      val blockedByFlags = blocking || upOrCancelSent || initialTouchEvent != null
-
-      if ((action != MotionEvent.ACTION_UP && action != MotionEvent.ACTION_CANCEL) && blockedByFlags) {
-        return
-      }
-
-      when (action) {
-        MotionEvent.ACTION_DOWN -> {
-          val postCommentMovementMethod = comment.movementMethod as? PostViewMovementMethod
-
-          if (postCommentMovementMethod != null
-            && postCommentMovementMethod.touchOverlapsAnyClickableSpan(comment, event)) {
-            blocking = true
-            sendUpOrCancel(event)
-            return
-          }
-
-          initialTouchEvent = MotionEvent.obtain(event)
-
-          modifyEventPosition(event) { updatedEvent ->
-            postCellContainer?.onTouchEvent(updatedEvent)
-          }
-        }
-        MotionEvent.ACTION_MOVE -> {
-          if (initialTouchEvent == null) {
-            blocking = true
-            sendUpOrCancel(event)
-            return
-          }
-
-          val deltaX = Math.abs(event.x - initialTouchEvent!!.x)
-          val deltaY = Math.abs(event.y - initialTouchEvent!!.y)
-
-          if (deltaX > scaledTouchSlop || deltaY > scaledTouchSlop) {
-            blocking = true
-            sendUpOrCancel(event)
-            return
-          }
-        }
-        MotionEvent.ACTION_UP,
-        MotionEvent.ACTION_CANCEL -> {
-          sendUpOrCancel(event)
-
-          blocking = false
-          upOrCancelSent = false
-
-          initialTouchEvent?.recycle()
-          initialTouchEvent = null
-        }
-      }
-    }
-
-    private fun sendUpOrCancel(event: MotionEvent) {
-      if (upOrCancelSent) {
-        return
-      }
-
-      upOrCancelSent = true
-
-      val action = if (blocking || event.actionMasked == MotionEvent.ACTION_CANCEL) {
-        MotionEvent.ACTION_CANCEL
-      } else {
-        MotionEvent.ACTION_UP
-      }
-
-      val motionEvent = MotionEvent.obtain(
-        SystemClock.uptimeMillis(),
-        SystemClock.uptimeMillis(),
-        action,
-        event.x,
-        event.y,
-        event.metaState
-      )
-
-      modifyEventPosition(motionEvent) { updatedEvent ->
-        postCellContainer?.onTouchEvent(updatedEvent)
-      }
-
-      motionEvent.recycle()
-    }
-
-    private fun modifyEventPosition(inputEvent: MotionEvent, applier: (MotionEvent) -> Unit) {
-      val deltaX = (commentView!!.left - postCellContainer!!.left).coerceAtLeast(0)
-      val deltaY = (commentView!!.top - postCellContainer!!.top).coerceAtLeast(0)
-
-      val event = MotionEvent.obtain(
-        inputEvent.downTime,
-        inputEvent.eventTime,
-        inputEvent.action,
-        inputEvent.x + deltaX,
-        inputEvent.y + deltaY,
-        inputEvent.metaState
-      )
-
-      applier(event)
-      event.recycle()
-    }
-
-  }
-
-  /**
-   * A MovementMethod that searches for PostLinkables.<br></br>
-   * See [PostLinkable] for more information.
-   */
-  private inner class PostViewMovementMethod() : LinkMovementMethod() {
-    private val handler = Handler(Looper.getMainLooper())
-    private val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
-
-    private var longClicking = false
-    private var skipNextUpEvent = false
-    private var performLinkLongClick: PerformalLinkLongClick? = null
-
-    override fun onTouchEvent(widget: TextView, buffer: Spannable, event: MotionEvent): Boolean {
-      val action = event.actionMasked
-
-      if (action == MotionEvent.ACTION_DOWN) {
-        skipNextUpEvent = false
-      }
-
-      if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-        if (performLinkLongClick != null) {
-          handler.removeCallbacks(performLinkLongClick!!)
-
-          longClicking = false
-          performLinkLongClick = null
-        }
-
-        if (skipNextUpEvent) {
-          return true
-        }
-      }
-
-      if (action != MotionEvent.ACTION_UP
-        && action != MotionEvent.ACTION_CANCEL
-        && action != MotionEvent.ACTION_DOWN
-      ) {
-        return true
-      }
-
-      if (action == MotionEvent.ACTION_CANCEL) {
-        buffer.removeSpan(linkClickSpan)
-        buffer.removeSpan(quoteClickSpan)
-        buffer.removeSpan(spoilerClickSpan)
-
-        return true
-      }
-
-      var x = event.x.toInt()
-      var y = event.y.toInt()
-
-      x -= widget.totalPaddingLeft
-      y -= widget.totalPaddingTop
-      x += widget.scrollX
-      y += widget.scrollY
-
-      val layout = widget.layout
-      val line = layout.getLineForVertical(y)
-      val lineLeft = layout.getLineLeft(line)
-      val lineRight = layout.getLineRight(line)
-
-      if (clickCoordinatesHitPostComment(x, lineLeft, lineRight)) {
-        val offset = layout.getOffsetForHorizontal(line, x.toFloat())
-        val clickableSpans = buffer.getSpans(offset, offset, ClickableSpan::class.java).toList()
-        if (clickableSpans.isNotEmpty()) {
-          onClickableSpanClicked(widget, buffer, action, clickableSpans)
-
-          if (action == MotionEvent.ACTION_DOWN && performLinkLongClick == null) {
-            val postLinkables = clickableSpans.filterIsInstance<PostLinkable>()
-            if (postLinkables.isNotEmpty()) {
-              performLinkLongClick = PerformalLinkLongClick(postLinkables)
-              handler.postDelayed(performLinkLongClick!!, longPressTimeout)
-            }
-          }
-
-          return true
-        }
-      }
-
-      buffer.removeSpan(linkClickSpan)
-      buffer.removeSpan(quoteClickSpan)
-      buffer.removeSpan(spoilerClickSpan)
-
-      return false
-    }
-
-    private fun clickCoordinatesHitPostComment(x: Int, lineLeft: Float, lineRight: Float): Boolean {
-      if (ChanSettings.postLinksTakeWholeHorizSpace.get()) {
-        return true
-      }
-
-      return x >= lineLeft && x < lineRight
-    }
-
-    fun touchOverlapsAnyClickableSpan(textView: TextView, event: MotionEvent): Boolean {
-      val action = event.actionMasked
-
-      if (action != MotionEvent.ACTION_UP
-        && action != MotionEvent.ACTION_CANCEL
-        && action != MotionEvent.ACTION_DOWN
-      ) {
-        return true
-      }
-
-      var x = event.x.toInt()
-      var y = event.y.toInt()
-
-      val buffer = if (textView.text is Spannable) {
-        textView.text as Spannable
-      } else {
-        SpannableString(textView.text)
-      }
-
-      x -= textView.totalPaddingLeft
-      y -= textView.totalPaddingTop
-      x += textView.scrollX
-      y += textView.scrollY
-
-      val layout = textView.layout
-      val line = layout.getLineForVertical(y)
-      val off = layout.getOffsetForHorizontal(line, x.toFloat())
-      val links = buffer.getSpans(off, off, ClickableSpan::class.java)
-
-      return links.isNotEmpty()
-    }
-
-    private fun onClickableSpanClicked(
-      widget: TextView,
-      buffer: Spannable,
-      action: Int,
-      clickableSpans: List<ClickableSpan>
-    ) {
-      val clickableSpan1 = clickableSpans[0]
-
-      val clickableSpan2 = if (clickableSpans.size > 1) {
-        clickableSpans[1]
-      } else {
-        null
-      }
-
-      val linkable1 = if (clickableSpan1 is PostLinkable) {
-        clickableSpan1
-      } else {
-        null
-      }
-
-      val linkable2 = if (clickableSpan2 is PostLinkable) {
-        clickableSpan2
-      } else {
-        null
-      }
-
-      if (action == MotionEvent.ACTION_UP) {
-        if (!longClicking) {
-          handleActionUpForClickOrLongClick(
-            linkable1 = linkable1,
-            linkable2 = linkable2,
-            links = clickableSpans.toMutableList(),
-            widget = widget,
-            buffer = buffer
-          )
-        }
-
-        return
-      }
-
-      if (action == MotionEvent.ACTION_DOWN && clickableSpan1 is PostLinkable) {
-        val span = when (clickableSpan1.type) {
-          PostLinkable.Type.LINK -> linkClickSpan
-          PostLinkable.Type.SPOILER -> spoilerClickSpan
-          else -> quoteClickSpan
-        }
-
-        buffer.setSpan(
-          span,
-          buffer.getSpanStart(clickableSpan1),
-          buffer.getSpanEnd(clickableSpan1),
-          0
-        )
-
-        return
-      }
-    }
-
-    private fun handleActionUpForClickOrLongClick(
-      linkable1: PostLinkable?,
-      linkable2: PostLinkable?,
-      links: MutableList<ClickableSpan>,
-      widget: TextView,
-      buffer: Spannable
-    ) {
-
-      fun fireCallback(post: ChanPost, linkable: PostLinkable): Boolean {
-        val isInPopup = postCellData?.isInPopup
-          ?: return false
-
-        if (!longClicking) {
-          postCellCallback?.onPostLinkableClicked(post, linkable, isInPopup)
-          return false
-        }
-
-        skipNextUpEvent = true
-
-        comment.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-
-        if (linkable.type == PostLinkable.Type.SPOILER) {
-          this@PostCell.performLongClick()
-          return true
-        }
-
-        postCellCallback?.onPostLinkableLongClicked(post, linkable, isInPopup)
-        return false
-      }
-
-      var consumeEvent = false
-
-      if (linkable2 == null && linkable1 != null) {
-        // regular, non-spoilered link
-        if (postCellData != null) {
-          consumeEvent = fireCallback(postCellData!!.post, linkable1)
-        }
-      } else if (linkable2 != null && linkable1 != null) {
-        // spoilered link, figure out which span is the spoiler
-        if (linkable1.type === PostLinkable.Type.SPOILER) {
-          if (linkable1.isSpoilerVisible) {
-            // linkable2 is the link and we're unspoilered
-            if (postCellData != null) {
-              consumeEvent = fireCallback(postCellData!!.post, linkable2)
-            }
-          } else {
-            // linkable2 is the link and we're spoilered; don't do the click event
-            // on the link yet
-            links.remove(linkable2)
-          }
-        } else if (linkable2.type === PostLinkable.Type.SPOILER) {
-          if (linkable2.isSpoilerVisible) {
-            // linkable 1 is the link and we're unspoilered
-            if (postCellData != null) {
-              consumeEvent = fireCallback(postCellData!!.post, linkable1)
-            }
-          } else {
-            // linkable1 is the link and we're spoilered; don't do the click event
-            // on the link yet
-            links.remove(linkable1)
-          }
-        } else {
-          // weird case where a double stack of linkables, but isn't spoilered
-          // (some 4chan stickied posts)
-          if (postCellData != null) {
-            consumeEvent = fireCallback(postCellData!!.post, linkable1)
-          }
-        }
-      }
-
-      if (consumeEvent) {
-        return
-      }
-
-      // do onclick on all spoiler postlinkables afterwards, so that we don't update the
-      // spoiler state early
-      for (clickableSpan in links) {
-        if (clickableSpan !is PostLinkable) {
-          continue
-        }
-
-        if (clickableSpan.type === PostLinkable.Type.SPOILER) {
-          clickableSpan.onClick(widget)
-        }
-      }
-
-      buffer.removeSpan(linkClickSpan)
-      buffer.removeSpan(quoteClickSpan)
-      buffer.removeSpan(spoilerClickSpan)
-    }
-
-    private inner class PerformalLinkLongClick(
-      private val clickedSpans: List<ClickableSpan>
-    ) : Runnable {
-
-      override fun run() {
-        val clickableSpan1 = clickedSpans[0]
-
-        val clickableSpan2 = if (clickedSpans.size > 1) {
-          clickedSpans[1]
-        } else {
-          null
-        }
-
-        val linkable1 = if (clickableSpan1 is PostLinkable) {
-          clickableSpan1
-        } else {
-          null
-        }
-
-        val linkable2 = if (clickableSpan2 is PostLinkable) {
-          clickableSpan2
-        } else {
-          null
-        }
-
-        longClicking = true
-
-        handleActionUpForClickOrLongClick(
-          linkable1 = linkable1,
-          linkable2 = linkable2,
-          links = clickedSpans.toMutableList(),
-          widget = comment,
-          buffer = comment.text as Spannable
-        )
-      }
-
-    }
-
-  }
-
-  /**
-   * A MovementMethod that searches for PostLinkables.<br></br>
-   * See [PostLinkable] for more information.
-   */
-  private inner class PostViewFastMovementMethod : LinkMovementMethod() {
-    private var intercept = false
-
-    override fun onTouchEvent(widget: TextView, buffer: Spannable, event: MotionEvent): Boolean {
-      val action = event.actionMasked
-
-      var x = event.x.toInt()
-      var y = event.y.toInt()
-
-      x -= widget.paddingLeft
-      y -= widget.paddingTop
-      x += widget.scrollX
-      y += widget.scrollY
-
-      val layout: Layout = widget.layout
-      val line = layout.getLineForVertical(y)
-      val off = layout.getOffsetForHorizontal(line, x.toFloat())
-      val link = buffer.getSpans(off, off, ClickableSpan::class.java)
-      val clickIsExactlyWithinBounds = (x >= layout.getLineLeft(line)) && (x < layout.getLineRight(line))
-      val clickingSpans = link.isNotEmpty() && clickIsExactlyWithinBounds
-
-      if (!intercept && action == MotionEvent.ACTION_UP && clickingSpans) {
-        link[0].onClick(widget)
-        return true
-      }
-
-      if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-        intercept = false
-      }
-
-      if (!clickingSpans) {
-        intercept = true
-        postCommentLongtapDetector.passTouchEvent(event)
-        return true
-      }
-
-      return false
-    }
-
-  }
-
-  class PostNumberClickableSpan(
-    private val postCellCallback: PostCellCallback?,
-    private val post: ChanPost?
-  ) : ClickableSpan() {
-
-    override fun onClick(widget: View) {
-      post?.let { post ->
-        postCellCallback?.onPostNoClicked(post)
-      }
-    }
-
-    override fun updateDrawState(ds: TextPaint) {
-      ds.isUnderlineText = false
-    }
-
-  }
-
-  class PosterIdClickableSpan(
-    private val postCellCallback: PostCellCallback?,
-    private val post: ChanPost?
-  ) : ClickableSpan() {
-
-    override fun onClick(widget: View) {
-      post?.let { post ->
-        postCellCallback?.onPostPosterIdClicked(post)
-      }
-    }
-
-    override fun updateDrawState(ds: TextPaint) {
-      ds.isUnderlineText = false
-    }
-
-  }
-
-  class PosterNameClickableSpan(
-    private val postCellCallback: PostCellCallback?,
-    private val post: ChanPost?
-  ) : ClickableSpan() {
-
-    override fun onClick(widget: View) {
-      post?.let { post ->
-        postCellCallback?.onPostPosterNameClicked(post)
-      }
-    }
-
-    override fun updateDrawState(ds: TextPaint) {
-      ds.isUnderlineText = false
-    }
-
-  }
-
-  class PosterTripcodeClickableSpan(
-    private val postCellCallback: PostCellCallback?,
-    private val post: ChanPost?
-  ) : ClickableSpan() {
-
-    override fun onClick(widget: View) {
-      post?.let { post ->
-        postCellCallback?.onPostPosterTripcodeClicked(post)
-      }
-    }
-
-    override fun updateDrawState(ds: TextPaint) {
-      ds.isUnderlineText = false
-    }
-
-  }
-
-  private inner class PostCellDoubleTapDetector : GestureDetector.SimpleOnGestureListener() {
-    override fun onDoubleTap(e: MotionEvent): Boolean {
-      val touchOverlapsAnyClickableSpan = commentMovementMethod.touchOverlapsAnyClickableSpan(comment, e)
-      if (touchOverlapsAnyClickableSpan) {
-        return true
-      }
-
-      comment.startSelectionMode(e.x, e.y)
-      requestParentDisallowInterceptTouchEvents(true)
-
-      return true
     }
   }
 
