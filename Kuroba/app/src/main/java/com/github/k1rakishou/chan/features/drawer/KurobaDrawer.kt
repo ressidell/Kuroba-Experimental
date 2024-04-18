@@ -354,12 +354,12 @@ private fun AutoScrollToTopWhenSearchQueryChanges(
         try {
           val success = awaitWhile(
             maxWaitTimeMs = 1000L,
-            waitWhile = { lastRememberedTotalItemsCount.value == totalItemsCountProvider() }
+            waitWhile = { lastRememberedTotalItemsCount.intValue == totalItemsCountProvider() }
           )
 
           if (success) {
             scrollTopTop()
-            lastRememberedTotalItemsCount.value = totalItemsCountProvider()
+            lastRememberedTotalItemsCount.intValue = totalItemsCountProvider()
           }
         } catch (_: Throwable) {
           // no-op
