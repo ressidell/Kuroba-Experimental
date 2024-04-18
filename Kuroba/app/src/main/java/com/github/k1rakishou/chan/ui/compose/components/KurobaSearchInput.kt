@@ -57,11 +57,14 @@ fun KurobaSearchInput(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically
   ) {
-    if (displayClearButton) {
+    AnimatedVisibility(
+      visible = displayClearButton && !searchQueryIsEmpty,
+      enter = fadeIn(),
+      exit = fadeOut()
+    ) {
       KurobaComposeClickableIcon(
         modifier = Modifier
           .size(32.dp),
-        enabled = !searchQueryIsEmpty,
         drawableId = R.drawable.ic_clear_white_24dp,
         iconTint = IconTint.TintWithColor(color),
         onClick = { searchQueryState.edit { clearText() } }

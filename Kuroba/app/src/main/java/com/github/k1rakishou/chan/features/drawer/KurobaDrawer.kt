@@ -26,7 +26,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -38,7 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -79,12 +81,16 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.chan.ui.compose.search.SimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
+import com.github.k1rakishou.chan.ui.helper.awaitWhile
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -192,15 +198,16 @@ private fun ColumnScope.BuildNavigationHistoryList(
       searchState.textFieldState.textAsFlow()
         .onEach { query ->
           delay(125)
-          searchQueryIsEmpty = query.isEmpty()
 
           if (query.isEmpty()) {
             searchState.results.value = currentNavHistoryEntryList
+            searchQueryIsEmpty = query.isEmpty()
             return@onEach
           }
 
           withContext(Dispatchers.Default) {
             searchState.results.value = processSearchQuery(query, currentNavHistoryEntryList)
+            searchQueryIsEmpty = query.isEmpty()
           }
         }
         .collect()
@@ -233,7 +240,13 @@ private fun ColumnScope.BuildNavigationHistoryList(
     val drawerGridMode by kurobaDrawerState.drawerGridMode
 
     if (drawerGridMode) {
-      val state = rememberLazyGridState()
+      val gridState = rememberLazyGridState()
+
+      AutoScrollToTopWhenSearchQueryChanges(
+        searchState = searchState,
+        totalItemsCountProvider = { gridState.layoutInfo.totalItemsCount },
+        scrollTopTop = { gridState.scrollToItem(0) }
+      )
 
       val spanCount = with(LocalDensity.current) {
         (maxWidth.toPx() / MainController.GRID_COLUMN_WIDTH).toInt()
@@ -241,73 +254,117 @@ private fun ColumnScope.BuildNavigationHistoryList(
       }
 
       LazyVerticalGrid(
-        state = state,
+        state = gridState,
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()
-          .simpleVerticalScrollbar(state, chanTheme),
+          .simpleVerticalScrollbar(gridState, chanTheme),
         columns = GridCells.Fixed(count = spanCount),
         content = {
-          items(count = searchResults.size) { index ->
-            val navHistoryEntry = searchResults[index]
+          items(
+            count = searchResults.size,
+            key = { index -> searchResults.getOrNull(index)?.descriptor ?: "<null>" },
+            contentType = { "grid_mode_item" }
+          ) { index ->
+            val navHistoryEntry = searchResults.getOrNull(index)
+              ?: return@items
+
             val isSelectionMode = selectedHistoryEntries.isNotEmpty()
             val isSelected = selectedHistoryEntries.contains(navHistoryEntry.descriptor)
 
-            key(searchResults[index].descriptor) {
-              BuildNavigationHistoryListEntryGridMode(
-                mainControllerViewModel = mainControllerViewModel,
-                kurobaDrawerState = kurobaDrawerState,
-                searchQueryIsNotEmpty = !searchQueryIsEmpty,
-                navHistoryEntry = navHistoryEntry,
-                isSelectionMode = isSelectionMode,
-                isSelected = isSelected,
-                isLowRamDevice = isLowRamDevice,
-                onHistoryEntryViewClicked = onHistoryEntryViewClicked,
-                onHistoryEntryViewLongClicked = onHistoryEntryViewLongClicked,
-                onHistoryEntrySelectionChanged = onHistoryEntrySelectionChanged,
-                onNavHistoryDeleteClicked = onNavHistoryDeleteClicked
-              )
-            }
+            BuildNavigationHistoryListEntryGridMode(
+              mainControllerViewModel = mainControllerViewModel,
+              kurobaDrawerState = kurobaDrawerState,
+              searchQueryIsNotEmpty = !searchQueryIsEmpty,
+              navHistoryEntry = navHistoryEntry,
+              isSelectionMode = isSelectionMode,
+              isSelected = isSelected,
+              isLowRamDevice = isLowRamDevice,
+              onHistoryEntryViewClicked = onHistoryEntryViewClicked,
+              onHistoryEntryViewLongClicked = onHistoryEntryViewLongClicked,
+              onHistoryEntrySelectionChanged = onHistoryEntrySelectionChanged,
+              onNavHistoryDeleteClicked = onNavHistoryDeleteClicked
+            )
           }
         }
       )
     } else {
-      val state = rememberLazyListState()
+      val listState = rememberLazyListState()
+
+      AutoScrollToTopWhenSearchQueryChanges(
+        searchState = searchState,
+        totalItemsCountProvider = { listState.layoutInfo.totalItemsCount },
+        scrollTopTop = { listState.scrollToItem(0) }
+      )
 
       LazyColumn(
-        state = state,
+        state = listState,
         modifier = Modifier
           .fillMaxWidth()
           .wrapContentHeight()
           .simpleVerticalScrollbar(
-            state = state,
+            state = listState,
             chanTheme = chanTheme
           ),
         content = {
-          items(count = searchResults.size) { index ->
-            val navHistoryEntry = searchResults[index]
+          items(
+            count = searchResults.size,
+            key = { index -> searchResults.getOrNull(index)?.descriptor ?: "<null>" },
+            contentType = { "list_mode_item" }
+          ) { index ->
+            val navHistoryEntry = searchResults.getOrNull(index)
+              ?: return@items
+
             val isSelectionMode = selectedHistoryEntries.isNotEmpty()
             val isSelected = selectedHistoryEntries.contains(navHistoryEntry.descriptor)
 
-            key(searchResults[index].descriptor) {
-              BuildNavigationHistoryListEntryListMode(
-                mainControllerViewModel = mainControllerViewModel,
-                kurobaDrawerState = kurobaDrawerState,
-                searchQueryIsNotEmpty = !searchQueryIsEmpty,
-                navHistoryEntry = navHistoryEntry,
-                isSelectionMode = isSelectionMode,
-                isSelected = isSelected,
-                isLowRamDevice = isLowRamDevice,
-                onHistoryEntryViewClicked = onHistoryEntryViewClicked,
-                onHistoryEntryViewLongClicked = onHistoryEntryViewLongClicked,
-                onHistoryEntrySelectionChanged = onHistoryEntrySelectionChanged,
-                onNavHistoryDeleteClicked = onNavHistoryDeleteClicked
-              )
-            }
+            BuildNavigationHistoryListEntryListMode(
+              mainControllerViewModel = mainControllerViewModel,
+              kurobaDrawerState = kurobaDrawerState,
+              searchQueryIsNotEmpty = !searchQueryIsEmpty,
+              navHistoryEntry = navHistoryEntry,
+              isSelectionMode = isSelectionMode,
+              isSelected = isSelected,
+              isLowRamDevice = isLowRamDevice,
+              onHistoryEntryViewClicked = onHistoryEntryViewClicked,
+              onHistoryEntryViewLongClicked = onHistoryEntryViewLongClicked,
+              onHistoryEntrySelectionChanged = onHistoryEntrySelectionChanged,
+              onNavHistoryDeleteClicked = onNavHistoryDeleteClicked
+            )
           }
         }
       )
     }
+  }
+}
+
+@Composable
+private fun AutoScrollToTopWhenSearchQueryChanges(
+  searchState: SimpleSearchStateV2<NavigationHistoryEntry>,
+  totalItemsCountProvider: () -> Int,
+  scrollTopTop: suspend () -> Unit
+) {
+  val lastRememberedTotalItemsCount = remember { mutableIntStateOf(0) }
+
+  LaunchedEffect(key1 = Unit) {
+    searchState.textFieldState.textAsFlow()
+      .filter { searchState.usingSearch }
+      .distinctUntilChangedBy { textFieldCharSequence -> textFieldCharSequence.length }
+      .collectLatest {
+        try {
+          val success = awaitWhile(
+            maxWaitTimeMs = 1000L,
+            waitWhile = { lastRememberedTotalItemsCount.value == totalItemsCountProvider() }
+          )
+
+          if (success) {
+            scrollTopTop()
+            lastRememberedTotalItemsCount.value = totalItemsCountProvider()
+          }
+        } catch (_: Throwable) {
+          // no-op
+        }
+      }
   }
 }
 
@@ -392,7 +449,7 @@ private fun BuildNavigationHistoryListHeader(
 }
 
 @Composable
-private fun BuildNavigationHistoryListEntryListMode(
+private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
   mainControllerViewModel: MainControllerViewModel,
   kurobaDrawerState: KurobaDrawerState,
   searchQueryIsNotEmpty: Boolean,
@@ -433,7 +490,8 @@ private fun BuildNavigationHistoryListEntryListMode(
         onLongClick = {
           onHistoryEntryViewLongClicked(navHistoryEntry)
         }
-      ),
+      )
+      .animateItemPlacement(),
     verticalAlignment = Alignment.CenterVertically
   ) {
     Box {
@@ -566,7 +624,7 @@ private fun BuildNavigationHistoryListEntryListMode(
 }
 
 @Composable
-private fun BuildNavigationHistoryListEntryGridMode(
+private fun LazyGridItemScope.BuildNavigationHistoryListEntryGridMode(
   mainControllerViewModel: MainControllerViewModel,
   kurobaDrawerState: KurobaDrawerState,
   searchQueryIsNotEmpty: Boolean,
@@ -624,7 +682,8 @@ private fun BuildNavigationHistoryListEntryGridMode(
         onLongClick = {
           onHistoryEntryViewLongClicked(navHistoryEntry)
         }
-      ),
+      )
+      .animateItemPlacement(),
   ) {
     Box {
       val contentScale = if (navHistoryEntry.descriptor is ChanDescriptor.ICatalogDescriptor) {
