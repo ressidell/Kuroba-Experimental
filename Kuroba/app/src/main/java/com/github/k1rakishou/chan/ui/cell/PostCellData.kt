@@ -144,6 +144,7 @@ data class PostCellData(
     get() = postViewMode == PostViewMode.RepliesPopup
       || postViewMode == PostViewMode.ExternalPostsPopup
       || postViewMode == PostViewMode.MediaViewerPostsPopup
+      || postViewMode == PostViewMode.Search
   val isSelectionMode: Boolean
     get() = postViewMode == PostViewMode.PostSelection
   val threadPreviewMode: Boolean
@@ -970,7 +971,7 @@ data class PostCellData(
     }
 
     fun canShowGoToPostButton(): Boolean {
-      if (this == RepliesPopup || this == ExternalPostsPopup || this == MediaViewerPostsPopup) {
+      if (this == RepliesPopup || this == ExternalPostsPopup || this == MediaViewerPostsPopup || this == Search) {
         return true
       }
 

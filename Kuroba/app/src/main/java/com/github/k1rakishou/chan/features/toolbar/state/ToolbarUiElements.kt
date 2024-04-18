@@ -208,7 +208,11 @@ fun SearchIcon(
 }
 
 @Composable
-fun SearchToolbarInfoText(totalFoundItems: Int, currentSearchItemIndex: Int) {
+fun SearchToolbarInfoText(
+  totalFoundItems: Int,
+  currentSearchItemIndex: Int,
+  onShowFoundItemsAsPopupClicked: () -> Unit
+) {
   if (totalFoundItems <= 0 || currentSearchItemIndex < 0) {
     return
   }
@@ -219,7 +223,11 @@ fun SearchToolbarInfoText(totalFoundItems: Int, currentSearchItemIndex: Int) {
     modifier = Modifier
       .fillMaxHeight()
       .wrapContentWidth()
-      .padding(horizontal = 8.dp, vertical = 4.dp),
+      .padding(horizontal = 8.dp, vertical = 4.dp)
+      .kurobaClickable(
+        bounded = false,
+        onClick = { onShowFoundItemsAsPopupClicked() }
+      ),
     contentAlignment = Alignment.Center
   ) {
     val textColor = ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)

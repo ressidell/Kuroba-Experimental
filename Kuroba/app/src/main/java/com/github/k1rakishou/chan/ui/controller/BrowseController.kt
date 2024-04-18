@@ -64,10 +64,12 @@ import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.HttpUrl
@@ -204,6 +206,23 @@ class BrowseController(
 
           onThreadSearchDataUpdated(currentChanDescriptor, threadSearchData)
         }
+    }
+
+    controllerScope.launch {
+      toolbarState.catalogSearch.showFoundItemsAsPopupClicked
+        .onEach {
+          val chanDescriptor = chanDescriptor
+            ?: return@onEach
+
+          val searchQuery = threadPostSearchManager.currentSearchQuery(chanDescriptor)
+            ?: return@onEach
+
+          threadLayout.popupHelper.showSearchPopup(
+            chanDescriptor = chanDescriptor,
+            searchQuery = searchQuery
+          )
+        }
+        .collect()
     }
 
     controllerScope.launch {

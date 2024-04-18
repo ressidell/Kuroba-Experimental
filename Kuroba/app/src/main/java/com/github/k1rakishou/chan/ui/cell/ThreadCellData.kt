@@ -406,24 +406,18 @@ class ThreadCellData(
     _chanDescriptor = null
   }
 
-  suspend fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
-    postViewMode = PostCellData.PostViewMode.Search
+  fun setSearchQuery(searchQuery: PostCellData.SearchQuery) {
     defaultSearchQuery = searchQuery
 
-    val posts = postCellDataLazyList.map { it.post }
-    onPostsUpdated(posts)
-  }
+    postCellDataLazyList.forEach { postCellDataLazy ->
+      if (postCellDataLazy.isInitialized) {
+        val postCellData = postCellDataLazy.postCellDataCalculated
 
-  suspend fun clearSearchQuery() {
-    if (postViewMode != PostCellData.PostViewMode.Search) {
-      return
+        postCellData.resetCommentTextCache()
+        postCellData.resetPostTitleCache()
+        postCellData.resetPostFileInfoCache()
+      }
     }
-
-    postViewMode = PostCellData.PostViewMode.Normal
-    defaultSearchQuery = PostCellData.SearchQuery()
-
-    val posts = postCellDataLazyList.map { it.post }
-    onPostsUpdated(posts)
   }
 
   fun setBoardPostViewMode(boardPostViewMode: ChanSettings.BoardPostViewMode) {

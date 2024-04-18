@@ -99,7 +99,8 @@ fun KurobaThreadSearchToolbarContent(
 
     SearchToolbarInfoText(
       totalFoundItems = totalFoundItems,
-      currentSearchItemIndex = currentSearchItemIndex
+      currentSearchItemIndex = currentSearchItemIndex,
+      onShowFoundItemsAsPopupClicked = { state.onShowFoundItemsAsPopupClicked() }
     )
 
     Spacer(modifier = Modifier.width(12.dp))

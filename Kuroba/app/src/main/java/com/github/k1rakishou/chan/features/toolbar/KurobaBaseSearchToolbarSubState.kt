@@ -9,7 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import com.github.k1rakishou.chan.features.toolbar.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.ui.compose.clearText
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
@@ -36,6 +40,13 @@ abstract class KurobaBaseSearchToolbarSubState(
   protected val _totalFoundItems = mutableIntStateOf(-1)
   val totalFoundItems: IntState
     get() = _totalFoundItems
+
+  private val _showFoundItemsAsPopupClicked = MutableSharedFlow<Unit>(
+    extraBufferCapacity = 1,
+    onBufferOverflow = BufferOverflow.DROP_OLDEST
+  )
+  val showFoundItemsAsPopupClicked: SharedFlow<Unit>
+    get() = _showFoundItemsAsPopupClicked.asSharedFlow()
 
   override fun onCreated() {
     super.onCreated()
@@ -83,6 +94,10 @@ abstract class KurobaBaseSearchToolbarSubState(
 
   fun isInSearchMode(): Boolean {
     return _searchVisibleState.value
+  }
+
+  fun onShowFoundItemsAsPopupClicked() {
+    _showFoundItemsAsPopupClicked.tryEmit(Unit)
   }
 
 }

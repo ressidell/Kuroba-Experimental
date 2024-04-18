@@ -58,6 +58,10 @@ class ThreadPostSearchManager(
     return getOrCreateSearch(chanDescriptor).searchQuery.value
   }
 
+  fun currentMatchedPosts(chanDescriptor: ChanDescriptor): List<PostDescriptor> {
+    return getOrCreateSearch(chanDescriptor).matchedPostDescriptors.value
+  }
+
   fun goToPrevious(chanDescriptor: ChanDescriptor) {
     getOrCreateSearch(chanDescriptor).goToPrevious()
   }

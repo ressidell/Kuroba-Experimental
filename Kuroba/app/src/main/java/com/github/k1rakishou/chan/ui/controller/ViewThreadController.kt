@@ -46,12 +46,14 @@ import com.github.k1rakishou.persist_state.PersistableChanState
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -142,6 +144,23 @@ open class ViewThreadController(
 
           onThreadSearchDataUpdated(currentChanDescriptor, threadSearchData)
         }
+    }
+
+    controllerScope.launch {
+      toolbarState.threadSearch.showFoundItemsAsPopupClicked
+        .onEach {
+          val chanDescriptor = chanDescriptor
+            ?: return@onEach
+
+          val searchQuery = threadPostSearchManager.currentSearchQuery(chanDescriptor)
+            ?: return@onEach
+
+          threadLayout.popupHelper.showSearchPopup(
+            chanDescriptor = chanDescriptor,
+            searchQuery = searchQuery
+          )
+        }
+        .collect()
     }
 
     controllerScope.launch {
