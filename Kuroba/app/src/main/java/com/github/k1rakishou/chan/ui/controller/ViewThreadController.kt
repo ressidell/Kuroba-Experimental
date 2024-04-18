@@ -50,6 +50,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -122,10 +124,12 @@ open class ViewThreadController(
 
     controllerScope.launch {
       combine(
+        toolbarState.threadSearch.listenForSearchCreationUpdates(),
         toolbarState.threadSearch.listenForSearchVisibilityUpdates(),
         toolbarState.threadSearch.listenForSearchQueryUpdates()
-      ) { visibility, searchQuery ->
+      ) { created, visibility, searchQuery ->
         return@combine ThreadSearchData(
+          searchToolbarCreated = created,
           searchToolbarVisible = visibility,
           searchQuery = searchQuery
         )
@@ -136,8 +140,19 @@ open class ViewThreadController(
 
           delay(200)
 
-          val matchedPosts = onThreadSearchDataUpdated(currentChanDescriptor, threadSearchData)
-          toolbarState.catalogSearch.updateMatchedPostsCounter(matchedPosts.size)
+          onThreadSearchDataUpdated(currentChanDescriptor, threadSearchData)
+        }
+    }
+
+    controllerScope.launch {
+      currentChanDescriptorFlow
+        .filterNotNull()
+        .flatMapLatest { chanDescriptor -> threadPostSearchManager.listenForActiveSearchToolbarInfo(chanDescriptor) }
+        .collectLatest { activeSearchToolbarInfo ->
+          toolbarState.threadSearch.updateActiveSearchInfo(
+            currentIndex = activeSearchToolbarInfo.currentIndex,
+            totalFound = activeSearchToolbarInfo.totalFound
+          )
         }
     }
 

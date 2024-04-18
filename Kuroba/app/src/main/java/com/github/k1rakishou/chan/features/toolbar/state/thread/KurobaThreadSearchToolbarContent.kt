@@ -17,9 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.toolbar.state.SearchIcon
+import com.github.k1rakishou.chan.features.toolbar.state.SearchToolbarInfoText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.freeFocusSafe
 import com.github.k1rakishou.chan.ui.compose.requestFocusSafe
@@ -45,11 +45,10 @@ fun KurobaThreadSearchToolbarContent(
 
   val searchQueryState = state.searchQueryState
 
-  val kurobaSearchInputColor = if (ThemeEngine.isDarkColor(chanTheme.toolbarBackgroundComposeColor)) {
-    Color.White
-  } else {
-    Color.Black
-  }
+  val currentSearchItemIndex by state.currentSearchItemIndex
+  val totalFoundItems by state.totalFoundItems
+
+  val color = ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)
 
   DisposableEffect(
     key1 = Unit,
@@ -91,10 +90,17 @@ fun KurobaThreadSearchToolbarContent(
           .focusable()
           .focusRequester(focusRequester),
         displayClearButton = false,
-        color = kurobaSearchInputColor,
+        color = color,
         searchQueryState = searchQueryState,
       )
     }
+
+    Spacer(modifier = Modifier.width(12.dp))
+
+    SearchToolbarInfoText(
+      totalFoundItems = totalFoundItems,
+      currentSearchItemIndex = currentSearchItemIndex
+    )
 
     Spacer(modifier = Modifier.width(12.dp))
   }

@@ -9,9 +9,13 @@ import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.source.cache.GenericCacheSource
 import com.github.k1rakishou.model.source.cache.thread.ChanThreadsCache
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 
 class ThreadPostSearchManager(
   private val chanThreadsCache: ChanThreadsCache,
@@ -26,6 +30,28 @@ class ThreadPostSearchManager(
 
   fun listenForScrollAnchorPostDescriptor(chanDescriptor: ChanDescriptor): StateFlow<PostDescriptor?> {
     return getOrCreateSearch(chanDescriptor).currentPostDescriptor
+  }
+
+  fun listenForActiveSearchToolbarInfo(chanDescriptor: ChanDescriptor): Flow<ActiveSearchToolbarInfo> {
+    val activeSearch = getOrCreateSearch(chanDescriptor)
+
+    return combine(
+      activeSearch.matchedPostDescriptors.map { postDescriptors -> postDescriptors.size },
+      activeSearch.currentPostDescriptorIndex
+    ) { matchedPostsCount, currentPostDescriptorIndex ->
+      if (currentPostDescriptorIndex == null) {
+        return@combine null
+      }
+
+      if (matchedPostsCount <= 0) {
+        return@combine null
+      }
+
+      return@combine ActiveSearchToolbarInfo(
+        currentIndex = currentPostDescriptorIndex,
+        totalFound = matchedPostsCount
+      )
+    }.filterNotNull()
   }
 
   fun currentSearchQuery(chanDescriptor: ChanDescriptor): String? {
@@ -44,14 +70,14 @@ class ThreadPostSearchManager(
     chanDescriptor: ChanDescriptor,
     postDescriptors: List<PostDescriptor>,
     searchQuery: String?
-  ): List<PostDescriptor> {
+  ): Boolean {
     if (searchQuery == null || searchQuery.length < AppConstants.MIN_QUERY_LENGTH) {
       getOrCreateSearch(chanDescriptor).updateSearchQuery(
         searchQuery = searchQuery,
         matchedPostDescriptors = emptyList()
       )
 
-      return postDescriptors
+      return postDescriptors.isNotEmpty()
     }
 
     val matchedPostDescriptors = parallelForEachOrdered<PostDescriptor, PostDescriptor?>(
@@ -86,7 +112,7 @@ class ThreadPostSearchManager(
       matchedPostDescriptors = matchedPostDescriptors
     )
 
-    return matchedPostDescriptors
+    return matchedPostDescriptors.isNotEmpty()
   }
 
   private fun checkMatchesQuery(chanPost: ChanPost, searchQuery: String): Boolean {
@@ -106,6 +132,11 @@ class ThreadPostSearchManager(
     return _activeSearches.getOrPut(chanDescriptor, { ActiveSearch(chanDescriptor) })
   }
 
+  data class ActiveSearchToolbarInfo(
+    val currentIndex: Int,
+    val totalFound: Int
+  )
+
   private class ActiveSearch(
     val chanDescriptor: ChanDescriptor
   ) {
@@ -123,18 +154,26 @@ class ThreadPostSearchManager(
     val currentPostDescriptor: StateFlow<PostDescriptor?>
       get() = _currentPostDescriptor.asStateFlow()
 
+    private val _currentPostDescriptorIndex = MutableStateFlow<Int?>(null)
+    val currentPostDescriptorIndex: StateFlow<Int?>
+      get() = _currentPostDescriptorIndex.asStateFlow()
+
     fun updateSearchQuery(searchQuery: String?, matchedPostDescriptors: List<PostDescriptor>) {
       Logger.debug(tag) {
         "updateSearchQuery() searchQuery: '${searchQuery}', " +
           "matchedPostDescriptorsCount: ${matchedPostDescriptors.size}"
       }
 
+      val queryChanged = _searchQuery.value != searchQuery
+
       if (searchQuery.isNullOrEmpty()) {
         _matchedPostDescriptors.value = emptyList()
         _currentPostDescriptor.value = null
-      } else {
+        _currentPostDescriptorIndex.value = null
+      } else if (queryChanged) {
         _matchedPostDescriptors.value = matchedPostDescriptors
         _currentPostDescriptor.value = matchedPostDescriptors.firstOrNull()
+        _currentPostDescriptorIndex.value = 0
       }
 
       _searchQuery.value = searchQuery
@@ -149,22 +188,21 @@ class ThreadPostSearchManager(
           return@goToPost
         }
 
-        var previousIndex = currentIndex - 1
-        if (previousIndex < 0) {
-          previousIndex = matchedPostDescriptors.lastIndex
+        var newIndex = currentIndex - 1
+        if (newIndex < 0) {
+          newIndex = matchedPostDescriptors.lastIndex
         }
 
         Logger.debug(tag) {
-          "goToPrevious() previousIndex: ${previousIndex}, " +
-            "currentIndex: ${currentIndex}, " +
+          "goToPrevious() currentIndex: ${currentIndex}, newIndex: ${newIndex}, " +
             "lastIndex: ${matchedPostDescriptors.lastIndex}"
         }
 
-        val previousPostDescriptor = matchedPostDescriptors.getOrNull(previousIndex)
+        val previousPostDescriptor = matchedPostDescriptors.getOrNull(newIndex)
         if (previousPostDescriptor == null) {
           Logger.debug(tag) {
             "goToPrevious() previousPostDescriptor is null, " +
-              "previousIndex: ${previousIndex}, " +
+              "previousIndex: ${newIndex}, " +
               "matchedPostDescriptors.indices: ${matchedPostDescriptors.indices}"
           }
 
@@ -174,6 +212,7 @@ class ThreadPostSearchManager(
 
         Logger.debug(tag) { "goToPrevious() previousPostDescriptor: ${previousPostDescriptor}" }
         _currentPostDescriptor.value = previousPostDescriptor
+        _currentPostDescriptorIndex.value = newIndex
       }
     }
 
@@ -186,22 +225,21 @@ class ThreadPostSearchManager(
           return@goToPost
         }
 
-        var nextIndex = currentIndex + 1
-        if (nextIndex > matchedPostDescriptors.lastIndex) {
-          nextIndex = 0
+        var newIndex = currentIndex + 1
+        if (newIndex > matchedPostDescriptors.lastIndex) {
+          newIndex = 0
         }
 
         Logger.debug(tag) {
-          "goToNext() nextIndex: ${nextIndex}, " +
-            "currentIndex: ${currentIndex}, " +
+          "goToNext() currentIndex: ${currentIndex}, newIndex: ${newIndex}, " +
             "lastIndex: ${matchedPostDescriptors.lastIndex}"
         }
 
-        val nextPostDescriptor = matchedPostDescriptors.getOrNull(nextIndex)
+        val nextPostDescriptor = matchedPostDescriptors.getOrNull(newIndex)
         if (nextPostDescriptor == null) {
           Logger.debug(tag) {
             "goToNext() nextPostDescriptor is null, " +
-              "nextIndex: ${nextIndex}, " +
+              "nextIndex: ${newIndex}, " +
               "matchedPostDescriptors.indices: ${matchedPostDescriptors.indices}"
           }
 
@@ -211,6 +249,7 @@ class ThreadPostSearchManager(
 
         Logger.debug(tag) { "goToNext() nextPostDescriptor: ${nextPostDescriptor}" }
         _currentPostDescriptor.value = nextPostDescriptor
+        _currentPostDescriptorIndex.value = newIndex
       }
     }
 

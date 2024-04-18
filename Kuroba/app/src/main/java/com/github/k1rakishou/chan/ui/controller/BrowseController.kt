@@ -66,6 +66,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.HttpUrl
@@ -184,10 +186,12 @@ class BrowseController(
 
     controllerScope.launch {
       combine(
+        toolbarState.catalogSearch.listenForSearchCreationUpdates(),
         toolbarState.catalogSearch.listenForSearchVisibilityUpdates(),
         toolbarState.catalogSearch.listenForSearchQueryUpdates()
-      ) { visibility, searchQuery ->
+      ) { created, visibility, searchQuery ->
         return@combine ThreadSearchData(
+          searchToolbarCreated = created,
           searchToolbarVisible = visibility,
           searchQuery = searchQuery
         )
@@ -198,8 +202,19 @@ class BrowseController(
 
           delay(200)
 
-          val matchedPosts = onThreadSearchDataUpdated(currentChanDescriptor, threadSearchData)
-          toolbarState.catalogSearch.updateMatchedPostsCounter(matchedPosts.size)
+          onThreadSearchDataUpdated(currentChanDescriptor, threadSearchData)
+        }
+    }
+
+    controllerScope.launch {
+      currentChanDescriptorFlow
+        .filterNotNull()
+        .flatMapLatest { chanDescriptor -> threadPostSearchManager.listenForActiveSearchToolbarInfo(chanDescriptor) }
+        .collectLatest { activeSearchToolbarInfo ->
+          toolbarState.catalogSearch.updateActiveSearchInfo(
+            currentIndex = activeSearchToolbarInfo.currentIndex,
+            totalFound = activeSearchToolbarInfo.totalFound
+          )
         }
     }
 

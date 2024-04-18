@@ -64,6 +64,7 @@ import com.github.k1rakishou.model.data.filter.FilterType
 import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.persist_state.ReplyMode
 import dagger.Lazy
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -139,7 +140,7 @@ abstract class ThreadController(
     get() = currentOpenedDescriptorStateManagerLazy.get()
   protected val pageRequestManager: PageRequestManager
     get() = pageRequestManagerLazy.get()
-  private val threadPostSearchManager: ThreadPostSearchManager
+  protected val threadPostSearchManager: ThreadPostSearchManager
     get() = threadPostSearchManagerLazy.get()
 
   private val applicationVisibilityManager: ApplicationVisibilityManager
@@ -162,6 +163,8 @@ abstract class ThreadController(
 
   val chanDescriptor: ChanDescriptor?
     get() = threadLayout.presenter.currentChanDescriptor
+  val currentChanDescriptorFlow: StateFlow<ChanDescriptor?>
+    get() = threadLayout.presenter.currentChanDescriptorFlow
 
   abstract override val threadControllerType: ThreadControllerType
 
@@ -702,8 +705,8 @@ abstract class ThreadController(
   protected suspend fun onThreadSearchDataUpdated(
     chanDescriptor: ChanDescriptor,
     threadSearchData: ThreadSearchData
-  ): List<PostDescriptor> {
-    if (!threadSearchData.searchToolbarVisible) {
+  ) {
+    if (!threadSearchData.searchToolbarCreated) {
       threadPostSearchManager.updateSearchQuery(
         chanDescriptor = chanDescriptor,
         postDescriptors = emptyList(),
@@ -711,23 +714,25 @@ abstract class ThreadController(
       )
 
       threadLayout.hideThreadSearchNavigationButtonsView()
-
-      return emptyList()
+      return
     }
 
-    val matchedPostDescriptors = threadPostSearchManager.updateSearchQuery(
+    if (!threadSearchData.searchToolbarVisible) {
+      threadLayout.hideThreadSearchNavigationButtonsView()
+      return
+    }
+
+    val hasMatchedPostDescriptors = threadPostSearchManager.updateSearchQuery(
       chanDescriptor = chanDescriptor,
       postDescriptors = threadLayout.displayingPostDescriptorsInThread,
       searchQuery = threadSearchData.searchQuery
     )
 
-    if (matchedPostDescriptors.isNotEmpty()) {
+    if (hasMatchedPostDescriptors) {
       threadLayout.showThreadSearchNavigationButtonsView()
     } else {
       threadLayout.hideThreadSearchNavigationButtonsView()
     }
-
-    return matchedPostDescriptors
   }
 
   protected fun pushChildController(controller: Controller) {
@@ -848,6 +853,7 @@ abstract class ThreadController(
   )
 
   protected data class ThreadSearchData(
+    val searchToolbarCreated: Boolean,
     val searchToolbarVisible: Boolean,
     val searchQuery: String
   )
