@@ -17,11 +17,13 @@ interface IToolbarGlobalState {
     val toolbarShown: StateFlow<Boolean>
     val toolbarHeight: StateFlow<Dp>
     val currentToolbarStates: StateFlow<ImmutableMap<ControllerKey, ToolbarStateKind>>
+    val toolbarBadges: StateFlow<ImmutableMap<ToolbarStateKind, ToolbarBadgeGlobalState>>
   }
 
   interface Writeable {
     fun updateToolbarVisibilityState(visible: Boolean)
     fun updateToolbarHeightState(height: Dp)
+    fun updateToolbarBadge(toolbarStateKind: ToolbarStateKind, toolbarBadgeGlobalState: ToolbarBadgeGlobalState)
 
     fun onToolbarTopStateChanged(controllerKey: ControllerKey, toolbarStateKind: ToolbarStateKind)
     fun onToolbarStateRemoved(controllerKey: ControllerKey)
@@ -41,6 +43,10 @@ class ToolbarGlobalState : IToolbarGlobalState.Readable, IToolbarGlobalState.Wri
   override val currentToolbarStates: StateFlow<ImmutableMap<ControllerKey, ToolbarStateKind>>
     get() = _currentToolbarStates.asStateFlow()
 
+  private val _toolbarBadges = MutableStateFlow<PersistentMap<ToolbarStateKind, ToolbarBadgeGlobalState>>(persistentMapOf())
+  override val toolbarBadges: StateFlow<ImmutableMap<ToolbarStateKind, ToolbarBadgeGlobalState>>
+    get() = _toolbarBadges.asStateFlow()
+
   override fun updateToolbarVisibilityState(visible: Boolean) {
     Logger.verbose(TAG) { "updateToolbarVisibilityState() visible: ${visible}" }
     _toolbarShown.value = visible
@@ -49,6 +55,17 @@ class ToolbarGlobalState : IToolbarGlobalState.Readable, IToolbarGlobalState.Wri
   override fun updateToolbarHeightState(height: Dp) {
     Logger.verbose(TAG) { "updateToolbarHeightState() height: ${height}" }
     _toolbarHeight.value = height
+  }
+
+  override fun updateToolbarBadge(
+    toolbarStateKind: ToolbarStateKind,
+    toolbarBadgeGlobalState: ToolbarBadgeGlobalState
+  ) {
+    Logger.verbose(TAG) {
+      "updateToolbarBadge() toolbarStateKind: ${toolbarStateKind}, toolbarBadgeGlobalState: ${toolbarBadgeGlobalState}"
+    }
+
+    _toolbarBadges.value = _toolbarBadges.value.put(toolbarStateKind, toolbarBadgeGlobalState)
   }
 
   override fun onToolbarTopStateChanged(controllerKey: ControllerKey, toolbarStateKind: ToolbarStateKind) {
@@ -74,3 +91,8 @@ class ToolbarGlobalState : IToolbarGlobalState.Readable, IToolbarGlobalState.Wri
   }
 
 }
+
+data class ToolbarBadgeGlobalState(
+  val number: Int,
+  val highImportance: Boolean
+)

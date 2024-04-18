@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.unit.Dp
+import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.features.toolbar.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
@@ -40,6 +41,8 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Stable
 class KurobaToolbarState(
@@ -49,6 +52,7 @@ class KurobaToolbarState(
   private var _destroyed = false
 
   private val _invokeAfterTransitionFinishedCallbacks = mutableListOf<KurobaToolbarState.() -> Unit>()
+  private var _coroutineScope = KurobaCoroutineScope()
 
   private val _toolbarStateList = mutableStateOf<PersistentList<KurobaToolbarSubState>>(persistentListOf())
   val toolbarStateList: State<ImmutableList<KurobaToolbarSubState>>
@@ -117,6 +121,19 @@ class KurobaToolbarState(
     Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being initialized (${hashCode()})" }
 
     _destroyed = false
+
+    _coroutineScope.cancel()
+    _coroutineScope = KurobaCoroutineScope()
+
+    _coroutineScope.launch {
+      globalUiStateHolder.toolbar.toolbarBadges
+        .collectLatest { toolbarBadges ->
+          toolbarBadges[ToolbarStateKind.Catalog]
+            ?.let { catalogBadgeState -> catalog.updateBadge(catalogBadgeState.number, catalogBadgeState.highImportance) }
+          toolbarBadges[ToolbarStateKind.Thread]
+            ?.let { threadBadgeState -> thread.updateBadge(threadBadgeState.number, threadBadgeState.highImportance) }
+        }
+    }
   }
 
   fun destroy() {
@@ -129,6 +146,7 @@ class KurobaToolbarState(
     _transitionToolbarState.value = null
     _toolbarAlpha.floatValue = 0f
     _destroyed = true
+    _coroutineScope.cancel()
   }
 
   fun onToolbarHeightChanged(totalToolbarHeight: Dp) {
@@ -523,11 +541,6 @@ class KurobaToolbarState(
     for (toolbarState in _toolbarList) {
       toolbarState.checkOrUncheckItem(subItem, check)
     }
-  }
-
-  fun updateBadge(count: Int, highImportance: Boolean) {
-    catalog.updateBadge(count, highImportance)
-    thread.updateBadge(count, highImportance)
   }
 
   fun onKurobaToolbarTransitionInstantFinished(instant: KurobaToolbarTransition.Instant) {

@@ -35,6 +35,7 @@ import com.github.k1rakishou.chan.features.my_posts.SavedPostsController
 import com.github.k1rakishou.chan.features.search.GlobalSearchController
 import com.github.k1rakishou.chan.features.settings.MainSettingsControllerV2
 import com.github.k1rakishou.chan.features.thread_downloading.LocalArchiveController
+import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
@@ -45,6 +46,7 @@ import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
+import com.github.k1rakishou.chan.ui.globalstate.toolbar.ToolbarBadgeGlobalState
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground
@@ -55,7 +57,6 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.TimeUtils
 import com.github.k1rakishou.chan.utils.findControllerOrNull
-import com.github.k1rakishou.chan.utils.findControllers
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -519,25 +520,15 @@ class MainController(
       )
     }
 
-    mainToolbarNavigationController?.let { mainNavController ->
-      val threadControllers = mainNavController.findControllers { controller -> controller is ThreadController }
-      if (threadControllers.isEmpty()) {
-        return@let
+    globalUiStateHolder.updateToolbarState {
+      val toolbarBadgeGlobalState = if (state.totalUnseenPostsCount <= 0) {
+        ToolbarBadgeGlobalState(0, false)
+      } else {
+        ToolbarBadgeGlobalState(state.totalUnseenPostsCount, state.hasUnreadReplies)
       }
 
-      threadControllers.forEach { threadController ->
-        if (state.totalUnseenPostsCount <= 0) {
-          threadController.toolbarState.updateBadge(
-            count = 0,
-            highImportance = false
-          )
-        } else {
-          threadController.toolbarState.updateBadge(
-            count = state.totalUnseenPostsCount,
-            highImportance = state.hasUnreadReplies
-          )
-        }
-      }
+      updateToolbarBadge(ToolbarStateKind.Catalog, toolbarBadgeGlobalState)
+      updateToolbarBadge(ToolbarStateKind.Thread, toolbarBadgeGlobalState)
     }
   }
 
