@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.view.doOnPreDraw
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -112,12 +111,6 @@ class ThemeGalleryController(
     }
   }
 
-  override fun onDestroy() {
-    super.onDestroy()
-
-    refreshThemesControllerFunc?.invoke()
-  }
-
   inner class Adapter : RecyclerView.Adapter<ThemeViewHolder>() {
     private val themes = mutableListOf<ChanTheme>()
     private var postCellDataWidthNoPaddings = 0
@@ -127,7 +120,7 @@ class ThemeGalleryController(
     }
 
     override fun onBindViewHolder(holder: ThemeViewHolder, position: Int) {
-      holder.onBind(themes[position], postCellDataWidthNoPaddings)
+      holder.onBind(position, themes[position], postCellDataWidthNoPaddings)
     }
 
     override fun getItemId(position: Int): Long {
@@ -148,7 +141,7 @@ class ThemeGalleryController(
 
   inner class ThemeViewHolder(itemView: FrameLayout) : RecyclerView.ViewHolder(itemView) {
 
-    fun onBind(chanTheme: ChanTheme, postCellDataWidthNoPaddings: Int) {
+    fun onBind(position: Int, chanTheme: ChanTheme, postCellDataWidthNoPaddings: Int) {
       val kurobaToolbarState = KurobaToolbarState(
         controllerKey = ControllerKey("${controllerKey.key}_${chanTheme.name}"),
         globalUiStateHolder = globalUiStateHolder
@@ -169,6 +162,7 @@ class ThemeGalleryController(
       val threadView = runBlocking {
         themeControllerHelper.createSimpleThreadView(
           context = context,
+          position = position,
           theme = chanTheme,
           kurobaToolbarState = kurobaToolbarState,
           navigationController = requireToolbarNavController(),
@@ -178,9 +172,8 @@ class ThemeGalleryController(
       }
 
       val fab = threadView.findViewById<FloatingActionButton>(R.id.theme_view_fab_id)
-      fab.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_done_white_24dp))
       fab.setOnClickListener {
-        themeEngine.applyTheme(chanTheme, lightThemes.not())
+        themeEngine.applyTheme(chanTheme)
 
         val themeType = if (chanTheme.isLightTheme) {
           getString(R.string.theme_settings_controller_theme_light)
@@ -189,6 +182,8 @@ class ThemeGalleryController(
         }
 
         showToast(getString(R.string.theme_settings_controller_theme_set, chanTheme.name, themeType))
+        refreshThemesControllerFunc?.invoke()
+        requireNavController().popController()
       }
 
       val container = itemView as FrameLayout

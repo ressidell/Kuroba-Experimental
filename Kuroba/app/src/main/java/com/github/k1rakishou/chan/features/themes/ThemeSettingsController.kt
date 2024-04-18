@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.compose.ui.unit.dp
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.viewpager.widget.ViewPager
 import com.github.k1rakishou.ChanSettings
@@ -30,7 +29,6 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
-import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.ViewPagerAdapter
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.ViewUtils.changeEdgeEffect
@@ -38,7 +36,6 @@ import com.github.k1rakishou.chan.utils.awaitUntilGloballyLaidOutAndGetSize
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.exhaustive
-import com.github.k1rakishou.common.updateMargins
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.core_themes.ThemeParser
@@ -72,8 +69,6 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
 
   private lateinit var pager: ViewPager
   private lateinit var currentThemeIndicator: TextView
-  private lateinit var applyThemeFab: ColorizableFloatingActionButton
-  private var currentItemIndex = 0
 
   private val themeControllerHelper by lazy {
     ThemeControllerHelper(themeEngine, postFilterManager, archivesManager)
@@ -88,7 +83,7 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
     super.onCreate()
 
     updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags()
+      newNavigationFlags = DeprecatedNavigationFlags(swipeable = false)
     )
 
     toolbarState.enterDefaultMode(
@@ -116,23 +111,16 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
     view = inflate(context, R.layout.controller_theme)
     pager = view.findViewById(R.id.pager)
     currentThemeIndicator = view.findViewById(R.id.current_theme_indicator)
-    applyThemeFab = view.findViewById(R.id.apply_theme_button)
 
-    applyThemeFab.setOnClickListener {
-      val switchToDark = currentItemIndex != 0
-      themeEngine.switchTheme(switchToDarkTheme = switchToDark)
-    }
-
-    currentItemIndex = if (themeEngine.chanTheme.isLightTheme) {
-      0
-    } else {
-      1
-    }
+    val initialItemIndex = if (themeEngine.chanTheme.isLightTheme) 0 else 1
 
     updateCurrentThemeIndicator(true)
     controllerScope.launch {
       val (width, _) = pager.awaitUntilGloballyLaidOutAndGetSize(waitForWidth = true)
-      reload(postCellDataWidthNoPaddings = width)
+      reload(
+        itemIndex = initialItemIndex,
+        postCellDataWidthNoPaddings = width
+      )
     }
 
     if (AndroidUtils.isAndroid10()) {
@@ -156,15 +144,7 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
   }
 
   override fun onInsetsChanged() {
-    val bottomPadding = with(appResources.composeDensity) {
-      maxOf(
-        globalWindowInsetsManager.bottom(),
-        globalUiStateHolder.bottomPanel.bottomPanelHeight.value.roundToPx()
-      )
-    }
-
-    val fabAdditionalBottomPadding = with(appResources.composeDensity) { 16.dp.roundToPx() }
-    applyThemeFab.updateMargins(bottom = bottomPadding + fabAdditionalBottomPadding)
+    // no-op
   }
 
   private fun showIgnoreDayNightModeDialog() {
@@ -190,12 +170,12 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
       ?.updateChecked(ChanSettings.ignoreDarkNightMode.toggle())
   }
 
-  private fun reload(postCellDataWidthNoPaddings: Int) {
+  private fun reload(itemIndex: Int, postCellDataWidthNoPaddings: Int) {
     val root = view.findViewById<LinearLayout>(R.id.root)
 
     val adapter = Adapter(postCellDataWidthNoPaddings)
     pager.adapter = adapter
-    pager.setCurrentItem(currentItemIndex, false)
+    pager.setCurrentItem(itemIndex, false)
     pager.changeEdgeEffect(themeEngine.chanTheme)
     pager.setOnPageChangeListener(object : ViewPager.OnPageChangeListener {
       override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
@@ -204,7 +184,6 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
 
       override fun onPageSelected(position: Int) {
         updateColors(adapter, position, root)
-        currentItemIndex = position
       }
 
       override fun onPageScrollStateChanged(state: Int) {
@@ -212,7 +191,7 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
       }
     })
 
-    view.postDelayed({ updateColors(adapter, 0, root) }, UPDATE_COLORS_DELAY_MS)
+    view.postDelayed({ updateColors(adapter, pager.currentItem, root) }, UPDATE_COLORS_DELAY_MS)
   }
 
   private fun resetTheme(item: ToolbarMenuOverflowItem) {
@@ -227,7 +206,10 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
       return
     }
 
-    reload(postCellDataWidthNoPaddings = pager.width)
+    reload(
+      itemIndex = pager.currentItem,
+      postCellDataWidthNoPaddings = pager.width
+    )
   }
 
   private fun exportThemeToClipboard(item: ToolbarMenuOverflowItem) {
@@ -413,7 +395,10 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
       }
       is ThemeParser.ThemeParseResult.Success -> {
         showToastLong(context.getString(R.string.done))
-        reload(postCellDataWidthNoPaddings = pager.width)
+        reload(
+          itemIndex = pager.currentItem,
+          postCellDataWidthNoPaddings = pager.width
+        )
       }
     }.exhaustive
   }
@@ -465,10 +450,11 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
 
       themeMap[position] = theme
 
-      return runBlocking { createSimpleThreadViewInternal(theme, postCellDataWidthNoPaddings) }
+      return runBlocking { createSimpleThreadViewInternal(position, theme, postCellDataWidthNoPaddings) }
     }
 
     private suspend fun createSimpleThreadViewInternal(
+      position: Int,
       chanTheme: ChanTheme,
       postCellDataWidthNoPaddings: Int
     ): CoordinatorLayout {
@@ -494,12 +480,26 @@ class ThemeSettingsController(context: Context) : Controller(context), WindowIns
 
       return themeControllerHelper.createSimpleThreadView(
         context = context,
+        position = position,
         theme = chanTheme,
         kurobaToolbarState = kurobaToolbarState,
         navigationController = requireToolbarNavController(),
         options = ThemeControllerHelper.Options(
           showMoreThemesButton = true,
-          refreshThemesControllerFunc = { reload(postCellDataWidthNoPaddings = pager.width) }
+          refreshThemesControllerFunc = {
+            view.postDelayed(
+              {
+                val root = view.findViewById<LinearLayout>(R.id.root)
+                val prevPage = pager.currentItem
+
+                val adapter = Adapter(postCellDataWidthNoPaddings)
+                pager.adapter = adapter
+                pager.setCurrentItem(prevPage)
+                updateColors(adapter, prevPage, root)
+              },
+              UPDATE_COLORS_DELAY_MS
+            )
+          }
         ),
         postCellDataWidthNoPaddings = postCellDataWidthNoPaddings
       )

@@ -255,7 +255,7 @@ open class ThemeEngine(
       return themeParseResult
     }
 
-    return applyTheme(themeParseResult.chanTheme, isDarkTheme)
+    return applyTheme(themeParseResult.chanTheme)
   }
 
   suspend fun tryParseAndApplyTheme(input: String, isDarkTheme: Boolean): ThemeParser.ThemeParseResult {
@@ -272,17 +272,17 @@ open class ThemeEngine(
       return themeParseResult
     }
 
-    return applyTheme(themeParseResult.chanTheme, isDarkTheme)
+    return applyTheme(themeParseResult.chanTheme)
   }
 
-  fun applyTheme(chanTheme: ChanTheme, isDarkTheme: Boolean): ThemeParser.ThemeParseResult {
-    if (isDarkTheme) {
+  fun applyTheme(chanTheme: ChanTheme): ThemeParser.ThemeParseResult {
+    if (chanTheme.isDarkTheme) {
       actualDarkTheme = chanTheme
     } else {
       actualLightTheme = chanTheme
     }
 
-    ChanSettings.isCurrentThemeDark.set(isDarkTheme)
+    ChanSettings.isCurrentThemeDark.set(chanTheme.isDarkTheme)
     this.chanTheme = chanTheme
     themeParser.storeThemeOnDisk(chanTheme)
 

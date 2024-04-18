@@ -124,6 +124,7 @@ class ThemeControllerHelper(
 
   suspend fun createSimpleThreadView(
     context: Context,
+    position: Int,
     theme: ChanTheme,
     kurobaToolbarState: KurobaToolbarState,
     navigationController: ToolbarNavigationController,
@@ -271,10 +272,14 @@ class ThemeControllerHelper(
 
     val fab = FloatingActionButton(context)
     fab.id = R.id.theme_view_fab_id
-    fab.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_create_white_24dp))
+    fab.setImageDrawable(ContextCompat.getDrawable(context, com.github.k1rakishou.chan.R.drawable.ic_done_white_24dp))
     fab.imageTintList = ColorStateList.valueOf(Color.WHITE)
     fab.updateColors(theme)
     fab.backgroundTintList = ColorStateList.valueOf(theme.accentColor)
+    fab.setOnClickListener {
+      val switchToDark = position != 0
+      themeEngine.switchTheme(switchToDarkTheme = switchToDark)
+    }
 
     val showMoreThemesButton = AppCompatButton(context)
     showMoreThemesButton.setBackgroundColor(theme.accentColor)
@@ -283,7 +288,7 @@ class ThemeControllerHelper(
     showMoreThemesButton.setOnClickListener {
       val themeGalleryController = ThemeGalleryController(
         context = context,
-        lightThemes = theme.isLightTheme,
+        lightThemes = position == 0,
         refreshThemesControllerFunc = options.refreshThemesControllerFunc
       )
       navigationController.pushController(themeGalleryController)
