@@ -26,38 +26,42 @@ import androidx.compose.ui.graphics.toArgb
 import com.github.k1rakishou.core_themes.ThemeEngine.Companion.manipulateColor
 
 @SuppressLint("ResourceType")
-abstract class ChanTheme {
+open class ChanTheme(
   // Don't forget to update ThemeParser's gson when this class changes !!!
-  abstract val name: String
-  abstract val isLightTheme: Boolean
-  abstract val lightStatusBar: Boolean
-  abstract val lightNavBar: Boolean
-  abstract val accentColor: Int
-  abstract val primaryColor: Int
-  abstract val backColor: Int
-  abstract val backColorSecondary: Int
-  abstract val errorColor: Int
-  abstract val textColorPrimary: Int
-  abstract val textColorSecondary: Int
-  abstract val textColorHint: Int
-  abstract val postHighlightedColor: Int
-  abstract val postSavedReplyColor: Int
-  abstract val postSubjectColor: Int
-  abstract val postDetailsColor: Int
-  abstract val postNameColor: Int
-  abstract val postInlineQuoteColor: Int
-  abstract val postQuoteColor: Int
-  abstract val postHighlightQuoteColor: Int
-  abstract val postLinkColor: Int
-  abstract val postSpoilerColor: Int
-  abstract val postSpoilerRevealTextColor: Int
-  abstract val postUnseenLabelColor: Int
-  abstract val dividerColor: Int
-  abstract val bookmarkCounterNotWatchingColor: Int
-  abstract val bookmarkCounterHasRepliesColor: Int
-  abstract val bookmarkCounterNormalColor: Int
+  val name: String,
+  val isLightTheme: Boolean,
+  val lightStatusBar: Boolean,
+  val lightNavBar: Boolean,
+  val accentColor: Int,
+  val primaryColor: Int,
+  val backColor: Int,
+  val backColorSecondary: Int,
+  val errorColor: Int,
+  val textColorPrimary: Int,
+  val textColorSecondary: Int,
+  val textColorHint: Int,
+  val postHighlightedColor: Int,
+  val postSavedReplyColor: Int,
+  val postSubjectColor: Int,
+  val postDetailsColor: Int,
+  val postNameColor: Int,
+  val postInlineQuoteColor: Int,
+  val postQuoteColor: Int,
+  val postHighlightQuoteColor: Int,
+  val postLinkColor: Int,
+  val postSpoilerColor: Int,
+  val postSpoilerRevealTextColor: Int,
+  val postUnseenLabelColor: Int,
+  val dividerColor: Int,
+  val bookmarkCounterNotWatchingColor: Int,
+  val bookmarkCounterHasRepliesColor: Int,
+  val bookmarkCounterNormalColor: Int,
+  val scrollbarTrackColor: Int = ChanTheme.DefaultScrollbarTrackColor,
+  val scrollbarThumbColorNormal: Int = ChanTheme.DefaultScrollbarThumbColorNormal,
+  val scrollbarThumbColorDragged: Int = accentColor,
+) {
 
-  abstract fun copyTheme(
+  open fun copyTheme(
     name: String = this.name,
     isLightTheme: Boolean = this.isLightTheme,
     lightStatusBar: Boolean = this.lightStatusBar,
@@ -86,7 +90,44 @@ abstract class ChanTheme {
     bookmarkCounterNotWatchingColor: Int = this.bookmarkCounterNotWatchingColor,
     bookmarkCounterHasRepliesColor: Int = this.bookmarkCounterHasRepliesColor,
     bookmarkCounterNormalColor: Int = this.bookmarkCounterNormalColor,
-  ): ChanTheme
+    scrollbarTrackColor: Int = this.scrollbarTrackColor,
+    scrollbarThumbColorNormal: Int = this.scrollbarThumbColorNormal,
+    scrollbarThumbColorDragged: Int = this.scrollbarThumbColorDragged,
+  ): ChanTheme {
+    return ChanTheme(
+      name = name,
+      isLightTheme = isLightTheme,
+      lightStatusBar = lightStatusBar,
+      lightNavBar = lightNavBar,
+      accentColor = accentColor,
+      primaryColor = primaryColor,
+      backColor = backColor,
+      backColorSecondary = backColorSecondary,
+      errorColor = errorColor,
+      textColorPrimary = textColorPrimary,
+      textColorSecondary = textColorSecondary,
+      textColorHint = textColorHint,
+      postHighlightedColor = postHighlightedColor,
+      postSavedReplyColor = postSavedReplyColor,
+      postSubjectColor = postSubjectColor,
+      postDetailsColor = postDetailsColor,
+      postNameColor = postNameColor,
+      postInlineQuoteColor = postInlineQuoteColor,
+      postQuoteColor = postQuoteColor,
+      postHighlightQuoteColor = postHighlightQuoteColor,
+      postLinkColor = postLinkColor,
+      postSpoilerColor = postSpoilerColor,
+      postSpoilerRevealTextColor = postSpoilerRevealTextColor,
+      postUnseenLabelColor = postUnseenLabelColor,
+      dividerColor = dividerColor,
+      bookmarkCounterNotWatchingColor = bookmarkCounterNotWatchingColor,
+      bookmarkCounterHasRepliesColor = bookmarkCounterHasRepliesColor,
+      bookmarkCounterNormalColor = bookmarkCounterNormalColor,
+      scrollbarTrackColor = scrollbarTrackColor,
+      scrollbarThumbColorNormal = scrollbarThumbColorNormal,
+      scrollbarThumbColorDragged = scrollbarThumbColorDragged
+    )
+  }
 
   val isDarkTheme: Boolean
     get() = !isLightTheme
@@ -113,6 +154,9 @@ abstract class ChanTheme {
   val postLinkColorCompose by lazy(LazyThreadSafetyMode.NONE) { Color(postLinkColor) }
   val postInlineQuoteColorCompose by lazy(LazyThreadSafetyMode.NONE) { Color(postInlineQuoteColor) }
   val postQuoteColorCompose by lazy(LazyThreadSafetyMode.NONE) { Color(postQuoteColor) }
+  val scrollbarTrackColorCompose by lazy(LazyThreadSafetyMode.NONE) { Color(scrollbarTrackColor) }
+  val scrollbarThumbColorNormalCompose by lazy(LazyThreadSafetyMode.NONE) { Color(scrollbarThumbColorNormal) }
+  val scrollbarThumbColorDraggedCompose by lazy(LazyThreadSafetyMode.NONE) { Color(scrollbarThumbColorDragged) }
 
   val selectedOnBackColor: Color
     get() {
@@ -366,5 +410,8 @@ abstract class ChanTheme {
     fun backColorSecondaryDeprecated(backColor: Int): Int {
       return manipulateColor(backColor, .7f)
     }
+
+    val DefaultScrollbarTrackColor = android.graphics.Color.parseColor("#ffbababa")
+    val DefaultScrollbarThumbColorNormal = android.graphics.Color.parseColor("#ff262626")
   }
 }

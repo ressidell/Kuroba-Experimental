@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.ContentAlpha
 import androidx.compose.runtime.Composable
@@ -55,6 +54,7 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyColumnWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableItem
 import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
@@ -62,7 +62,6 @@ import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
 import com.github.k1rakishou.chan.ui.compose.reorder.move
 import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
@@ -394,16 +393,13 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
       }
     )
 
-    LazyColumn(
+    LazyColumnWithFastScroller(
       modifier = Modifier
         .fillMaxWidth()
         .heightIn(min = 128.dp, max = mainContentMaxHeight)
-        .reorderable(reorderableState)
-        .simpleVerticalScrollbar(
-          state = reorderableState.listState,
-          chanTheme = chanTheme
-        ),
+        .reorderable(reorderableState),
       state = reorderableState.listState,
+      draggableScrollbar = false,
       content = {
         val addedBoorus = thirdEyeSettingState.addedBoorusState
         if (addedBoorus.isEmpty()) {

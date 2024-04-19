@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material.Divider
@@ -69,6 +68,7 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyColumnWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
@@ -79,7 +79,6 @@ import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
 import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.theme.SimpleSquarePainter
@@ -355,17 +354,13 @@ class FiltersController(
         .addBottom(layoutDirection, FAB_SIZE + FAB_MARGIN)
     }
 
-    LazyColumn(
+    LazyColumnWithFastScroller(
       modifier = Modifier
         .fillMaxSize()
-        .simpleVerticalScrollbar(
-          state = reorderableState.listState,
-          chanTheme = chanTheme,
-          contentPadding = paddingValues
-        )
         .reorderable(reorderableState),
       state = reorderableState.listState,
-      contentPadding = paddingValues
+      contentPadding = paddingValues,
+      draggableScrollbar = false
     ) {
       items(
         count = searchResults.size,

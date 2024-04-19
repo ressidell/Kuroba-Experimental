@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.material.Divider
@@ -38,11 +37,11 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessag
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyColumnWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -197,16 +196,12 @@ class BoardArchiveController(
         .asPaddingValues(controllerKey)
     }
 
-    LazyColumn(
+    LazyColumnWithFastScroller(
       state = state,
       modifier = Modifier
-        .fillMaxSize()
-        .simpleVerticalScrollbar(
-          state = state,
-          chanTheme = chanTheme,
-          contentPadding = paddingValues
-        ),
-      contentPadding = paddingValues
+        .fillMaxSize(),
+      contentPadding = paddingValues,
+      draggableScrollbar = true
     ) {
       items(count = searchResults.size + 1) { index ->
         val archiveThreadItem = searchResults.getOrNull(index)

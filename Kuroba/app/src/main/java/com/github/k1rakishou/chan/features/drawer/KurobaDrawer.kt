@@ -25,11 +25,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -76,11 +74,12 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyColumnWithFastScroller
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalGridWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.chan.ui.compose.search.SimpleSearchStateV2
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.helper.awaitWhile
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -253,13 +252,13 @@ private fun ColumnScope.BuildNavigationHistoryList(
           .coerceIn(MainController.MIN_SPAN_COUNT, MainController.MAX_SPAN_COUNT)
       }
 
-      LazyVerticalGrid(
+      LazyVerticalGridWithFastScroller(
         state = gridState,
         modifier = Modifier
           .fillMaxWidth()
-          .wrapContentHeight()
-          .simpleVerticalScrollbar(gridState, chanTheme),
+          .wrapContentHeight(),
         columns = GridCells.Fixed(count = spanCount),
+        draggableScrollbar = false,
         content = {
           items(
             count = searchResults.size,
@@ -297,15 +296,12 @@ private fun ColumnScope.BuildNavigationHistoryList(
         scrollTopTop = { listState.scrollToItem(0) }
       )
 
-      LazyColumn(
+      LazyColumnWithFastScroller(
         state = listState,
         modifier = Modifier
           .fillMaxWidth()
-          .wrapContentHeight()
-          .simpleVerticalScrollbar(
-            state = listState,
-            chanTheme = chanTheme
-          ),
+          .wrapContentHeight(),
+        draggableScrollbar = false,
         content = {
           items(
             count = searchResults.size,

@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Card
@@ -78,10 +77,10 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessag
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyColumnWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
@@ -345,16 +344,12 @@ class LocalArchiveController(
     Column(
       modifier = Modifier.fillMaxSize()
     ) {
-      LazyColumn(
+      LazyColumnWithFastScroller(
         state = state,
         modifier = Modifier
-          .fillMaxSize()
-          .simpleVerticalScrollbar(
-            state = state,
-            chanTheme = chanTheme,
-            contentPadding = paddingValues
-          ),
-        contentPadding = paddingValues
+          .fillMaxSize(),
+        contentPadding = paddingValues,
+        draggableScrollbar = true
       ) {
         item(key = "selector", contentType = "selector") {
           BuildViewModelSelector(onViewModeChanged = onViewModeChanged)
@@ -376,7 +371,7 @@ class LocalArchiveController(
             }
           }
 
-          return@LazyColumn
+          return@LazyColumnWithFastScroller
         }
 
         items(

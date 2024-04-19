@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -43,6 +42,7 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyColumnWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
@@ -51,7 +51,6 @@ import com.github.k1rakishou.chan.ui.compose.reorder.ReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.detectReorder
 import com.github.k1rakishou.chan.ui.compose.reorder.rememberReorderableLazyListState
 import com.github.k1rakishou.chan.ui.compose.reorder.reorderable
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -151,17 +150,13 @@ class CompositeCatalogsSetupController(
       modifier = Modifier.fillMaxSize()
     ) {
       if (compositeCatalogs.isNotEmpty()) {
-        LazyColumn(
+        LazyColumnWithFastScroller(
           state = reorderableState.listState,
           modifier = Modifier
             .fillMaxSize()
-            .simpleVerticalScrollbar(
-              state = reorderableState.listState,
-              chanTheme = chanTheme,
-              contentPadding = paddingValues
-            )
             .reorderable(reorderableState),
           contentPadding = paddingValues,
+          draggableScrollbar = false,
           content = {
             items(compositeCatalogs.size) { index ->
               val compositeCatalog = compositeCatalogs.get(index)

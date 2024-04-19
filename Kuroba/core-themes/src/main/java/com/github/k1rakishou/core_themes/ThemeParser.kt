@@ -313,7 +313,16 @@ class ThemeParser(
     val bookmarkCounterHasRepliesColor: String? = null,
     @Since(1.0)
     @SerializedName("bookmark_counter_normal_color")
-    val bookmarkCounterNormalColor: String? = null
+    val bookmarkCounterNormalColor: String? = null,
+    @Since(1.1)
+    @SerializedName("scrollbar_track_color")
+    val scrollbarTrackColor: String? = null,
+    @Since(1.1)
+    @SerializedName("scrollbar_thumb_color_normal")
+    val scrollbarThumbColorNormal: String? = null,
+    @Since(1.1)
+    @SerializedName("scrollbar_thumb_color_dragger")
+    val scrollbarThumbColorDragged: String? = null
   ) {
 
     fun getUnparsedFields(): List<String> {
@@ -394,6 +403,9 @@ class ThemeParser(
         unparsedFields += "bookmark_counter_normal_color"
       }
 
+      // `scrollbarTrackColor`, `scrollbarThumbColorNormal` and `scrollbarThumbColorDragged` are optional fields so we
+      // don't fail parsing if they are not present
+
       return unparsedFields
     }
 
@@ -403,7 +415,7 @@ class ThemeParser(
       val backColorSecondary = backColorSecondary.toColorOrNull()
         ?: ChanTheme.backColorSecondaryDeprecated(backColor)
 
-      return Theme(
+      return ChanTheme(
         name = name,
         isLightTheme = isLightTheme,
         lightStatusBar = lightStatusBar,
@@ -432,6 +444,9 @@ class ThemeParser(
         bookmarkCounterNotWatchingColor = bookmarkCounterNotWatchingColor.toColorOrNull() ?: defaultTheme.bookmarkCounterNotWatchingColor,
         bookmarkCounterHasRepliesColor = bookmarkCounterHasRepliesColor.toColorOrNull() ?: defaultTheme.bookmarkCounterHasRepliesColor,
         bookmarkCounterNormalColor = bookmarkCounterNormalColor.toColorOrNull() ?: defaultTheme.bookmarkCounterNormalColor,
+        scrollbarTrackColor = scrollbarTrackColor.toColorOrNull() ?: defaultTheme.scrollbarTrackColor,
+        scrollbarThumbColorNormal = scrollbarThumbColorNormal.toColorOrNull() ?: defaultTheme.scrollbarThumbColorNormal,
+        scrollbarThumbColorDragged = scrollbarThumbColorDragged.toColorOrNull() ?: defaultTheme.scrollbarThumbColorDragged,
       )
     }
 
@@ -441,7 +456,11 @@ class ThemeParser(
       val backColorSecondary = backColorSecondary.toColorOrNull()
         ?: ChanTheme.backColorSecondaryDeprecated(backColor)
 
-      return Theme(
+      val scrollbarTrackColor = scrollbarTrackColor.toColorOrNull() ?: ChanTheme.DefaultScrollbarTrackColor
+      val scrollbarThumbColorNormal = scrollbarThumbColorNormal.toColorOrNull() ?: ChanTheme.DefaultScrollbarThumbColorNormal
+      val scrollbarThumbColorDragged = scrollbarThumbColorDragged.toColorOrNull() ?: accentColor.toColorOrNull()
+
+      return ChanTheme(
         name = name,
         isLightTheme = isLightTheme,
         lightStatusBar = lightStatusBar,
@@ -470,6 +489,9 @@ class ThemeParser(
         bookmarkCounterNotWatchingColor = bookmarkCounterNotWatchingColor.toColorOrNull() ?: return null,
         bookmarkCounterHasRepliesColor = bookmarkCounterHasRepliesColor.toColorOrNull() ?: return null,
         bookmarkCounterNormalColor = bookmarkCounterNormalColor.toColorOrNull() ?: return null,
+        scrollbarTrackColor = scrollbarTrackColor,
+        scrollbarThumbColorNormal = scrollbarThumbColorNormal,
+        scrollbarThumbColorDragged = scrollbarThumbColorDragged ?: return null
       )
     }
 
@@ -523,6 +545,9 @@ class ThemeParser(
           bookmarkCounterNotWatchingColor = chanTheme.bookmarkCounterNotWatchingColor.colorIntToHexColorString(),
           bookmarkCounterHasRepliesColor = chanTheme.bookmarkCounterHasRepliesColor.colorIntToHexColorString(),
           bookmarkCounterNormalColor = chanTheme.bookmarkCounterNormalColor.colorIntToHexColorString(),
+          scrollbarTrackColor = chanTheme.scrollbarTrackColor.colorIntToHexColorString(),
+          scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormal.colorIntToHexColorString(),
+          scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDragged.colorIntToHexColorString()
         )
       }
 
@@ -543,12 +568,12 @@ class ThemeParser(
 
   sealed class ThemeExportResult {
     class Error(val error: Throwable) : ThemeExportResult()
-    object Success : ThemeExportResult()
+    data object Success : ThemeExportResult()
   }
 
   companion object {
     private const val TAG = "ThemeParser"
-    private const val CURRENT_VERSION = 1.1
+    private const val CURRENT_VERSION = 1.2
 
     const val DARK_THEME_FILE_NAME = "kurobaex_theme_dark.json"
     const val LIGHT_THEME_FILE_NAME = "kurobaex_theme_light.json"

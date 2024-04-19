@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Composable
@@ -49,9 +48,9 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalGridWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.search.rememberSimpleSearchStateV2
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.core_themes.ChanTheme
@@ -190,14 +189,14 @@ class ComposeBoardsSelectorController(
       return
     }
 
-    LazyVerticalGrid(
+    LazyVerticalGridWithFastScroller(
       modifier = Modifier
         .fillMaxWidth()
         .weight(1f)
-        .defaultMinSize(minHeight = 256.dp)
-        .simpleVerticalScrollbar(state = listState, chanTheme = chanTheme),
+        .defaultMinSize(minHeight = 256.dp),
       state = listState,
       columns = GridCells.Adaptive(CELL_SIZE),
+      draggableScrollbar = false,
       content = {
         items(searchResults.size) { index ->
           val cellData = searchResults[index]

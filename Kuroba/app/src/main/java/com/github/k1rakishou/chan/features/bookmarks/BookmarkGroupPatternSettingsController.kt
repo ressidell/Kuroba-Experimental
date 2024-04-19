@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -43,8 +42,8 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyColumnWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
@@ -108,17 +107,13 @@ class BookmarkGroupPatternSettingsController(
         .padding(4.dp)
     ) {
       val listState = rememberLazyListState()
-      val chanTheme = LocalChanTheme.current
 
-      LazyColumn(
+      LazyColumnWithFastScroller(
         state = listState,
         modifier = Modifier
           .fillMaxWidth()
-          .weight(1f)
-          .simpleVerticalScrollbar(
-            state = listState,
-            chanTheme = chanTheme
-          ),
+          .weight(1f),
+        draggableScrollbar = false,
         content = {
           val mutableMatcherFlags = viewModel.mutableMatcherFlags
 

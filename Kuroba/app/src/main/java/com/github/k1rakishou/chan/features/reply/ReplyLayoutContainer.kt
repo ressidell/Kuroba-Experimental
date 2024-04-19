@@ -22,8 +22,8 @@ import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutState
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutVisibility
 import com.github.k1rakishou.chan.features.reply.left.ReplyInputLeftPart
 import com.github.k1rakishou.chan.features.reply.right.ReplyInputRightPart
+import com.github.k1rakishou.chan.ui.compose.lazylist.verticalScrollbar
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.verticalScrollbar
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 
 @Composable
@@ -82,8 +82,7 @@ fun ReplyLayoutContainer(
         )
         .verticalScrollbar(
           contentPadding = emptyPaddings,
-          scrollState = scrollState,
-          thumbColor = chanTheme.accentColorCompose
+          scrollState = scrollState
         )
     ) {
       ReplyInputLeftPart(

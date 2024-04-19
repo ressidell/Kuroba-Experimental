@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.textAsFlow
@@ -36,8 +35,8 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalGridWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.simpleVerticalScrollbar
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingComposeController
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isTablet
 import com.github.k1rakishou.chan.utils.InputWithQuerySorter
@@ -116,11 +115,10 @@ class SelectBoardForSearchController(
           Color.DarkGray
         }
 
-        LazyVerticalGrid(
+        LazyVerticalGridWithFastScroller(
           state = listState,
-          modifier = Modifier
-            .simpleVerticalScrollbar(state = listState, chanTheme = chanTheme),
           columns = GridCells.Adaptive(minSize = minSize),
+          draggableScrollbar = false,
           content = {
             item(
               span = { GridItemSpan(this.maxCurrentLineSpan) },
@@ -164,7 +162,7 @@ class SelectBoardForSearchController(
                 }
               )
 
-              return@LazyVerticalGrid
+              return@LazyVerticalGridWithFastScroller
             }
 
             items(

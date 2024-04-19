@@ -62,9 +62,9 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDivider
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextButton
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.lazylist.verticalScrollbar
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
-import com.github.k1rakishou.chan.ui.compose.verticalScrollbar
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.openLink
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupEdgeToEdge
@@ -269,7 +269,6 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
         .drawBehind { drawRect(chanTheme.backColorCompose) }
         .padding(horizontal = 4.dp, vertical = 8.dp)
         .verticalScrollbar(
-          thumbColor = chanTheme.accentColorCompose,
           contentPadding = insets,
           scrollState = scrollState
         ),
