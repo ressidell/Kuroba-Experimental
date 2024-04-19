@@ -38,11 +38,14 @@ import com.github.k1rakishou.chan.features.thread_downloading.LocalArchiveContro
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainerView
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarControllerType
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
@@ -116,10 +119,14 @@ class MainController(
   private val threadDownloadManager: ThreadDownloadManager
     get() = threadDownloadManagerLazy.get()
 
+  override val controllerKey: ControllerKey
+    get() = MainController.ControllerKey
+
   private lateinit var rootLayout: TouchBlockingFrameLayout
   private lateinit var container: TouchBlockingFrameLayoutNoBackground
   private lateinit var drawerLayout: DrawerLayout
   private lateinit var drawer: TouchBlockingLinearLayoutNoBackground
+  private lateinit var snackbarContainerView: SnackbarContainerView
 
   private val _latestDrawerEnableState = MutableStateFlow<DrawerEnableState?>(null)
 
@@ -200,6 +207,9 @@ class MainController(
     drawerLayout = view.findViewById(R.id.drawer_layout)
     drawerLayout.setDrawerShadow(R.drawable.panel_shadow, GravityCompat.START)
     drawer = view.findViewById(R.id.drawer_part)
+
+    snackbarContainerView = view.findViewById(R.id.snackbar_container_view)
+    snackbarContainerView.init(SnackbarControllerType.Main)
 
     drawerLayout.addDrawerListener(this)
 
@@ -992,6 +1002,8 @@ class MainController(
 
   companion object {
     private const val TAG = "MainController"
+
+    val ControllerKey = ControllerKey(MainController::class.java.name)
 
     const val MIN_SPAN_COUNT = 3
     const val MAX_SPAN_COUNT = 6

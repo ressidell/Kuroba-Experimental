@@ -68,10 +68,6 @@ class LocalFilePicker(
   override suspend fun pickFile(filePickerInput: LocalFilePickerInput): ModularResult<PickedFile> {
     BackgroundUtils.ensureMainThread()
 
-    if (filePickerInput.clearLastRememberedFilePicker) {
-      PersistableChanState.lastRememberedFilePicker.set("")
-    }
-
     val attachedActivity = activities.firstOrNull()
     if (attachedActivity == null) {
       return error(FilePickerError.ActivityIsNotSet())
@@ -296,8 +292,7 @@ class LocalFilePicker(
 
   data class LocalFilePickerInput(
     val notifyListeners: Boolean,
-    val replyChanDescriptor: ChanDescriptor,
-    val clearLastRememberedFilePicker: Boolean = false
+    val replyChanDescriptor: ChanDescriptor
   )
 
   private data class EnqueuedRequest(

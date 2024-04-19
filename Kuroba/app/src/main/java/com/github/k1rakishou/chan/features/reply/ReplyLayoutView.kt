@@ -364,10 +364,6 @@ class ReplyLayoutView @JvmOverloads constructor(
     replyLayoutViewModel.onPickLocalMediaButtonClicked()
   }
 
-  fun onPickLocalMediaButtonLongClicked() {
-    replyLayoutViewModel.onPickLocalMediaButtonLongClicked()
-  }
-
   fun onPickRemoteMediaButtonClicked() {
     replyLayoutViewModel.onPickRemoteMediaButtonClicked()
   }

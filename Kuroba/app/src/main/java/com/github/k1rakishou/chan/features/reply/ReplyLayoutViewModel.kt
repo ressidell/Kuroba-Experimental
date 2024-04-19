@@ -591,16 +591,7 @@ class ReplyLayoutViewModel(
       return
     }
 
-    withReplyLayoutState { replyLayoutState -> replyLayoutState.pickLocalMedia(showFilePickerChooser = false) }
-  }
-
-  fun onPickLocalMediaButtonLongClicked() {
-    if (AppModuleAndroidUtils.checkDontKeepActivitiesSettingEnabledForWarningDialog(appContext)) {
-      replyLayoutViewCallbacks?.onDontKeepActivitiesSettingDetected()
-      return
-    }
-
-    withReplyLayoutState { replyLayoutState -> replyLayoutState.pickLocalMedia(showFilePickerChooser = true) }
+    withReplyLayoutState { replyLayoutState -> replyLayoutState.pickLocalMedia() }
   }
 
   fun onPickRemoteMediaButtonClicked() {

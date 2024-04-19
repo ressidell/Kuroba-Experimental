@@ -128,8 +128,8 @@ class BrowseController(
   override fun onCreate() {
     super.onCreate()
 
-    val navControllerContainerLayout = inflate(context, R.layout.controller_browse)
-    val container = navControllerContainerLayout.findViewById<NavigationControllerContainerLayout>(R.id.browse_controller_container)
+    val containerLayout = inflate(context, R.layout.controller_browse)
+    val container = containerLayout.findViewById<NavigationControllerContainerLayout>(R.id.browse_controller_container)
     container.initBrowseControllerTracker(this, requireNavController())
     container.addView(view)
     view = container

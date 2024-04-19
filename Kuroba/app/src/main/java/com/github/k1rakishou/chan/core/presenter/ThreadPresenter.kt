@@ -1434,8 +1434,19 @@ class ThreadPresenter @Inject constructor(
       }
     }
 
-    threadPresenterCallback?.showNewPostsNotification(false, -1, -1)
-    threadPresenterCallback?.showThreadStatusNotification(false, null, null, null, null)
+    threadPresenterCallback?.showNewPostsNotification(
+      show = false,
+      newPostsCount = -1,
+      deletedPostsCount = -1
+    )
+
+    threadPresenterCallback?.showThreadStatusNotification(
+      show = false,
+      nowSticky = null,
+      nowArchived = null,
+      nowDeleted = null,
+      nowClosed = null
+    )
 
     // Update the last seen indicator
     showPosts()

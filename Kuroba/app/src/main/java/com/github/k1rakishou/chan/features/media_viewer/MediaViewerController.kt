@@ -270,7 +270,7 @@ class MediaViewerController(
     PostPopupHelper(
       context = context,
       postCellCallback = mediaViewerPostCellCallback,
-      _chanThreadManager = _chanThreadManager,
+      chanThreadManagerLazy = _chanThreadManager,
       callback = postPopupHelperCallback
     )
   }

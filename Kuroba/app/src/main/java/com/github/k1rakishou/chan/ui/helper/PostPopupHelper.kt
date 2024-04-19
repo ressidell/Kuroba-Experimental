@@ -21,14 +21,14 @@ import dagger.Lazy
 class PostPopupHelper(
   private val context: Context,
   private val postCellCallback: PostCellInterface.PostCellCallback,
-  private val _chanThreadManager: Lazy<ChanThreadManager>,
+  private val chanThreadManagerLazy: Lazy<ChanThreadManager>,
   private val callback: PostPopupHelperCallback
 ) {
   private val dataQueue: MutableList<PostPopupData> = ArrayList()
   private var presentingPostRepliesController: BasePostPopupController<out PostPopupData>? = null
 
   private val chanThreadManager: ChanThreadManager
-    get() = _chanThreadManager.get()
+    get() = chanThreadManagerLazy.get()
 
   val isOpen: Boolean
     get() = presentingPostRepliesController != null && presentingPostRepliesController!!.alive

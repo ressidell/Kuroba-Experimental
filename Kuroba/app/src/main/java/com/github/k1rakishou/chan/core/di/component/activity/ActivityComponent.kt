@@ -202,7 +202,6 @@ import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareLinearLayout
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareRecyclerView
 import com.github.k1rakishou.chan.ui.view.sorting.BookmarkSortingItemView
-import com.github.k1rakishou.chan.ui.view.widget.SnackbarWrapper
 import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertController
 import dagger.BindsInstance
 import dagger.Subcomponent
@@ -417,7 +416,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(floatingControllerFrameContainer: FloatingControllerFrameContainer)
   fun inject(replyLayoutView: ReplyLayoutView)
   fun inject(kurobaToolbarView: KurobaToolbarView)
-  fun inject(snackbarWrapper: SnackbarWrapper)
   fun inject(threadSearchNavigationButtonsView: ThreadSearchNavigationButtonsView)
 
   @Subcomponent.Builder

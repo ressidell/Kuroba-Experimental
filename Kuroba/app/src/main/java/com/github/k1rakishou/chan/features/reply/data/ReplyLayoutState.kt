@@ -656,7 +656,7 @@ class ReplyLayoutState(
       .ignore()
   }
 
-  fun pickLocalMedia(showFilePickerChooser: Boolean) {
+  fun pickLocalMedia() {
     filePickerExecutor.post {
       if (!requestPermissionIfNeededSuspend()) {
         showToast(appResources.string(R.string.reply_layout_pick_file_permission_required))
@@ -666,8 +666,7 @@ class ReplyLayoutState(
       try {
         val input = LocalFilePicker.LocalFilePickerInput(
           notifyListeners = true,
-          replyChanDescriptor = chanDescriptor,
-          clearLastRememberedFilePicker = showFilePickerChooser
+          replyChanDescriptor = chanDescriptor
         )
 
         val pickedFileResult = withContext(Dispatchers.IO) { imagePickHelper.pickLocalFile(input) }

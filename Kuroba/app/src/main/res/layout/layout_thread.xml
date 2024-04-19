@@ -29,4 +29,9 @@
         android:layout_gravity="end|bottom"
         android:layout_margin="@dimen/hiding_fab_margin" />
 
+    <com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainerView
+        android:id="@+id/snackbar_container_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
 </com.github.k1rakishou.chan.ui.layout.ThreadLayout>

@@ -736,10 +736,6 @@ class ThreadListLayout @JvmOverloads constructor(
     replyLayoutView.onPickLocalMediaButtonClicked()
   }
 
-  fun onPickLocalMediaButtonLongClicked() {
-    replyLayoutView.onPickLocalMediaButtonLongClicked()
-  }
-
   fun onPickRemoteMediaButtonClicked() {
     replyLayoutView.onPickRemoteMediaButtonClicked()
   }

@@ -86,6 +86,16 @@ data class ContentPaddings(
     return maxOf(bottomInset, bottomPanelHeight)
   }
 
+  fun calculateBottomPadding(): Dp {
+    val bottomPanelHeight = if (controllersHoldingBottomPanel.isNotEmpty()) {
+      bottomPanelHeight
+    } else {
+      0.dp
+    }
+
+    return maxOf(bottomInset, bottomPanelHeight)
+  }
+
   fun calculateTopPadding(): Dp {
     return maxOf(
       topInset,
@@ -97,6 +107,13 @@ data class ContentPaddings(
     return PaddingValues(
       top = calculateTopPadding(),
       bottom = calculateBottomPadding(controllerKey)
+    )
+  }
+
+  fun asPaddingValues(): PaddingValues {
+    return PaddingValues(
+      top = calculateTopPadding(),
+      bottom = calculateBottomPadding()
     )
   }
 

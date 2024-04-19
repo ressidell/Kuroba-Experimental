@@ -37,11 +37,19 @@ import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
 import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.compose.ThreadSearchNavigationButtonsView
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarCollection
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainerView
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarControllerType
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarManager
+import com.github.k1rakishou.chan.ui.compose.snackbar.asSnackbarId
+import com.github.k1rakishou.chan.ui.compose.snackbar.snackbarButton
+import com.github.k1rakishou.chan.ui.compose.snackbar.snackbarText
 import com.github.k1rakishou.chan.ui.controller.PostLinksController
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
+import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.ui.helper.PostPopupHelper
 import com.github.k1rakishou.chan.ui.helper.PostPopupHelper.PostPopupHelperCallback
 import com.github.k1rakishou.chan.ui.helper.RemovedPostsHelper
@@ -52,8 +60,6 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableTextView
 import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.LoadView
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
-import com.github.k1rakishou.chan.ui.view.widget.SnackbarClass
-import com.github.k1rakishou.chan.ui.view.widget.SnackbarWrapper
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getQuantityString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -77,7 +83,6 @@ import com.github.k1rakishou.model.data.post.ChanPostHide
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.persist_state.IndexAndTop
 import com.github.k1rakishou.persist_state.ReplyMode
-import com.google.android.material.snackbar.Snackbar
 import dagger.Lazy
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -116,46 +121,54 @@ class ThreadLayout @JvmOverloads constructor(
   @Inject
   lateinit var presenter: ThreadPresenter
   @Inject
-  lateinit var _themeEngine: Lazy<ThemeEngine>
+  lateinit var themeEngineLazy: Lazy<ThemeEngine>
   @Inject
-  lateinit var _postFilterManager: Lazy<PostFilterManager>
+  lateinit var postFilterManagerLazy: Lazy<PostFilterManager>
   @Inject
-  lateinit var _siteManager: Lazy<SiteManager>
+  lateinit var siteManagerLazy: Lazy<SiteManager>
   @Inject
-  lateinit var _postHideManager: Lazy<PostHideManager>
+  lateinit var postHideManagerLazy: Lazy<PostHideManager>
   @Inject
-  lateinit var _archivesManager: Lazy<ArchivesManager>
+  lateinit var archivesManagerLazy: Lazy<ArchivesManager>
   @Inject
-  lateinit var _dialogFactory: Lazy<DialogFactory>
+  lateinit var dialogFactoryLazy: Lazy<DialogFactory>
   @Inject
-  lateinit var _chanThreadManager: Lazy<ChanThreadManager>
+  lateinit var chanThreadManagerLazy: Lazy<ChanThreadManager>
   @Inject
-  lateinit var _globalWindowInsetsManager: Lazy<GlobalWindowInsetsManager>
+  lateinit var globalWindowInsetsManagerLazy: Lazy<GlobalWindowInsetsManager>
   @Inject
-  lateinit var _chanLoadProgressNotifier: Lazy<ChanLoadProgressNotifier>
+  lateinit var chanLoadProgressNotifierLazy: Lazy<ChanLoadProgressNotifier>
   @Inject
   lateinit var globalUiStateHolderLazy: Lazy<GlobalUiStateHolder>
+  @Inject
+  lateinit var snackbarManagerLazy: Lazy<SnackbarManager>
+  @Inject
+  lateinit var appResourcesLazy: Lazy<AppResources>
 
   private val themeEngine: ThemeEngine
-    get() = _themeEngine.get()
+    get() = themeEngineLazy.get()
   private val postFilterManager: PostFilterManager
-    get() = _postFilterManager.get()
+    get() = postFilterManagerLazy.get()
   private val siteManager: SiteManager
-    get() = _siteManager.get()
+    get() = siteManagerLazy.get()
   private val postHideManager: PostHideManager
-    get() = _postHideManager.get()
+    get() = postHideManagerLazy.get()
   private val archivesManager: ArchivesManager
-    get() = _archivesManager.get()
+    get() = archivesManagerLazy.get()
   private val dialogFactory: DialogFactory
-    get() = _dialogFactory.get()
+    get() = dialogFactoryLazy.get()
   private val chanThreadManager: ChanThreadManager
-    get() = _chanThreadManager.get()
+    get() = chanThreadManagerLazy.get()
   private val globalWindowInsetsManager: GlobalWindowInsetsManager
-    get() = _globalWindowInsetsManager.get()
+    get() = globalWindowInsetsManagerLazy.get()
   private val chanLoadProgressNotifier: ChanLoadProgressNotifier
-    get() = _chanLoadProgressNotifier.get()
+    get() = chanLoadProgressNotifierLazy.get()
   private val globalUiStateHolder: GlobalUiStateHolder
     get() = globalUiStateHolderLazy.get()
+  private val snackbarManager: SnackbarManager
+    get() = snackbarManagerLazy.get()
+  private val appResources: AppResources
+    get() = appResourcesLazy.get()
 
   private lateinit var callback: ThreadLayoutCallback
   private lateinit var progressLayout: View
@@ -176,7 +189,6 @@ class ThreadLayout @JvmOverloads constructor(
   var threadControllerType: ThreadControllerType? = null
     private set
   private var controllerKey: ControllerKey? = null
-  private var newPostsNotification: SnackbarWrapper? = null
   private var refreshedFromSwipe = false
   private var deletingDialog: ProgressDialog? = null
   private var state: State? = null
@@ -185,6 +197,7 @@ class ThreadLayout @JvmOverloads constructor(
   private val scrollToBottomDebouncer = Debouncer(false)
   private val job = SupervisorJob()
   private val coroutineScope = CoroutineScope(job + Dispatchers.Main + CoroutineName("ThreadLayout"))
+  private val snackbarCollection = SnackbarCollection()
 
   override val kurobaToolbarState: KurobaToolbarState
     get() = callback.kurobaToolbarState
@@ -240,7 +253,17 @@ class ThreadLayout @JvmOverloads constructor(
     loadView = findViewById(com.github.k1rakishou.chan.R.id.loadview)
     replyButton = findViewById(com.github.k1rakishou.chan.R.id.reply_button)
     replyButton.setThreadControllerType(threadControllerType, controllerKey)
-    replyButton.setSnackbarClass(SnackbarClass.from(threadControllerType))
+    replyButton.setSnackbarControllerType(threadControllerType.asSnackbarControllerType())
+
+
+    val snackbarContainerView = findViewById<SnackbarContainerView>(
+      com.github.k1rakishou.chan.R.id.snackbar_container_view
+    )
+
+    when (threadControllerType) {
+      ThreadControllerType.Catalog -> snackbarContainerView.init(SnackbarControllerType.Catalog)
+      ThreadControllerType.Thread -> snackbarContainerView.init(SnackbarControllerType.Thread)
+    }
 
     threadSearchNavigationButtonsView = findViewById(com.github.k1rakishou.chan.R.id.thread_search_navigation_buttons)
 
@@ -260,7 +283,7 @@ class ThreadLayout @JvmOverloads constructor(
     // View setup
     presenter.create(context, this)
     threadListLayout.onCreate(presenter, this, threadControllerType)
-    postPopupHelper = PostPopupHelper(context, presenter, _chanThreadManager, this)
+    postPopupHelper = PostPopupHelper(context, presenter, chanThreadManagerLazy, this)
     imageReencodingHelper = ImageOptionsHelper(context, this)
     removedPostsHelper = RemovedPostsHelper(context, presenter, this)
     errorText.typeface = themeEngine.chanTheme.mainFont
@@ -374,10 +397,6 @@ class ThreadLayout @JvmOverloads constructor(
 
   fun onPickLocalMediaButtonClicked() {
     threadListLayout.onPickLocalMediaButtonClicked()
-  }
-
-  fun onPickLocalMediaButtonLongClicked() {
-    threadListLayout.onPickLocalMediaButtonLongClicked()
   }
 
   fun onPickRemoteMediaButtonClicked() {
@@ -856,7 +875,8 @@ class ThreadLayout @JvmOverloads constructor(
   @Suppress("MoveLambdaOutsideParentheses")
   override fun hideThread(post: ChanPost, hide: Boolean) {
     serializedCoroutineExecutor.post {
-      val type = threadControllerType ?: return@post
+      val controllerType = threadControllerType
+        ?: return@post
 
       // hideRepliesToThisPost is false here because we don't have posts in the catalog mode so there
       // is no point in hiding replies to a thread
@@ -871,27 +891,30 @@ class ThreadLayout @JvmOverloads constructor(
       postHideManager.create(postHide)
       presenter.refreshUI()
 
-      val snackbarStringId = if (hide) {
-        R.string.thread_hidden
-      } else {
-        R.string.thread_removed
-      }
-
-      SnackbarWrapper.create(
-        themeEngine.chanTheme,
-        this,
-        snackbarStringId,
-        Snackbar.LENGTH_LONG
-      ).apply {
-        setAction(R.string.undo, {
-          serializedCoroutineExecutor.post {
-            postFilterManager.remove(post.postDescriptor)
-            postHideManager.remove(postHide.postDescriptor)
-            presenter.refreshUI()
+      snackbarCollection += snackbarManager.snackbar(
+        snackbarControllerType = controllerType.asSnackbarControllerType(),
+        snackbarId = "hide_thread".asSnackbarId(),
+        text = snackbarText(
+          text = appResources.string(
+            if (hide) {
+              R.string.thread_hidden
+            } else {
+              R.string.thread_removed
+            }
+          )
+        ),
+        button = snackbarButton<Unit>(
+          coroutineScope = coroutineScope,
+          text = appResources.string(R.string.undo),
+          onClick = {
+            serializedCoroutineExecutor.post {
+              postFilterManager.remove(post.postDescriptor)
+              postHideManager.remove(postHide.postDescriptor)
+              presenter.refreshUI()
+            }
           }
-        })
-        show(type)
-      }
+        )
+      )
     }
   }
 
@@ -901,7 +924,8 @@ class ThreadLayout @JvmOverloads constructor(
     postDescriptors: Set<PostDescriptor>
   ) {
     serializedCoroutineExecutor.post {
-      val type = threadControllerType ?: return@post
+      val controllerType = threadControllerType
+        ?: return@post
 
       val hideList = mutableListOf<ChanPostHide>()
       val resultPostDescriptors = mutableListOf<PostDescriptor>()
@@ -933,23 +957,25 @@ class ThreadLayout @JvmOverloads constructor(
         getQuantityString(R.plurals.post_removed, postDescriptors.size, postDescriptors.size)
       }
 
-      SnackbarWrapper.create(
-        themeEngine.chanTheme,
-        this,
-        formattedString,
-        Snackbar.LENGTH_LONG
-      ).apply {
-        setAction(R.string.undo) {
-          serializedCoroutineExecutor.post {
-            presenter.reparsePostsWithReplies(resultPostDescriptors) { totalPostsWithReplies ->
-              postFilterManager.removeMany(totalPostsWithReplies)
-              postHideManager.removeManyChanPostHides(totalPostsWithReplies)
+      snackbarCollection += snackbarManager.snackbar(
+        snackbarControllerType = controllerType.asSnackbarControllerType(),
+        snackbarId = "hide_or_remove_posts".asSnackbarId(),
+        text = snackbarText(
+          text = formattedString
+        ),
+        button = snackbarButton<Unit>(
+          coroutineScope = coroutineScope,
+          text = appResources.string(R.string.undo),
+          onClick = {
+            serializedCoroutineExecutor.post {
+              presenter.reparsePostsWithReplies(resultPostDescriptors) { totalPostsWithReplies ->
+                postFilterManager.removeMany(totalPostsWithReplies)
+                postHideManager.removeManyChanPostHides(totalPostsWithReplies)
+              }
             }
           }
-        }
-
-        show(type)
-      }
+        )
+      )
     }
   }
 
@@ -987,19 +1013,20 @@ class ThreadLayout @JvmOverloads constructor(
     selectedPosts: List<PostDescriptor>
   ) {
     serializedCoroutineExecutor.post {
-      val type = threadControllerType ?: return@post
+      val controllerType = threadControllerType ?: return@post
 
       presenter.reparsePostsWithReplies(selectedPosts) { totalPostsWithReplies ->
         postFilterManager.removeMany(totalPostsWithReplies)
         postHideManager.removeManyChanPostHides(selectedPosts)
       }
 
-      SnackbarWrapper.create(
-        themeEngine.chanTheme,
-        this,
-        getString(R.string.restored_n_posts, selectedPosts.size),
-        Snackbar.LENGTH_LONG
-      ).apply { show(type) }
+      snackbarCollection += snackbarManager.snackbar(
+        snackbarControllerType = controllerType.asSnackbarControllerType(),
+        snackbarId = "restore_removed_posts".asSnackbarId(),
+        text = snackbarText(
+          text = appResources.string(R.string.restored_n_posts, selectedPosts.size)
+        )
+      )
     }
   }
 
@@ -1053,16 +1080,14 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   override fun showNewPostsNotification(show: Boolean, newPostsCount: Int, deletedPostsCount: Int) {
-    if (!show) {
-      dismissSnackbar()
+    val snackbarId = "show_new_posts".asSnackbarId()
+
+    if (!show || !canShowSnackBar()) {
+      snackbarManager.dismissSnackbar(snackbarId)
       return
     }
 
-    if (!canShowSnackBar()) {
-      return
-    }
-
-    val type = threadControllerType
+    val controllerType = threadControllerType
       ?: return
 
     val text = when {
@@ -1081,24 +1106,18 @@ class ThreadLayout @JvmOverloads constructor(
       }
     }
 
-    dismissSnackbar()
-
-    newPostsNotification = SnackbarWrapper.create(
-      themeEngine.chanTheme,
-      this,
-      text,
-      Snackbar.LENGTH_LONG
-    ).apply {
-      // Show action only if we are showing new posts and we are not already at the bottom of the thread
-      if (!threadListLayout.scrolledToBottom() && newPostsCount > 0) {
-        setAction(R.string.thread_new_posts_goto) {
-          presenter.onNewPostsViewClicked()
-          dismissSnackbar()
-        }
-      }
-
-      show(type)
-    }
+    snackbarCollection += snackbarManager.snackbar(
+      snackbarControllerType = controllerType.asSnackbarControllerType(),
+      snackbarId = snackbarId,
+      text = snackbarText(text),
+      button = snackbarButton<Unit>(
+        coroutineScope = coroutineScope,
+        text = appResources.string(R.string.thread_new_posts_goto),
+        // Show action only if we are showing new posts and we are not already at the bottom of the thread
+        show = !threadListLayout.scrolledToBottom() && newPostsCount > 0,
+        onClick = { presenter.onNewPostsViewClicked() }
+      )
+    )
   }
 
   override fun showThreadStatusNotification(
@@ -1109,7 +1128,6 @@ class ThreadLayout @JvmOverloads constructor(
     nowClosed: Boolean?
   ) {
     if (!show) {
-      dismissSnackbar()
       return
     }
 
@@ -1117,7 +1135,7 @@ class ThreadLayout @JvmOverloads constructor(
       return
     }
 
-    val type = threadControllerType
+    val controllerType = threadControllerType
       ?: return
 
     val text = getThreadStatusText(nowSticky, nowDeleted, nowClosed, nowArchived)
@@ -1125,14 +1143,11 @@ class ThreadLayout @JvmOverloads constructor(
       return
     }
 
-    newPostsNotification = SnackbarWrapper.create(
-      themeEngine.chanTheme,
-      this,
-      text,
-      Snackbar.LENGTH_LONG
-    ).apply {
-      show(type)
-    }
+    snackbarCollection += snackbarManager.snackbar(
+      snackbarControllerType = controllerType.asSnackbarControllerType(),
+      snackbarId = "show_thread_status_notification".asSnackbarId(),
+      text = snackbarText(text)
+    )
   }
 
   override fun canShowSnackBar(): Boolean {
@@ -1158,16 +1173,6 @@ class ThreadLayout @JvmOverloads constructor(
     }
 
     return true
-  }
-
-  private fun dismissSnackbar() {
-    newPostsNotification?.dismiss()
-    newPostsNotification = null
-  }
-
-  override fun onDetachedFromWindow() {
-    dismissSnackbar()
-    super.onDetachedFromWindow()
   }
 
   override fun showImageReencodingWindow(
@@ -1214,7 +1219,7 @@ class ThreadLayout @JvmOverloads constructor(
         threadListLayout.cleanup()
         postPopupHelper.popAll()
 
-        dismissSnackbar()
+        snackbarCollection.dismissAll(snackbarManager)
       }
     }
 
