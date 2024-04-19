@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
+import androidx.compose.runtime.snapshotFlow
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -412,6 +413,12 @@ class ThreadListLayout @JvmOverloads constructor(
           .onEach { setRecyclerViewPadding() }
           .collect()
       }
+    }
+
+    coroutineScope.launch {
+      snapshotFlow { globalWindowInsetsManager.currentWindowInsets.value }
+        .onEach { setRecyclerViewPadding() }
+        .collect()
     }
 
     coroutineScope.launch {
