@@ -67,6 +67,7 @@ import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.openLink
+import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.showErrorToast
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupEdgeToEdge
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupStatusAndNavBarColors
 import com.github.k1rakishou.common.AndroidUtils.setClipboardContent
@@ -623,11 +624,10 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
 
     setClipboardContent("Crash report", resultString)
 
-    Toast.makeText(
-      this,
+    showErrorToast(
       resources.getString(R.string.crash_report_activity_copied_to_clipboard),
       Toast.LENGTH_SHORT
-    ).show()
+    )
   }
 
   private suspend fun importFromBackup(context: Context) {

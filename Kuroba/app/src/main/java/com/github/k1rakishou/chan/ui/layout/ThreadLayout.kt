@@ -39,9 +39,10 @@ import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.compose.ThreadSearchNavigationButtonsView
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarCollection
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainerView
-import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarControllerType
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarManager
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.compose.snackbar.asSnackbarId
+import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
 import com.github.k1rakishou.chan.ui.compose.snackbar.snackbarButton
 import com.github.k1rakishou.chan.ui.compose.snackbar.snackbarText
 import com.github.k1rakishou.chan.ui.controller.PostLinksController
@@ -141,7 +142,7 @@ class ThreadLayout @JvmOverloads constructor(
   @Inject
   lateinit var globalUiStateHolderLazy: Lazy<GlobalUiStateHolder>
   @Inject
-  lateinit var snackbarManagerLazy: Lazy<SnackbarManager>
+  lateinit var snackbarManagerFactoryLazy: Lazy<SnackbarManagerFactory>
   @Inject
   lateinit var appResourcesLazy: Lazy<AppResources>
 
@@ -165,8 +166,8 @@ class ThreadLayout @JvmOverloads constructor(
     get() = chanLoadProgressNotifierLazy.get()
   private val globalUiStateHolder: GlobalUiStateHolder
     get() = globalUiStateHolderLazy.get()
-  private val snackbarManager: SnackbarManager
-    get() = snackbarManagerLazy.get()
+  private val snackbarManagerFactory: SnackbarManagerFactory
+    get() = snackbarManagerFactoryLazy.get()
   private val appResources: AppResources
     get() = appResourcesLazy.get()
 
@@ -185,6 +186,7 @@ class ThreadLayout @JvmOverloads constructor(
   private lateinit var imageReencodingHelper: ImageOptionsHelper
   private lateinit var removedPostsHelper: RemovedPostsHelper
   private lateinit var serializedCoroutineExecutor: SerializedCoroutineExecutor
+  private lateinit var snackbarManager: SnackbarManager
 
   var threadControllerType: ThreadControllerType? = null
     private set
@@ -246,6 +248,10 @@ class ThreadLayout @JvmOverloads constructor(
     this.serializedCoroutineExecutor = SerializedCoroutineExecutor(coroutineScope)
     this.threadControllerType = threadControllerType
     this.controllerKey = controllerKey
+    this.snackbarManager = when (threadControllerType) {
+      ThreadControllerType.Catalog -> snackbarManagerFactory.snackbarManager(SnackbarScope.Catalog)
+      ThreadControllerType.Thread -> snackbarManagerFactory.snackbarManager(SnackbarScope.Thread)
+    }
 
     Logger.d(TAG, "ThreadLayout.create(threadControllerType: ${threadControllerType}, controllerKey: ${controllerKey})")
 
@@ -253,7 +259,7 @@ class ThreadLayout @JvmOverloads constructor(
     loadView = findViewById(com.github.k1rakishou.chan.R.id.loadview)
     replyButton = findViewById(com.github.k1rakishou.chan.R.id.reply_button)
     replyButton.setThreadControllerType(threadControllerType, controllerKey)
-    replyButton.setSnackbarControllerType(threadControllerType.asSnackbarControllerType())
+    replyButton.setSnackbarScope(threadControllerType.asSnackbarScope())
 
 
     val snackbarContainerView = findViewById<SnackbarContainerView>(
@@ -261,8 +267,8 @@ class ThreadLayout @JvmOverloads constructor(
     )
 
     when (threadControllerType) {
-      ThreadControllerType.Catalog -> snackbarContainerView.init(SnackbarControllerType.Catalog)
-      ThreadControllerType.Thread -> snackbarContainerView.init(SnackbarControllerType.Thread)
+      ThreadControllerType.Catalog -> snackbarContainerView.init(SnackbarScope.Catalog)
+      ThreadControllerType.Thread -> snackbarContainerView.init(SnackbarScope.Thread)
     }
 
     threadSearchNavigationButtonsView = findViewById(com.github.k1rakishou.chan.R.id.thread_search_navigation_buttons)
@@ -875,9 +881,6 @@ class ThreadLayout @JvmOverloads constructor(
   @Suppress("MoveLambdaOutsideParentheses")
   override fun hideThread(post: ChanPost, hide: Boolean) {
     serializedCoroutineExecutor.post {
-      val controllerType = threadControllerType
-        ?: return@post
-
       // hideRepliesToThisPost is false here because we don't have posts in the catalog mode so there
       // is no point in hiding replies to a thread
       val postHide = ChanPostHide(
@@ -892,7 +895,6 @@ class ThreadLayout @JvmOverloads constructor(
       presenter.refreshUI()
 
       snackbarCollection += snackbarManager.snackbar(
-        snackbarControllerType = controllerType.asSnackbarControllerType(),
         snackbarId = "hide_thread".asSnackbarId(),
         text = snackbarText(
           text = appResources.string(
@@ -924,9 +926,6 @@ class ThreadLayout @JvmOverloads constructor(
     postDescriptors: Set<PostDescriptor>
   ) {
     serializedCoroutineExecutor.post {
-      val controllerType = threadControllerType
-        ?: return@post
-
       val hideList = mutableListOf<ChanPostHide>()
       val resultPostDescriptors = mutableListOf<PostDescriptor>()
 
@@ -958,7 +957,6 @@ class ThreadLayout @JvmOverloads constructor(
       }
 
       snackbarCollection += snackbarManager.snackbar(
-        snackbarControllerType = controllerType.asSnackbarControllerType(),
         snackbarId = "hide_or_remove_posts".asSnackbarId(),
         text = snackbarText(
           text = formattedString
@@ -1013,15 +1011,12 @@ class ThreadLayout @JvmOverloads constructor(
     selectedPosts: List<PostDescriptor>
   ) {
     serializedCoroutineExecutor.post {
-      val controllerType = threadControllerType ?: return@post
-
       presenter.reparsePostsWithReplies(selectedPosts) { totalPostsWithReplies ->
         postFilterManager.removeMany(totalPostsWithReplies)
         postHideManager.removeManyChanPostHides(selectedPosts)
       }
 
       snackbarCollection += snackbarManager.snackbar(
-        snackbarControllerType = controllerType.asSnackbarControllerType(),
         snackbarId = "restore_removed_posts".asSnackbarId(),
         text = snackbarText(
           text = appResources.string(R.string.restored_n_posts, selectedPosts.size)
@@ -1087,9 +1082,6 @@ class ThreadLayout @JvmOverloads constructor(
       return
     }
 
-    val controllerType = threadControllerType
-      ?: return
-
     val text = when {
       newPostsCount <= 0 && deletedPostsCount <= 0 -> return
       newPostsCount > 0 && deletedPostsCount <= 0 -> {
@@ -1107,7 +1099,6 @@ class ThreadLayout @JvmOverloads constructor(
     }
 
     snackbarCollection += snackbarManager.snackbar(
-      snackbarControllerType = controllerType.asSnackbarControllerType(),
       snackbarId = snackbarId,
       text = snackbarText(text),
       button = snackbarButton<Unit>(
@@ -1127,16 +1118,12 @@ class ThreadLayout @JvmOverloads constructor(
     nowDeleted: Boolean?,
     nowClosed: Boolean?
   ) {
-    if (!show) {
+    val snackbarId = "show_thread_status_notification".asSnackbarId()
+
+    if (!show || !canShowSnackBar()) {
+      snackbarManager.dismissSnackbar(snackbarId)
       return
     }
-
-    if (!canShowSnackBar()) {
-      return
-    }
-
-    val controllerType = threadControllerType
-      ?: return
 
     val text = getThreadStatusText(nowSticky, nowDeleted, nowClosed, nowArchived)
     if (text.isNullOrEmpty()) {
@@ -1144,8 +1131,7 @@ class ThreadLayout @JvmOverloads constructor(
     }
 
     snackbarCollection += snackbarManager.snackbar(
-      snackbarControllerType = controllerType.asSnackbarControllerType(),
-      snackbarId = "show_thread_status_notification".asSnackbarId(),
+      snackbarId = snackbarId,
       text = snackbarText(text)
     )
   }

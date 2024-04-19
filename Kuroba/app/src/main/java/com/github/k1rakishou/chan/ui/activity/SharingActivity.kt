@@ -21,7 +21,6 @@ import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.ui.helper.picker.ImagePickHelper
 import com.github.k1rakishou.chan.ui.helper.picker.PickedFile
 import com.github.k1rakishou.chan.ui.helper.picker.ShareFilePicker
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.core_logger.Logger
@@ -96,7 +95,6 @@ class SharingActivity : AppCompatActivity(), IHasViewModelProviderFactory, IHasA
       appRestarter.detachActivity(this)
     }
 
-    AppModuleAndroidUtils.cancelLastToast()
     mainScope.cancelChildren()
   }
 

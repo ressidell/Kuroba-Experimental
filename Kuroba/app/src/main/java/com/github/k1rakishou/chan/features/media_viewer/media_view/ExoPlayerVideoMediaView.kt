@@ -267,9 +267,8 @@ class ExoPlayerVideoMediaView(
           Logger.e(TAG, "onFullVideoLoadingError()", error)
 
           if (error.isExceptionImportant() && shown) {
-            cancellableToast.showToast(
-              context,
-              getString(R.string.image_failed_video_error, error.errorMessageOrClassName())
+            snackbarManager.errorToast(
+              message = getString(R.string.image_failed_video_error, error.errorMessageOrClassName())
             )
           }
 

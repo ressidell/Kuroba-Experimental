@@ -12,6 +12,7 @@ import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsContro
 import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerAdapter
 import com.github.k1rakishou.chan.features.media_viewer.ViewableMedia
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarManager
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
@@ -29,6 +30,7 @@ class MediaLongClickMenuHelper(
   private val scope: CoroutineScope,
   private val globalWindowInsetsManager: GlobalWindowInsetsManager,
   private val imageSaverV2: ImageSaverV2,
+  private val snackbarManager: SnackbarManager,
   private val getMediaViewerAdapterFunc: () -> MediaViewerAdapter?,
   private val presentControllerFunc: (Controller) -> Unit
 ) {
@@ -113,26 +115,26 @@ class MediaLongClickMenuHelper(
           ?: return
 
         AndroidUtils.setClipboardContent("Image URL", remoteLocation.url.toString())
-        AppModuleAndroidUtils.showToast(context, R.string.image_url_copied_to_clipboard)
+        snackbarManager.toast(messageId = R.string.image_url_copied_to_clipboard)
       }
       ACTION_IMAGE_COPY_THUMBNAIL_URL -> {
         val previewLocationUrl = (viewableMedia.previewLocation as? MediaLocation.Remote)?.url
           ?: return
 
         AndroidUtils.setClipboardContent("Thumbnail URL", previewLocationUrl.toString())
-        AppModuleAndroidUtils.showToast(context, R.string.image_url_copied_to_clipboard)
+        snackbarManager.toast(messageId = R.string.image_url_copied_to_clipboard)
       }
       ACTION_IMAGE_COPY_ORIGINAL_FILE_NAME -> {
         AndroidUtils.setClipboardContent("Original file name", viewableMedia.formatFullOriginalFileName())
-        AppModuleAndroidUtils.showToast(context, R.string.image_file_name_copied_to_clipboard)
+        snackbarManager.toast(messageId = R.string.image_file_name_copied_to_clipboard)
       }
       ACTION_IMAGE_COPY_SERVER_FILE_NAME -> {
         AndroidUtils.setClipboardContent("Server file name", viewableMedia.formatFullServerFileName())
-        AppModuleAndroidUtils.showToast(context, R.string.image_file_name_copied_to_clipboard)
+        snackbarManager.toast(messageId = R.string.image_file_name_copied_to_clipboard)
       }
       ACTION_IMAGE_COPY_MD5_HASH_HEX -> {
         AndroidUtils.setClipboardContent("File hash", viewableMedia.viewableMediaMeta.mediaHash)
-        AppModuleAndroidUtils.showToast(context, R.string.image_file_hash_copied_to_clipboard)
+        snackbarManager.toast(messageId = R.string.image_file_hash_copied_to_clipboard)
       }
       ACTION_OPEN_IN_BROWSER -> {
         val mediaUrl = (viewableMedia.mediaLocation as? MediaLocation.Remote)?.url

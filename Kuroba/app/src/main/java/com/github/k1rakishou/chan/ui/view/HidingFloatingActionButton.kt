@@ -22,7 +22,7 @@ import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
-import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarControllerType
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
@@ -51,7 +51,7 @@ class HidingFloatingActionButton
   private var _listeningForInsetsChanges = false
   private var _threadControllerType: ThreadControllerType? = null
   private var _controllerKey: ControllerKey? = null
-  private var _snackbarControllerType: SnackbarControllerType? = null
+  private var _snackbarScope: SnackbarScope? = null
 
   private val padding = dp(12f)
   private val additionalPadding = dp(17f)
@@ -129,13 +129,13 @@ class HidingFloatingActionButton
     _controllerKey = controllerKey
   }
 
-  fun setSnackbarControllerType(snackbarControllerType: SnackbarControllerType) {
-    check(_snackbarControllerType == null) {
-      "Attempt to set snackbarControllerType twice! " +
-        "current: ${_snackbarControllerType}, snackbarControllerType: ${snackbarControllerType}"
+  fun setSnackbarScope(snackbarScope: SnackbarScope) {
+    check(_snackbarScope == null) {
+      "Attempt to set snackbarScope twice! " +
+        "current: ${_snackbarScope}, snackbarScope: ${snackbarScope}"
     }
 
-    _snackbarControllerType = snackbarControllerType
+    _snackbarScope = snackbarScope
   }
 
   override fun onTouchEvent(ev: MotionEvent): Boolean {
@@ -202,7 +202,7 @@ class HidingFloatingActionButton
   private fun listenForFabVisibilityFlags() {
     coroutineScope.cancelChildren()
     coroutineScope.launch {
-      while (_snackbarControllerType == null || _threadControllerType == null || _controllerKey == null) {
+      while (_snackbarScope == null || _threadControllerType == null || _controllerKey == null) {
         if (!isActive) {
           return@launch
         }
@@ -210,7 +210,7 @@ class HidingFloatingActionButton
         delay(100)
       }
 
-      val snackbarControllerType = _snackbarControllerType ?: return@launch
+      val snackbarScope = _snackbarScope ?: return@launch
       val threadControllerType = _threadControllerType ?: return@launch
       val controllerKey = _controllerKey ?: return@launch
 
@@ -223,7 +223,7 @@ class HidingFloatingActionButton
         snapshotFlow { globalUiStateHolder.threadLayout.focusedControllerState.value },
         snapshotFlow { globalUiStateHolder.fastScroller.isDraggingFastScrollerState.value },
         snapshotFlow { globalUiStateHolder.scroll.scrollTransitionProgress.floatValue },
-        snapshotFlow { globalUiStateHolder.snackbar.snackbarVisibilityState(snackbarControllerType).value },
+        snapshotFlow { globalUiStateHolder.snackbar.snackbarVisibilityState(snackbarScope).value },
         globalUiStateHolder.toolbar.currentToolbarStates,
         currentOpenedDescriptorStateManager.currentFocusedController
       ) { _, _, enableFab, replyLayoutState, threadLayout, focusedController, draggingFastScroller, scroll,

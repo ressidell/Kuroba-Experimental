@@ -15,6 +15,8 @@ import com.github.k1rakishou.chan.core.base.ControllerHostActivity
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
+import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
 import com.github.k1rakishou.chan.ui.controller.base.transition.FadeTransition
 import com.github.k1rakishou.chan.ui.controller.base.transition.TransitionMode
 import com.github.k1rakishou.chan.ui.controller.navigation.BottomPanelContract
@@ -25,13 +27,13 @@ import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigati
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppResources
-import com.github.k1rakishou.chan.ui.view.widget.CancellableToast
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.core_logger.Logger
+import dagger.Lazy
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -51,11 +53,22 @@ abstract class Controller(
   lateinit var view: ViewGroup
 
   @Inject
-  lateinit var kurobaToolbarStateManager: KurobaToolbarStateManager
+  lateinit var kurobaToolbarStateManagerLazy: Lazy<KurobaToolbarStateManager>
   @Inject
-  lateinit var globalUiStateHolder: GlobalUiStateHolder
+  lateinit var globalUiStateHolderLazy: Lazy<GlobalUiStateHolder>
   @Inject
-  lateinit var appResources: AppResources
+  lateinit var appResourcesLazy: Lazy<AppResources>
+  @Inject
+  lateinit var snackbarManagerFactoryLazy: Lazy<SnackbarManagerFactory>
+
+  val kurobaToolbarStateManager: KurobaToolbarStateManager
+    get() = kurobaToolbarStateManagerLazy.get()
+  val globalUiStateHolder: GlobalUiStateHolder
+    get() = globalUiStateHolderLazy.get()
+  val appResources: AppResources
+    get() = appResourcesLazy.get()
+  val snackbarManagerFactory: SnackbarManagerFactory
+    get() = snackbarManagerFactoryLazy.get()
 
   open val controllerKey: ControllerKey
     get() = ControllerKey(this::class.java.name)
@@ -64,6 +77,7 @@ abstract class Controller(
   open var containerToolbarState: KurobaToolbarState
     get() = requireToolbarNavController().containerToolbarState
     set(value) { requireToolbarNavController().containerToolbarState = value }
+  open val snackbarScope: SnackbarScope = SnackbarScope.Global
 
   @JvmField
   var parentController: Controller? = null
@@ -115,9 +129,8 @@ abstract class Controller(
     private set
 
   private val job = SupervisorJob()
+  protected val snackbarManager by lazy { snackbarManagerFactory.snackbarManager(snackbarScope) }
   protected var controllerScope = CoroutineScope(job + Dispatchers.Main + CoroutineName("Controller_${this::class.java.simpleName}"))
-
-  protected val cancellableToast = CancellableToast()
 
   private val _navigationFlags = mutableStateOf<DeprecatedNavigationFlags>(DeprecatedNavigationFlags())
   val hasDrawer: Boolean
@@ -391,12 +404,22 @@ abstract class Controller(
 
   @JvmOverloads
   protected fun showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
-    cancellableToast.showToast(context, message, duration)
+    snackbarManager.globalToast(message, duration)
   }
 
   @JvmOverloads
   protected fun showToast(@StringRes messageId: Int, duration: Int = Toast.LENGTH_SHORT) {
-    cancellableToast.showToast(context, messageId, duration)
+    snackbarManager.globalToast(appResources.string(messageId), duration)
+  }
+
+  @JvmOverloads
+  protected fun showErrorToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
+    snackbarManager.globalErrorToast(message, duration)
+  }
+
+  @JvmOverloads
+  protected fun showErrorToast(@StringRes messageId: Int, duration: Int = Toast.LENGTH_SHORT) {
+    snackbarManager.globalErrorToast(appResources.string(messageId), duration)
   }
 
   private fun finishPresenting() {

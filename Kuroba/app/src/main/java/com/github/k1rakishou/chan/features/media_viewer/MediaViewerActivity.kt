@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.view.MotionEvent
 import android.view.WindowManager
 import android.webkit.URLUtil
-import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.lifecycle.lifecycleScope
 import com.github.k1rakishou.chan.BuildConfig
@@ -21,7 +20,8 @@ import com.github.k1rakishou.chan.core.helper.AppRestarter
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.ApplicationCrashNotifier
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
+import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupEdgeToEdge
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupStatusAndNavBarColors
 import com.github.k1rakishou.chan.utils.startActivitySafe
@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 class MediaViewerActivity : ControllerHostActivity(),
   MediaViewerController.MediaViewerCallbacks,
@@ -58,11 +59,14 @@ class MediaViewerActivity : ControllerHostActivity(),
   lateinit var appRestarter: AppRestarter
   @Inject
   lateinit var applicationCrashNotifier: ApplicationCrashNotifier
+  @Inject
+  lateinit var snackbarManagerFactory: SnackbarManagerFactory
 
   override lateinit var activityComponent: ActivityComponent
   private lateinit var viewModelComponent: ViewModelComponent
   private lateinit var mediaViewerController: MediaViewerController
 
+  private val snackbarManager by lazy { snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer) }
   private val viewModel by lazy { requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>() }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -158,8 +162,6 @@ class MediaViewerActivity : ControllerHostActivity(),
       globalWindowInsetsManager.stopListeningForWindowInsetsChanges(window)
     }
 
-    AppModuleAndroidUtils.cancelLastToast()
-
     AndroidUtils.getWindow(this)
       .clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
   }
@@ -254,7 +256,7 @@ class MediaViewerActivity : ControllerHostActivity(),
       val errorMessage = "Failed to extract viewableMedia from intent '$intent'"
 
       Logger.e(TAG, "handleNewIntent() $errorMessage")
-      Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_LONG).show()
+      snackbarManager.errorToast(message = errorMessage, duration = 6.seconds)
 
       return false
     }
@@ -268,7 +270,7 @@ class MediaViewerActivity : ControllerHostActivity(),
 
     if (!success) {
       val errorMessage = "Failed to display viewableMedia (no media to show was found)"
-      Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_LONG).show()
+      snackbarManager.errorToast(message = errorMessage, duration = 6.seconds)
     }
 
     return success

@@ -36,16 +36,20 @@ import android.widget.Toast;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.github.k1rakishou.ChanSettings;
 import com.github.k1rakishou.chan.BuildConfig;
+import com.github.k1rakishou.chan.Chan;
 import com.github.k1rakishou.chan.R;
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
+import com.github.k1rakishou.chan.core.di.component.application.ApplicationComponent;
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity;
 import com.github.k1rakishou.chan.ui.activity.SharingActivity;
 import com.github.k1rakishou.chan.ui.activity.StartActivity;
-import com.github.k1rakishou.chan.ui.view.widget.CancellableToast;
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarManager;
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope;
 import com.github.k1rakishou.common.AndroidUtils;
 import com.github.k1rakishou.common.KotlinExtensionsKt;
 import com.github.k1rakishou.core_logger.Logger;
@@ -56,10 +60,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import kotlin.Lazy;
+
 public class AppModuleAndroidUtils {
     private static final String TAG = "AppModuleAndroidUtils";
-    private static final CancellableToast cancellableToast = new CancellableToast();
 
+    @Nullable
     @SuppressLint("StaticFieldLeak")
     private static Application application;
 
@@ -202,7 +208,7 @@ public class AppModuleAndroidUtils {
                 Logger.e(TAG, "openLink() application.startActivity() error, intent = " + intent, e);
 
                 String message = getString(R.string.open_link_failed_url_additional_info, link, e.getMessage());
-                Toast.makeText(application, message, Toast.LENGTH_SHORT).show();
+                showErrorToast(message, Toast.LENGTH_SHORT);
             }
 
             return;
@@ -281,7 +287,7 @@ public class AppModuleAndroidUtils {
             Logger.e(TAG, "openIntent() application.startActivity() error, intent = " + intent, e);
 
             String message = getString(R.string.open_intent_failed, intent.toString());
-            Toast.makeText(application, message, Toast.LENGTH_SHORT).show();
+            showErrorToast(message, Toast.LENGTH_SHORT);
             return;
         }
 
@@ -578,6 +584,11 @@ public class AppModuleAndroidUtils {
         });
     }
 
+    private static final Lazy<SnackbarManager> snackbarManagerLazy = kotlin.LazyKt.lazy(() -> {
+        ApplicationComponent applicationComponent = Chan.Companion.getComponent();
+        return applicationComponent.getSnackbarManagerFactory().snackbarManager(SnackbarScope.Global);
+    });
+
     public static void showToast(Context context, String message) {
         showToast(context, message, Toast.LENGTH_SHORT);
     }
@@ -591,18 +602,33 @@ public class AppModuleAndroidUtils {
     }
 
     public static void showToast(Context context, String message, int duration) {
-        if (BackgroundUtils.isMainThread()) {
-            cancellableToast.showToast(context.getApplicationContext(), message, duration);
+        Application app = application;
+        if (app == null) {
             return;
         }
 
-        BackgroundUtils.runOnMainThread(() -> {
-            cancellableToast.showToast(context.getApplicationContext(), message, duration);
-        });
+        snackbarManagerLazy.getValue().globalToast(message, duration);
     }
 
-    public static void cancelLastToast() {
-        cancellableToast.cancel();
+    public static void showErrorToast(String message) {
+        showErrorToast(message, Toast.LENGTH_SHORT);
+    }
+
+    public static void showErrorToast(int resId, int duration) {
+        showErrorToast(getString(resId), duration);
+    }
+
+    public static void showErrorToast(int resId) {
+        showErrorToast(getString(resId));
+    }
+
+    public static void showErrorToast(String message, int duration) {
+        Application app = application;
+        if (app == null) {
+            return;
+        }
+
+        snackbarManagerLazy.getValue().globalToast(message, duration);
     }
 
     public static SharedPreferences getPreferencesForSite(SiteDescriptor siteDescriptor) {

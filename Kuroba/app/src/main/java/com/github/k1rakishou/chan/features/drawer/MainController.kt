@@ -39,7 +39,7 @@ import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainerView
-import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarControllerType
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.ThreadController
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
@@ -209,7 +209,7 @@ class MainController(
     drawer = view.findViewById(R.id.drawer_part)
 
     snackbarContainerView = view.findViewById(R.id.snackbar_container_view)
-    snackbarContainerView.init(SnackbarControllerType.Main)
+    snackbarContainerView.init(SnackbarScope.Global)
 
     drawerLayout.addDrawerListener(this)
 

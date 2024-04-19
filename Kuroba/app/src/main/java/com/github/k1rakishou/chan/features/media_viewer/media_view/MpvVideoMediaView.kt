@@ -35,7 +35,6 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.widget.SimpleAnimatorListener
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.showToast
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.setEnabledFast
 import com.github.k1rakishou.chan.utils.setVisibilityFast
@@ -154,10 +153,10 @@ class MpvVideoMediaView(
 
     mpvHwSw.setOnClickListener {
       if (actualVideoPlayerView.hwdecActive) {
-        showToast(context, R.string.mpv_switching_to_sw_decoding)
+        snackbarManager.toast(messageId = R.string.mpv_switching_to_sw_decoding)
         MpvSettings.hardwareDecoding.set(false)
       } else {
-        showToast(context, R.string.mpv_switching_to_hw_decoding)
+        snackbarManager.toast(messageId = R.string.mpv_switching_to_hw_decoding)
         MpvSettings.hardwareDecoding.set(true)
       }
 

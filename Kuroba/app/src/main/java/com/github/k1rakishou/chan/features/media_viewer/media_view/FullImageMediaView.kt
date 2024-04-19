@@ -271,9 +271,8 @@ class FullImageMediaView(
           Logger.e(TAG, "onFullImageLoadingError()", error)
 
           if (error.isExceptionImportant() && shown) {
-            cancellableToast.showToast(
-              context,
-              getString(R.string.image_image_download_failed, error.errorMessageOrClassName())
+            snackbarManager.errorToast(
+              message = getString(R.string.image_image_download_failed, error.errorMessageOrClassName())
             )
           }
 
@@ -394,9 +393,8 @@ class FullImageMediaView(
           }
 
           if (shown) {
-            cancellableToast.showToast(
-              context,
-              getString(R.string.image_image_load_failed, e.errorMessageOrClassName())
+            snackbarManager.errorToast(
+              message = getString(R.string.image_image_load_failed, e.errorMessageOrClassName())
             )
           }
 
@@ -407,9 +405,8 @@ class FullImageMediaView(
           Logger.e(TAG, "onTileLoadError()", e)
           animationAwaitable.complete(Unit)
 
-          cancellableToast.showToast(
-            context,
-            getString(R.string.image_tile_load_failed, e.errorMessageOrClassName())
+          snackbarManager.errorToast(
+            message = getString(R.string.image_tile_load_failed, e.errorMessageOrClassName())
           )
         }
 

@@ -1348,6 +1348,7 @@ class ReplyLayoutState(
 
     fun showToast(message: String)
     fun showErrorToast(throwable: Throwable)
+    fun showErrorToast(message: String)
 
     suspend fun onPostedSuccessfully(
       prevChanDescriptor: ChanDescriptor,

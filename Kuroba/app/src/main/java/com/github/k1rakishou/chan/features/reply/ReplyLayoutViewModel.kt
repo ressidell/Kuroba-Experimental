@@ -31,6 +31,8 @@ import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutState
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutVisibility
 import com.github.k1rakishou.chan.features.reply.data.SendReplyState
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
+import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.base.Controller
@@ -93,7 +95,8 @@ class ReplyLayoutViewModel(
   private val runtimePermissionsHelperLazy: Lazy<RuntimePermissionsHelper>,
   private val imagePickHelperLazy: Lazy<ImagePickHelper>,
   private val twoCaptchaSolverLazy: Lazy<TwoCaptchaSolver>,
-  private val clearPostingCookiesLazy: Lazy<ClearPostingCookies>
+  private val clearPostingCookiesLazy: Lazy<ClearPostingCookies>,
+  private val snackbarManagerFactoryLazy: Lazy<SnackbarManagerFactory>
 ) : BaseViewModel(), ReplyLayoutState.Callbacks {
   private val appConstants: AppConstants
     get() = appConstantsLazy.get()
@@ -154,6 +157,13 @@ class ReplyLayoutViewModel(
   private var listenForPostingStatusUpdatesJob: Job? = null
   private var threadListLayoutCallbacks: ThreadListLayoutCallbacks? = null
   private var replyLayoutViewCallbacks: ReplyLayoutViewCallbacks? = null
+
+  private val snackbarManager by lazy {
+    when (threadControllerType) {
+      ThreadControllerType.Catalog -> snackbarManagerFactoryLazy.get().snackbarManager(SnackbarScope.Catalog)
+      ThreadControllerType.Thread -> snackbarManagerFactoryLazy.get().snackbarManager(SnackbarScope.Thread)
+    }
+  }
 
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)
@@ -232,7 +242,7 @@ class ReplyLayoutViewModel(
   }
 
   override fun showToast(message: String) {
-    replyLayoutViewCallbacks?.showToast(message)
+    snackbarManager.globalToast(message)
   }
 
   override fun showErrorToast(throwable: Throwable) {
@@ -241,7 +251,11 @@ class ReplyLayoutViewModel(
       throwable.errorMessageOrClassName()
     )
 
-    replyLayoutViewCallbacks?.showToast(message)
+    showErrorToast(message)
+  }
+
+  override fun showErrorToast(message: String) {
+    snackbarManager.globalErrorToast(message)
   }
 
   override suspend fun onPostedSuccessfully(
@@ -599,13 +613,13 @@ class ReplyLayoutViewModel(
       promptUserForMediaUrlExecutor.post(500) {
         val mediaUrl = replyLayoutViewCallbacks?.promptUserForMediaUrl()
         if (mediaUrl.isNullOrBlank()) {
-          replyLayoutViewCallbacks?.showToast(appResources.string(R.string.reply_layout_remote_file_pick_no_url_provided))
+          showErrorToast(appResources.string(R.string.reply_layout_remote_file_pick_no_url_provided))
           return@post
         }
 
         val mediaHttpUrl = mediaUrl.toHttpUrlOrNull()
         if (mediaHttpUrl == null) {
-          replyLayoutViewCallbacks?.showToast(appResources.string(R.string.reply_layout_remote_file_pick_url_not_url))
+          showErrorToast(appResources.string(R.string.reply_layout_remote_file_pick_url_not_url))
           return@post
         }
 
@@ -820,8 +834,6 @@ class ReplyLayoutViewModel(
     fun hideDialog()
     fun hideBanDialog()
 
-    fun showToast(message: String)
-
     fun onReplyLayoutOptionsButtonClicked()
     fun onAttachedMediaClicked(attachedMedia: ReplyFileAttachable, isFileSupportedForReencoding: Boolean)
     suspend fun onAttachedMediaLongClicked(attachedMedia: ReplyFileAttachable)
@@ -848,7 +860,8 @@ class ReplyLayoutViewModel(
     private val runtimePermissionsHelperLazy: Lazy<RuntimePermissionsHelper>,
     private val imagePickHelperLazy: Lazy<ImagePickHelper>,
     private val twoCaptchaSolverLazy: Lazy<TwoCaptchaSolver>,
-    private val clearPostingCookiesLazy: Lazy<ClearPostingCookies>
+    private val clearPostingCookiesLazy: Lazy<ClearPostingCookies>,
+    private val snackbarManagerFactoryLazy: Lazy<SnackbarManagerFactory>
   ) : ViewModelAssistedFactory<ReplyLayoutViewModel> {
     override fun create(handle: SavedStateHandle): ReplyLayoutViewModel {
       return ReplyLayoutViewModel(
@@ -869,7 +882,8 @@ class ReplyLayoutViewModel(
         runtimePermissionsHelperLazy = runtimePermissionsHelperLazy,
         imagePickHelperLazy = imagePickHelperLazy,
         twoCaptchaSolverLazy = twoCaptchaSolverLazy,
-        clearPostingCookiesLazy = clearPostingCookiesLazy
+        clearPostingCookiesLazy = clearPostingCookiesLazy,
+        snackbarManagerFactoryLazy = snackbarManagerFactoryLazy
       )
     }
   }

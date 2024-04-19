@@ -36,6 +36,8 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.ViewPagerAutoSwip
 import com.github.k1rakishou.chan.features.media_viewer.media_view.MediaViewContract
 import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainerView
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.helper.PostLinkableClickHelper
 import com.github.k1rakishou.chan.ui.helper.PostPopupHelper
@@ -43,7 +45,6 @@ import com.github.k1rakishou.chan.ui.view.AppearTransitionImageView
 import com.github.k1rakishou.chan.ui.view.OptionalSwipeViewPager
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.setVisibilityFast
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -81,6 +82,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 class MediaViewerController(
   context: Context,
@@ -88,42 +90,41 @@ class MediaViewerController(
 ) : Controller(context), ViewPager.OnPageChangeListener, MediaViewContract, WindowInsetsListener {
 
   @Inject
-  lateinit var _imageSaverV2: Lazy<ImageSaverV2>
+  lateinit var imageSaverV2Lazy: Lazy<ImageSaverV2>
   @Inject
-  lateinit var _chanThreadManager: Lazy<ChanThreadManager>
+  lateinit var chanThreadManagerLazy: Lazy<ChanThreadManager>
   @Inject
-  lateinit var _siteManager: Lazy<SiteManager>
+  lateinit var siteManagerLazy: Lazy<SiteManager>
   @Inject
-  lateinit var _boardManager: Lazy<BoardManager>
+  lateinit var boardManagerLazy: Lazy<BoardManager>
   @Inject
-  lateinit var _archivesManager: Lazy<ArchivesManager>
+  lateinit var archivesManagerLazy: Lazy<ArchivesManager>
   @Inject
-  lateinit var _postHideManager: Lazy<PostHideManager>
-
+  lateinit var postHideManagerLazy: Lazy<PostHideManager>
   @Inject
-  lateinit var appConstants: AppConstants
+  lateinit var appConstantsLazy: Lazy<AppConstants>
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderV2Lazy: Lazy<ImageLoaderV2>
   @Inject
-  lateinit var mediaViewerScrollerHelper: MediaViewerScrollerHelper
+  lateinit var mediaViewerScrollerHelperLazy: Lazy<MediaViewerScrollerHelper>
   @Inject
-  lateinit var exoPlayerCache: ExoPlayerCache
+  lateinit var exoPlayerCacheLazy: Lazy<ExoPlayerCache>
   @Inject
-  lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
+  lateinit var globalWindowInsetsManagerLazy: Lazy<GlobalWindowInsetsManager>
   @Inject
-  lateinit var chan4CloudFlareImagePreloaderManager: Chan4CloudFlareImagePreloaderManager
+  lateinit var chan4CloudFlareImagePreloaderManagerLazy: Lazy<Chan4CloudFlareImagePreloaderManager>
   @Inject
-  lateinit var exclusionZonesHolder: Android10GesturesExclusionZonesHolder
+  lateinit var exclusionZonesHolderLazy: Lazy<Android10GesturesExclusionZonesHolder>
   @Inject
-  lateinit var mediaViewerOpenAlbumHelper: MediaViewerOpenAlbumHelper
+  lateinit var mediaViewerOpenAlbumHelperLazy: Lazy<MediaViewerOpenAlbumHelper>
   @Inject
-  lateinit var fileChooser: FileChooser
+  lateinit var fileChooserLazy: Lazy<FileChooser>
   @Inject
-  lateinit var mediaViewerGoToImagePostHelper: MediaViewerGoToImagePostHelper
+  lateinit var mediaViewerGoToImagePostHelperLazy: Lazy<MediaViewerGoToImagePostHelper>
   @Inject
-  lateinit var mediaViewerGoToPostHelper: MediaViewerGoToPostHelper
+  lateinit var mediaViewerGoToPostHelperLazy: Lazy<MediaViewerGoToPostHelper>
   @Inject
-  lateinit var mediaViewerOpenThreadHelper: MediaViewerOpenThreadHelper
+  lateinit var mediaViewerOpenThreadHelperLazy: Lazy<MediaViewerOpenThreadHelper>
 
   private var chanDescriptor: ChanDescriptor? = null
   private var autoSwipeJob: Job? = null
@@ -131,6 +132,8 @@ class MediaViewerController(
 
   override val viewerChanDescriptor: ChanDescriptor?
     get() = chanDescriptor
+  override val snackbarScope: SnackbarScope
+    get() = SnackbarScope.MediaViewer
 
   private lateinit var mediaViewerRootLayout: MediaViewerRootLayout
   private lateinit var appearPreviewImage: AppearTransitionImageView
@@ -138,17 +141,41 @@ class MediaViewerController(
   private lateinit var mediaViewerToolbar: MediaViewerToolbar
 
   private val chanThreadManager: ChanThreadManager
-    get() = _chanThreadManager.get()
+    get() = chanThreadManagerLazy.get()
   private val siteManager: SiteManager
-    get() = _siteManager.get()
+    get() = siteManagerLazy.get()
   private val imageSaverV2: ImageSaverV2
-    get() = _imageSaverV2.get()
+    get() = imageSaverV2Lazy.get()
   private val boardManager: BoardManager
-    get() = _boardManager.get()
+    get() = boardManagerLazy.get()
   private val archivesManager: ArchivesManager
-    get() = _archivesManager.get()
+    get() = archivesManagerLazy.get()
   private val postHideManager: PostHideManager
-    get() = _postHideManager.get()
+    get() = postHideManagerLazy.get()
+  private val appConstants: AppConstants
+    get() = appConstantsLazy.get()
+  private val imageLoaderV2: ImageLoaderV2
+    get() = imageLoaderV2Lazy.get()
+  private val mediaViewerScrollerHelper: MediaViewerScrollerHelper
+    get() = mediaViewerScrollerHelperLazy.get()
+  private val exoPlayerCache: ExoPlayerCache
+    get() = exoPlayerCacheLazy.get()
+  private val globalWindowInsetsManager: GlobalWindowInsetsManager
+    get() = globalWindowInsetsManagerLazy.get()
+  private val chan4CloudFlareImagePreloaderManager: Chan4CloudFlareImagePreloaderManager
+    get() = chan4CloudFlareImagePreloaderManagerLazy.get()
+  private val exclusionZonesHolder: Android10GesturesExclusionZonesHolder
+    get() = exclusionZonesHolderLazy.get()
+  private val mediaViewerOpenAlbumHelper: MediaViewerOpenAlbumHelper
+    get() = mediaViewerOpenAlbumHelperLazy.get()
+  private val fileChooser: FileChooser
+    get() = fileChooserLazy.get()
+  private val mediaViewerGoToImagePostHelper: MediaViewerGoToImagePostHelper
+    get() = mediaViewerGoToImagePostHelperLazy.get()
+  private val mediaViewerGoToPostHelper: MediaViewerGoToPostHelper
+    get() = mediaViewerGoToPostHelperLazy.get()
+  private val mediaViewerOpenThreadHelper: MediaViewerOpenThreadHelper
+    get() = mediaViewerOpenThreadHelperLazy.get()
 
   private val viewPagerAutoSwiperLazy = lazy {
     ViewPagerAutoSwiper(pager)
@@ -256,7 +283,7 @@ class MediaViewerController(
     }
 
     private fun notSupported() {
-      showToast(R.string.media_viewer_action_not_supported)
+      snackbarManager.errorToast(messageId = R.string.media_viewer_action_not_supported, duration = 6.seconds)
     }
   }
 
@@ -270,7 +297,7 @@ class MediaViewerController(
     PostPopupHelper(
       context = context,
       postCellCallback = mediaViewerPostCellCallback,
-      chanThreadManagerLazy = _chanThreadManager,
+      chanThreadManagerLazy = chanThreadManagerLazy,
       callback = postPopupHelperCallback
     )
   }
@@ -280,8 +307,8 @@ class MediaViewerController(
   private val mediaViewerMenuHelper by lazy {
     MediaViewerMenuHelper(
       globalWindowInsetsManager = globalWindowInsetsManager,
-      presentControllerFunc = { controller -> presentController(controller, true) },
-      showToastFunc = { messageId -> showToast(messageId) }
+      snackbarManager = snackbarManager,
+      presentControllerFunc = { controller -> presentController(controller, true) }
     )
   }
 
@@ -290,6 +317,7 @@ class MediaViewerController(
       scope = controllerScope,
       globalWindowInsetsManager = globalWindowInsetsManager,
       imageSaverV2 = imageSaverV2,
+      snackbarManager = snackbarManager,
       getMediaViewerAdapterFunc = { mediaViewerAdapter },
       presentControllerFunc = { controller -> presentController(controller, true) }
     )
@@ -314,6 +342,9 @@ class MediaViewerController(
 
     mediaViewerToolbar = view.findViewById(R.id.media_viewer_toolbar)
     mediaViewerToolbar.onCreate()
+
+    val snackbarContainerView = view.findViewById<SnackbarContainerView>(com.github.k1rakishou.chan.R.id.snackbar_container_view)
+    snackbarContainerView.init(SnackbarScope.MediaViewer)
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
 
@@ -444,7 +475,7 @@ class MediaViewerController(
     } else {
       val simpleImageInfo = viewableMedia.toSimpleImageInfoOrNull()
       if (simpleImageInfo == null) {
-        showToast(getString(R.string.media_viewer_cannot_save_media, viewableMedia))
+        snackbarManager.errorToast(message = appResources.string(R.string.media_viewer_cannot_save_media, viewableMedia))
         return false
       }
 
@@ -477,7 +508,7 @@ class MediaViewerController(
       }
 
       if (!swiped) {
-        showToast(getString(R.string.media_viewer_auto_swipe_end_reached))
+        snackbarManager.errorToast(messageId = R.string.media_viewer_auto_swipe_end_reached)
       }
 
       autoSwipeJob = null

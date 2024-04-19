@@ -19,7 +19,7 @@ import com.github.k1rakishou.chan.features.media_viewer.MediaViewerControllerVie
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerToolbar
 import com.github.k1rakishou.chan.features.media_viewer.ViewableMedia
 import com.github.k1rakishou.chan.features.media_viewer.helper.ExoPlayerWrapper
-import com.github.k1rakishou.chan.ui.view.widget.CancellableToast
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarManager
 import com.github.k1rakishou.chan.utils.AnimationUtils.fadeIn
 import com.github.k1rakishou.chan.utils.AnimationUtils.fadeOut
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -54,12 +54,12 @@ class AudioPlayerView @JvmOverloads constructor(
   private lateinit var mediaViewContract: MediaViewContract
   private lateinit var cacheHandler: CacheHandler
   private lateinit var threadDownloadManager: ThreadDownloadManager
+  private lateinit var snackbarManager: SnackbarManager
   private lateinit var cachedHttpDataSourceFactory: DataSource.Factory
   private lateinit var fileDataSourceFactory: DataSource.Factory
   private lateinit var contentDataSourceFactory: DataSource.Factory
 
   private val scope = KurobaCoroutineScope()
-  private val cancellableToast by lazy { CancellableToast() }
 
   private val pauseInBg: Boolean
     get() = ChanSettings.mediaViewerPausePlayersWhenInBackground.get()
@@ -90,6 +90,7 @@ class AudioPlayerView @JvmOverloads constructor(
     audioPlayerViewState: AudioPlayerViewState,
     mediaViewContract: MediaViewContract,
     threadDownloadManager: ThreadDownloadManager,
+    snackbarManager: SnackbarManager,
     cachedHttpDataSourceFactory: DataSource.Factory,
     fileDataSourceFactory: DataSource.Factory,
     contentDataSourceFactory: DataSource.Factory,
@@ -104,6 +105,7 @@ class AudioPlayerView @JvmOverloads constructor(
     this.mediaViewContract = mediaViewContract
     this.cacheHandler = cacheHandler
     this.threadDownloadManager = threadDownloadManager
+    this.snackbarManager = snackbarManager
     this.cachedHttpDataSourceFactory = cachedHttpDataSourceFactory
     this.fileDataSourceFactory = fileDataSourceFactory
     this.contentDataSourceFactory = contentDataSourceFactory
@@ -198,7 +200,6 @@ class AudioPlayerView @JvmOverloads constructor(
     positionAndDurationUpdateJob?.cancel()
     positionAndDurationUpdateJob = null
 
-    cancellableToast.cancel()
     scope.cancelChildren()
   }
 
@@ -274,7 +275,7 @@ class AudioPlayerView @JvmOverloads constructor(
           soundPostActualSoundMedia.mediaLocation.value
         )
 
-        cancellableToast.showToast(context, message)
+        snackbarManager.toast(message = message)
       }
 
       // fallthrough
@@ -304,7 +305,7 @@ class AudioPlayerView @JvmOverloads constructor(
       }
 
       Logger.d(TAG, "loadImageBgAudio() preload()")
-      cancellableToast.showToast(context, R.string.media_viewer_loading_bg_audio)
+      snackbarManager.toast(messageId = R.string.media_viewer_loading_bg_audio)
 
       soundPostVideoPlayer.preload(
         viewableMedia = soundPostActualSoundMedia,
@@ -336,7 +337,7 @@ class AudioPlayerView @JvmOverloads constructor(
       Logger.e(TAG, "loadImageBgAudio() Failed to load image bg audio: ${soundPostActualSoundMedia.mediaLocation}", error)
 
       val errorMessage = getString(R.string.media_viewer_error_loading_bg_audio, error.errorMessageOrClassName())
-      cancellableToast.showToast(context, errorMessage)
+      snackbarManager.errorToast(message = errorMessage)
 
       return false
     }

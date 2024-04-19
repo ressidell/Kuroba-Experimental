@@ -9,8 +9,9 @@ sealed class SnackbarType {
   data object ErrorToast : SnackbarType()
 }
 
-enum class SnackbarControllerType {
-  Main,
+enum class SnackbarScope {
+  Global,
   Catalog,
-  Thread
+  Thread,
+  MediaViewer
 }

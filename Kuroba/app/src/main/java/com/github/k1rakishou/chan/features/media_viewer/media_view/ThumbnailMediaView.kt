@@ -16,8 +16,9 @@ import com.github.k1rakishou.chan.core.cache.CacheHandler
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
 import com.github.k1rakishou.chan.features.media_viewer.ViewableMedia
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
+import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
 import com.github.k1rakishou.chan.ui.view.ThumbnailImageView
-import com.github.k1rakishou.chan.ui.view.widget.CancellableToast
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.setVisibilityFast
@@ -40,8 +41,6 @@ class ThumbnailMediaView @JvmOverloads constructor(
   private val thumbnailErrorView: ThumbnailImageView
   private val errorText: TextView
 
-  protected val cancellableToast by lazy { CancellableToast() }
-
   private var currentlyVisible = false
   private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
 
@@ -49,6 +48,10 @@ class ThumbnailMediaView @JvmOverloads constructor(
   lateinit var imageLoaderV2: Lazy<ImageLoaderV2>
   @Inject
   lateinit var cacheHandler: Lazy<CacheHandler>
+  @Inject
+  lateinit var snackbarManagerFactory: SnackbarManagerFactory
+
+  protected val snackbarManager by lazy { snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer) }
 
   init {
     AppModuleAndroidUtils.extractActivityComponent(context)
@@ -112,7 +115,6 @@ class ThumbnailMediaView @JvmOverloads constructor(
     requestDisposable = null
 
     thumbnailView.setImageDrawable(null)
-    cancellableToast.cancel()
   }
 
   fun setError(errorText: String) {
@@ -169,7 +171,7 @@ class ThumbnailMediaView @JvmOverloads constructor(
     Logger.e(TAG, "onThumbnailImageNotFoundError()")
 
     if (currentlyVisible) {
-      cancellableToast.showToast(context, R.string.image_not_found)
+      snackbarManager.toast(messageId = R.string.image_not_found)
     }
   }
 
@@ -177,9 +179,8 @@ class ThumbnailMediaView @JvmOverloads constructor(
     Logger.e(TAG, "onThumbnailImageError()", exception)
 
     if (exception.isExceptionImportant() && currentlyVisible) {
-      cancellableToast.showToast(
-        context,
-        getString(R.string.image_image_thumbnail_load_failed, exception.errorMessageOrClassName())
+      snackbarManager.toast(
+        message = getString(R.string.image_image_thumbnail_load_failed, exception.errorMessageOrClassName())
       )
     }
   }

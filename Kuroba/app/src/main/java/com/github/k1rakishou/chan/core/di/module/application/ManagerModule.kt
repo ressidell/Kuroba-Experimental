@@ -98,8 +98,7 @@ import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingC
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingDelegate
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
-import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarManager
-import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarManagerImpl
+import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.AndroidUtils
@@ -1014,9 +1013,12 @@ class ManagerModule {
 
   @Singleton
   @Provides
-  fun provideSnackbarManager(appContext: Context, globalUiStateHolder: GlobalUiStateHolder): SnackbarManager {
-    Logger.deps("SnackbarManagerImpl")
-    return SnackbarManagerImpl(
+  fun provideSnackbarManagerFactory(
+    appContext: Context,
+    globalUiStateHolder: GlobalUiStateHolder
+  ): SnackbarManagerFactory {
+    Logger.deps("SnackbarManagerFactory")
+    return SnackbarManagerFactory(
       appContext = appContext,
       globalUiStateHolder = globalUiStateHolder
     )

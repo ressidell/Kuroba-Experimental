@@ -13,7 +13,7 @@ data class SnackbarInfo(
   val aliveUntil: Long?,
   val content: List<SnackbarContentItem>,
   val snackbarType: SnackbarType = SnackbarType.Default,
-  val snackbarControllerType: SnackbarControllerType
+  val snackbarScope: SnackbarScope
 ) {
   val snackbarIdForCompose: Long = nextSnackbarIdForCompose()
 

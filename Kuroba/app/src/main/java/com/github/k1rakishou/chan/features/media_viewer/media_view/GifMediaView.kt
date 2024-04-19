@@ -254,9 +254,8 @@ class GifMediaView(
           Logger.e(TAG, "onFullGifLoadingError()", error)
 
           if (error.isExceptionImportant() && shown) {
-            cancellableToast.showToast(
-              context,
-              AppModuleAndroidUtils.getString(R.string.image_failed_gif_error, error.errorMessageOrClassName())
+            snackbarManager.errorToast(
+              message = AppModuleAndroidUtils.getString(R.string.image_failed_gif_error, error.errorMessageOrClassName())
             )
           }
 
@@ -400,7 +399,6 @@ class GifMediaView(
     }
   }
 
-  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun setBigGifFromFile(filePath: FilePath): Boolean {
     return coroutineScope {
       val drawable = try {
@@ -409,7 +407,7 @@ class GifMediaView(
         Logger.e(TAG, "Error while trying to set a gif file", e)
 
         if (shown) {
-          cancellableToast.showToast(context, "Failed to draw Gif. Error: ${e.message}")
+          snackbarManager.errorToast(message = "Failed to draw Gif. Error: ${e.message}")
         }
 
         return@coroutineScope true

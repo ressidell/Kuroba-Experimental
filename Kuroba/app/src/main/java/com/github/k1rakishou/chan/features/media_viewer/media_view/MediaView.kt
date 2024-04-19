@@ -24,9 +24,10 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.ChanPostBackgroun
 import com.github.k1rakishou.chan.features.media_viewer.helper.CloseMediaActionHelper
 import com.github.k1rakishou.chan.features.media_viewer.strip.MediaViewerActionStrip
 import com.github.k1rakishou.chan.features.media_viewer.strip.MediaViewerBottomActionStripCallbacks
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
+import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
 import com.github.k1rakishou.chan.ui.view.CircularChunkedLoadingBar
-import com.github.k1rakishou.chan.ui.view.widget.CancellableToast
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.setVisibilityFast
@@ -82,7 +83,10 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
   @Inject
   lateinit var threadDownloadManager: ThreadDownloadManager
+  @Inject
+  lateinit var snackbarManagerFactory: SnackbarManagerFactory
 
+  protected val snackbarManager by lazy { snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer) }
   private val controllerViewModel by lazy { context.requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>() }
 
   private var _mediaViewToolbar: MediaViewerToolbar? = null
@@ -94,7 +98,6 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
   private var _shown = false
   private var _preloadingCalled = false
 
-  protected val cancellableToast by lazy { CancellableToast() }
   protected val scope = KurobaCoroutineScope()
 
   protected val pauseInBg: Boolean
@@ -162,6 +165,7 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
         audioPlayerViewState = mediaViewState.audioPlayerViewState,
         mediaViewContract = mediaViewContract,
         threadDownloadManager = threadDownloadManager,
+        snackbarManager = snackbarManager,
         cachedHttpDataSourceFactory = cachedHttpDataSourceFactory,
         fileDataSourceFactory = fileDataSourceFactory,
         contentDataSourceFactory = contentDataSourceFactory
@@ -225,7 +229,6 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
       audioPlayerView?.unbind()
     }
 
-    cancellableToast.cancel()
     scope.cancelChildren()
     unbind()
 

@@ -12,7 +12,7 @@ import com.github.k1rakishou.common.iteration
 
 @Stable
 class SnackbarState(
-  private val snackbarManager: SnackbarManager,
+  val snackbarManager: SnackbarManager,
 ) {
   private val _activeSnackbars = mutableStateListOf<SnackbarInfo>()
   val activeSnackbars: List<SnackbarInfo>

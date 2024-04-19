@@ -5,7 +5,6 @@ import android.text.Spannable
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
@@ -75,8 +74,6 @@ class ReplyLayoutView @JvmOverloads constructor(
   private lateinit var replyLayoutViewModel: ReplyLayoutViewModel
   private lateinit var replyLayoutCallbacks: ReplyLayoutViewModel.ThreadListLayoutCallbacks
 
-  private var prevToast: Toast? = null
-
   private val composeView: ComposeView
   private val coroutineScope = KurobaCoroutineScope()
   private val readyState = mutableStateOf(false)
@@ -127,9 +124,6 @@ class ReplyLayoutView @JvmOverloads constructor(
   }
 
   override fun onDestroy() {
-    prevToast?.cancel()
-    prevToast = null
-
     replyLayoutViewModel.unbindCallbacks()
     coroutineScope.cancelChildren()
   }
@@ -260,14 +254,6 @@ class ReplyLayoutView @JvmOverloads constructor(
 
   override fun hideBanDialog() {
     banDialogHandle.getAndSet(null)?.dismiss()
-  }
-
-  override fun showToast(message: String) {
-    prevToast?.cancel()
-    prevToast = null
-
-    prevToast = Toast.makeText(context, message, Toast.LENGTH_LONG)
-      .also { toast -> toast.show() }
   }
 
   override fun onAttachedMediaClicked(attachedMedia: ReplyFileAttachable, isFileSupportedForReencoding: Boolean) {

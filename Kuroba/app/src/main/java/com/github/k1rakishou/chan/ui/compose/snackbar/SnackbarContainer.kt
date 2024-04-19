@@ -92,7 +92,7 @@ class SnackbarContainerView @JvmOverloads constructor(
   context: Context,
   attributeSet: AttributeSet? = null
 ) : FrameLayout(context, attributeSet, 0) {
-  private val _snackbarControllerType = mutableStateOf<SnackbarControllerType?>(null)
+  private val _snackbarScope = mutableStateOf<SnackbarScope?>(null)
 
   init {
     addView(
@@ -100,19 +100,20 @@ class SnackbarContainerView @JvmOverloads constructor(
         setContent {
           ComposeEntrypoint {
             val contentPaddings = LocalContentPaddings.current
-            val snackbarManager = appDependencies().snackbarManager
-            val snackbarState = remember { SnackbarState(snackbarManager) }
 
-            val snackbarControllerTypeMut by _snackbarControllerType
-            val snackbarControllerType = snackbarControllerTypeMut
+            val snackbarScopeMut by _snackbarScope
+            val snackbarScope = snackbarScopeMut
 
-            if (snackbarControllerType == null) {
+            if (snackbarScope == null) {
               return@ComposeEntrypoint
             }
 
+            val snackbarManagerFactory = appDependencies().snackbarManagerFactory
+            val snackbarState = remember { SnackbarState(snackbarManagerFactory.snackbarManager(snackbarScope)) }
+
             SnackbarContainer(
               snackbarState = snackbarState,
-              snackbarControllerType = snackbarControllerType,
+              snackbarScope = snackbarScope,
               screenPaddings = remember(key1 = contentPaddings) { contentPaddings.asPaddingValues() }
             )
           }
@@ -121,18 +122,17 @@ class SnackbarContainerView @JvmOverloads constructor(
     )
   }
 
-  fun init(snackbarControllerType: SnackbarControllerType) {
-    _snackbarControllerType.value = snackbarControllerType
+  fun init(snackbarScope: SnackbarScope) {
+    _snackbarScope.value = snackbarScope
   }
 
 }
-
 
 @Composable
 fun SnackbarContainer(
   modifier: Modifier = Modifier,
   snackbarState: SnackbarState,
-  snackbarControllerType: SnackbarControllerType,
+  snackbarScope: SnackbarScope,
   screenPaddings: PaddingValues,
   animationDuration: Int = 200
 ) {
@@ -140,8 +140,6 @@ fun SnackbarContainer(
     modifier = modifier,
     contentAlignment = Alignment.BottomCenter
   ) {
-    val snackbarManager = appDependencies().snackbarManager
-
     val insets = LocalWindowInsets.current
     val chanTheme = LocalChanTheme.current
     val currentOrientation = LocalConfiguration.current.orientation
@@ -154,6 +152,8 @@ fun SnackbarContainer(
     val maxContainerWidth = remember(key1 = maxWidth) { maxWidth - 16.dp }
     val maxSnackbarWidth = (if (isTablet) 600.dp else 400.dp).coerceAtMost(maxContainerWidth)
 
+    val snackbarManager = snackbarState.snackbarManager
+
     LaunchedEffect(
       key1 = snackbarState,
       block = {
@@ -161,7 +161,7 @@ fun SnackbarContainer(
           .collect { snackbarInfoEvent ->
             when (snackbarInfoEvent) {
               is SnackbarInfoEvent.Push -> {
-                if (snackbarInfoEvent.snackbarInfo.snackbarControllerType == snackbarControllerType) {
+                if (snackbarInfoEvent.snackbarInfo.snackbarScope == snackbarScope) {
                   snackbarState.pushSnackbar(snackbarInfoEvent.snackbarInfo)
                 }
               }
@@ -244,11 +244,11 @@ fun SnackbarContainer(
             snackbarAnimation = snackbarAnimation,
             onSnackbarSizeChanged = { snackbarId, intSize -> visibleSnackbarSizeMap[snackbarId] = intSize },
             onSnackbarCreated = { snackbarInfo ->
-              snackbarManager.onSnackbarCreated(snackbarInfo.snackbarId, snackbarInfo.snackbarControllerType)
+              snackbarManager.onSnackbarCreated(snackbarInfo.snackbarId, snackbarInfo.snackbarScope)
             },
             onSnackbarDisposed = { snackbarInfo ->
               visibleSnackbarSizeMap.remove(snackbarInfo.snackbarId)
-              snackbarManager.onSnackbarDestroyed(snackbarInfo.snackbarId, snackbarInfo.snackbarControllerType)
+              snackbarManager.onSnackbarDestroyed(snackbarInfo.snackbarId, snackbarInfo.snackbarScope)
             },
             onAnimationEnded = { finishedAnimation -> snackbarState.onAnimationEnded(finishedAnimation) },
             onSnackbarSwipedAway = { snackbarIdForCompose -> snackbarState.onSnackbarSwipedAway(snackbarIdForCompose) },

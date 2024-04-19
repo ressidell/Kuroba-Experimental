@@ -6,6 +6,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
 
@@ -17,6 +18,9 @@ class MediaViewerGesturesSettingsController(context: Context) : BaseFloatingCont
   private lateinit var swipeDownGroup: RadioGroup
 
   override fun getLayoutId(): Int = R.layout.controller_media_viewer_gestures_settings
+
+  override val snackbarScope: SnackbarScope
+    get() = SnackbarScope.MediaViewer
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -104,7 +108,7 @@ class MediaViewerGesturesSettingsController(context: Context) : BaseFloatingCont
       ChanSettings.mediaViewerTopGestureAction.set(swipeUpGesture)
       ChanSettings.mediaViewerBottomGestureAction.set(swipeDownGesture)
 
-      showToast(R.string.restart_the_media_viewer)
+      snackbarManager.toast(messageId = R.string.restart_the_media_viewer)
       pop()
     }
   }

@@ -37,7 +37,6 @@ import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationContro
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.picker.ImagePickHelper
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupEdgeToEdge
@@ -165,7 +164,6 @@ class StartActivity : ControllerHostActivity(),
     super.onDestroy()
     Logger.d(TAG, "onDestroy()")
 
-    AppModuleAndroidUtils.cancelLastToast()
     compositeDisposable.clear()
 
     if (::appRestarter.isInitialized) {

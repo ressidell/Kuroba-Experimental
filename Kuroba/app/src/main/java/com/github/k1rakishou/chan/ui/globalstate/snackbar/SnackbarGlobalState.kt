@@ -1,36 +1,36 @@
 package com.github.k1rakishou.chan.ui.globalstate.snackbar
 
 import androidx.compose.runtime.State
-import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarControllerType
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.core_logger.Logger
 
 interface ISnackbarGlobalState {
   interface Readable {
-    fun snackbarVisibilityState(snackbarControllerType: SnackbarControllerType): State<Boolean>
+    fun snackbarVisibilityState(snackbarScope: SnackbarScope): State<Boolean>
   }
 
   interface Writeable {
-    fun updateSnackbarVisibility(snackbarControllerType: SnackbarControllerType, visible: Boolean)
+    fun updateSnackbarVisibility(snackbarScope: SnackbarScope, visible: Boolean)
   }
 }
 
 class SnackbarGlobalState : ISnackbarGlobalState.Readable, ISnackbarGlobalState.Writeable {
-  private val _states = mutableMapOf<SnackbarControllerType, IndividualSnackbarGlobalState>()
+  private val _states = mutableMapOf<SnackbarScope, IndividualSnackbarGlobalState>()
 
-  override fun snackbarVisibilityState(snackbarControllerType: SnackbarControllerType): State<Boolean> {
-    return getOrCreateState(snackbarControllerType).visibleState
+  override fun snackbarVisibilityState(snackbarScope: SnackbarScope): State<Boolean> {
+    return getOrCreateState(snackbarScope).visibleState
   }
 
-  override fun updateSnackbarVisibility(snackbarControllerType: SnackbarControllerType, visible: Boolean) {
-    Logger.verbose(snackbarControllerType.tag()) { "updateSnackbarVisibility() visible: ${visible}" }
-    getOrCreateState(snackbarControllerType).updateSnackbarVisibility(visible)
+  override fun updateSnackbarVisibility(snackbarScope: SnackbarScope, visible: Boolean) {
+    Logger.verbose(snackbarScope.tag()) { "updateSnackbarVisibility() visible: ${visible}" }
+    getOrCreateState(snackbarScope).updateSnackbarVisibility(visible)
   }
 
-  private fun getOrCreateState(snackbarControllerType: SnackbarControllerType): IndividualSnackbarGlobalState {
-   return _states.getOrPut(snackbarControllerType, { IndividualSnackbarGlobalState() })
+  private fun getOrCreateState(snackbarScope: SnackbarScope): IndividualSnackbarGlobalState {
+   return _states.getOrPut(snackbarScope, { IndividualSnackbarGlobalState() })
   }
 
-  private fun SnackbarControllerType.tag(): String {
+  private fun SnackbarScope.tag(): String {
     return "SnackbarGlobalState_${this.name}"
   }
 

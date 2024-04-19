@@ -1,15 +1,15 @@
 package com.github.k1rakishou.chan.ui.controller
 
-import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarControllerType
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 
 enum class ThreadControllerType {
   Catalog,
   Thread;
 
-  fun asSnackbarControllerType(): SnackbarControllerType {
+  fun asSnackbarScope(): SnackbarScope {
     return when (this) {
-      Catalog -> SnackbarControllerType.Catalog
-      Thread -> SnackbarControllerType.Thread
+      Catalog -> SnackbarScope.Catalog
+      Thread -> SnackbarScope.Thread
     }
   }
 }

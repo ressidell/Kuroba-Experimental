@@ -8,19 +8,19 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerAdapter
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerGesturesSettingsController
 import com.github.k1rakishou.chan.features.reordering.SimpleListItemsReorderingController
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarManager
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
 import com.github.k1rakishou.persist_state.PersistableChanState
 
 class MediaViewerMenuHelper(
   private val globalWindowInsetsManager: GlobalWindowInsetsManager,
-  private val presentControllerFunc: (Controller) -> Unit,
-  private val showToastFunc: (Int) -> Unit
+  private val snackbarManager: SnackbarManager,
+  private val presentControllerFunc: (Controller) -> Unit
 ) {
 
   fun onMediaViewerOptionsClick(
@@ -152,7 +152,7 @@ class MediaViewerMenuHelper(
     when (clickedItem.key as Int) {
       ACTION_DRAW_BEHIND_NOTCH -> {
         ChanSettings.mediaViewerDrawBehindNotch.toggle()
-        showToastFunc(R.string.restart_the_media_viewer)
+        snackbarManager.toast(messageId = R.string.restart_the_media_viewer)
       }
       ACTION_ALLOW_IMAGE_TRANSPARENCY -> {
         ChanSettings.transparencyOn.toggle()
@@ -181,7 +181,7 @@ class MediaViewerMenuHelper(
       }
       ACTION_ENABLE_SOUND_POSTS -> {
         ChanSettings.mediaViewerSoundPostsEnabled.toggle()
-        showToastFunc(R.string.restart_the_media_viewer)
+        snackbarManager.toast(messageId = R.string.restart_the_media_viewer)
       }
       ACTION_USE_MPV -> {
         ChanSettings.useMpvVideoPlayer.toggle()
@@ -207,7 +207,7 @@ class MediaViewerMenuHelper(
             val reorderedButtons = ReorderableMediaViewerActions(itemsReordered.map { it.id })
             PersistableChanState.reorderableMediaViewerActions.set(reorderedButtons)
 
-            AppModuleAndroidUtils.showToast(context, R.string.restart_the_media_viewer)
+            snackbarManager.toast(messageId = R.string.restart_the_media_viewer)
           }
         )
 
@@ -257,7 +257,7 @@ class MediaViewerMenuHelper(
         }
 
         ChanSettings.mediaViewerMaxOffscreenPages.set(selectedPagesCount)
-        showToastFunc(R.string.restart_the_media_viewer)
+        snackbarManager.toast(messageId = R.string.restart_the_media_viewer)
       }
     )
 
