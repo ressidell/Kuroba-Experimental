@@ -21,8 +21,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidthIn
@@ -58,7 +56,6 @@ import androidx.compose.ui.layout.SubcomposeLayoutState
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -75,7 +72,6 @@ import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
-import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowSizeClass
 import com.github.k1rakishou.chan.ui.compose.window.WindowWidthSizeClass
 import com.github.k1rakishou.chan.utils.appDependencies
@@ -93,16 +89,18 @@ class SnackbarContainerView @JvmOverloads constructor(
   attributeSet: AttributeSet? = null
 ) : FrameLayout(context, attributeSet, 0) {
   private val _snackbarScope = mutableStateOf<SnackbarScope?>(null)
+  private val _additionalScreenPaddings = mutableStateOf<PaddingValues>(PaddingValues())
 
   init {
     addView(
       ComposeView(context).apply {
         setContent {
           ComposeEntrypoint {
-            val contentPaddings = LocalContentPaddings.current
+            val localContentPaddings = LocalContentPaddings.current
 
             val snackbarScopeMut by _snackbarScope
             val snackbarScope = snackbarScopeMut
+
 
             if (snackbarScope == null) {
               return@ComposeEntrypoint
@@ -114,7 +112,7 @@ class SnackbarContainerView @JvmOverloads constructor(
             SnackbarContainer(
               snackbarState = snackbarState,
               snackbarScope = snackbarScope,
-              screenPaddings = remember(key1 = contentPaddings) { contentPaddings.asPaddingValues() }
+              screenPaddings = localContentPaddings.asPaddingValues()
             )
           }
         }
@@ -140,10 +138,8 @@ fun SnackbarContainer(
     modifier = modifier,
     contentAlignment = Alignment.BottomCenter
   ) {
-    val insets = LocalWindowInsets.current
     val chanTheme = LocalChanTheme.current
     val currentOrientation = LocalConfiguration.current.orientation
-    val layoutDirection = LocalLayoutDirection.current
     val windowSizeClass = LocalWindowSizeClass.current
 
     val currentOrientationUpdated by rememberUpdatedState(newValue = currentOrientation)
@@ -212,20 +208,11 @@ fun SnackbarContainer(
       }
     )
 
-    val snackbarContainerPaddings = remember(key1 = insets, key2 = screenPaddings) {
-      return@remember PaddingValues(
-        start = insets.left + screenPaddings.calculateStartPadding(layoutDirection),
-        end = insets.right + screenPaddings.calculateEndPadding(layoutDirection),
-        top = insets.top + screenPaddings.calculateTopPadding(),
-        bottom = insets.bottom + screenPaddings.calculateBottomPadding()
-      )
-    }
-
     LayoutSnackbarItems(
       modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight()
-        .padding(snackbarContainerPaddings)
+        .padding(screenPaddings)
         .requiredWidthIn(max = maxSnackbarWidth),
       snackbars = activeSnackbars,
       animationSpecProvider = { tween(durationMillis = animationDuration) }
@@ -459,19 +446,26 @@ private fun KurobaSnackbarItem(
 
   val animationInProgress = layoutAnimationIsInProgress || fadeInOrOutAnimationJob != null
   val hasClickableItems = remember(key1 = snackbarInfo) { snackbarInfo.hasClickableItems }
-  val canBeSwipedAway = hasClickableItems && snackbarInfo.aliveUntil != null
+
+  val canBeDismissedOnClick = when (snackbarInfo.snackbarType) {
+    SnackbarType.Default -> hasClickableItems && snackbarInfo.aliveUntil != null
+    SnackbarType.ErrorToast,
+    SnackbarType.Toast -> true
+  }
+
+  val canBeSwipedAway = when (snackbarInfo.snackbarType) {
+    SnackbarType.Default -> hasClickableItems && snackbarInfo.aliveUntil != null
+    SnackbarType.ErrorToast,
+    SnackbarType.Toast -> true
+  }
 
   val clickableModifier = if (animationInProgress) {
     Modifier
   } else {
     Modifier.kurobaClickable(
-      onClick = {
-        if (hasClickableItems) {
-          return@kurobaClickable
-        }
-
-        dismissSnackbar(snackbarInfo.snackbarId)
-      }
+      bounded = true,
+      enabled = canBeDismissedOnClick,
+      onClick = { dismissSnackbar(snackbarInfo.snackbarId) }
     )
   }
 

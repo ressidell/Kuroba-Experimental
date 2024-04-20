@@ -48,6 +48,10 @@ data class FabVisibilityState(
         return false
       }
 
+      if (snackbarVisible) {
+        return false
+      }
+
       // Otherwise we need FAB to always be visible in SPLIT layout mode
       return true
     }
@@ -75,6 +79,10 @@ data class FabVisibilityState(
       }
 
       if (isForceHiddenBasedOnControllerType(threadControllerType)) {
+        return true
+      }
+
+      if (snackbarVisible) {
         return true
       }
 
