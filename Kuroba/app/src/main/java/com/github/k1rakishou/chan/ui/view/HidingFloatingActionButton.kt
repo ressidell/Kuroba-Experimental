@@ -189,10 +189,9 @@ class HidingFloatingActionButton
     if (isChristmasToday || is4chanBirthdayToday) {
       canvas.withScale(x = 0.5f, y = 0.5f, pivotX = 0.5f, pivotY = 0.5f) {
         canvas.withTranslation(x = hatOffsetX) {
-          if (isChristmasToday) {
-            canvas.drawBitmap(christmasHat, 0f, 0f, paint)
-          } else if (is4chanBirthdayToday) {
-            canvas.drawBitmap(partyHat, 0f, 0f, paint)
+          when {
+            isChristmasToday -> canvas.drawBitmap(christmasHat, 0f, 0f, paint)
+            is4chanBirthdayToday -> canvas.drawBitmap(partyHat, 0f, 0f, paint)
           }
         }
       }
@@ -225,9 +224,9 @@ class HidingFloatingActionButton
         snapshotFlow { globalUiStateHolder.scroll.scrollTransitionProgress.floatValue },
         snapshotFlow { globalUiStateHolder.snackbar.snackbarVisibilityState(snackbarScope).value },
         globalUiStateHolder.toolbar.currentToolbarStates,
-        currentOpenedDescriptorStateManager.currentFocusedController
+        currentOpenedDescriptorStateManager.currentFocusedControllers
       ) { _, _, enableFab, replyLayoutState, threadLayout, focusedController, draggingFastScroller, scroll,
-          snackbarVisible, currentToolbarStates, currentFocusedController ->
+          snackbarVisible, currentToolbarStates, currentFocusedControllers ->
         return@combineMany FabVisibilityState(
           fabEnabled = enableFab,
           replyLayoutVisibilityStates = replyLayoutState,
@@ -237,7 +236,7 @@ class HidingFloatingActionButton
           isDraggingFastScroller = draggingFastScroller,
           snackbarVisible = snackbarVisible,
           currentToolbarStates = currentToolbarStates,
-          currentFocusedController = currentFocusedController
+          currentFocusedControllers = currentFocusedControllers
         )
       }
         .onEach { fabVisibilityState ->

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import coil.size.Scale
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
@@ -107,9 +108,9 @@ class ImagePickHelper(
 
           withContext(Dispatchers.IO) {
             val success = imageLoaderV2.calculateFilePreviewAndStoreOnDisk(
-              appContext,
-              replyFileMeta.fileUuid,
-              Scale.FIT
+              context = appContext,
+              fileUuid = replyFileMeta.fileUuid,
+              scale = Scale.FIT
             )
 
             if (!success) {
@@ -117,10 +118,17 @@ class ImagePickHelper(
             }
           }
 
-          val currentFocusedDescriptor = currentOpenedDescriptorStateManager.currentFocusedDescriptor
-          if (currentFocusedDescriptor != null) {
-            val maxAllowedFilesPerPost = replyLayoutHelper.getMaxAllowedFilesPerPost(currentFocusedDescriptor)
-            if (maxAllowedFilesPerPost != null && canAutoSelectFile(maxAllowedFilesPerPost).unwrap()) {
+          val maxAllowedFilesPerPost = if (ChanSettings.isSplitLayoutMode()) {
+            currentOpenedDescriptorStateManager.currentFocusedDescriptors.getAllNonNull()
+              .mapNotNull { chanDescriptor -> replyLayoutHelper.getMaxAllowedFilesPerPost(chanDescriptor) }
+              .min()
+          } else {
+            currentOpenedDescriptorStateManager.currentFocusedDescriptors.getFocused()
+              ?.let { chanDescriptor -> replyLayoutHelper.getMaxAllowedFilesPerPost(chanDescriptor) }
+          }
+
+          if (maxAllowedFilesPerPost != null && maxAllowedFilesPerPost > 0) {
+            if (canAutoSelectFile(maxAllowedFilesPerPost).unwrap()) {
               replyManager.updateFileSelection(
                 fileUuid = replyFileMeta.fileUuid,
                 selected = true,

@@ -1,7 +1,7 @@
 package com.github.k1rakishou.chan.ui.viewstate
 
 import com.github.k1rakishou.ChanSettings
-import com.github.k1rakishou.chan.core.manager.CurrentFocusedController
+import com.github.k1rakishou.chan.core.manager.CurrentFocusedControllers
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.controller.BrowseController
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
@@ -19,7 +19,7 @@ data class FabVisibilityState(
   val isDraggingFastScroller: Boolean,
   val snackbarVisible: Boolean,
   val currentToolbarStates: ImmutableMap<ControllerKey, ToolbarStateKind>,
-  val currentFocusedController: CurrentFocusedController
+  val currentFocusedControllers: CurrentFocusedControllers
 ) {
   private val catalogScreenKey
     get() = BrowseController.catalogControllerKey
@@ -43,7 +43,13 @@ data class FabVisibilityState(
         return false
       }
 
-      // fallthrough
+      if (isForceHiddenBasedOnControllerType(threadControllerType)) {
+        // Can't be visible if it's force hidden
+        return false
+      }
+
+      // Otherwise we need FAB to always be visible in SPLIT layout mode
+      return true
     }
 
     if (isForceHiddenBasedOnCurrentFocusedController(controllerKey)) {
@@ -68,6 +74,11 @@ data class FabVisibilityState(
         return true
       }
 
+      if (isForceHiddenBasedOnControllerType(threadControllerType)) {
+        return true
+      }
+
+      // Otherwise we need FAB to always be visible in SPLIT layout mode
       return false
     }
 
@@ -105,12 +116,26 @@ data class FabVisibilityState(
     }
   }
 
+  private fun isForceHiddenBasedOnControllerType(threadControllerType: ThreadControllerType): Boolean {
+    val currentFocusedScreenKey = when (threadControllerType) {
+      ThreadControllerType.Catalog -> catalogScreenKey
+      ThreadControllerType.Thread -> threadScreenKey
+    }
+
+    if (currentToolbarStates[currentFocusedScreenKey]?.needForceHideFab() == true) {
+      return true
+    }
+
+    return false
+  }
+
   private fun isForceHiddenBasedOnCurrentFocusedController(controllerKey: ControllerKey): Boolean {
-    if (!ChanSettings.isSplitLayoutMode() && (controllerKey == catalogScreenKey || controllerKey == threadScreenKey)) {
-      val currentFocusedScreenKey = when (currentFocusedController) {
-        CurrentFocusedController.Catalog -> catalogScreenKey
-        CurrentFocusedController.Thread -> threadScreenKey
-        CurrentFocusedController.None -> null
+    if (controllerKey == catalogScreenKey || controllerKey == threadScreenKey) {
+      val currentFocusedScreenKey = when (currentFocusedControllers.focusState()) {
+        CurrentFocusedControllers.FocusState.Catalog -> catalogScreenKey
+        CurrentFocusedControllers.FocusState.Thread -> threadScreenKey
+        CurrentFocusedControllers.FocusState.None,
+        CurrentFocusedControllers.FocusState.Both -> null
       }
 
       if (currentFocusedScreenKey != null && currentToolbarStates[currentFocusedScreenKey]?.needForceHideFab() == true) {
@@ -118,8 +143,6 @@ data class FabVisibilityState(
       }
 
       // fallthrough
-    } else if (currentToolbarStates[controllerKey]?.needForceHideFab() == true) {
-      return true
     }
 
     return false

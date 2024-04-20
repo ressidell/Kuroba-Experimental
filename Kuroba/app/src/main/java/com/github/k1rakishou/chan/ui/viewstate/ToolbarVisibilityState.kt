@@ -1,7 +1,7 @@
 package com.github.k1rakishou.chan.ui.viewstate
 
 import com.github.k1rakishou.ChanSettings
-import com.github.k1rakishou.chan.core.manager.CurrentFocusedController
+import com.github.k1rakishou.chan.core.manager.CurrentFocusedControllers
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.controller.BrowseController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
@@ -13,7 +13,7 @@ data class ToolbarVisibilityState(
   val isDraggingFastScroller: Boolean,
   val scrollProgress: Float,
   val currentToolbarStates: ImmutableMap<ControllerKey, ToolbarStateKind>,
-  val currentFocusedController: CurrentFocusedController,
+  val currentFocusedControllers: CurrentFocusedControllers,
   val topControllerKeys: List<ControllerKey>
 ) {
   private val catalogScreenKey
@@ -41,20 +41,29 @@ data class ToolbarVisibilityState(
       return true
     }
 
-    if (!ChanSettings.isSplitLayoutMode() && (topControllerKeys.any { key -> key == catalogScreenKey || key == threadScreenKey } )) {
-      val currentFocusedScreenKey = when (currentFocusedController) {
-        CurrentFocusedController.Catalog -> catalogScreenKey
-        CurrentFocusedController.Thread -> threadScreenKey
-        CurrentFocusedController.None -> null
-      }
-
-      if (currentFocusedScreenKey != null && currentToolbarStates[currentFocusedScreenKey]?.needForceShowToolbar() == true) {
+    if (ChanSettings.isSplitLayoutMode()) {
+      if (currentToolbarStates[topControllerKeys.first()]?.needForceShowToolbar() == true) {
         return true
       }
 
       // fallthrough
-    } else if (currentToolbarStates[topControllerKeys.first()]?.needForceShowToolbar() == true) {
-      return true
+    } else {
+      if (topControllerKeys.any { key -> key == catalogScreenKey || key == threadScreenKey } ) {
+        val currentFocusedScreenKey = when (currentFocusedControllers.focusState())  {
+          CurrentFocusedControllers.FocusState.Catalog -> catalogScreenKey
+          CurrentFocusedControllers.FocusState.Thread -> threadScreenKey
+          CurrentFocusedControllers.FocusState.None,
+          CurrentFocusedControllers.FocusState.Both -> null
+        }
+
+        if (currentFocusedScreenKey != null && currentToolbarStates[currentFocusedScreenKey]?.needForceShowToolbar() == true) {
+          return true
+        }
+
+        // fallthrough
+      }
+
+      // fallthrough
     }
 
     return false

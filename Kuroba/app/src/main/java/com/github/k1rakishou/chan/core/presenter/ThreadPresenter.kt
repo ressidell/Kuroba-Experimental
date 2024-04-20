@@ -1,19 +1,3 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.core.presenter
 
 import android.content.Context
@@ -40,7 +24,7 @@ import com.github.k1rakishou.chan.core.manager.ChanFilterManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
-import com.github.k1rakishou.chan.core.manager.CurrentFocusedController
+import com.github.k1rakishou.chan.core.manager.CurrentFocusedControllers
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
@@ -74,7 +58,6 @@ import com.github.k1rakishou.chan.ui.cell.ThreadStatusCell
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.PostOmittedImagesController
-import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.helper.PostLinkableClickHelper
 import com.github.k1rakishou.chan.ui.helper.PostPopupHelper
@@ -140,33 +123,33 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.time.measureTimedValue
 
 class ThreadPresenter @Inject constructor(
-  private val _bookmarksManager: Lazy<BookmarksManager>,
-  private val _pageRequestManager: Lazy<PageRequestManager>,
-  private val _siteManager: Lazy<SiteManager>,
-  private val _boardManager: Lazy<BoardManager>,
-  private val _savedReplyManager: Lazy<SavedReplyManager>,
-  private val _chanPostRepository: Lazy<ChanPostRepository>,
-  private val _archivesManager: Lazy<ArchivesManager>,
-  private val _onDemandContentLoaderManager: Lazy<OnDemandContentLoaderManager>,
-  private val _seenPostsManager: Lazy<SeenPostsManager>,
-  private val _historyNavigationManager: Lazy<HistoryNavigationManager>,
-  private val _postFilterManager: Lazy<PostFilterManager>,
-  private val _chanFilterManager: Lazy<ChanFilterManager>,
-  private val _lastViewedPostNoInfoHolder: Lazy<LastViewedPostNoInfoHolder>,
-  private val _chanThreadViewableInfoManager: Lazy<ChanThreadViewableInfoManager>,
-  private val _postHideHelper: Lazy<PostHideHelper>,
-  private val _postHideManager: Lazy<PostHideManager>,
-  private val _chanThreadManager: Lazy<ChanThreadManager>,
-  private val _globalWindowInsetsManager: Lazy<GlobalWindowInsetsManager>,
-  private val _thumbnailLongtapOptionsHelper: Lazy<ThumbnailLongtapOptionsHelper>,
-  private val _mediaViewerGoToPostHelper: Lazy<MediaViewerGoToPostHelper>,
-  private val _themeEngine: Lazy<ThemeEngine>,
-  private val _chanLoadProgressNotifier: Lazy<ChanLoadProgressNotifier>,
-  private val _postHighlightManager: Lazy<PostHighlightManager>,
-  private val _currentOpenedDescriptorStateManager: Lazy<CurrentOpenedDescriptorStateManager>,
-  private val _chanCatalogSnapshotCache: Lazy<ChanCatalogSnapshotCache>,
-  private val _compositeCatalogManager: Lazy<CompositeCatalogManager>,
-  private val _refreshChan4CaptchaTicketUseCase: Lazy<RefreshChan4CaptchaTicketUseCase>
+  private val bookmarksManagerLazy: Lazy<BookmarksManager>,
+  private val pageRequestManagerLazy: Lazy<PageRequestManager>,
+  private val siteManagerLazy: Lazy<SiteManager>,
+  private val boardManagerLazy: Lazy<BoardManager>,
+  private val savedReplyManagerLazy: Lazy<SavedReplyManager>,
+  private val chanPostRepositoryLazy: Lazy<ChanPostRepository>,
+  private val archivesManagerLazy: Lazy<ArchivesManager>,
+  private val onDemandContentLoaderManagerLazy: Lazy<OnDemandContentLoaderManager>,
+  private val seenPostsManagerLazy: Lazy<SeenPostsManager>,
+  private val historyNavigationManagerLazy: Lazy<HistoryNavigationManager>,
+  private val postFilterManagerLazy: Lazy<PostFilterManager>,
+  private val chanFilterManagerLazy: Lazy<ChanFilterManager>,
+  private val lastViewedPostNoInfoHolderLazy: Lazy<LastViewedPostNoInfoHolder>,
+  private val chanThreadViewableInfoManagerLazy: Lazy<ChanThreadViewableInfoManager>,
+  private val postHideHelperLazy: Lazy<PostHideHelper>,
+  private val postHideManagerLazy: Lazy<PostHideManager>,
+  private val chanThreadManagerLazy: Lazy<ChanThreadManager>,
+  private val globalWindowInsetsManagerLazy: Lazy<GlobalWindowInsetsManager>,
+  private val thumbnailLongtapOptionsHelperLazy: Lazy<ThumbnailLongtapOptionsHelper>,
+  private val mediaViewerGoToPostHelperLazy: Lazy<MediaViewerGoToPostHelper>,
+  private val themeEngineLazy: Lazy<ThemeEngine>,
+  private val chanLoadProgressNotifierLazy: Lazy<ChanLoadProgressNotifier>,
+  private val postHighlightManagerLazy: Lazy<PostHighlightManager>,
+  private val currentOpenedDescriptorStateManagerLazy: Lazy<CurrentOpenedDescriptorStateManager>,
+  private val chanCatalogSnapshotCacheLazy: Lazy<ChanCatalogSnapshotCache>,
+  private val compositeCatalogManagerLazy: Lazy<CompositeCatalogManager>,
+  private val refreshChan4CaptchaTicketUseCaseLazy: Lazy<RefreshChan4CaptchaTicketUseCase>
 ) : PostAdapterCallback,
   PostCellCallback,
   ThreadStatusCell.Callback,
@@ -174,59 +157,59 @@ class ThreadPresenter @Inject constructor(
   CoroutineScope {
 
   private val bookmarksManager: BookmarksManager
-    get() = _bookmarksManager.get()
+    get() = bookmarksManagerLazy.get()
   private val pageRequestManager: PageRequestManager
-    get() = _pageRequestManager.get()
+    get() = pageRequestManagerLazy.get()
   private val siteManager: SiteManager
-    get() = _siteManager.get()
+    get() = siteManagerLazy.get()
   private val boardManager: BoardManager
-    get() = _boardManager.get()
+    get() = boardManagerLazy.get()
   private val savedReplyManager: SavedReplyManager
-    get() = _savedReplyManager.get()
+    get() = savedReplyManagerLazy.get()
   private val chanPostRepository: ChanPostRepository
-    get() = _chanPostRepository.get()
+    get() = chanPostRepositoryLazy.get()
   private val archivesManager: ArchivesManager
-    get() = _archivesManager.get()
+    get() = archivesManagerLazy.get()
   private val onDemandContentLoaderManager: OnDemandContentLoaderManager
-    get() = _onDemandContentLoaderManager.get()
+    get() = onDemandContentLoaderManagerLazy.get()
   private val seenPostsManager: SeenPostsManager
-    get() = _seenPostsManager.get()
+    get() = seenPostsManagerLazy.get()
   private val historyNavigationManager: HistoryNavigationManager
-    get() = _historyNavigationManager.get()
+    get() = historyNavigationManagerLazy.get()
   private val postFilterManager: PostFilterManager
-    get() = _postFilterManager.get()
+    get() = postFilterManagerLazy.get()
   private val chanFilterManager: ChanFilterManager
-    get() = _chanFilterManager.get()
+    get() = chanFilterManagerLazy.get()
   private val lastViewedPostNoInfoHolder: LastViewedPostNoInfoHolder
-    get() = _lastViewedPostNoInfoHolder.get()
+    get() = lastViewedPostNoInfoHolderLazy.get()
   private val chanThreadViewableInfoManager: ChanThreadViewableInfoManager
-    get() = _chanThreadViewableInfoManager.get()
+    get() = chanThreadViewableInfoManagerLazy.get()
   private val postHideHelper: PostHideHelper
-    get() = _postHideHelper.get()
+    get() = postHideHelperLazy.get()
   private val postHideManager: PostHideManager
-    get() = _postHideManager.get()
+    get() = postHideManagerLazy.get()
   private val chanThreadManager: ChanThreadManager
-    get() = _chanThreadManager.get()
+    get() = chanThreadManagerLazy.get()
   private val globalWindowInsetsManager: GlobalWindowInsetsManager
-    get() = _globalWindowInsetsManager.get()
+    get() = globalWindowInsetsManagerLazy.get()
   private val thumbnailLongtapOptionsHelper: ThumbnailLongtapOptionsHelper
-    get() = _thumbnailLongtapOptionsHelper.get()
+    get() = thumbnailLongtapOptionsHelperLazy.get()
   private val themeEngine: ThemeEngine
-    get() = _themeEngine.get()
+    get() = themeEngineLazy.get()
   private val chanLoadProgressNotifier: ChanLoadProgressNotifier
-    get() = _chanLoadProgressNotifier.get()
+    get() = chanLoadProgressNotifierLazy.get()
   private val postHighlightManager: PostHighlightManager
-    get() = _postHighlightManager.get()
+    get() = postHighlightManagerLazy.get()
   private val currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager
-    get() = _currentOpenedDescriptorStateManager.get()
+    get() = currentOpenedDescriptorStateManagerLazy.get()
   private val chanCatalogSnapshotCache: ChanCatalogSnapshotCache
-    get() = _chanCatalogSnapshotCache.get()
+    get() = chanCatalogSnapshotCacheLazy.get()
   private val compositeCatalogManager: CompositeCatalogManager
-    get() = _compositeCatalogManager.get()
+    get() = compositeCatalogManagerLazy.get()
   private val mediaViewerGoToPostHelper: MediaViewerGoToPostHelper
-    get() = _mediaViewerGoToPostHelper.get()
+    get() = mediaViewerGoToPostHelperLazy.get()
   private val refreshChan4CaptchaTicketUseCase: RefreshChan4CaptchaTicketUseCase
-    get() = _refreshChan4CaptchaTicketUseCase.get()
+    get() = refreshChan4CaptchaTicketUseCaseLazy.get()
 
   override val endOfCatalogReached: Boolean
     get() {
@@ -306,8 +289,8 @@ class ThreadPresenter @Inject constructor(
     ChanThreadTicker(
       scope = this,
       isDevFlavor = isDevBuild(),
-      _archivesManager = _archivesManager,
-      _chanThreadManager = _chanThreadManager,
+      archivesManager = archivesManager,
+      chanThreadManager = chanThreadManager,
       action = this::onChanTickerTick
     )
   }
@@ -315,7 +298,6 @@ class ThreadPresenter @Inject constructor(
   private var threadPresenterCallback: ThreadPresenterCallback? = null
   private var forcePageUpdate = false
   private val alreadyCreatedNavElement = AtomicBoolean(false)
-  private var currentFocusedController = CurrentFocusedController.None
   private var currentNormalLoadThreadJob: Job? = null
   private var currentFullLoadThreadJob: Job? = null
   private var refreshChan4CaptchaTicketJob: Job? = null
@@ -1328,10 +1310,11 @@ class ThreadPresenter @Inject constructor(
 
     if (historyNavigationManager.contains(localChanDescriptor)) {
       // Move old
-      val canMoveToTop = when (currentFocusedController()) {
-        CurrentFocusedController.Catalog -> localChanDescriptor is ChanDescriptor.ICatalogDescriptor
-        CurrentFocusedController.Thread -> localChanDescriptor is ChanDescriptor.ThreadDescriptor
-        CurrentFocusedController.None -> ChanSettings.isSplitLayoutMode()
+      val canMoveToTop = when (currentOpenedDescriptorStateManager.currentControllersFocusState) {
+        CurrentFocusedControllers.FocusState.Catalog -> localChanDescriptor is ChanDescriptor.ICatalogDescriptor
+        CurrentFocusedControllers.FocusState.Thread -> localChanDescriptor is ChanDescriptor.ThreadDescriptor
+        CurrentFocusedControllers.FocusState.None,
+        CurrentFocusedControllers.FocusState.Both -> ChanSettings.isSplitLayoutMode()
       }
 
       if (canMoveToTop) {
@@ -2857,36 +2840,6 @@ class ThreadPresenter @Inject constructor(
     }
 
     threadPresenterCallback?.onRestoreRemovedPostsClicked(currentChanDescriptor!!, selectedPosts)
-  }
-
-  fun lostFocus(wasFocused: ThreadControllerType) {
-    if (ChanSettings.getCurrentLayoutMode() == ChanSettings.LayoutMode.SPLIT) {
-      // If we are not in SLIDE/PHONE layout mode, then we don't need to check the state of SlidingPaneLayout
-      currentFocusedController = CurrentFocusedController.None
-      return
-    }
-
-    currentFocusedController = when (wasFocused) {
-      ThreadControllerType.Catalog -> CurrentFocusedController.Thread
-      ThreadControllerType.Thread -> CurrentFocusedController.Catalog
-    }
-  }
-
-  fun gainedFocus(nowFocused: ThreadControllerType) {
-    if (ChanSettings.getCurrentLayoutMode() == ChanSettings.LayoutMode.SPLIT) {
-      // If we are not in SLIDE/PHONE layout mode, then we don't need to check the state of SlidingPaneLayout
-      currentFocusedController = CurrentFocusedController.None
-      return
-    }
-
-    currentFocusedController = when (nowFocused) {
-      ThreadControllerType.Catalog -> CurrentFocusedController.Catalog
-      ThreadControllerType.Thread -> CurrentFocusedController.Thread
-    }
-  }
-
-  fun currentFocusedController(): CurrentFocusedController {
-    return currentFocusedController
   }
 
   fun processDvachPostReport(reason: String, post: ChanPost, site: Site, retrying: Boolean = false) {

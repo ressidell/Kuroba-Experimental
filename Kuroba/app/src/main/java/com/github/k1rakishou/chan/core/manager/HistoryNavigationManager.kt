@@ -409,7 +409,7 @@ class HistoryNavigationManager(
         navHistoryElementInfo.pinned = doPin
 
         val isDescriptorCurrentlyOpened =
-          navHistoryElementDescriptor == currentOpenedDescriptorStateManager.currentFocusedDescriptor
+          currentOpenedDescriptorStateManager.isDescriptorFocused(navHistoryElementDescriptor)
 
         val nextPinnedElementIndex = if (lastPinnedElementIndex < 0) {
           0

@@ -21,7 +21,8 @@ import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.LastViewedPostNoInfoHolder
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
-import com.github.k1rakishou.chan.core.manager.CurrentFocusedController
+import com.github.k1rakishou.chan.core.manager.CurrentFocusedControllers
+import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PostHighlightManager
 import com.github.k1rakishou.chan.core.presenter.ThreadPresenter
@@ -126,6 +127,8 @@ class ThreadListLayout @JvmOverloads constructor(
   lateinit var chanLoadProgressNotifierLazy: Lazy<ChanLoadProgressNotifier>
   @Inject
   lateinit var postHighlightManagerLazy: Lazy<PostHighlightManager>
+  @Inject
+  lateinit var currentOpenedDescriptorStateManagerLazy: Lazy<CurrentOpenedDescriptorStateManager>
 
   private val themeEngine: ThemeEngine
     get() = themeEngineLazy.get()
@@ -145,6 +148,8 @@ class ThreadListLayout @JvmOverloads constructor(
     get() = chanLoadProgressNotifierLazy.get()
   private val postHighlightManager: PostHighlightManager
     get() = postHighlightManagerLazy.get()
+  private val currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager
+    get() = currentOpenedDescriptorStateManagerLazy.get()
 
   private val scrollListener: RecyclerView.OnScrollListener = object : RecyclerView.OnScrollListener() {
     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -599,20 +604,14 @@ class ThreadListLayout @JvmOverloads constructor(
           return false
         }
 
-        val currentFocusedController = threadPresenter?.currentFocusedController()
-          ?: CurrentFocusedController.None
-
         val currentChanDescriptor = threadPresenter?.currentChanDescriptor
           ?: return false
 
-        val canScroll = when (currentFocusedController) {
-          CurrentFocusedController.Catalog -> {
-            currentChanDescriptor is ChanDescriptor.ICatalogDescriptor
-          }
-          CurrentFocusedController.Thread -> {
-            currentChanDescriptor is ThreadDescriptor
-          }
-          CurrentFocusedController.None -> false
+        val canScroll = when (currentOpenedDescriptorStateManager.currentControllersFocusState) {
+          CurrentFocusedControllers.FocusState.Catalog -> currentChanDescriptor is ChanDescriptor.ICatalogDescriptor
+          CurrentFocusedControllers.FocusState.Thread -> currentChanDescriptor is ThreadDescriptor
+          CurrentFocusedControllers.FocusState.None,
+          CurrentFocusedControllers.FocusState.Both -> false
         }
 
         if (!canScroll) {
@@ -639,7 +638,6 @@ class ThreadListLayout @JvmOverloads constructor(
   }
 
   fun lostFocus(wasFocused: ThreadControllerType) {
-    threadPresenter?.lostFocus(wasFocused)
     snowLayout.lostFocus()
   }
 
@@ -647,7 +645,6 @@ class ThreadListLayout @JvmOverloads constructor(
     nowFocused: ThreadControllerType,
     isContentVisible: Boolean
   ) {
-    threadPresenter?.gainedFocus(nowFocused)
     snowLayout.gainedFocus()
 
     if (isContentVisible) {

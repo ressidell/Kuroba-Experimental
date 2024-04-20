@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 
-val DEFAULT_UNDRAGGABLE_SCROLLBAR_WIDTH = 4.dp
+val DEFAULT_UNDRAGGABLE_SCROLLBAR_WIDTH = 6.dp
 val DEFAULT_DRAGGABLE_SCROLLBAR_WIDTH = 10.dp
 val DEFAULT_SCROLLBAR_HEIGHT = 64.dp
 

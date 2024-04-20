@@ -596,10 +596,7 @@ abstract class ThreadController(
     val currentReplyLayoutIsOpened = if (ChanSettings.isSplitLayoutMode()) {
       replyLayoutVisibilityEvents.isOpenedOrExpandedForDescriptor(currentDescriptor)
     } else {
-      val currentFocusedDescriptor = currentOpenedDescriptorStateManager.currentFocusedDescriptor
-        ?: return
-
-      if (currentFocusedDescriptor != currentDescriptor) {
+      if (currentOpenedDescriptorStateManager.isDescriptorNotFocused(currentDescriptor)) {
         return
       }
 
