@@ -20,7 +20,6 @@ import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.PostHideManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
-import com.github.k1rakishou.chan.features.gesture_editor.Android10GesturesExclusionZonesHolder
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController
 import com.github.k1rakishou.chan.features.media_viewer.helper.ExoPlayerCache
@@ -41,6 +40,7 @@ import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.helper.PostLinkableClickHelper
 import com.github.k1rakishou.chan.ui.helper.PostPopupHelper
+import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
 import com.github.k1rakishou.chan.ui.view.AppearTransitionImageView
 import com.github.k1rakishou.chan.ui.view.OptionalSwipeViewPager
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
@@ -114,8 +114,6 @@ class MediaViewerController(
   @Inject
   lateinit var chan4CloudFlareImagePreloaderManagerLazy: Lazy<Chan4CloudFlareImagePreloaderManager>
   @Inject
-  lateinit var exclusionZonesHolderLazy: Lazy<Android10GesturesExclusionZonesHolder>
-  @Inject
   lateinit var mediaViewerOpenAlbumHelperLazy: Lazy<MediaViewerOpenAlbumHelper>
   @Inject
   lateinit var fileChooserLazy: Lazy<FileChooser>
@@ -135,7 +133,7 @@ class MediaViewerController(
   override val snackbarScope: SnackbarScope
     get() = SnackbarScope.MediaViewer
 
-  private lateinit var mediaViewerRootLayout: MediaViewerRootLayout
+  private lateinit var mediaViewerRootLayout: TouchBlockingFrameLayoutNoBackground
   private lateinit var appearPreviewImage: AppearTransitionImageView
   private lateinit var pager: OptionalSwipeViewPager
   private lateinit var mediaViewerToolbar: MediaViewerToolbar
@@ -164,8 +162,6 @@ class MediaViewerController(
     get() = globalWindowInsetsManagerLazy.get()
   private val chan4CloudFlareImagePreloaderManager: Chan4CloudFlareImagePreloaderManager
     get() = chan4CloudFlareImagePreloaderManagerLazy.get()
-  private val exclusionZonesHolder: Android10GesturesExclusionZonesHolder
-    get() = exclusionZonesHolderLazy.get()
   private val mediaViewerOpenAlbumHelper: MediaViewerOpenAlbumHelper
     get() = mediaViewerOpenAlbumHelperLazy.get()
   private val fileChooser: FileChooser

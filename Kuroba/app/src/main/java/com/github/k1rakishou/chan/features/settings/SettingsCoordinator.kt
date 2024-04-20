@@ -23,7 +23,6 @@ import com.github.k1rakishou.chan.core.repository.ImportExportRepository
 import com.github.k1rakishou.chan.core.usecase.InstallMpvNativeLibrariesFromGithubUseCase
 import com.github.k1rakishou.chan.core.usecase.InstallMpvNativeLibrariesFromLocalDirectoryUseCase
 import com.github.k1rakishou.chan.core.usecase.TwoCaptchaCheckBalanceUseCase
-import com.github.k1rakishou.chan.features.gesture_editor.Android10GesturesExclusionZonesHolder
 import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen
 import com.github.k1rakishou.chan.features.settings.screens.BehaviourSettingsScreen
 import com.github.k1rakishou.chan.features.settings.screens.CachingSettingsScreen
@@ -89,8 +88,6 @@ class SettingsCoordinator(
   lateinit var reportManager: ReportManager
   @Inject
   lateinit var settingsNotificationManager: SettingsNotificationManager
-  @Inject
-  lateinit var exclusionZonesHolder: Android10GesturesExclusionZonesHolder
   @Inject
   lateinit var fileChooser: FileChooser
   @Inject
@@ -167,10 +164,7 @@ class SettingsCoordinator(
       context,
       navigationController,
       postHideManager,
-      appSettingsUpdateAppRefreshHelper,
-      exclusionZonesHolder,
-      globalWindowInsetsManager,
-      dialogFactory
+      appSettingsUpdateAppRefreshHelper
     )
   }
 

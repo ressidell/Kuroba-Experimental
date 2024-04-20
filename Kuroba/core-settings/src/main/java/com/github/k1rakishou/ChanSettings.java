@@ -356,7 +356,6 @@ public class ChanSettings {
     // Other options
     public static BooleanSetting fullUserRotationEnable;
     public static BooleanSetting showCopyApkUpdateDialog;
-    public static StringSetting androidTenGestureZones;
     //endregion
 
     //region MEDIA
@@ -594,7 +593,6 @@ public class ChanSettings {
         // Other options
         fullUserRotationEnable = new BooleanSetting(provider, "full_user_rotation_enable", true);
         showCopyApkUpdateDialog = new BooleanSetting(provider, "show_copy_apk_update_dialog", true);
-        androidTenGestureZones = new StringSetting(provider, "android_ten_gesture_zones", EMPTY_JSON);
         //endregion
 
         //region MEDIA

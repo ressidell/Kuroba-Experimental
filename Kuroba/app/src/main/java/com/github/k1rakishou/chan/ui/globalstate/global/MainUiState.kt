@@ -12,6 +12,9 @@ interface IMainUiState {
   interface Readable {
     val touchPosition: StateFlow<Offset>
     val windowSizeClass: StateFlow<WindowSizeClass?>
+
+    fun addTouchPositionListener(key: String, listener: GlobalTouchPositionListener)
+    fun removeTouchPositionListener(key: String)
   }
 
   interface Writeable {
@@ -29,6 +32,16 @@ internal class MainUiState : IMainUiState.Readable, IMainUiState.Writeable {
   override val windowSizeClass: StateFlow<WindowSizeClass?>
     get() = _windowSizeClass.asStateFlow()
 
+  private val _listeners = mutableMapOf<String, GlobalTouchPositionListener>()
+
+  override fun addTouchPositionListener(key: String, listener: GlobalTouchPositionListener) {
+    _listeners[key] = listener
+  }
+
+  override fun removeTouchPositionListener(key: String) {
+    _listeners.remove(key)
+  }
+
   override fun updateTouchPosition(touchPosition: Offset, eventAction: Int?) {
     when (eventAction) {
       MotionEvent.ACTION_DOWN -> Logger.verbose(TAG) { "updateTouchPosition() ACTION_DOWN at ${touchPosition}" }
@@ -39,6 +52,7 @@ internal class MainUiState : IMainUiState.Readable, IMainUiState.Writeable {
       }
     }
 
+    _listeners.values.forEach { listener -> listener.onTouchPositionUpdated(touchPosition, eventAction) }
     _touchPosition.value = touchPosition
   }
 
@@ -50,4 +64,8 @@ internal class MainUiState : IMainUiState.Readable, IMainUiState.Writeable {
     private const val TAG = "MainUiState"
   }
 
+}
+
+interface GlobalTouchPositionListener {
+  fun onTouchPositionUpdated(touchPosition: Offset, eventAction: Int?)
 }

@@ -1,62 +1,54 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
--->
+<?xml version="1.0" encoding="utf-8"?>
 <com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-    <com.github.k1rakishou.chan.ui.layout.DrawerWidthAdjustingLayout
-        android:id="@+id/drawer_layout"
+    <com.github.k1rakishou.chan.ui.controller.base.ui.SystemGestureZoneBlockerLayout
+        android:id="@+id/system_gesture_zone_blocker"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <RelativeLayout
-            android:id="@+id/drawer_content_part"
+        <com.github.k1rakishou.chan.ui.layout.DrawerWidthAdjustingLayout
+            android:id="@+id/drawer_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
-                android:id="@+id/main_controller_container"
+            <RelativeLayout
+                android:id="@+id/drawer_content_part"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent">
 
-        </RelativeLayout>
+                <com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBackground
+                    android:id="@+id/main_controller_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
 
-        <com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground
-            android:id="@+id/drawer_part"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:clipToPadding="false"
-            android:orientation="vertical">
+            </RelativeLayout>
 
-            <androidx.compose.ui.platform.ComposeView
-                android:id="@+id/drawer_compose_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+            <com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground
+                android:id="@+id/drawer_part"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:clipToPadding="false"
+                android:orientation="vertical">
 
-        </com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground>
+                <androidx.compose.ui.platform.ComposeView
+                    android:id="@+id/drawer_compose_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
 
-    </com.github.k1rakishou.chan.ui.layout.DrawerWidthAdjustingLayout>
+            </com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayoutNoBackground>
 
-    <com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainerView
-        android:id="@+id/snackbar_container_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        </com.github.k1rakishou.chan.ui.layout.DrawerWidthAdjustingLayout>
+
+        <com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainerView
+            android:id="@+id/snackbar_container_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </com.github.k1rakishou.chan.ui.controller.base.ui.SystemGestureZoneBlockerLayout>
 
 </com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout>

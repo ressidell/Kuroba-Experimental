@@ -40,7 +40,6 @@ import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.site.SiteResolver
 import com.github.k1rakishou.chan.core.watcher.BookmarkWatcherCoordinator
 import com.github.k1rakishou.chan.core.watcher.FilterWatcherCoordinator
-import com.github.k1rakishou.chan.features.gesture_editor.Android10GesturesExclusionZonesHolder
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2ServiceDelegate
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingCoordinator
@@ -206,13 +205,4 @@ class AppModule {
     return CaptchaHolder(appScope)
   }
 
-  @Provides
-  @Singleton
-  fun provideAndroid10GesturesHolder(
-    gson: Gson
-  ): Android10GesturesExclusionZonesHolder {
-    deps("Android10GesturesExclusionZonesHolder")
-
-    return Android10GesturesExclusionZonesHolder(gson)
-  }
 }

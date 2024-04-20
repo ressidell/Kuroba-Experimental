@@ -21,8 +21,6 @@ import com.github.k1rakishou.chan.features.filters.CreateOrUpdateFilterControlle
 import com.github.k1rakishou.chan.features.filters.FilterBoardSelectorController
 import com.github.k1rakishou.chan.features.filters.FilterTypeSelectionController
 import com.github.k1rakishou.chan.features.filters.FiltersController
-import com.github.k1rakishou.chan.features.gesture_editor.AdjustAndroid10GestureZonesController
-import com.github.k1rakishou.chan.features.gesture_editor.AdjustAndroid10GestureZonesView
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController
 import com.github.k1rakishou.chan.features.image_saver.ResolveDuplicateImagesController
 import com.github.k1rakishou.chan.features.image_saver.epoxy.EpoxyDuplicateImageView
@@ -30,7 +28,6 @@ import com.github.k1rakishou.chan.features.login.LoginController
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerController
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerGesturesSettingsController
-import com.github.k1rakishou.chan.features.media_viewer.MediaViewerRootLayout
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerToolbar
 import com.github.k1rakishou.chan.features.media_viewer.media_view.AudioMediaView
 import com.github.k1rakishou.chan.features.media_viewer.media_view.ExoPlayerVideoMediaView
@@ -131,6 +128,7 @@ import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.WebViewReportController
 import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
+import com.github.k1rakishou.chan.ui.controller.base.ui.SystemGestureZoneBlockerLayout
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostController
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaComposeDialogController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
@@ -241,7 +239,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(themeGalleryController: ThemeGalleryController)
   fun inject(threadSlideController: ThreadSlideController)
   fun inject(viewThreadController: ViewThreadController)
-  fun inject(adjustAndroid10GestureZonesController: AdjustAndroid10GestureZonesController)
   fun inject(bookmarksController: BookmarksController)
   fun inject(rangeSettingUpdaterController: RangeSettingUpdaterController)
   fun inject(bookmarksSortingController: BookmarksSortingController)
@@ -370,10 +367,9 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(postCell: PostCell)
   fun inject(albumViewCell: AlbumViewCell)
   fun inject(navigationControllerContainerLayout: NavigationControllerContainerLayout)
-  fun inject(mediaViewerRootLayout: MediaViewerRootLayout)
+  fun inject(systemGestureZoneBlockerLayout: SystemGestureZoneBlockerLayout)
   fun inject(bookmarksPresenter: BookmarksPresenter)
   fun inject(baseThreadBookmarkViewHolder: BaseThreadBookmarkViewHolder)
-  fun inject(adjustAndroid10GestureZonesView: AdjustAndroid10GestureZonesView)
   fun inject(settingsCoordinator: SettingsCoordinator)
   fun inject(jsCaptchaCookiesEditorLayout: JsCaptchaCookiesEditorLayout)
   fun inject(hidingFloatingActionButton: HidingFloatingActionButton)

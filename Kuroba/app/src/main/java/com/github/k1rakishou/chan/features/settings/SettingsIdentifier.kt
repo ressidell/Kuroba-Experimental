@@ -474,22 +474,6 @@ sealed class BehaviorScreen(
     }
   }
 
-  sealed class Android10GestureSettings(
-    settingsId: String,
-    groupIdentifier: GroupIdentifier = GeneralGroup.getGroupIdentifier()
-  ) : IGroup,
-    BehaviorScreen(groupIdentifier, SettingIdentifier(settingsId)) {
-
-    object GesturesExclusionZonesEditor : Android10GestureSettings("gestures_exclusion_zones_editor")
-    object ResetExclusionZones : Android10GestureSettings("reset_exclusion_zones")
-
-    companion object : IGroupIdentifier() {
-      override fun screenIdentifier(): ScreenIdentifier = BehaviorScreen.screenIdentifier()
-      override fun getGroupIdentifier(): GroupIdentifier = GroupIdentifier("android_10_gesture_settings")
-    }
-  }
-
-
   sealed class OtherSettingsGroup(
     settingsId: String,
     groupIdentifier: GroupIdentifier = GeneralGroup.getGroupIdentifier()
