@@ -85,6 +85,7 @@ import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
@@ -235,13 +236,13 @@ private fun ColumnScope.BuildNavigationHistoryList(
       .fillMaxWidth()
       .weight(1f)
   ) {
-    val chanTheme = LocalChanTheme.current
     val drawerGridMode by kurobaDrawerState.drawerGridMode
 
     if (drawerGridMode) {
       val gridState = rememberLazyGridState()
 
       AutoScrollToTopWhenSearchQueryChanges(
+        kurobaDrawerState = kurobaDrawerState,
         searchState = searchState,
         totalItemsCountProvider = { gridState.layoutInfo.totalItemsCount },
         scrollTopTop = { gridState.scrollToItem(0) }
@@ -291,6 +292,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
       val listState = rememberLazyListState()
 
       AutoScrollToTopWhenSearchQueryChanges(
+        kurobaDrawerState = kurobaDrawerState,
         searchState = searchState,
         totalItemsCountProvider = { listState.layoutInfo.totalItemsCount },
         scrollTopTop = { listState.scrollToItem(0) }
@@ -336,6 +338,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
 
 @Composable
 private fun AutoScrollToTopWhenSearchQueryChanges(
+  kurobaDrawerState: KurobaDrawerState,
   searchState: SimpleSearchStateV2<NavigationHistoryEntry>,
   totalItemsCountProvider: () -> Int,
   scrollTopTop: suspend () -> Unit
@@ -354,6 +357,7 @@ private fun AutoScrollToTopWhenSearchQueryChanges(
           )
 
           if (success) {
+            awaitFrame()
             scrollTopTop()
             lastRememberedTotalItemsCount.intValue = totalItemsCountProvider()
           }
@@ -362,6 +366,20 @@ private fun AutoScrollToTopWhenSearchQueryChanges(
         }
       }
   }
+
+  LaunchedEffect(key1 = Unit) {
+    kurobaDrawerState.resetScrollPositionEvent
+      .onEach {
+        try {
+          awaitFrame()
+          scrollTopTop()
+        } catch (_: Throwable) {
+          // no-op
+        }
+      }
+      .collect()
+  }
+
 }
 
 @Composable

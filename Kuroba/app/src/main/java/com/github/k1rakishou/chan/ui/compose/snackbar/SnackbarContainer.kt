@@ -89,7 +89,6 @@ class SnackbarContainerView @JvmOverloads constructor(
   attributeSet: AttributeSet? = null
 ) : FrameLayout(context, attributeSet, 0) {
   private val _snackbarScope = mutableStateOf<SnackbarScope?>(null)
-  private val _additionalScreenPaddings = mutableStateOf<PaddingValues>(PaddingValues())
 
   init {
     addView(
@@ -608,7 +607,7 @@ private fun RowScope.KurobaSnackbarContent(
   onDismissSnackbar: (SnackbarId) -> Unit
 ) {
   val chanTheme = LocalChanTheme.current
-  val textSize = if (isTablet) 18.ktu else 16.ktu
+  val textSize = if (isTablet) 16.ktu else 14.ktu
 
   val hasClickableItems = snackbarInfo.hasClickableItems
   val aliveUntil = snackbarInfo.aliveUntil
@@ -695,7 +694,7 @@ private fun RowScope.KurobaSnackbarContent(
           modifier = widthModifier,
           fontSize = textSize,
           color = textColor,
-          maxLines = 3,
+          maxLines = 6,
           overflow = TextOverflow.Ellipsis,
           text = snackbarContentItem.formattedText
         )

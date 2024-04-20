@@ -28,6 +28,10 @@ import com.github.k1rakishou.model.data.navigation.NavHistoryElement
 import com.github.k1rakishou.model.util.ChanPostUtils
 import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 
@@ -68,6 +72,10 @@ class KurobaDrawerState(
   private val _selectedHistoryEntries = mutableStateMapOf<ChanDescriptor, Unit>()
   val selectedHistoryEntries: Map<ChanDescriptor, Unit>
     get() = _selectedHistoryEntries
+
+  private val _resetScrollPositionEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+  val resetScrollPositionEvent: SharedFlow<Unit>
+    get() = _resetScrollPositionEvents.asSharedFlow()
 
   val searchTextFieldState = TextFieldState(initialText = "")
 
@@ -382,6 +390,8 @@ class KurobaDrawerState(
               _navigationHistoryEntryList.add(navHistoryElementIndex, navigationHistoryEntry)
             }
           }
+
+          _resetScrollPositionEvents.emit(Unit)
         }
         is HistoryNavigationManager.UpdateEvent.Deleted -> {
           val descriptorsToDelete = updateEvent.navHistoryElements

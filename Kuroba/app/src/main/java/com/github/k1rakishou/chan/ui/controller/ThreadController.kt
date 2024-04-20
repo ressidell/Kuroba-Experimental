@@ -38,6 +38,7 @@ import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.DoubleControllerType
@@ -167,6 +168,14 @@ abstract class ThreadController(
     get() = threadLayout.presenter.currentChanDescriptorFlow
 
   abstract override val threadControllerType: ThreadControllerType
+
+  override val snackbarScope: SnackbarScope
+    get() {
+      return when (threadControllerType) {
+        ThreadControllerType.Catalog -> SnackbarScope.Catalog
+        ThreadControllerType.Thread -> SnackbarScope.Thread
+      }
+    }
 
   override fun onCreate() {
     super.onCreate()
