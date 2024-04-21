@@ -17,7 +17,7 @@ suspend fun AwaitPointerEventScope.awaitPointerSlopOrCancellationWithPass(
   pointerId: PointerId,
   pointerType: PointerType = PointerType.Touch,
   pointerEventPass: PointerEventPass = PointerEventPass.Main,
-  onPointerSlopReached: (change: PointerInputChange, overSlop: Offset) -> Unit
+  onPointerSlopReached: (change: PointerInputChange, overSlop: Offset) -> Boolean
 ): PointerInputChange? {
   if (currentEvent.isPointerUp(pointerId)) {
     return null // The pointer has already been lifted, so the gesture is canceled
@@ -46,7 +46,11 @@ suspend fun AwaitPointerEventScope.awaitPointerSlopOrCancellationWithPass(
       var acceptedDrag = false
       if (distance >= touchSlop) {
         val touchSlopOffset = offset / distance * touchSlop
-        onPointerSlopReached(dragEvent, offset - touchSlopOffset)
+
+        if (!onPointerSlopReached(dragEvent, offset - touchSlopOffset)) {
+          return null
+        }
+
         if (dragEvent.isConsumed) {
           acceptedDrag = true
         } else {

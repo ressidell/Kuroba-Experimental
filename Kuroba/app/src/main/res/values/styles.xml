@@ -1,24 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
--->
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="gestures_zone_view_background">#5038FFB2</color>
-    <color name="gestures_zone_view_added_zones">#50FFB55B</color>
-    <color name="gestures_zone_view_current_zone">#50FF4C82</color>
-
     <color name="my_post_color">#9BF853</color>
     <color name="reply_post_color">#f85e53</color>
     <color name="cross_thread_reply_post_color">#53EDF8</color>

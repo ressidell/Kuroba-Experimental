@@ -25,11 +25,10 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailView
+import com.github.k1rakishou.chan.ui.compose.lazylist.ScrollbarView
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableFloatingActionButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
-import com.github.k1rakishou.chan.ui.view.FastScroller
-import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.ThumbnailView.ThumbnailViewOptions
 import com.github.k1rakishou.chan.ui.view.insets.ColorizableInsetAwareGridRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -60,7 +59,7 @@ class AlbumDownloadController(context: Context) : Controller(context),
 
   private lateinit var recyclerView: ColorizableInsetAwareGridRecyclerView
   private lateinit var download: ColorizableFloatingActionButton
-  private lateinit var fastScroller: FastScroller
+  private lateinit var scrollbarView: ScrollbarView
 
   private var allChecked = true
   private val items: MutableList<AlbumDownloadItem> = ArrayList()
@@ -113,10 +112,9 @@ class AlbumDownloadController(context: Context) : Controller(context),
     val adapter = AlbumAdapter()
     recyclerView.setAdapter(adapter)
 
-    fastScroller = FastScrollerHelper.create(
-      recyclerView,
-      null
-    )
+    scrollbarView = view.findViewById(R.id.album_download_controller_scrollbar)
+    scrollbarView.attachRecyclerView(recyclerView)
+    scrollbarView.isScrollbarDraggable(true)
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
     onInsetsChanged()
@@ -135,9 +133,7 @@ class AlbumDownloadController(context: Context) : Controller(context),
     super.onDestroy()
     globalWindowInsetsManager.removeInsetsUpdatesListener(this)
 
-    if (::fastScroller.isInitialized) {
-      fastScroller.onCleanup()
-    }
+    scrollbarView.cleanup()
 
     if (::recyclerView.isInitialized) {
       recyclerView.swapAdapter(null, true)

@@ -112,6 +112,7 @@ import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailView
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailViewWrapper
 import com.github.k1rakishou.chan.ui.compose.ThreadSearchNavigationButtonsView
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
+import com.github.k1rakishou.chan.ui.compose.lazylist.ScrollbarView
 import com.github.k1rakishou.chan.ui.controller.AlbumDownloadController
 import com.github.k1rakishou.chan.ui.controller.AlbumViewController
 import com.github.k1rakishou.chan.ui.controller.BrowseController
@@ -183,7 +184,6 @@ import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingCoordinatorLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingLinearLayout
 import com.github.k1rakishou.chan.ui.view.CircularChunkedLoadingBar
-import com.github.k1rakishou.chan.ui.view.FastScroller
 import com.github.k1rakishou.chan.ui.view.FloatingMenu
 import com.github.k1rakishou.chan.ui.view.HidingFloatingActionButton
 import com.github.k1rakishou.chan.ui.view.OptionalSwipeViewPager
@@ -391,7 +391,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(splitNavigationControllerLayout: SplitNavigationControllerLayout)
   fun inject(attachNewFileButton: AttachNewFileButton)
   fun inject(optionalSwipeViewPager: OptionalSwipeViewPager)
-  fun inject(fastScroller: FastScroller)
+  fun inject(scrollbarView: ScrollbarView)
   fun inject(postImageThumbnailViewWrapper: PostImageThumbnailViewWrapper)
   fun inject(thumbnailMediaView: ThumbnailMediaView)
   fun inject(fullImageMediaView: FullImageMediaView)

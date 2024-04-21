@@ -88,27 +88,6 @@ public class ChanSettings {
         }
     }
 
-    public enum FastScrollerType implements OptionSettingItem {
-        Disabled("disabled"),
-        ScrollByDraggingThumb("scroll_by_dragging_thumb"),
-        ScrollByClickingAnyPointOfTrack("scroll_by_clicking_any_point_of_track");
-
-        String key;
-
-        FastScrollerType(String key) {
-            this.key = key;
-        }
-
-        @Override
-        public String getKey() {
-            return key;
-        }
-
-        public boolean isEnabled() {
-            return this != Disabled;
-        }
-    }
-
     public enum ImageGestureActionType implements OptionSettingItem {
         SaveImage("save_image"),
         CloseImage("close_image"),
@@ -294,7 +273,6 @@ public class ChanSettings {
     public static BooleanSetting enableReplyFab;
     public static BooleanSetting captchaOnBottom;
     public static BooleanSetting neverShowPages;
-    public static OptionsSetting<FastScrollerType> draggableScrollbars;
 
     //Post
     public static StringSetting fontSize;
@@ -505,13 +483,6 @@ public class ChanSettings {
         enableReplyFab = new BooleanSetting(provider, "preference_enable_reply_fab", true);
         captchaOnBottom = new BooleanSetting(provider, "captcha_on_bottom", true);
         neverShowPages = new BooleanSetting(provider, "never_show_page_number", false);
-
-        draggableScrollbars = new OptionsSetting<>(
-                provider,
-                "draggable_scrollbars",
-                FastScrollerType.class,
-                FastScrollerType.ScrollByClickingAnyPointOfTrack
-        );
 
         // Post
         fontSize = new StringSetting(provider, "preference_font", String.valueOf(defaultFontSize()));

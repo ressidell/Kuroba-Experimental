@@ -14,7 +14,6 @@ import com.github.k1rakishou.model.data.filter.FilterAction
 import com.github.k1rakishou.model.data.post.ChanPost
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.*
 
 class ExtractPostMapInfoHolderUseCase(
   private val savedReplyManager: SavedReplyManager,
@@ -39,7 +38,8 @@ class ExtractPostMapInfoHolderUseCase(
         postFilterHighlightRanges = extractPostFilterHighlightsFromPostList(parameter),
         deletedPostsPositionRanges = extractDeletedPostsPositionsFromPostList(parameter, postsMap),
         hotPostsPositionRanges = extractHotPostsPositionsFromPostList(parameter, postsMap),
-        thirdEyePostsPositionRanges = extractThirdEyePostsPositionsFromPostList(parameter, postsMap)
+        thirdEyePostsPositionRanges = extractThirdEyePostsPositionsFromPostList(parameter, postsMap),
+        totalPostsCount = postDescriptors.size
       )
     }
   }
@@ -414,10 +414,15 @@ data class PostMapInfoHolder(
   val postFilterHighlightRanges: List<PostMapInfoEntry> = emptyList(),
   val deletedPostsPositionRanges: List<PostMapInfoEntry> = emptyList(),
   val hotPostsPositionRanges: List<PostMapInfoEntry> = emptyList(),
-  val thirdEyePostsPositionRanges: List<PostMapInfoEntry> = emptyList()
+  val thirdEyePostsPositionRanges: List<PostMapInfoEntry> = emptyList(),
+  val totalPostsCount: Int = 0
 ) {
 
   fun isEmpty(): Boolean {
+    if (totalPostsCount <= 0) {
+      return true
+    }
+
     return myPostsPositionRanges.isEmpty()
       && replyPositionRanges.isEmpty()
       && crossThreadQuotePositionRanges.isEmpty()
@@ -428,6 +433,10 @@ data class PostMapInfoHolder(
   }
 
   fun isTheSame(otherPostMapInfoHolder: PostMapInfoHolder): Boolean {
+    if (this.totalPostsCount != otherPostMapInfoHolder.totalPostsCount) {
+      return false
+    }
+
     if (!rangesTheSame(myPostsPositionRanges, otherPostMapInfoHolder.myPostsPositionRanges)) {
       return false
     }

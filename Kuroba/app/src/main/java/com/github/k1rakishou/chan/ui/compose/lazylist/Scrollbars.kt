@@ -61,7 +61,7 @@ fun Modifier.scrollbar(
   scrollbarThumbColorNormal: Color? = null,
   scrollbarThumbColorDragged: Color? = null,
   contentPadding: PaddingValues = DefaultPaddingValues,
-  scrollbarDragProgress: Float? = null,
+  scrollbarManualDragProgress: Float? = null,
 ): Modifier {
   return composed {
     val chanTheme = LocalChanTheme.current
@@ -74,7 +74,7 @@ fun Modifier.scrollbar(
       scrollbarThumbColorNormal = scrollbarThumbColorNormal ?: chanTheme.scrollbarThumbColorNormalCompose,
       scrollbarThumbColorDragged = scrollbarThumbColorDragged ?: chanTheme.scrollbarThumbColorDraggedCompose,
       contentPadding = contentPadding,
-      scrollbarDragProgress = scrollbarDragProgress,
+      scrollbarManualDragProgress = scrollbarManualDragProgress,
       isScrollInProgress = { listStateWrapper -> listStateWrapper.isScrollInProgress }
     )
   }
@@ -87,7 +87,7 @@ fun Modifier.scrollbar(
   scrollbarThumbColorNormal: Color? = null,
   scrollbarThumbColorDragged: Color? = null,
   contentPadding: PaddingValues = DefaultPaddingValues,
-  scrollbarDragProgress: Float? = null,
+  scrollbarManualDragProgress: Float? = null,
 ): Modifier {
   return composed {
     val chanTheme = LocalChanTheme.current
@@ -100,7 +100,7 @@ fun Modifier.scrollbar(
       scrollbarThumbColorNormal = scrollbarThumbColorNormal ?: chanTheme.scrollbarThumbColorNormalCompose,
       scrollbarThumbColorDragged = scrollbarThumbColorDragged ?: chanTheme.scrollbarThumbColorDraggedCompose,
       contentPadding = contentPadding,
-      scrollbarDragProgress = scrollbarDragProgress,
+      scrollbarManualDragProgress = scrollbarManualDragProgress,
       isScrollInProgress = { listStateWrapper -> listStateWrapper.isScrollInProgress }
     )
   }
@@ -116,7 +116,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
   scrollbarThumbColorNormal: Color,
   scrollbarThumbColorDragged: Color,
   contentPadding: PaddingValues,
-  scrollbarDragProgress: Float? = null,
+  scrollbarManualDragProgress: Float? = null,
   isScrollInProgress: (LazyStateWrapper<ItemInfo, LayoutInfo>) -> Boolean = { lazyListState -> lazyListState.isScrollInProgress }
 ): Modifier {
   return composed(
@@ -128,7 +128,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
       properties["scrollbarThumbColorNormal"] = scrollbarThumbColorNormal
       properties["scrollbarThumbColorDragged"] = scrollbarThumbColorDragged
       properties["contentPadding"] = contentPadding
-      properties["scrollbarManualDragProgress"] = scrollbarDragProgress
+      properties["scrollbarManualDragProgress"] = scrollbarManualDragProgress
     },
     factory = {
       val density = LocalDensity.current
@@ -161,7 +161,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
         }
       }
 
-      val isScrollbarDragged = scrollbarDragProgress != null
+      val isScrollbarDragged = scrollbarManualDragProgress != null
       val targetThumbAlpha = when {
         isScrollbarDragged -> 1f
         isScrollInProgress(lazyStateWrapper) -> 0.8f
@@ -229,7 +229,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
                   calculateStaticScrollbarWidth(
                     leftPaddingPx = leftPaddingPx,
                     rightPaddingPx = rightPaddingPx,
-                    scrollbarManualDragProgress = scrollbarDragProgress,
+                    scrollbarManualDragProgress = scrollbarManualDragProgress,
                     lazyStateWrapper = lazyStateWrapper,
                     firstVisibleElementIndex = firstVisibleElementIndex,
                     scrollbarWidth = scrollbarDimens.width.toFloat()
@@ -270,7 +270,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
                   calculateStaticScrollbarHeight(
                     topPaddingPx = topPaddingPx,
                     bottomPaddingPx = bottomPaddingPx,
-                    scrollbarManualDragProgress = scrollbarDragProgress,
+                    scrollbarManualDragProgress = scrollbarManualDragProgress,
                     lazyStateWrapper = lazyStateWrapper,
                     firstVisibleElementIndex = firstVisibleElementIndex,
                     scrollbarHeight = scrollbarDimens.height.toFloat()
@@ -313,7 +313,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
 /**
  * Vertical scrollbar for Composables that use ScrollState (like verticalScroll())
  * */
-fun Modifier.verticalScrollbar(
+fun Modifier.scrollbar(
   contentPadding: PaddingValues,
   scrollState: ScrollState,
   enabled: Boolean = true

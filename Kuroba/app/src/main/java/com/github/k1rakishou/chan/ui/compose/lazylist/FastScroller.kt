@@ -44,6 +44,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 
@@ -133,7 +134,7 @@ fun LazyColumnWithFastScroller(
             scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
             scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
             contentPadding = contentPadding,
-            scrollbarDragProgress = scrollbarDragProgress
+            scrollbarManualDragProgress = scrollbarDragProgress
           ),
         reverseLayout = reverseLayout,
         verticalArrangement = verticalArrangement,
@@ -217,7 +218,7 @@ fun LazyVerticalGridWithFastScroller(
             scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
             scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
             contentPadding = contentPadding,
-            scrollbarDragProgress = scrollbarDragProgress
+            scrollbarManualDragProgress = scrollbarDragProgress
           ),
         columns = columns,
         reverseLayout = reverseLayout,
@@ -299,7 +300,7 @@ fun LazyVerticalStaggeredGridWithFastScroller(
             scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
             scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
             contentPadding = contentPadding,
-            scrollbarDragProgress = scrollbarDragProgress
+            scrollbarManualDragProgress = scrollbarDragProgress
           ),
         columns = columns,
         userScrollEnabled = userScrollEnabled,
@@ -342,8 +343,18 @@ suspend fun <
       pointerId = down.id,
       pointerEventPass = PointerEventPass.Initial,
       onPointerSlopReached = { change, _ ->
+        val distance = change.position - down.position
+
+        // In order to avoid triggering fast scroller accidentally when touch the right edge of the screen (some
+        // phones have curved screen, god forbid them) we want to check that the finger actually moved vertically more
+        // than horizontally by 1/3.
+        if (distance.y.absoluteValue < (distance.x.absoluteValue * 1.333f)) {
+          return@awaitPointerSlopOrCancellationWithPass false
+        }
+
         down.consume()
         change.consume()
+        return@awaitPointerSlopOrCancellationWithPass true
       }
     ) != null
 

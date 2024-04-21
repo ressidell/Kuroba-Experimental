@@ -46,6 +46,7 @@ import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
+import com.github.k1rakishou.chan.ui.compose.lazylist.ScrollbarView
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
@@ -54,8 +55,6 @@ import com.github.k1rakishou.chan.ui.epoxy.epoxyErrorView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyExpandableGroupView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyLoadingView
 import com.github.k1rakishou.chan.ui.epoxy.epoxyTextView
-import com.github.k1rakishou.chan.ui.view.FastScroller
-import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.insets.InsetAwareEpoxyRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -112,6 +111,7 @@ class BookmarksController(
   private lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
   private lateinit var swipeRefreshLayout: SwipeRefreshLayout
   private lateinit var itemTouchHelper: ItemTouchHelper
+  private lateinit var scrollbarView: ScrollbarView
 
   private val bookmarksSelectionHelper = BookmarksSelectionHelper(this)
 
@@ -132,7 +132,6 @@ class BookmarksController(
   private val needRestoreScrollPosition = AtomicBoolean(true)
   private val needScrollToHighlightedBookmark = AtomicBoolean(bookmarksToHighlight.isNotEmpty())
   private var isInSearchMode = false
-  private var fastScroller: FastScroller? = null
 
   private val touchHelperCallback = object : EpoxyModelTouchCallback<EpoxyModel<*>>(controller, EpoxyModel::class.java) {
 
@@ -262,11 +261,26 @@ class BookmarksController(
     super.onCreate()
 
     view = inflate(context, R.layout.controller_bookmarks)
-    epoxyRecyclerView = view.findViewById(R.id.epoxy_recycler_view)
     swipeRefreshLayout = view.findViewById(R.id.boomarks_swipe_refresh_layout)
 
+    epoxyRecyclerView = view.findViewById(R.id.epoxy_recycler_view)
+    epoxyRecyclerView.addOnScrollListener(onScrollListener)
+
+    scrollbarView = view.findViewById(R.id.bookmarks_controller_scrollbar)
+    scrollbarView.attachRecyclerView(epoxyRecyclerView)
+    scrollbarView.isScrollbarDraggable(true)
+    scrollbarView.thumbDragListener(object : ScrollbarView.ThumbDragListener {
+      override fun onDragStarted() {
+        // no-op
+      }
+
+      override fun onDragEnded() {
+        onRecyclerViewScrolled(epoxyRecyclerView)
+      }
+    })
+
     swipeRefreshLayout.setOnChildScrollUpCallback { parent, child ->
-      val isDragging = fastScroller?.isDragging ?: false
+      val isDragging = scrollbarView.isDragging
       if (isDragging) {
         // Disable SwipeRefresh layout when dragging the fast scroller
         return@setOnChildScrollUpCallback true
@@ -339,14 +353,13 @@ class BookmarksController(
     updateLayoutManager()
 
     bookmarksPresenter.onCreate(this)
-    setupRecycler()
     reloadBookmarks()
   }
 
   override fun onDestroy() {
     super.onDestroy()
 
-    cleanupFastScroller()
+    scrollbarView.cleanup()
 
     bookmarksPresenter.updateReorderingMode(enterReorderingMode = false)
     requireBottomPanelContract().hideBottomPanel(controllerKey)
@@ -529,44 +542,6 @@ class BookmarksController(
     needRestoreScrollPosition.set(true)
 
     bookmarksPresenter.onViewBookmarksModeChanged()
-  }
-
-  private fun cleanupFastScroller() {
-    fastScroller?.let { scroller ->
-      epoxyRecyclerView.removeItemDecoration(scroller)
-      scroller.onCleanup()
-    }
-
-    fastScroller = null
-  }
-
-  private fun setupRecycler() {
-    epoxyRecyclerView.addOnScrollListener(onScrollListener)
-
-    if (ChanSettings.draggableScrollbars.get().isEnabled) {
-      epoxyRecyclerView.isVerticalScrollBarEnabled = false
-      cleanupFastScroller()
-
-      val scroller = FastScrollerHelper.create(
-        epoxyRecyclerView,
-        null
-      )
-
-      scroller.setThumbDragListener(object : FastScroller.ThumbDragListener {
-        override fun onDragStarted() {
-          // no-op
-        }
-
-        override fun onDragEnded() {
-          onRecyclerViewScrolled(epoxyRecyclerView)
-        }
-      })
-
-      fastScroller = scroller
-    } else {
-      epoxyRecyclerView.isVerticalScrollBarEnabled = true
-      cleanupFastScroller()
-    }
   }
 
   private fun bookmarkGroupsSettings() {

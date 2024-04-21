@@ -37,7 +37,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
-import com.github.k1rakishou.chan.ui.compose.lazylist.verticalScrollbar
+import com.github.k1rakishou.chan.ui.compose.lazylist.scrollbar
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
@@ -200,7 +200,7 @@ class LogsController(context: Context) : Controller(context) {
       modifier = Modifier
         .fillMaxSize()
         .background(Color.Black)
-        .verticalScrollbar(
+        .scrollbar(
           contentPadding = contentPadding,
           scrollState = scrollState
         )

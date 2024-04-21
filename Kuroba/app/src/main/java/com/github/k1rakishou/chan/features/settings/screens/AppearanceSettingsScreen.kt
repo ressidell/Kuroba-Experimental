@@ -450,30 +450,6 @@ class AppearanceSettingsScreen(
           setting = ChanSettings.neverShowPages
         )
 
-        group += ListSettingV2.createBuilder<ChanSettings.FastScrollerType>(
-          context = context,
-          identifier = AppearanceScreen.LayoutGroup.EnableDraggableScrollbars,
-          topDescriptionIdFunc = { R.string.setting_enable_draggable_scrollbars },
-          bottomDescriptionIdFunc = { R.string.setting_enable_draggable_scrollbars_bottom },
-          items = ChanSettings.FastScrollerType.values().toList(),
-          groupId = "fast_scroller_type",
-          itemNameMapper = { fastScrollerType ->
-            when (fastScrollerType) {
-              ChanSettings.FastScrollerType.Disabled -> {
-                context.getString(R.string.setting_enable_draggable_scrollbars_disabled)
-              }
-              ChanSettings.FastScrollerType.ScrollByDraggingThumb -> {
-                context.getString(R.string.setting_enable_draggable_scrollbars_scroll_by_dragging_thumb)
-              }
-              ChanSettings.FastScrollerType.ScrollByClickingAnyPointOfTrack -> {
-                context.getString(R.string.setting_enable_draggable_scrollbars_scroll_by_clicking_track)
-              }
-            }
-          },
-          setting = ChanSettings.draggableScrollbars,
-          requiresUiRefresh = true
-        )
-
         group += LinkSettingV2.createBuilder(
           context = context,
           identifier = AppearanceScreen.LayoutGroup.ReorderableBottomNavViewButtonsSetting,

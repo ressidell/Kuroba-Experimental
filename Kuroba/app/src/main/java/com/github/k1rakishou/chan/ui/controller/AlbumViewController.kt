@@ -28,11 +28,10 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.cell.AlbumViewCell
+import com.github.k1rakishou.chan.ui.compose.lazylist.ScrollbarView
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableGridRecyclerView
-import com.github.k1rakishou.chan.ui.view.FastScroller
-import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.FixedLinearLayoutManager
 import com.github.k1rakishou.chan.ui.view.insets.ColorizableInsetAwareGridRecyclerView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -61,7 +60,7 @@ class AlbumViewController(
   private val postImages = mutableListOf<ChanPostImage>()
   private var targetIndex = -1
 
-  private var fastScroller: FastScroller? = null
+  private lateinit var scrollbarView: ScrollbarView
   private var albumAdapter: AlbumAdapter? = null
 
   override val controllerKey: ControllerKey
@@ -171,10 +170,9 @@ class AlbumViewController(
     recyclerView.adapter = albumAdapter
     updateRecyclerView(false)
 
-    fastScroller = FastScrollerHelper.create(
-      recyclerView,
-      null
-    )
+    scrollbarView = view.findViewById(R.id.album_view_controller_scrollbar)
+    scrollbarView.attachRecyclerView(recyclerView)
+    scrollbarView.isScrollbarDraggable(true)
 
     controllerScope.launch {
       mediaViewerScrollerHelper.mediaViewerScrollEventsFlow
@@ -271,9 +269,7 @@ class AlbumViewController(
   override fun onDestroy() {
     super.onDestroy()
 
-    fastScroller?.onCleanup()
-    fastScroller = null
-
+    scrollbarView.cleanup()
     recyclerView.swapAdapter(null, true)
   }
 

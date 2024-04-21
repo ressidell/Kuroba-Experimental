@@ -40,6 +40,7 @@ import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface.PostCellCallback
 import com.github.k1rakishou.chan.ui.cell.PreviousThreadScrollPositionData
 import com.github.k1rakishou.chan.ui.cell.ThreadStatusCell
+import com.github.k1rakishou.chan.ui.compose.lazylist.ScrollbarView
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController
 import com.github.k1rakishou.chan.ui.controller.CaptchaContainerController
 import com.github.k1rakishou.chan.ui.controller.LoadingViewController
@@ -47,10 +48,7 @@ import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppResources
-import com.github.k1rakishou.chan.ui.view.FastScroller
-import com.github.k1rakishou.chan.ui.view.FastScrollerHelper
 import com.github.k1rakishou.chan.ui.view.FixedLinearLayoutManager
-import com.github.k1rakishou.chan.ui.view.PostInfoMapItemDecoration
 import com.github.k1rakishou.chan.ui.view.ThumbnailView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
@@ -77,6 +75,7 @@ import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -84,7 +83,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.max
@@ -99,7 +97,7 @@ class ThreadListLayout @JvmOverloads constructor(
   defAttrStyle: Int = 0
 ) : FrameLayout(context, attrs, defAttrStyle),
   ThemeEngine.ThemeChangesListener,
-  FastScroller.ThumbDragListener,
+  ScrollbarView.ThumbDragListener,
   ReplyLayoutViewModel.ThreadListLayoutCallbacks {
 
   @Inject
@@ -234,6 +232,7 @@ class ThreadListLayout @JvmOverloads constructor(
   private lateinit var replyLayoutView: ReplyLayoutView
   private lateinit var snowLayout: SnowLayout
   private lateinit var recyclerView: RecyclerView
+  private lateinit var scrollbarView: ScrollbarView
   private lateinit var postAdapter: PostAdapter
 
   private val compositeDisposable = CompositeDisposable()
@@ -245,14 +244,13 @@ class ThreadListLayout @JvmOverloads constructor(
 
   private var threadPresenter: ThreadPresenter? = null
   private var layoutManager: RecyclerView.LayoutManager? = null
-  private var fastScroller: FastScroller? = null
-  private var postInfoMapItemDecoration: PostInfoMapItemDecoration? = null
   private var callback: ThreadListLayoutPresenterCallback? = null
   private var currentThreadControllerType: ThreadControllerType? = null
   private var threadListLayoutCallback: ThreadListLayoutCallback? = null
   private var boardPostViewMode: BoardPostViewMode? = null
   private var spanCount = 2
   private var prevLastPostNo = 0L
+  private var updatePostMarksJob: Job? = null
 
   private fun getCurrentChanDescriptor(): ChanDescriptor? {
     return threadPresenter?.currentChanDescriptor
@@ -281,6 +279,10 @@ class ThreadListLayout @JvmOverloads constructor(
     snowLayout = findViewById(R.id.snow_layout)
     recyclerView = findViewById(R.id.recycler_view)
     recyclerView.hackMaxFlingVelocity()
+    scrollbarView = findViewById(R.id.thread_list_controller_scrollbar)
+    scrollbarView.attachRecyclerView(recyclerView)
+    scrollbarView.isScrollbarDraggable(true)
+    scrollbarView.thumbDragListener(this)
 
     onThemeChanged()
   }
@@ -401,7 +403,6 @@ class ThreadListLayout @JvmOverloads constructor(
     recyclerView.addOnScrollListener(scrollListener)
     recyclerView.addItemDecoration(gridModeSpaceItemDecoration)
 
-    runBlocking { setFastScroll(false, emptyList()) }
     attachToolbarScroll(attach = true)
 
     coroutineScope.launch {
@@ -445,13 +446,16 @@ class ThreadListLayout @JvmOverloads constructor(
     compositeDisposable.clear()
     job.cancelChildren()
 
+    updatePostMarksJob?.cancel()
+    updatePostMarksJob = null
+
     recyclerView.removeOnScrollListener(scrollListener)
-    runBlocking { setFastScroll(false, emptyList()) }
 
     forceRecycleAllPostViews()
     replyLayoutView.onDestroy()
     recyclerView.removeItemDecoration(gridModeSpaceItemDecoration)
     recyclerView.swapAdapter(null, true)
+    scrollbarView.cleanup()
     threadPresenter = null
   }
 
@@ -511,7 +515,8 @@ class ThreadListLayout @JvmOverloads constructor(
       )
     }
 
-    setFastScroll(true, filteredPosts)
+    updatePostMarksJob?.cancel()
+    updatePostMarksJob = coroutineScope.launch { scrollbarViewUpdatePostMarks(filteredPosts) }
 
     if (chanDescriptor != null) {
       // Use post() here to wait until recycler had processed the new posts so that we don't end up
@@ -531,6 +536,39 @@ class ThreadListLayout @JvmOverloads constructor(
       applyFilterDuration = applyFilterDuration,
       setThreadPostsDuration = setThreadPostsDuration
     )
+  }
+
+  private suspend fun scrollbarViewUpdatePostMarks(posts: List<PostIndexed>) {
+    val chanDescriptor = currentChanDescriptorOrNull()
+    if (chanDescriptor == null) {
+      scrollbarView.hideScrollbarMarks()
+      return
+    }
+
+    val postDescriptors = posts.map { postIndexed -> postIndexed.chanPost.postDescriptor }
+
+    when (chanDescriptor) {
+      is ChanDescriptor.ICatalogDescriptor -> {
+        val params = ExtractPostMapInfoHolderUseCase.Params(
+          postDescriptors = postDescriptors,
+          isViewingThread = false
+        )
+
+        scrollbarView.updateScrollbarMarks(
+          extractPostMapInfoHolderUseCase.execute(params)
+        )
+      }
+      is ThreadDescriptor -> {
+        val params = ExtractPostMapInfoHolderUseCase.Params(
+          postDescriptors = postDescriptors,
+          isViewingThread = true
+        )
+
+        scrollbarView.updateScrollbarMarks(
+          extractPostMapInfoHolderUseCase.execute(params)
+        )
+      }
+    }
   }
 
   fun setBoardPostViewMode(boardPostViewMode: BoardPostViewMode) {
@@ -753,7 +791,7 @@ class ThreadListLayout @JvmOverloads constructor(
       return true
     }
 
-    val isDragging = fastScroller?.isDragging ?: false
+    val isDragging = scrollbarView.isDragging
     if (isDragging) {
       // Disable SwipeRefresh layout when dragging the fast scroller
       return true
@@ -893,12 +931,7 @@ class ThreadListLayout @JvmOverloads constructor(
       0
     }
 
-    val recyclerRight = if (ChanSettings.draggableScrollbars.get().isEnabled) {
-      defaultPadding + FastScrollerHelper.FAST_SCROLLER_WIDTH
-    } else {
-      defaultPadding
-    }
-
+    val recyclerRight = defaultPadding + scrollbarView.scrollbarWidthPx
     val recyclerTop = defaultPadding + toolbarHeight()
     var recyclerBottom = defaultPadding
 
@@ -963,77 +996,6 @@ class ThreadListLayout @JvmOverloads constructor(
 
     globalUiStateHolder.updateScrollState {
       resetScrollState()
-    }
-  }
-
-  private suspend fun setFastScroll(enable: Boolean, posts: List<PostIndexed>) {
-    val enabledInSettings = ChanSettings.draggableScrollbars.get().isEnabled
-
-    if (!enable || !enabledInSettings) {
-      if (fastScroller != null) {
-        recyclerView.removeItemDecoration(fastScroller!!)
-
-        fastScroller?.destroyCallbacks()
-        fastScroller?.onCleanup()
-        fastScroller = null
-      }
-
-      postInfoMapItemDecoration = null
-      recyclerView.isVerticalScrollBarEnabled = true
-
-      return
-    }
-
-    val chanDescriptor = currentChanDescriptorOrNull()
-    if (chanDescriptor == null) {
-      return
-    }
-
-    val postDescriptors = posts.map { postIndexed -> postIndexed.chanPost.postDescriptor }
-
-    when (chanDescriptor) {
-      is ChanDescriptor.ICatalogDescriptor -> {
-        if (postInfoMapItemDecoration == null) {
-          postInfoMapItemDecoration = PostInfoMapItemDecoration(context)
-        }
-
-        val params = ExtractPostMapInfoHolderUseCase.Params(
-          postDescriptors = postDescriptors,
-          isViewingThread = false
-        )
-
-        postInfoMapItemDecoration!!.setItems(
-          extractPostMapInfoHolderUseCase.execute(params),
-          postDescriptors.size
-        )
-      }
-      is ThreadDescriptor -> {
-        if (postInfoMapItemDecoration == null) {
-          postInfoMapItemDecoration = PostInfoMapItemDecoration(context)
-        }
-
-        val params = ExtractPostMapInfoHolderUseCase.Params(
-          postDescriptors = postDescriptors,
-          isViewingThread = true
-        )
-
-        postInfoMapItemDecoration!!.setItems(
-          extractPostMapInfoHolderUseCase.execute(params),
-          postDescriptors.size
-        )
-      }
-    }
-
-    if (fastScroller == null) {
-      val scroller = FastScrollerHelper.create(
-        recyclerView,
-        postInfoMapItemDecoration
-      )
-
-      scroller.setThumbDragListener(this)
-      fastScroller = scroller
-
-      recyclerView.isVerticalScrollBarEnabled = false
     }
   }
 
@@ -1120,7 +1082,7 @@ class ThreadListLayout @JvmOverloads constructor(
       }
 
       if (lastVisibleItemPosition == postAdapter.itemCount - 1) {
-        val isDragging = fastScroller?.isDragging ?: false
+        val isDragging = scrollbarView.isDragging
         if (!isDragging) {
           threadListLayoutCallback?.showToolbar()
         }
