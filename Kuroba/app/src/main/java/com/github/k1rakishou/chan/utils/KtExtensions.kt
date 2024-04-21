@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.utils
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.TextWatcher
@@ -118,7 +119,7 @@ suspend fun View.awaitUntilGloballyLaidOutAndGetSize(
   waitForHeight: Boolean = false,
   attempts: Int = 5
 ) : Pair<Int, Int> {
-  val viewTag = this.toString()
+  val viewTag = "${this::class.java.name}_${this.viewIdForLogs()}"
 
   if (!waitForWidth && !waitForHeight) {
     error("awaitUntilGloballyLaidOutAndGetSize($viewTag) At least one of the parameters must be set to true!")
@@ -128,13 +129,26 @@ suspend fun View.awaitUntilGloballyLaidOutAndGetSize(
   val heightOk = (!waitForHeight || height > 0)
 
   if (attempts <= 0) {
-    Logger.e(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) exhausted all attempts exiting " +
-      "(widthOk=$widthOk, width=$width, heightOk=$heightOk, height=$height)")
+    val additionalStatusLog = buildString {
+      if (waitForWidth) {
+        append("widthOk: $widthOk, width: $width")
+      }
+
+      if (waitForHeight) {
+        if (isNotEmpty()) {
+          append("; ")
+        }
+
+        append("heightOk: $heightOk, height: $height")
+      }
+    }
+
+    Logger.e(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) exhausted all attempts exiting (${additionalStatusLog})")
     return width to height
   }
 
   if (widthOk && heightOk) {
-    Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) widthOk=$widthOk, width=$width, heightOk=$heightOk, height=$height")
+    Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) both width and height are OK. width: $width, height: $height")
     return width to height
   }
 
@@ -144,7 +158,7 @@ suspend fun View.awaitUntilGloballyLaidOutAndGetSize(
     requestLayout()
   }
 
-  Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) before OnGlobalLayoutListener (attempts=$attempts)")
+  Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) before OnGlobalLayoutListener (attempts: $attempts)")
 
   suspendCancellableCoroutine<Unit> { cancellableContinuation ->
     val listener = object : OnGlobalLayoutListener {
@@ -152,8 +166,8 @@ suspend fun View.awaitUntilGloballyLaidOutAndGetSize(
         val view = this@awaitUntilGloballyLaidOutAndGetSize
 
         Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) onGlobalLayout called " +
-                "(width=${view.width}, ${view.measuredWidth}, " +
-                "height=${view.height}, ${view.measuredHeight})")
+                "(width: ${view.width}, ${view.measuredWidth}, " +
+                "height: ${view.height}, ${view.measuredHeight})")
 
         viewTreeObserver.removeOnGlobalLayoutListener(this)
         cancellableContinuation.resumeValueSafe(Unit)
@@ -163,7 +177,7 @@ suspend fun View.awaitUntilGloballyLaidOutAndGetSize(
     viewTreeObserver.addOnGlobalLayoutListener(listener)
 
     cancellableContinuation.invokeOnCancellation { cause ->
-      Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) onCancel called, reason=${cause}")
+      Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) onCancel called, reason: '${cause}'")
 
       viewTreeObserver.removeOnGlobalLayoutListener(listener)
     }
@@ -171,6 +185,39 @@ suspend fun View.awaitUntilGloballyLaidOutAndGetSize(
 
   Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) after OnGlobalLayoutListener")
   return awaitUntilGloballyLaidOutAndGetSize(waitForWidth, waitForHeight, attempts - 1)
+}
+
+fun View.viewIdForLogs(): String {
+  val id: Int = id
+  if (id == View.NO_ID) {
+    return "<no id>"
+  }
+
+  return buildString {
+    val resources = context.resources
+    if (id <= 0 || resources == null) {
+      return "<resources is null>"
+    }
+
+    try {
+      val pkgname = when (id and -0x1000000) {
+        0x7f000000 -> "app"
+        0x01000000 -> "android"
+        else -> resources.getResourcePackageName(id)
+      }
+
+      val typename = resources.getResourceTypeName(id)
+      val entryname = resources.getResourceEntryName(id)
+
+      append(pkgname)
+      append(":")
+      append(typename)
+      append("/")
+      append(entryname)
+    } catch (e: Resources.NotFoundException) {
+      return "<error>"
+    }
+  }
 }
 
 fun Controller.findControllerOrNull(predicate: (Controller) -> Boolean): Controller? {
