@@ -121,37 +121,37 @@ suspend fun View.awaitUntilGloballyLaidOutAndGetSize(
   val viewTag = this.toString()
 
   if (!waitForWidth && !waitForHeight) {
-    error("awaitUntilGloballyLaidOut($viewTag) At least one of the parameters must be set to true!")
+    error("awaitUntilGloballyLaidOutAndGetSize($viewTag) At least one of the parameters must be set to true!")
   }
 
   val widthOk = (!waitForWidth || width > 0)
   val heightOk = (!waitForHeight || height > 0)
 
   if (attempts <= 0) {
-    Logger.e(TAG, "awaitUntilGloballyLaidOut($viewTag) exhausted all attempts exiting " +
+    Logger.e(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) exhausted all attempts exiting " +
       "(widthOk=$widthOk, width=$width, heightOk=$heightOk, height=$height)")
     return width to height
   }
 
   if (widthOk && heightOk) {
-    Logger.d(TAG, "awaitUntilGloballyLaidOut($viewTag) widthOk=$widthOk, width=$width, heightOk=$heightOk, height=$height")
+    Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) widthOk=$widthOk, width=$width, heightOk=$heightOk, height=$height")
     return width to height
   }
 
   if (!ViewCompat.isLaidOut(this) || attempts < 5) {
-    Logger.d(TAG, "awaitUntilGloballyLaidOut($viewTag) requesting layout " +
+    Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) requesting layout " +
             "(viewLaidOut: ${ViewCompat.isLaidOut(this)}, attempts: ${attempts})...")
     requestLayout()
   }
 
-  Logger.d(TAG, "awaitUntilGloballyLaidOut($viewTag) before OnGlobalLayoutListener (attempts=$attempts)")
+  Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) before OnGlobalLayoutListener (attempts=$attempts)")
 
   suspendCancellableCoroutine<Unit> { cancellableContinuation ->
     val listener = object : OnGlobalLayoutListener {
       override fun onGlobalLayout() {
         val view = this@awaitUntilGloballyLaidOutAndGetSize
 
-        Logger.d(TAG, "awaitUntilGloballyLaidOut($viewTag) onGlobalLayout called " +
+        Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) onGlobalLayout called " +
                 "(width=${view.width}, ${view.measuredWidth}, " +
                 "height=${view.height}, ${view.measuredHeight})")
 
@@ -163,13 +163,13 @@ suspend fun View.awaitUntilGloballyLaidOutAndGetSize(
     viewTreeObserver.addOnGlobalLayoutListener(listener)
 
     cancellableContinuation.invokeOnCancellation { cause ->
-      Logger.d(TAG, "awaitUntilGloballyLaidOut($viewTag) onCancel called, reason=${cause}")
+      Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) onCancel called, reason=${cause}")
 
       viewTreeObserver.removeOnGlobalLayoutListener(listener)
     }
   }
 
-  Logger.d(TAG, "awaitUntilGloballyLaidOut($viewTag) after OnGlobalLayoutListener")
+  Logger.d(TAG, "awaitUntilGloballyLaidOutAndGetSize($viewTag) after OnGlobalLayoutListener")
   return awaitUntilGloballyLaidOutAndGetSize(waitForWidth, waitForHeight, attempts - 1)
 }
 
