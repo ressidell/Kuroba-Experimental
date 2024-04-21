@@ -11,7 +11,34 @@ open class PostDescriptor protected constructor(
   val descriptor: ChanDescriptor,
   val postNo: Long,
   open val postSubNo: Long = 0L
-) {
+) : Comparable<PostDescriptor> {
+
+  override fun compareTo(other: PostDescriptor): Int {
+    if (descriptor !is ChanDescriptor.ThreadDescriptor) {
+      error("Only ThreadDescriptors are supported here (descriptor: ${descriptor})")
+    }
+
+    if (other.descriptor !is ChanDescriptor.ThreadDescriptor) {
+      error("Only ThreadDescriptors are supported here (other.descriptor: ${other.descriptor})")
+    }
+
+    val threadNoRes = descriptor.threadNo.compareTo(other.descriptor.threadNo)
+    if (threadNoRes != 0) {
+      return threadNoRes
+    }
+
+    val postNoRes = postNo.compareTo(other.postNo)
+    if (postNoRes != 0) {
+      return postNoRes
+    }
+
+    val postSubNoRes = postSubNo.compareTo(other.postSubNo)
+    if (postSubNoRes != 0) {
+      return postSubNoRes
+    }
+
+    return 0
+  }
 
   fun isOP(): Boolean {
     return when (descriptor) {

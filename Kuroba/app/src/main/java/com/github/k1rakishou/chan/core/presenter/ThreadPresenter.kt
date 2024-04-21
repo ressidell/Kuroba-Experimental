@@ -1223,11 +1223,11 @@ class ThreadPresenter @Inject constructor(
   }
 
   private fun getNewPostsCount(chanDescriptor: ChanDescriptor): Int {
-    var newPostsCount = 0
-
     if (chanDescriptor !is ChanDescriptor.ThreadDescriptor) {
-      return newPostsCount
+      return 0
     }
+
+    var newPostsCount = 0
 
     chanThreadViewableInfoManager.update(chanDescriptor) { chanThreadViewableInfo ->
       val lastLoadedPostNo = chanThreadViewableInfo.lastLoadedPostNo
@@ -1259,14 +1259,13 @@ class ThreadPresenter @Inject constructor(
         return@getAndConsumeMarkedPostNo
       }
 
-      highlightPost(markedPost.postDescriptor, blink = true)
-
-      if (BackgroundUtils.isInForeground()) {
-        BackgroundUtils.runOnMainThread(
-          { scrollToPost(markedPost.postDescriptor) },
-          SCROLL_TO_POST_DELAY_MS
-        )
-      }
+      BackgroundUtils.runOnMainThread(
+        {
+          highlightPost(markedPost.postDescriptor, blink = true)
+          scrollToPost(markedPost.postDescriptor)
+        },
+        SCROLL_TO_POST_DELAY_MS
+      )
     }
   }
 
@@ -1433,111 +1432,141 @@ class ThreadPresenter @Inject constructor(
 
     // Update the last seen indicator
     showPosts()
+    Logger.debug(TAG) { "onListScrolledToBottom()" }
   }
 
   fun onNewPostsViewClicked() {
     if (!isBound) {
+      Logger.debug(TAG) { "onNewPostsViewClicked() isBound is false" }
       return
     }
 
     val chanDescriptor = currentChanDescriptor
-      ?: return
+    if (chanDescriptor == null) {
+      Logger.debug(TAG) { "onNewPostsViewClicked(${chanDescriptor}) chanDescriptor is null" }
+      return
+    }
 
     chanThreadViewableInfoManager.view(chanDescriptor) { chanThreadViewableInfoView ->
-      val post = chanThreadManager.findPostByPostNo(
-        chanDescriptor,
-        chanThreadViewableInfoView.lastViewedPostNo
-      )
+      val lastLoadedPostNo = chanThreadViewableInfoView.lastLoadedPostNo
 
-      var position = -1
+      val needle = chanThreadManager.findPostByPostNo(
+        chanDescriptor = chanDescriptor,
+        postNo = lastLoadedPostNo
+      )?.postDescriptor
 
-      if (post != null) {
-        val posts = threadPresenterCallback?.displayingPostDescriptorsInThread
-          ?: return@view
-
-        for (i in posts.indices) {
-          val needle = posts[i]
-          if (post.postDescriptor == needle) {
-            position = i
-            break
-          }
+      if (needle == null) {
+        Logger.debug(TAG) {
+          "onNewPostsViewClicked(${chanDescriptor}) post == is null, " +
+            "lastLoadedPostNo: ${lastLoadedPostNo}"
         }
+
+        showToast(context, getString(R.string.failed_post_find_post_to_scroll_to, lastLoadedPostNo), Toast.LENGTH_LONG)
+        return@view
       }
 
-      // -1 is fine here because we add 1 down the chain to make it 0 if there's no last viewed
+      val posts = threadPresenterCallback?.displayingPostDescriptorsInThread
+      if (posts == null || posts.isEmpty()) {
+        Logger.debug(TAG) { "onNewPostsViewClicked(${chanDescriptor}) posts is null or empty" }
+        showToast(context, getString(R.string.failed_post_find_post_to_scroll_to, needle.postNo), Toast.LENGTH_LONG)
+        return@view
+      }
+
+      val position = posts.indexOfLast { postDescriptor -> postDescriptor <= needle }
+      if (position < 0) {
+        Logger.debug(TAG) { "onNewPostsViewClicked(${chanDescriptor}) position < 0 (position: ${position})" }
+        showToast(context, getString(R.string.failed_post_find_post_to_scroll_to, needle.postNo), Toast.LENGTH_LONG)
+        return@view
+      }
+
       threadPresenterCallback?.smoothScrollNewPosts(position)
+      Logger.debug(TAG) { "onNewPostsViewClicked(${chanDescriptor}) scrolling to ${position}" }
     }
   }
 
-  fun scrollTo(displayPosition: Int) {
-    threadPresenterCallback?.scrollTo(displayPosition)
-  }
+  fun scrollToImage(postImage: ChanPostImage) {
+    if (postImage.imageUrl == null) {
+      Logger.error(TAG) { "scrollToImage() postImage.imageUrl is null" }
+      return
+    }
 
-  fun scrollToImage(postImage: ChanPostImage, smooth: Boolean) {
-    var position = -1
     val postDescriptors = threadPresenterCallback?.displayingPostDescriptorsInThread
-      ?: return
+    if (postDescriptors.isNullOrEmpty()) {
+      Logger.error(TAG) { "scrollToImage(${postImage.imageUrl}) displayingPostDescriptorsInThread is null" }
+      return
+    }
 
-    out@ for (i in postDescriptors.indices) {
-      val postDescriptor = postDescriptors[i]
+    val position = postDescriptors.indexOfFirst { postDescriptor ->
       val postImages = chanThreadManager.getPost(postDescriptor)?.postImages
-        ?: continue
+        ?: return@indexOfFirst false
 
-      for (image in postImages) {
-        if (image == postImage) {
-          position = i
-          break@out
-        }
-      }
+      return@indexOfFirst postImages.any { chanPostImage -> chanPostImage == postImage }
     }
 
-    if (position >= 0) {
-      scrollTo(position)
+    if (position < 0) {
+      Logger.error(TAG) { "scrollToImage(${postImage.imageUrl}) position < 0 (${position})" }
+      showToast(context, getString(R.string.failed_post_find_image_scroll_to, postImage.imageUrl), Toast.LENGTH_LONG)
+      return
     }
+
+    scrollTo(position)
+    Logger.debug(TAG) { "scrollToImage(${postImage.imageUrl}) scrolling to position: ${position}" }
   }
 
   fun scrollToPost(needle: PostDescriptor) {
-    var position = -1
-
     val posts = threadPresenterCallback?.displayingPostDescriptorsInThread
     if (posts == null || posts.isEmpty()) {
       Logger.e(TAG, "scrollToPost($needle) posts are null or empty")
       return
     }
 
-    for (i in posts.indices) {
-      val postDescriptor = posts[i]
-      if (postDescriptor == needle) {
-        position = i
-        break
-      }
+    val position = posts.indexOfLast { postDescriptor -> postDescriptor <= needle }
+    if (position < 0) {
+      Logger.e(TAG, "scrollToPost($needle) position < 0 (${position})")
+      showToast(context, getString(R.string.failed_post_find_post_to_scroll_to, needle.postNo), Toast.LENGTH_LONG)
+      return
     }
 
-    if (position >= 0) {
-      scrollTo(position)
-    }
+    scrollTo(position)
+    Logger.debug(TAG) { "scrollToImage($needle) scrolling to position: ${position}" }
+  }
+
+  fun scrollTo(displayPosition: Int) {
+    Logger.debug(TAG) { "scrollTo() displayPosition: ${displayPosition}" }
+    threadPresenterCallback?.scrollTo(displayPosition)
   }
 
   fun highlightPost(postDescriptor: PostDescriptor?, blink: Boolean) {
+    Logger.debug(TAG) { "highlightPost() postDescriptor: ${postDescriptor}, blink: ${blink}" }
     threadPresenterCallback?.highlightPost(postDescriptor, blink)
   }
 
-  fun highlightPostWithImage(postImage: ChanPostImage) {
+  fun highlightPostWithImage(needle: ChanPostImage) {
     val postDescriptors = threadPresenterCallback?.displayingPostDescriptorsInThread
-      ?: return
-
-    for (postDescriptor in postDescriptors) {
-      val post = chanThreadManager.getPost(postDescriptor)
-        ?: continue
-
-      for (image in post.postImages) {
-        if (image.equalUrl(postImage)) {
-          scrollToPost(post.postDescriptor)
-          highlightPost(post.postDescriptor, blink = true)
-          return
-        }
-      }
+    if (postDescriptors == null || postDescriptors.isEmpty()) {
+      Logger.debug(TAG) { "highlightPostWithImage(${needle.imageUrl}) postDescriptors is null or empty" }
+      return
     }
+
+    val postDescriptorToScrollTo = postDescriptors.lastOrNull { postDescriptor ->
+      val post = chanThreadManager.getPost(postDescriptor)
+      if (post == null) {
+        return@lastOrNull false
+      }
+
+      return@lastOrNull post.postImages.any { chanPostImage -> chanPostImage.equalUrl(needle) }
+    }
+
+    if (postDescriptorToScrollTo == null) {
+      Logger.debug(TAG) { "highlightPostWithImage(${needle.imageUrl}) postDescriptorToScrollTo is null" }
+      showToast(context, getString(R.string.failed_post_find_image_scroll_to, needle.imageUrl), Toast.LENGTH_LONG)
+      return
+    }
+
+    Logger.debug(TAG) { "highlightPostWithImage(${needle.imageUrl}) scrolling to ${postDescriptorToScrollTo}" }
+
+    scrollToPost(postDescriptorToScrollTo)
+    highlightPost(postDescriptorToScrollTo, blink = true)
   }
 
   override fun onPostClicked(postDescriptor: PostDescriptor) {

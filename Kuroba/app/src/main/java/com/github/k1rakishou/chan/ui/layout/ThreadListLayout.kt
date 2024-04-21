@@ -810,8 +810,7 @@ class ThreadListLayout @JvmOverloads constructor(
     }
 
     (layoutManager as FixedLinearLayoutManager).scrollToPositionWithOffset(
-      // position + 1 for last seen view
-      displayPosition + 1,
+      displayPosition,
       SCROLL_OFFSET
     )
   }

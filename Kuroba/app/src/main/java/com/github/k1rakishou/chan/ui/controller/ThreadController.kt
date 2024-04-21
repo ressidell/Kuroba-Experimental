@@ -228,7 +228,7 @@ abstract class ThreadController(
             return@collect
           }
 
-          threadLayout.presenter.scrollToImage(scrollToImageEvent.chanPostImage, true)
+          threadLayout.presenter.scrollToImage(scrollToImageEvent.chanPostImage)
         }
     }
 
