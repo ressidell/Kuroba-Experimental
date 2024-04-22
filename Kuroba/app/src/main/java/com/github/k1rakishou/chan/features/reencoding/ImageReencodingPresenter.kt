@@ -160,7 +160,7 @@ class ImageReencodingPresenter(
     imageOptions.changeImageChecksum = isChecked
   }
 
-  fun applyImageOptions(fileName: String) {
+  fun applyImageOptions(fileName: String?) {
     val alreadyRunning = synchronized(this) { bitmapReencodeJob != null }
     if (alreadyRunning) {
       return
@@ -172,7 +172,7 @@ class ImageReencodingPresenter(
       return
     }
 
-    imageOptions.newFileName = if (fileName.isEmpty()) {
+    imageOptions.newFileName = if (fileName.isNullOrEmpty()) {
       null
     } else {
       fileName
