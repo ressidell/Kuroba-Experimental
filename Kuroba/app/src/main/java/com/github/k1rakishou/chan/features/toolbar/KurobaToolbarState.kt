@@ -37,10 +37,15 @@ import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -53,6 +58,10 @@ class KurobaToolbarState(
 
   private val _invokeAfterTransitionFinishedCallbacks = mutableListOf<KurobaToolbarState.() -> Unit>()
   private var _coroutineScope = KurobaCoroutineScope()
+
+  private val _keyboardOpenRequesters = MutableStateFlow<PersistentSet<ToolbarStateKind>>(persistentSetOf())
+  val keyboardOpenRequesters: StateFlow<ImmutableSet<ToolbarStateKind>>
+    get() = _keyboardOpenRequesters.asStateFlow()
 
   private val _toolbarStateList = mutableStateOf<PersistentList<KurobaToolbarSubState>>(persistentListOf())
   val toolbarStateList: State<ImmutableList<KurobaToolbarSubState>>
@@ -168,6 +177,22 @@ class KurobaToolbarState(
     globalUiStateHolder.updateScrollState {
       resetScrollState()
     }
+  }
+
+  fun showKeyboard(toolbarStateKind: ToolbarStateKind) {
+    if (_keyboardOpenRequesters.value.contains(toolbarStateKind)) {
+      return
+    }
+
+    _keyboardOpenRequesters.value = _keyboardOpenRequesters.value.add(toolbarStateKind)
+  }
+
+  fun hideKeyboard(toolbarStateKind: ToolbarStateKind) {
+    if (!_keyboardOpenRequesters.value.contains(toolbarStateKind)) {
+      return
+    }
+
+    _keyboardOpenRequesters.value = _keyboardOpenRequesters.value.remove(toolbarStateKind)
   }
 
   fun updateToolbarAlpha(toolbarAlpha: Float) {
@@ -482,6 +507,10 @@ class KurobaToolbarState(
       _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
       val newTop = _toolbarList.lastOrNull()
 
+      if (prevTop != null) {
+        hideKeyboard(prevTop.kind)
+      }
+
       prevTop?.onHidden()
       newTop?.onShown()
       prevTop?.onDestroyed()
@@ -564,6 +593,10 @@ class KurobaToolbarState(
         newTop?.onShown()
 
         if (newTop != null) {
+          if (newTop.kind.isSearchToolbar()) {
+            showKeyboard(newTop.kind)
+          }
+
           globalUiStateHolder.updateToolbarState { onToolbarTopStateChanged(controllerKey, newTop.kind) }
         }
       }
@@ -571,6 +604,7 @@ class KurobaToolbarState(
         val prevTop = _toolbarList.lastOrNull()
         if (prevTop != null) {
           _toolbarStateList.value = _toolbarList.removeAt(_toolbarList.lastIndex)
+          hideKeyboard(prevTop.kind)
         }
 
         val newTop = _toolbarList.lastOrNull()
@@ -614,6 +648,10 @@ class KurobaToolbarState(
 
         if (newTop != null) {
           globalUiStateHolder.updateToolbarState { onToolbarTopStateChanged(controllerKey, newTop.kind) }
+
+          if (newTop.kind.isSearchToolbar()) {
+            showKeyboard(newTop.kind)
+          }
         }
       } else {
         _transitionToolbarState.value = KurobaToolbarTransition.Instant(

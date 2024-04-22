@@ -115,9 +115,6 @@ class BrowseController(
   override val kurobaToolbarState: KurobaToolbarState
     get() = toolbarState
 
-  val browseControllerToolbarState: KurobaToolbarState
-    get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
-
   override val controllerKey: ControllerKey
     get() = BrowseController.catalogControllerKey
 
@@ -430,8 +427,8 @@ class BrowseController(
     super.onLostFocus(wasFocused)
     check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
 
-    browseControllerToolbarState.invokeAfterTransitionFinished {
-      if (browseControllerToolbarState.isInReplyMode()) {
+    catalogControllerToolbarState.invokeAfterTransitionFinished {
+      if (catalogControllerToolbarState.isInReplyMode()) {
         popUntil(withAnimation = false) { topToolbar ->
           if (topToolbar.kind != ToolbarStateKind.Catalog) {
             return@popUntil true
@@ -1246,8 +1243,8 @@ class BrowseController(
   }
 
   override fun onReplyViewShouldClose() {
-    if (toolbarState.isInReplyMode()) {
-      toolbarState.pop()
+    if (catalogControllerToolbarState.isInReplyMode()) {
+      catalogControllerToolbarState.pop()
     }
 
     threadLayout.openOrCloseReply(false)

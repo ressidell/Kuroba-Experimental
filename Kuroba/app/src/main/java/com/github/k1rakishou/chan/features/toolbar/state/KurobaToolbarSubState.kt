@@ -183,4 +183,18 @@ enum class ToolbarStateKind {
     }
   }
 
+  fun isSearchToolbar(): Boolean {
+    return when (this) {
+      Search,
+      ThreadSearch,
+      CatalogSearch -> true
+      Selection,
+      Reply,
+      Container,
+      Catalog,
+      Thread,
+      Default -> false
+    }
+  }
+
 }

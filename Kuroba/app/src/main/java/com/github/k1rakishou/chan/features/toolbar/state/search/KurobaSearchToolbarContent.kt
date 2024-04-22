@@ -9,10 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -21,23 +18,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.features.toolbar.state.SearchIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
-import com.github.k1rakishou.chan.ui.compose.freeFocusSafe
-import com.github.k1rakishou.chan.ui.compose.requestFocusSafe
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun KurobaSearchToolbarContent(
   modifier: Modifier,
   chanTheme: ChanTheme,
   state: KurobaSearchToolbarSubState,
+  focusRequester: FocusRequester,
   onCloseSearchToolbarButtonClicked: () -> Unit
 ) {
-  val focusRequester = remember { FocusRequester() }
-  val coroutineScope = rememberCoroutineScope()
-
   val searchVisibleState by state.searchVisibleState
   if (!searchVisibleState) {
     return
@@ -50,21 +41,6 @@ fun KurobaSearchToolbarContent(
   } else {
     Color.Black
   }
-
-  DisposableEffect(
-    key1 = Unit,
-    effect = {
-      val job = coroutineScope.launch {
-        delay(100)
-        focusRequester.requestFocusSafe()
-      }
-
-      onDispose {
-        job.cancel()
-        focusRequester.freeFocusSafe()
-      }
-    }
-  )
 
   Row(
     modifier = modifier,

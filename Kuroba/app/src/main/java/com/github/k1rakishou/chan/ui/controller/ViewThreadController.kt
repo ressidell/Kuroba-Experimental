@@ -92,9 +92,6 @@ open class ViewThreadController(
   override val kurobaToolbarState: KurobaToolbarState
     get() = toolbarState
 
-  val viewThreadControllerToolbarState: KurobaToolbarState
-    get() = kurobaToolbarStateManager.getOrCreate(controllerKey)
-
   override val controllerKey: ControllerKey
     get() = ViewThreadController.threadControllerKey
 
@@ -189,8 +186,8 @@ open class ViewThreadController(
   }
 
   override fun onReplyViewShouldClose() {
-    if (toolbarState.isInReplyMode()) {
-      toolbarState.pop()
+    if (threadControllerToolbarState.isInReplyMode()) {
+      threadControllerToolbarState.pop()
     }
 
     threadLayout.openOrCloseReply(false)
@@ -319,8 +316,8 @@ open class ViewThreadController(
     super.onLostFocus(wasFocused)
     check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
 
-    viewThreadControllerToolbarState.invokeAfterTransitionFinished {
-      if (viewThreadControllerToolbarState.isInReplyMode()) {
+    threadControllerToolbarState.invokeAfterTransitionFinished {
+      if (threadControllerToolbarState.isInReplyMode()) {
         popUntil(withAnimation = false) { topToolbar ->
           if (topToolbar.kind != ToolbarStateKind.Thread) {
             return@popUntil true
