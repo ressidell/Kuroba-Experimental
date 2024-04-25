@@ -531,7 +531,7 @@ class ThreadLayout @JvmOverloads constructor(
     }
 
     switchThreadLayoutState(State.CONTENT)
-    callback.onShowPosts()
+    callback.onShowPosts(descriptor)
   }
 
   override fun postClicked(postDescriptor: PostDescriptor) {
@@ -591,6 +591,7 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   override fun showLoading(animateTransition: Boolean) {
+    callback.onShowLoading()
     switchThreadLayoutState(State.LOADING, animateTransition = animateTransition)
   }
 
@@ -606,7 +607,6 @@ class ThreadLayout @JvmOverloads constructor(
     )
   }
 
-  @Suppress("MoveLambdaOutsideParentheses")
   override fun showPostLinkables(post: ChanPost, inPopup: Boolean) {
     val linkables = post.postComment.linkables
       .filter { postLinkable -> postLinkable.type == PostLinkable.Type.LINK }
@@ -1195,29 +1195,34 @@ class ThreadLayout @JvmOverloads constructor(
     threadListLayout.showCaptcha(chanDescriptor, replyMode, autoReply, afterPostingAttempt, onFinished)
   }
 
-  private fun switchThreadLayoutState(state: State, animateTransition: Boolean = true) {
-    if (this.state == state) {
+  private fun switchThreadLayoutState(newState: State, animateTransition: Boolean = true) {
+    val currentState = state
+    if (currentState == newState) {
       return
     }
 
-    if (this.state != null) {
-      if (this.state == State.CONTENT) {
-        threadListLayout.cleanup()
-        postPopupHelper.popAll()
+    if (currentState != null && currentState == State.CONTENT) {
+      threadListLayout.cleanup()
+      postPopupHelper.popAll()
 
-        snackbarCollection.dismissAll(snackbarManager)
-      }
+      snackbarCollection.dismissAll(snackbarManager)
     }
 
-    this.state = state
+    if (newState != State.CONTENT) {
+      threadListLayout.showToolbarIfNeeded()
+    }
+
+    state = newState
 
     threadControllerType?.let { controllerType ->
       globalUiStateHolder.updateThreadLayoutState {
-        updateThreadLayoutState(controllerType, state)
+        updateThreadLayoutState(controllerType, newState)
       }
     }
 
-    when (state) {
+    callback.onThreadLayoutStateChanged(newState)
+
+    when (newState) {
       State.EMPTY -> {
         loadView.setView(inflateEmptyView(), animateTransition)
       }
@@ -1439,7 +1444,8 @@ class ThreadLayout @JvmOverloads constructor(
     fun openMediaLinkInMediaViewer(link: String)
     fun showImages(chanDescriptor: ChanDescriptor, initialImageUrl: String?, transitionThumbnailUrl: String)
     fun showAlbum(initialImageUrl: HttpUrl?, displayingPostDescriptors: List<PostDescriptor>)
-    fun onShowPosts()
+    fun onShowLoading()
+    fun onShowPosts(chanDescriptor: ChanDescriptor)
     fun onShowError()
     fun presentController(controller: Controller, animated: Boolean)
     fun unpresentController(predicate: (Controller) -> Boolean)
@@ -1450,6 +1456,7 @@ class ThreadLayout @JvmOverloads constructor(
     fun openFiltersController(chanFilterMutable: ChanFilterMutable)
     fun threadBackPressed(): Boolean
     fun threadBackLongPressed()
+    fun onThreadLayoutStateChanged(state: State)
 
     fun showAvailableArchivesList(
       postDescriptor: PostDescriptor,

@@ -53,9 +53,12 @@ class ChanPostBackgroundColorStorage(
       return DEFAULT_COLOR
     }
 
-    val workSafeBoard = postDescriptor?.boardDescriptor()?.let { boardDescriptor ->
-      boardManager.byBoardDescriptor(boardDescriptor)?.workSafe
-    } ?: true
+    val workSafeBoard = postDescriptor?.boardDescriptor()
+      ?.let { boardDescriptor -> boardManager.byBoardDescriptor(boardDescriptor)?.workSafe }
+
+    if (workSafeBoard == null) {
+      return DEFAULT_COLOR
+    }
 
     if (workSafeBoard) {
       return chanBackgroundColors.sfwColor

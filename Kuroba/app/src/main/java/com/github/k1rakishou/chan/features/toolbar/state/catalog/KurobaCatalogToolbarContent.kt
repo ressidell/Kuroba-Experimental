@@ -45,8 +45,7 @@ fun KurobaCatalogToolbarContent(
   val title = titleMut
 
   val subtitle by state.subtitle
-
-  val textColor = chanTheme.onToolbarBackgroundComposeColor
+  val toolbarContentState by state.toolbarContentState
 
   val path = remember { Path() }
 
@@ -90,7 +89,7 @@ fun KurobaCatalogToolbarContent(
             enabled = true,
             onClick = { state.onMainContentClick?.invoke() }
           )
-          .drawBehind { drawTriangle(path, textColor) }
+          .drawBehind { drawTriangle(path, chanTheme.onToolbarBackgroundComposeColor) }
           .padding(start = 12.dp, end = 28.dp),
         title = title,
         subtitle = subtitle,
@@ -117,6 +116,7 @@ fun KurobaCatalogToolbarContent(
           ToolbarClickableIcon(
             toolbarMenuItem = rightIcon,
             chanTheme = chanTheme,
+            enabled = toolbarContentState.isLoaded,
             onClick = {
               val iconClickInterceptor = state.iconClickInterceptor
 
@@ -137,6 +137,7 @@ fun KurobaCatalogToolbarContent(
         ToolbarClickableIcon(
           toolbarMenuItem = overflowIcon,
           chanTheme = chanTheme,
+          enabled = toolbarContentState.isLoaded,
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor
 

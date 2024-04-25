@@ -41,6 +41,7 @@ fun KurobaThreadToolbarContent(
   val subtitle = subtitleMut
 
   val scrollableTitle by state.scrollableTitle
+  val toolbarContentState by state.toolbarContentState
 
   Row(
     modifier = modifier,
@@ -101,6 +102,7 @@ fun KurobaThreadToolbarContent(
           ToolbarClickableIcon(
             toolbarMenuItem = rightIcon,
             chanTheme = chanTheme,
+            enabled = toolbarContentState.isLoaded,
             onClick = {
               val iconClickInterceptor = state.iconClickInterceptor
 
@@ -121,6 +123,7 @@ fun KurobaThreadToolbarContent(
         ToolbarClickableIcon(
           toolbarMenuItem = overflowIcon,
           chanTheme = chanTheme,
+          enabled = toolbarContentState.isLoaded,
           onClick = {
             val iconClickInterceptor = state.iconClickInterceptor
 

@@ -103,7 +103,7 @@ class FutabaChanReader(
     val board = if (chanReaderProcessor.canUseEmptyBoardIfBoardDoesNotExist) {
       ChanBoard(boardDescriptor)
     } else {
-      boardManager.byBoardDescriptor(boardDescriptor) ?: return
+      boardManager.byBoardDescriptor(boardDescriptor)
     }
 
     val endpoints = site.endpoints()
@@ -200,10 +200,12 @@ class FutabaChanReader(
     // The file from between the other values.
     if (fileId != null && fileName != null && fileExt != null && !fileDeleted) {
       val args = SiteEndpoints.makeArgument("tim", fileId, "ext", fileExt)
+      val customSpoilers = board?.customSpoilers ?: -1
+
       val image = ChanPostImageBuilder()
         .serverFilename(fileId)
-        .thumbnailUrl(endpoints.thumbnailUrl(boardDescriptor, false, board.customSpoilers, args))
-        .spoilerThumbnailUrl(endpoints.thumbnailUrl(boardDescriptor, true, board.customSpoilers, args))
+        .thumbnailUrl(endpoints.thumbnailUrl(boardDescriptor, false, customSpoilers, args))
+        .spoilerThumbnailUrl(endpoints.thumbnailUrl(boardDescriptor, true, customSpoilers, args))
         .imageUrl(endpoints.imageUrl(builder.boardDescriptor, args))
         .filename(Parser.unescapeEntities(fileName, false))
         .extension(fileExt)
@@ -263,7 +265,7 @@ class FutabaChanReader(
   private fun readPostImage(
     reader: JsonReader,
     builder: ChanPostBuilder,
-    board: ChanBoard,
+    board: ChanBoard?,
     endpoints: SiteEndpoints
   ): ChanPostImage? {
     var fileId: String? = null
@@ -295,11 +297,12 @@ class FutabaChanReader(
 
     if (fileId != null && fileName != null && fileExt != null) {
       val args = SiteEndpoints.makeArgument("tim", fileId, "ext", fileExt)
+      val customSpoilers = board?.customSpoilers ?: -1
 
       return ChanPostImageBuilder()
         .serverFilename(fileId)
-        .thumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, false, board.customSpoilers, args))
-        .spoilerThumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, true, board.customSpoilers, args))
+        .thumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, false, customSpoilers, args))
+        .spoilerThumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, true, customSpoilers, args))
         .imageUrl(endpoints.imageUrl(builder.boardDescriptor, args))
         .filename(Parser.unescapeEntities(fileName, false))
         .extension(fileExt)

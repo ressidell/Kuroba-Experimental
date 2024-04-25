@@ -1292,12 +1292,6 @@ class PostingServiceDelegate(
 
     val boardDescriptor = BoardDescriptor.create(siteDescriptor, replyResponse.boardCode)
 
-    val localBoard = boardManager.byBoardDescriptor(boardDescriptor)
-    if (localBoard == null) {
-      Logger.e(TAG, "onPostedSuccessfully() localBoard==null")
-      return
-    }
-
     val threadNo = if (replyResponse.threadNo <= 0L) {
       replyResponse.postNo
     } else {
@@ -1306,7 +1300,7 @@ class PostingServiceDelegate(
 
     val newThreadDescriptor = ChanDescriptor.ThreadDescriptor.create(
       localSite.name(),
-      localBoard.boardCode(),
+      boardDescriptor.boardCode,
       threadNo
     )
 

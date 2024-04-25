@@ -712,6 +712,8 @@ class ThreadPresenter @Inject constructor(
           break
         }
 
+        threadPresenterCallback?.showLoading()
+
         val message = "Loading catalog '${nextDescriptorToLoad.userReadableString()}' " +
           "${catalogPageToLoad}/${totalCatalogPages}"
         loadingController?.updateWithText(message)
@@ -2136,14 +2138,6 @@ class ThreadPresenter @Inject constructor(
           if (threadLink != null) {
             if (!threadLink.isValid()) {
               Logger.e(TAG, "PostLinkable is not valid: threadLink = ${threadLink}")
-              return@post
-            }
-
-            val boardDescriptor = BoardDescriptor.create(site.name(), threadLink.board)
-            val board = boardManager.byBoardDescriptor(boardDescriptor)
-
-            if (board == null) {
-              Logger.e(TAG, "PostLinkable is not valid: board with descriptor ${boardDescriptor} is null")
               return@post
             }
 

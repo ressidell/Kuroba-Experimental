@@ -9,6 +9,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowI
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.ui.compose.badge.ToolbarBadgeData
+import com.github.k1rakishou.chan.ui.layout.ThreadLayout
 import com.github.k1rakishou.core_logger.Logger
 
 abstract class KurobaToolbarSubState {
@@ -40,6 +41,17 @@ abstract class KurobaToolbarSubState {
   @CallSuper
   open fun onDestroyed() {
     Logger.verbose(tag()) { "onDestroyed()" }
+  }
+
+  fun updateBadge(counter: Int, highImportance: Boolean) {
+    _toolbarBadgeState.value = ToolbarBadgeData(
+      counter = counter,
+      highlight = highImportance
+    )
+  }
+
+  fun hideBadge() {
+    _toolbarBadgeState.value = null
   }
 
   fun findItem(id: Int): ToolbarMenuItem? {
@@ -127,19 +139,30 @@ abstract class KurobaToolbarSubState {
     }
   }
 
-  fun updateBadge(counter: Int, highImportance: Boolean) {
-    _toolbarBadgeState.value = ToolbarBadgeData(
-      counter = counter,
-      highlight = highImportance
-    )
-  }
-
-  fun hideBadge() {
-    _toolbarBadgeState.value = null
-  }
-
   private fun tag(): String {
     return "KurobaToolbarSubState_${kind}"
+  }
+
+}
+
+enum class ToolbarContentState {
+  Empty,
+  Loading,
+  Loaded,
+  Error;
+
+  val isLoaded: Boolean
+    get() = this == Loaded
+
+  companion object {
+    fun from(state: ThreadLayout.State): ToolbarContentState {
+      return when (state) {
+        ThreadLayout.State.EMPTY -> ToolbarContentState.Empty
+        ThreadLayout.State.LOADING -> ToolbarContentState.Loading
+        ThreadLayout.State.CONTENT -> ToolbarContentState.Loaded
+        ThreadLayout.State.ERROR -> ToolbarContentState.Error
+      }
+    }
   }
 
 }

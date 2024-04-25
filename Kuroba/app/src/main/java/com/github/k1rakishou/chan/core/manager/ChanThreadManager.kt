@@ -100,7 +100,6 @@ class ChanThreadManager(
     requestedChanDescriptors.remove(chanDescriptor)
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun loadThreadOrCatalog(
     page: Int?,
     compositeCatalogDescriptor: ChanDescriptor.CompositeCatalogDescriptor?,

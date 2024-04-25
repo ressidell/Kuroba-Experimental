@@ -988,14 +988,13 @@ class ThreadListLayout @JvmOverloads constructor(
     }
   }
 
-  private fun showToolbarIfNeeded() {
+  fun showToolbarIfNeeded() {
     if (!ChanSettings.canCollapseToolbar()) {
       return
     }
 
-    globalUiStateHolder.updateScrollState {
-      resetScrollState()
-    }
+    globalUiStateHolder.updateScrollState { resetScrollState() }
+    globalUiStateHolder.updateToolbarState { updateToolbarVisibilityState(true) }
   }
 
   private fun openOrCloseReplyLayout(open: Boolean) {

@@ -36,7 +36,6 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScroll
 import com.github.k1rakishou.chan.features.report_posts.Chan4ReportPostController
 import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
-import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
@@ -167,11 +166,6 @@ abstract class ThreadController(
     get() = threadLayout.presenter.currentChanDescriptor
   val currentChanDescriptorFlow: StateFlow<ChanDescriptor?>
     get() = threadLayout.presenter.currentChanDescriptorFlow
-
-  val catalogControllerToolbarState: KurobaToolbarState
-    get() = kurobaToolbarStateManager.getOrCreate(BrowseController.catalogControllerKey)
-  val threadControllerToolbarState: KurobaToolbarState
-    get() = kurobaToolbarStateManager.getOrCreate(ViewThreadController.threadControllerKey)
 
   abstract override val threadControllerType: ThreadControllerType
 
@@ -329,7 +323,7 @@ abstract class ThreadController(
     threadLayout.showLoading(animateTransition = animateTransition)
   }
 
-  open suspend fun showSitesNotSetup() {
+  open fun showSitesNotSetup() {
     threadLayout.presenter.showNoContent()
   }
 
@@ -453,11 +447,15 @@ abstract class ThreadController(
     pushChildController(controller)
   }
 
-  override fun onShowPosts() {
+  override fun onShowLoading() {
     // no-op
   }
 
   override fun onShowError() {
+    // no-op
+  }
+
+  override fun onShowPosts(chanDescriptor: ChanDescriptor) {
     // no-op
   }
 

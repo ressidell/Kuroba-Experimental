@@ -607,7 +607,7 @@ class ReplyLayoutHelper(
   private fun boardSupportsSpoilers(chanDescriptor: ChanDescriptor): Boolean {
     return boardManager.byBoardDescriptor(chanDescriptor.boardDescriptor())
       ?.spoilers
-      ?: return false
+      ?: false
   }
 
   fun handleQuote(replyTextState: TextFieldState, postNo: Long, textQuote: String?) {

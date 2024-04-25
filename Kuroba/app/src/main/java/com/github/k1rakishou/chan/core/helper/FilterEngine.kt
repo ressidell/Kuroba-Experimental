@@ -4,7 +4,7 @@ import androidx.annotation.AnyThread
 import com.github.k1rakishou.chan.core.manager.ChanFilterManager
 import com.github.k1rakishou.common.RegexPatternCompiler
 import com.github.k1rakishou.core_logger.Logger
-import com.github.k1rakishou.model.data.board.ChanBoard
+import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import com.github.k1rakishou.model.data.filter.ChanFilter
 import com.github.k1rakishou.model.data.filter.ChanFilterMutable
 import com.github.k1rakishou.model.data.filter.FilterType
@@ -35,8 +35,8 @@ class FilterEngine @Inject constructor(
   val enabledFilters: List<ChanFilter>
     get() = chanFilterManager.getEnabledFiltersSorted()
 
-  fun matchesBoard(filter: ChanFilter, board: ChanBoard): Boolean {
-    return filter.matchesBoard(board.boardDescriptor)
+  fun matchesBoard(filter: ChanFilter, boardDescriptor: BoardDescriptor): Boolean {
+    return filter.matchesBoard(boardDescriptor)
   }
 
   fun extractMatchedKeywords(

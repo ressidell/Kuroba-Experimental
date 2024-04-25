@@ -73,7 +73,6 @@ open class VichanApi(
     val site = siteManager.bySiteDescriptor(chanReaderProcessor.chanDescriptor.siteDescriptor())
       ?: return
     val board = boardManager.byBoardDescriptor(chanReaderProcessor.chanDescriptor.boardDescriptor())
-      ?: return
 
     val endpoints = site.endpoints()
 
@@ -120,6 +119,7 @@ open class VichanApi(
           builder.op(opId == 0)
           builder.opId(opId.toLong())
         }
+
         "sticky" -> builder.sticky(reader.nextInt() == 1)
         "closed" -> builder.closed(reader.nextInt() == 1)
         "archived" -> builder.archived(reader.nextInt() == 1)
@@ -139,6 +139,7 @@ open class VichanApi(
           }
           reader.endArray()
         }
+
         "md5" -> fileHash = reader.nextString()
         else -> {
           // Unknown/ignored key
@@ -157,11 +158,12 @@ open class VichanApi(
     // The file from between the other values.
     if (!fileId.isNullOrEmpty() && !fileExt.isNullOrEmpty()) {
       val args = SiteEndpoints.makeArgument("tim", fileId, "ext", fileExt, "fpath", fpath.toString())
+      val customSpoilers = board?.customSpoilers ?: -1
 
       val image = ChanPostImageBuilder()
         .serverFilename(fileId)
-        .thumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, false, board.customSpoilers, args))
-        .spoilerThumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, true, board.customSpoilers, args))
+        .thumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, false, customSpoilers, args))
+        .spoilerThumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, true, customSpoilers, args))
         .imageUrl(endpoints.imageUrl(builder.boardDescriptor, args))
         .filename(Parser.unescapeEntities(fileName, false))
         .extension(fileExt)
@@ -208,7 +210,7 @@ open class VichanApi(
   protected open fun readPostImage(
     reader: JsonReader,
     builder: ChanPostBuilder,
-    board: ChanBoard,
+    board: ChanBoard?,
     endpoints: SiteEndpoints
   ): ChanPostImage? {
     try {
@@ -253,11 +255,12 @@ open class VichanApi(
 
     if (fileId.isNotNullNorEmpty() && fileName.isNotNullNorEmpty() && fileExt.isNotNullNorEmpty()) {
       val args = SiteEndpoints.makeArgument("tim", fileId, "ext", fileExt, "fpath", fpath.toString())
+      val customSpoilers = board?.customSpoilers ?: -1
 
       return ChanPostImageBuilder()
         .serverFilename(fileId)
-        .thumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, false, board.customSpoilers, args))
-        .spoilerThumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, true, board.customSpoilers, args))
+        .thumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, false, customSpoilers, args))
+        .spoilerThumbnailUrl(endpoints.thumbnailUrl(builder.boardDescriptor, true, customSpoilers, args))
         .imageUrl(endpoints.imageUrl(builder.boardDescriptor, args))
         .filename(Parser.unescapeEntities(fileName, false))
         .extension(fileExt)
@@ -272,7 +275,13 @@ open class VichanApi(
     return null
   }
 
-  protected open fun otherPostKey(name: String, reader: JsonReader, builder: ChanPostBuilder, board: ChanBoard, endpoints: SiteEndpoints) {
+  protected open fun otherPostKey(
+    name: String,
+    reader: JsonReader,
+    builder: ChanPostBuilder,
+    board: ChanBoard?,
+    endpoints: SiteEndpoints
+  ) {
     reader.skipValue()
   }
 

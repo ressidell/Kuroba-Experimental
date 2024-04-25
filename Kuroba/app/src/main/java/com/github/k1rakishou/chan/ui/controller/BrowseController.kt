@@ -33,6 +33,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.state.ToolbarContentState
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarInlineContent
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.adapter.PostsFilter
@@ -44,6 +45,7 @@ import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerCont
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.helper.RuntimePermissionsHelper
+import com.github.k1rakishou.chan.ui.layout.ThreadLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -107,13 +109,15 @@ class BrowseController(
 
   private lateinit var serializedCoroutineExecutor: SerializedCoroutineExecutor
 
-  private var updateCompositeCatalogNavigationSubtitleJob: Job? = null
+  private var updateToolbarTitleJob: Job? = null
 
   override val threadControllerType: ThreadControllerType
     get() = ThreadControllerType.Catalog
-
   override val kurobaToolbarState: KurobaToolbarState
     get() = toolbarState
+
+  val catalogControllerToolbarState: KurobaToolbarState
+    get() = kurobaToolbarStateManager.getOrCreate(BrowseController.catalogControllerKey)
 
   override val controllerKey: ControllerKey
     get() = BrowseController.catalogControllerKey
@@ -242,16 +246,16 @@ class BrowseController(
   override fun onDestroy() {
     super.onDestroy()
 
-    updateCompositeCatalogNavigationSubtitleJob?.cancel()
-    updateCompositeCatalogNavigationSubtitleJob = null
+    updateToolbarTitleJob?.cancel()
+    updateToolbarTitleJob = null
 
     presenter.destroy()
   }
 
-  override suspend fun showSitesNotSetup() {
+  override fun showSitesNotSetup() {
     super.showSitesNotSetup()
 
-    toolbarState.catalog.updateTitle(
+    catalogControllerToolbarState.catalog.updateTitle(
       newTitle = ToolbarText.Id(R.string.browse_controller_title_app_setup),
       newSubTitle = ToolbarText.Id(R.string.browse_controller_subtitle)
     )
@@ -275,43 +279,42 @@ class BrowseController(
 
       threadLayout.presenter.bindChanDescriptor(catalogDescriptor as ChanDescriptor)
 
-      updateToolbarTitle(catalogDescriptor)
       updateMenuItems()
     }
   }
 
-  override suspend fun updateToolbarTitle(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
-    boardManager.awaitUntilInitialized()
+  override fun updateToolbarTitle(catalogDescriptor: ChanDescriptor.ICatalogDescriptor) {
+    updateToolbarTitleJob?.cancel()
+    updateToolbarTitleJob = controllerScope.launch(Dispatchers.Main.immediate) {
+      coroutineContext[Job.Key]?.invokeOnCompletion { updateToolbarTitleJob = null }
 
-    updateCompositeCatalogNavigationSubtitleJob?.cancel()
-    updateCompositeCatalogNavigationSubtitleJob = null
+      boardManager.awaitUntilInitialized()
 
-    when (catalogDescriptor) {
-      is CatalogDescriptor -> {
-        val boardDescriptor = catalogDescriptor.boardDescriptor
+      when (catalogDescriptor) {
+        is CatalogDescriptor -> {
+          val boardDescriptor = catalogDescriptor.boardDescriptor
 
-        val board = boardManager.byBoardDescriptor(boardDescriptor)
-          ?: return
+          val board = boardManager.byBoardDescriptor(boardDescriptor)
 
-        toolbarState.catalog.updateTitle(
-          newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/"),
-          newSubTitle = ToolbarText.String(board.name ?: "")
-        )
-      }
-      is ChanDescriptor.CompositeCatalogDescriptor -> {
-        toolbarState.catalog.updateTitle(
-          newTitle = ToolbarText.Id(R.string.composite_catalog),
-          newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
-        )
+          catalogControllerToolbarState.catalog.updateTitle(
+            newTitle = ToolbarText.String("/" + boardDescriptor.boardCode + "/"),
+            newSubTitle = board?.let { chanBoard -> ToolbarText.String(chanBoard.name ?: "") }
+          )
+        }
 
-        updateCompositeCatalogNavigationSubtitleJob = controllerScope.launch {
+        is ChanDescriptor.CompositeCatalogDescriptor -> {
+          catalogControllerToolbarState.catalog.updateTitle(
+            newTitle = ToolbarText.Id(R.string.composite_catalog),
+            newSubTitle = ToolbarText.Id(R.string.browse_controller_composite_catalog_subtitle_loading)
+          )
+
           val newTitle = presenter.getCompositeCatalogNavigationTitle(catalogDescriptor)
 
           val compositeCatalogSubTitle = ToolbarInlineContent.getCompositeCatalogNavigationSubtitle(
             compositeCatalogDescriptor = catalogDescriptor
           )
 
-          toolbarState.catalog.updateTitle(
+          catalogControllerToolbarState.catalog.updateTitle(
             newTitle = ToolbarText.String(newTitle ?: ""),
             newSubTitle = ToolbarText.Spanned(compositeCatalogSubTitle)
           )
@@ -413,6 +416,28 @@ class BrowseController(
     )
   }
 
+  override fun onShowLoading() {
+    catalogControllerToolbarState.catalog.updateTitle(
+      newTitle = ToolbarText.Id(com.github.k1rakishou.chan.R.string.loading),
+      newSubTitle = null
+    )
+  }
+
+  override fun onShowError() {
+    super.onShowError()
+
+    catalogControllerToolbarState.catalog.updateTitle(
+      newTitle = ToolbarText.Id(R.string.catalog_loading_error_title),
+      newSubTitle = null
+    )
+  }
+
+  override fun onShowPosts(chanDescriptor: ChanDescriptor) {
+    super.onShowPosts(chanDescriptor)
+
+    updateToolbarTitle(chanDescriptor as ChanDescriptor.ICatalogDescriptor)
+  }
+
   override suspend fun showThreadWithoutFocusing(descriptor: ThreadDescriptor, animated: Boolean) {
     showThreadInternal(
       descriptor = descriptor,
@@ -421,6 +446,10 @@ class BrowseController(
         pushControllerWithAnimation = animated
       )
     )
+  }
+
+  override fun onThreadLayoutStateChanged(state: ThreadLayout.State) {
+    catalogControllerToolbarState.catalog.updateToolbarContentState(ToolbarContentState.from(state))
   }
 
   override fun onLostFocus(wasFocused: ThreadControllerType) {

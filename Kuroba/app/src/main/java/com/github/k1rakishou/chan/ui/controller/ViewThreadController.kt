@@ -23,12 +23,14 @@ import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
+import com.github.k1rakishou.chan.features.toolbar.state.ToolbarContentState
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.ReplyAutoCloseListener
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
+import com.github.k1rakishou.chan.ui.layout.ThreadLayout
 import com.github.k1rakishou.chan.ui.layout.ThreadLayout.ThreadLayoutCallback
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
@@ -88,12 +90,13 @@ open class ViewThreadController(
 
   override val threadControllerType: ThreadControllerType
     get() = ThreadControllerType.Thread
-
   override val kurobaToolbarState: KurobaToolbarState
     get() = toolbarState
-
   override val controllerKey: ControllerKey
     get() = ViewThreadController.threadControllerKey
+
+  val threadControllerToolbarState: KurobaToolbarState
+    get() = kurobaToolbarStateManager.getOrCreate(ViewThreadController.threadControllerKey)
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)
@@ -280,17 +283,24 @@ open class ViewThreadController(
     showPostsInExternalThreadHelper.showPostsInExternalThread(postDescriptor, isPreviewingCatalogThread)
   }
 
-  override fun onShowPosts() {
-    super.onShowPosts()
+  override fun onShowLoading() {
+    threadControllerToolbarState.thread.updateTitle(
+      newTitle = ToolbarText.Id(com.github.k1rakishou.chan.R.string.loading),
+      newSubTitle = null
+    )
+  }
 
-    setNavigationTitleFromDescriptor(threadDescriptor)
+  override fun onShowPosts(chanDescriptor: ChanDescriptor) {
+    super.onShowPosts(chanDescriptor)
+
+    setNavigationTitleFromDescriptor(chanDescriptor as ThreadDescriptor)
     setPinIconState(false)
   }
 
   override fun onShowError() {
     super.onShowError()
 
-    toolbarState.thread.updateTitle(
+    threadControllerToolbarState.thread.updateTitle(
       newTitle = ToolbarText.Id(R.string.thread_loading_error_title),
       newSubTitle = null
     )
@@ -310,6 +320,10 @@ open class ViewThreadController(
   override fun threadBackLongPressed() {
     threadFollowHistoryManager.clearAllExcept(threadDescriptor)
     showToast(R.string.thread_follow_history_has_been_cleared)
+  }
+
+  override fun onThreadLayoutStateChanged(state: ThreadLayout.State) {
+    threadControllerToolbarState.thread.updateToolbarContentState(ToolbarContentState.from(state))
   }
 
   override fun onLostFocus(wasFocused: ThreadControllerType) {
@@ -472,14 +486,12 @@ open class ViewThreadController(
             requestPagesIfNotCached = false
           )
 
-          if (chanBoard != null) {
-            subtitle = ChanPostUtils.getThreadStatistics(
-              chanThread = chanThread,
-              op = originalPost,
-              board = chanBoard,
-              boardPage = boardPage
-            )
-          }
+          subtitle = ChanPostUtils.getThreadStatistics(
+            chanThread = chanThread,
+            op = originalPost,
+            board = chanBoard,
+            boardPage = boardPage
+          )
         }
 
         return@withContext title to subtitle

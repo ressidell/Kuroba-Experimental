@@ -161,7 +161,6 @@ class DvachApiV2(
     val site = siteManager.bySiteDescriptor(chanReaderProcessor.chanDescriptor.siteDescriptor())
       ?: return
     val board = boardManager.byBoardDescriptor(chanReaderProcessor.chanDescriptor.boardDescriptor())
-      ?: return
 
     val endpoints = site.endpoints()
 
@@ -196,13 +195,14 @@ class DvachApiV2(
   private suspend fun processPostsInternal(
     posts: List<DvachPost>,
     chanReaderProcessor: AbstractChanReaderProcessor,
-    board: ChanBoard,
+    board: ChanBoard?,
     endpoints: SiteEndpoints
   ) {
     val postsCount = posts.size
+    val boardDescriptor = chanReaderProcessor.chanDescriptor.boardDescriptor()
 
     // TODO(KurobaEx): this seems to be incorrect when we are reading a catalog
-    val threadDescriptor = posts.first().threadDescriptor(board.boardDescriptor)
+    val threadDescriptor = posts.first().threadDescriptor(boardDescriptor)
     val posters = extraThreadInfoMap[threadDescriptor]?.posters
 
     val postBuilders = posts.map { threadPost ->
@@ -261,7 +261,7 @@ class DvachApiV2(
       builder.sage(threadPost.isSage())
 
       val postImages = threadPost.files
-        ?.mapNotNull { postFile -> postFile.toChanPostImage(board, endpoints) }
+        ?.mapNotNull { postFile -> postFile.toChanPostImage(board, boardDescriptor, endpoints) }
         ?: emptyList()
 
       builder.postImages(postImages, builder.postDescriptor)
@@ -598,7 +598,8 @@ class DvachApiV2(
   ) {
 
     fun toChanPostImage(
-      board: ChanBoard,
+      board: ChanBoard?,
+      boardDescriptor: BoardDescriptor,
       endpoints: SiteEndpoints
     ): ChanPostImage? {
       if (path?.contains("/stickers/", ignoreCase = true) == true) {
@@ -625,16 +626,18 @@ class DvachApiV2(
           "thumbnail", thumbnail
         )
 
+        val customSpoilers = board?.customSpoilers ?: -1
+
         return ChanPostImageBuilder()
           .serverFilename(serverFileName)
           .thumbnailUrl(
-            endpoints.thumbnailUrl(board.boardDescriptor, false, board.customSpoilers, args)
+            endpoints.thumbnailUrl(boardDescriptor, false, customSpoilers, args)
           )
           .spoilerThumbnailUrl(
-            endpoints.thumbnailUrl(board.boardDescriptor, true, board.customSpoilers, args)
+            endpoints.thumbnailUrl(boardDescriptor, true, customSpoilers, args)
           )
           .imageUrl(
-            endpoints.imageUrl(board.boardDescriptor, args)
+            endpoints.imageUrl(boardDescriptor, args)
           )
           .filename(Parser.unescapeEntities(originalFileName, false))
           .extension(fileExt)

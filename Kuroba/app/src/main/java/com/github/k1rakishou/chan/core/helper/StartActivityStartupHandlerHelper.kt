@@ -496,9 +496,6 @@ class StartActivityStartupHandlerHelper(
 
     boardManager.awaitUntilInitialized()
 
-    boardManager.byBoardDescriptor(chanDescriptor.boardDescriptor())
-      ?: return null
-
     return chanDescriptor
   }
 

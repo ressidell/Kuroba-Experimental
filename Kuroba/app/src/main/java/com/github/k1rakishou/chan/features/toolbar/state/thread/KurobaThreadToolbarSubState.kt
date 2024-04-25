@@ -8,6 +8,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.features.toolbar.state.IKurobaToolbarParams
 import com.github.k1rakishou.chan.features.toolbar.state.KurobaToolbarSubState
+import com.github.k1rakishou.chan.features.toolbar.state.ToolbarContentState
 import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 
 @Immutable
@@ -49,6 +50,10 @@ class KurobaThreadToolbarSubState(
   val iconClickInterceptor: ((ToolbarMenuItem) -> Boolean)?
     get() = _iconClickInterceptor
 
+  private val _toolbarContentState = mutableStateOf<ToolbarContentState>(ToolbarContentState.Empty)
+  val toolbarContentState: State<ToolbarContentState>
+    get() = _toolbarContentState
+
   override val kind: ToolbarStateKind = params.kind
 
   override val leftMenuItem: ToolbarMenuItem?
@@ -74,6 +79,10 @@ class KurobaThreadToolbarSubState(
   ) {
     _title.value = newTitle
     _subtitle.value = newSubTitle
+  }
+
+  fun updateToolbarContentState(state: ToolbarContentState) {
+    _toolbarContentState.value = state
   }
 
   override fun toString(): String {

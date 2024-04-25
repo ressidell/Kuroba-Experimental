@@ -165,11 +165,8 @@ abstract class AbstractParsePostsUseCase(
   protected fun loadFilters(chanDescriptor: ChanDescriptor): List<ChanFilter> {
     BackgroundUtils.ensureBackgroundThread()
 
-    val board = boardManager.byBoardDescriptor(chanDescriptor.boardDescriptor())
-      ?: return emptyList()
-
     return filterEngine.enabledFilters
-      .filter { filter -> filterEngine.matchesBoard(filter, board) }
+      .filter { filter -> filterEngine.matchesBoard(filter, chanDescriptor.boardDescriptor()) }
   }
 
   class ParsingResult @OptIn(ExperimentalTime::class) constructor(

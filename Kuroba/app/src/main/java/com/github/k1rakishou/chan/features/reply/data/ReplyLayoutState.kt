@@ -819,9 +819,8 @@ class ReplyLayoutState(
         placeCursorAtEnd()
       }
 
-      boardManager.byBoardDescriptor(chanDescriptor.boardDescriptor())?.let { chanBoard ->
-        _maxCommentLength.intValue = chanBoard.maxCommentChars
-      }
+      boardManager.byBoardDescriptor(chanDescriptor.boardDescriptor())
+        ?.let { chanBoard -> _maxCommentLength.intValue = chanBoard.maxCommentChars }
     }
 
     val postFormattingButtons = postFormattingButtonsFactory.createPostFormattingButtons(chanDescriptor.boardDescriptor())
@@ -1240,15 +1239,6 @@ class ReplyLayoutState(
       boardCode = replyResponse.boardCode
     )
 
-    val localBoard = boardManager.byBoardDescriptor(boardDescriptor)
-    if (localBoard == null) {
-      Logger.error(TAG) {
-        "onPostedSuccessfully(${prevChanDescriptor}) localBoard is null"
-      }
-
-      return
-    }
-
     val threadNo = if (replyResponse.threadNo <= 0L) {
       replyResponse.postNo
     } else {
@@ -1257,7 +1247,7 @@ class ReplyLayoutState(
 
     val newThreadDescriptor = ChanDescriptor.ThreadDescriptor.create(
       siteName = localSite.name(),
-      boardCode = localBoard.boardCode(),
+      boardCode = boardDescriptor.boardCode,
       threadNo = threadNo
     )
 

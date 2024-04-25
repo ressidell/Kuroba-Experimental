@@ -267,8 +267,8 @@ class BrowsePresenter @Inject constructor(
     suspend fun loadCatalog(catalogDescriptor: ChanDescriptor.ICatalogDescriptor)
     suspend fun showThread(descriptor: ChanDescriptor.ThreadDescriptor, animated: Boolean)
 
-    suspend fun updateToolbarTitle(catalogDescriptor: ChanDescriptor.ICatalogDescriptor)
-    suspend fun showSitesNotSetup()
+    fun updateToolbarTitle(catalogDescriptor: ChanDescriptor.ICatalogDescriptor)
+    fun showSitesNotSetup()
   }
 
   companion object {

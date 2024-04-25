@@ -80,14 +80,6 @@ class PostLinkableClickHelper(
         return
       }
 
-      val boardDescriptor = BoardDescriptor.create(siteName, threadLink.board)
-      val board = boardManager.byBoardDescriptor(boardDescriptor)
-
-      if (board == null) {
-        Logger.e(TAG, "Bad thread linkable: Couldn't find board for descriptor ${boardDescriptor}")
-        return
-      }
-
       val postDescriptor = PostDescriptor.create(
         siteName,
         threadLink.board,
@@ -109,16 +101,6 @@ class PostLinkableClickHelper(
 
       val boardDescriptor = BoardDescriptor.create(siteName, link.toString())
       val catalogDescriptor = ChanDescriptor.CatalogDescriptor.create(boardDescriptor)
-      val board = boardManager.byBoardDescriptor(boardDescriptor)
-
-      if (board == null) {
-        AppModuleAndroidUtils.showToast(
-          context,
-          AppModuleAndroidUtils.getString(R.string.failed_to_find_board_with_code, boardDescriptor.boardCode)
-        )
-
-        return
-      }
 
       onBoardLinkClicked(catalogDescriptor)
       return
@@ -133,12 +115,6 @@ class PostLinkableClickHelper(
 
       val boardDescriptor = BoardDescriptor.create(siteName, searchLink.board)
       val catalogDescriptor = ChanDescriptor.CatalogDescriptor.create(boardDescriptor)
-      val board = boardManager.byBoardDescriptor(boardDescriptor)
-
-      if (board == null) {
-        AppModuleAndroidUtils.showToast(context, R.string.site_uses_dynamic_boards)
-        return
-      }
 
       onSearchLinkClicked(catalogDescriptor, searchLink.query)
       return
