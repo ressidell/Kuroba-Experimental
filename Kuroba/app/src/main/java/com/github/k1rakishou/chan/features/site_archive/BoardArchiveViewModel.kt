@@ -80,7 +80,7 @@ class BoardArchiveViewModel(
   }
 
   private suspend fun loadPageOfArchiveThreads() {
-    if (_endReached.value) {
+    if (_endReached.value || _state.value is AsyncData.Loading) {
       return
     }
 

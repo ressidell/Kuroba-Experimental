@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.ui.compose.lazylist
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.PaddingValues
@@ -174,8 +175,8 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
         else -> 0f
       }
 
-      val duration = if (isScrollInProgress(lazyStateWrapper) || isScrollbarDragged) 150 else 1000
-      val delay = if (isScrollInProgress(lazyStateWrapper) || isScrollbarDragged) 0 else 1000
+      val duration = if (isScrollInProgress(lazyStateWrapper) || isScrollbarDragged) 150 else 500
+      val delay = if (isScrollInProgress(lazyStateWrapper) || isScrollbarDragged) 0 else 1500
 
       val thumbAlphaAnimated by animateFloatAsState(
         targetValue = targetThumbAlpha,
@@ -197,6 +198,31 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
         targetValue = if (isScrollbarDragged) scrollbarThumbColorDragged else scrollbarThumbColorNormal,
         animationSpec = tween(durationMillis = 200)
       )
+
+      val scrollbarSizeAnimatedState = when (scrollbarDimens) {
+        is ScrollbarDimens.Horizontal -> {
+          val scrollbarHeightPx = if (isScrollInProgress(lazyStateWrapper) || isScrollbarDragged) scrollbarDimens.height else 0
+
+          animateIntAsState(
+            targetValue = scrollbarHeightPx,
+            animationSpec = tween(
+              durationMillis = duration,
+              delayMillis = delay
+            )
+          )
+        }
+        is ScrollbarDimens.Vertical -> {
+          val scrollbarWidthPx = if (isScrollInProgress(lazyStateWrapper) || isScrollbarDragged) scrollbarDimens.width else 0
+
+          animateIntAsState(
+            targetValue = scrollbarWidthPx,
+            animationSpec = tween(
+              durationMillis = duration,
+              delayMillis = delay
+            )
+          )
+        }
+      }
 
       this.then(
         Modifier.drawWithContent {
@@ -238,19 +264,19 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
               }
 
               val offsetX = leftPaddingPx + scrollbarOffsetX
-              val offsetY = this.size.height - scrollbarDimens.height
+              val offsetY = this.size.height - scrollbarSizeAnimatedState.value
 
               drawRect(
                 color = scrollbarTrackColor,
                 topLeft = Offset(leftPaddingPx, offsetY),
-                size = Size(this.size.width - (leftPaddingPx + rightPaddingPx), scrollbarDimens.height.toFloat()),
+                size = Size(this.size.width - (leftPaddingPx + rightPaddingPx), scrollbarSizeAnimatedState.value.toFloat()),
                 alpha = trackAlphaAnimated
               )
 
               drawRect(
                 color = thumbColorAnimated,
                 topLeft = Offset(offsetX, offsetY),
-                size = Size(scrollbarWidthAdjusted, scrollbarDimens.height.toFloat()),
+                size = Size(scrollbarWidthAdjusted, scrollbarSizeAnimatedState.value.toFloat()),
                 alpha = thumbAlphaAnimated
               )
             }
@@ -279,9 +305,9 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
               }
 
               val offsetY = topPaddingPx + scrollbarOffsetY
-              val offsetX = this.size.width - scrollbarDimens.width
+              val offsetX = this.size.width - scrollbarSizeAnimatedState.value
 
-              val trackWidth = scrollbarDimens.width.toFloat()
+              val trackWidth = scrollbarSizeAnimatedState.value.toFloat()
               val trackHeight = this.size.height - (topPaddingPx + bottomPaddingPx)
 
               val topLeft = Offset(offsetX, topPaddingPx)
@@ -298,7 +324,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
                 drawRect(
                   color = thumbColorAnimated,
                   topLeft = Offset(offsetX, offsetY),
-                  size = Size(scrollbarDimens.width.toFloat(), scrollbarHeightAdjusted),
+                  size = Size(scrollbarSizeAnimatedState.value.toFloat(), scrollbarHeightAdjusted),
                   alpha = thumbAlphaAnimated
                 )
               }

@@ -2,8 +2,6 @@ package com.github.k1rakishou.chan.ui.compose.lazylist.wrapper
 
 import androidx.compose.runtime.Stable
 
-typealias GenericLazyStateWrapper = LazyStateWrapper<LazyItemInfoWrapper, LazyLayoutInfoWrapper<LazyItemInfoWrapper>>
-
 @Stable
 interface LazyStateWrapper<T : LazyItemInfoWrapper, V : LazyLayoutInfoWrapper<T>> {
   val isScrollInProgress: Boolean

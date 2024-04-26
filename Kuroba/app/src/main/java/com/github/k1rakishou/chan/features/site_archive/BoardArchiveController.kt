@@ -203,10 +203,18 @@ class BoardArchiveController(
       contentPadding = paddingValues,
       draggableScrollbar = true
     ) {
-      items(count = searchResults.size + 1) { index ->
+      items(
+        count = searchResults.size + 1,
+        key = { index -> searchResults.getOrNull(index)?.threadDescriptor ?: "<null_${index}>" },
+        contentType = { "archive_thread_item" }
+      ) { index ->
         val archiveThreadItem = searchResults.getOrNull(index)
         if (archiveThreadItem != null) {
-          ArchiveThreadItem(index, searchResults[index], onThreadClicked)
+          ArchiveThreadItem(
+            position = index,
+            archiveThread = searchResults[index],
+            onThreadClicked = onThreadClicked
+          )
 
           if (index >= 0 && index < searchResults.size) {
             Divider(
@@ -215,17 +223,22 @@ class BoardArchiveController(
               thickness = 1.dp
             )
           }
-        } else {
-          ListFooter(
-            resultsFromSearch = resultsFromSearch,
-            searchQuery = searchQuery,
-            hasResults = searchResults.isNotEmpty(),
-            endReached = endReached,
-            page = page,
-            boardArchiveControllerState = boardArchiveControllerState,
-            viewModel = viewModel
-          )
         }
+      }
+
+      item(
+        key = "list_footer",
+        contentType = "list_footer"
+      ) {
+        ListFooter(
+          resultsFromSearch = resultsFromSearch,
+          searchQuery = searchQuery,
+          hasResults = searchResults.isNotEmpty(),
+          endReached = endReached,
+          page = page,
+          boardArchiveControllerState = boardArchiveControllerState,
+          viewModel = viewModel
+        )
       }
     }
   }

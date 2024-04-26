@@ -307,7 +307,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
         content = {
           items(
             count = searchResults.size,
-            key = { index -> searchResults.getOrNull(index)?.descriptor ?: "<null>" },
+            key = { index -> searchResults.getOrNull(index)?.descriptor ?: "<null_${index}>" },
             contentType = { "list_mode_item" }
           ) { index ->
             val navHistoryEntry = searchResults.getOrNull(index)

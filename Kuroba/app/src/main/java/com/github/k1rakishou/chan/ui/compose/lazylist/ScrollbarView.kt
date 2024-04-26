@@ -266,8 +266,8 @@ class ScrollbarView @JvmOverloads constructor(
         }
 
         val isBeingScrolledOrDragged = recyclerViewScrollState == RecyclerViewScrollState.Scrolling || isScrollbarDragged
-        val duration = if (isBeingScrolledOrDragged) 150 else 1000
-        val delay = if (isBeingScrolledOrDragged) 0 else 1000
+        val duration = if (isBeingScrolledOrDragged) 150 else 500
+        val delay = if (isBeingScrolledOrDragged) 0 else 1500
         val scrollbarWidthPx = with(density) { if (isBeingScrolledOrDragged) scrollbarWidth.roundToPx() else 0 }
 
         val thumbAlphaAnimatedState = animateFloatAsState(
@@ -325,6 +325,9 @@ class ScrollbarView @JvmOverloads constructor(
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
               if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
                 if (recyclerViewScrollState != RecyclerViewScrollState.Scrolling) {
+                  val range = recyclerView.computeVerticalScrollRange()
+                  needToDrawScrollbar = range > (recyclerView.height * 1.33f)
+
                   recyclerViewScrollState = RecyclerViewScrollState.Scrolling
                 }
               } else if (newState == RecyclerView.SCROLL_STATE_IDLE) {
@@ -342,7 +345,7 @@ class ScrollbarView @JvmOverloads constructor(
               recyclerViewScrollExtent.intValue = extent
               recyclerViewScrollRange.intValue = range
               recyclerViewScrollOffset.intValue = offset
-              needToDrawScrollbar = extent > (recyclerView.height * 1.5f)
+              needToDrawScrollbar = range > (recyclerView.height * 1.33f)
             }
           }
         }
@@ -361,35 +364,37 @@ class ScrollbarView @JvmOverloads constructor(
           Modifier.drawWithContent {
             drawContent()
 
-            drawScrollbar(
-              density = density,
-              chanTheme = chanTheme,
-              scrollbarWidthAnimatedState = scrollbarWidthAnimatedState,
-              scrollbarHeight = with(density) { scrollbarHeight.toPx() },
-              scrollbarManualDragProgress = scrollbarManualDragProgress,
-              recyclerViewPaddingsState = recyclerViewPaddingsState,
-              recyclerViewScrollExtent = recyclerViewScrollExtent,
-              recyclerViewScrollRange = recyclerViewScrollRange,
-              recyclerViewScrollOffset = recyclerViewScrollOffset,
-              thumbAlphaAnimatedState = thumbAlphaAnimatedState,
-              trackAlphaAnimatedState = trackAlphaAnimatedState,
-              thumbColorAnimatedState = thumbColorAnimatedState,
-            )
+            if (needToDrawScrollbar) {
+              drawScrollbar(
+                density = density,
+                chanTheme = chanTheme,
+                scrollbarWidthAnimatedState = scrollbarWidthAnimatedState,
+                scrollbarHeight = with(density) { scrollbarHeight.toPx() },
+                scrollbarManualDragProgress = scrollbarManualDragProgress,
+                recyclerViewPaddingsState = recyclerViewPaddingsState,
+                recyclerViewScrollExtent = recyclerViewScrollExtent,
+                recyclerViewScrollRange = recyclerViewScrollRange,
+                recyclerViewScrollOffset = recyclerViewScrollOffset,
+                thumbAlphaAnimatedState = thumbAlphaAnimatedState,
+                trackAlphaAnimatedState = trackAlphaAnimatedState,
+                thumbColorAnimatedState = thumbColorAnimatedState,
+              )
 
-            val recyclerViewPaddings = recyclerViewPaddingsState.value
+              val recyclerViewPaddings = recyclerViewPaddingsState.value
 
-            _postInfoMapItemDecoration.draw(
-              contentDrawScope = this,
-              scrollbarMarkWidth = scrollbarWidth.toPx(),
-              recyclerTopPadding = recyclerViewPaddings
-                .calculateTopPadding()
-                .toPx(),
-              recyclerBottomPadding = recyclerViewPaddings
-                .calculateBottomPadding()
-                .toPx(),
-              recyclerView = recyclerView,
-              alpha = thumbAlphaAnimatedState.value.quantize(precision = 0.33f)
-            )
+              _postInfoMapItemDecoration.draw(
+                contentDrawScope = this,
+                scrollbarMarkWidth = scrollbarWidth.toPx(),
+                recyclerTopPadding = recyclerViewPaddings
+                  .calculateTopPadding()
+                  .toPx(),
+                recyclerBottomPadding = recyclerViewPaddings
+                  .calculateBottomPadding()
+                  .toPx(),
+                recyclerView = recyclerView,
+                alpha = thumbAlphaAnimatedState.value.quantize(precision = 0.33f)
+              )
+            }
           }
         )
       }
