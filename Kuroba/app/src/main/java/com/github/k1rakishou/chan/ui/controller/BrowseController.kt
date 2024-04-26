@@ -155,10 +155,10 @@ class BrowseController(
     threadLayout.setBoardPostViewMode(ChanSettings.boardPostViewMode.get())
 
     serializedCoroutineExecutor.post {
-      val order = PostsFilter.Order.find(ChanSettings.boardOrder.get())
+      val catalogSortingOrder = PostsFilter.CatalogSortingOrder.current()
 
       threadLayout.presenter.setOrder(
-        order = order,
+        catalogSortingOrder = catalogSortingOrder,
         isManuallyChangedOrder = false
       )
     }
@@ -955,7 +955,7 @@ class BrowseController(
 
   @Suppress("MoveLambdaOutsideParentheses")
   private fun ToolbarOverflowMenuBuilder.addSortMenu() {
-    val currentOrder = PostsFilter.Order.find(ChanSettings.boardOrder.get())
+    val currentSortingOrder = PostsFilter.CatalogSortingOrder.current()
     val groupId = "catalog_sort"
 
     withOverflowMenuItem(
@@ -967,63 +967,63 @@ class BrowseController(
           id = SORT_MODE_BUMP,
           stringId = R.string.order_bump,
           visible = true,
-          checked = currentOrder == PostsFilter.Order.BUMP,
+          checked = currentSortingOrder == PostsFilter.CatalogSortingOrder.BUMP,
           groupId = groupId,
-          value = PostsFilter.Order.BUMP,
+          value = PostsFilter.CatalogSortingOrder.BUMP,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
         withCheckableOverflowMenuItem(
           id = SORT_MODE_REPLY,
           stringId = R.string.order_reply,
           visible = true,
-          checked = currentOrder == PostsFilter.Order.REPLY,
+          checked = currentSortingOrder == PostsFilter.CatalogSortingOrder.REPLY,
           groupId = groupId,
-          value = PostsFilter.Order.REPLY,
+          value = PostsFilter.CatalogSortingOrder.REPLY,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
         withCheckableOverflowMenuItem(
           id = SORT_MODE_IMAGE,
           stringId = R.string.order_image,
           visible = true,
-          checked = currentOrder == PostsFilter.Order.IMAGE,
+          checked = currentSortingOrder == PostsFilter.CatalogSortingOrder.IMAGE,
           groupId = groupId,
-          value = PostsFilter.Order.IMAGE,
+          value = PostsFilter.CatalogSortingOrder.IMAGE,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
         withCheckableOverflowMenuItem(
           id = SORT_MODE_NEWEST,
           stringId = R.string.order_newest,
           visible = true,
-          checked = currentOrder == PostsFilter.Order.NEWEST,
+          checked = currentSortingOrder == PostsFilter.CatalogSortingOrder.NEWEST,
           groupId = groupId,
-          value = PostsFilter.Order.NEWEST,
+          value = PostsFilter.CatalogSortingOrder.NEWEST,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
         withCheckableOverflowMenuItem(
           id = SORT_MODE_OLDEST,
           stringId = R.string.order_oldest,
           visible = true,
-          checked = currentOrder == PostsFilter.Order.OLDEST,
+          checked = currentSortingOrder == PostsFilter.CatalogSortingOrder.OLDEST,
           groupId = groupId,
-          value = PostsFilter.Order.OLDEST,
+          value = PostsFilter.CatalogSortingOrder.OLDEST,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
         withCheckableOverflowMenuItem(
           id = SORT_MODE_MODIFIED,
           stringId = R.string.order_modified,
           visible = true,
-          checked = currentOrder == PostsFilter.Order.MODIFIED,
+          checked = currentSortingOrder == PostsFilter.CatalogSortingOrder.MODIFIED,
           groupId = groupId,
-          value = PostsFilter.Order.MODIFIED,
+          value = PostsFilter.CatalogSortingOrder.MODIFIED,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
         withCheckableOverflowMenuItem(
           id = SORT_MODE_ACTIVITY,
           stringId = R.string.order_activity,
           visible = true,
-          checked = currentOrder == PostsFilter.Order.ACTIVITY,
+          checked = currentSortingOrder == PostsFilter.CatalogSortingOrder.ACTIVITY,
           groupId = groupId,
-          value = PostsFilter.Order.ACTIVITY,
+          value = PostsFilter.CatalogSortingOrder.ACTIVITY,
           onClick = { subItem -> onSortItemClicked(subItem) }
         )
       }
@@ -1032,14 +1032,24 @@ class BrowseController(
 
   private fun onSortItemClicked(subItem: ToolbarMenuCheckableOverflowItem) {
     serializedCoroutineExecutor.post {
-      val order = subItem.value as? PostsFilter.Order
+      val catalogSortingOrder = subItem.value as? PostsFilter.CatalogSortingOrder
         ?: return@post
 
-      ChanSettings.boardOrder.set(order.orderName)
+      ChanSettings.boardOrder.set(catalogSortingOrder.orderName)
       toolbarState.checkOrUncheckItem(subItem, true)
 
       val presenter = threadLayout.presenter
-      presenter.setOrder(order, isManuallyChangedOrder = true)
+
+      val currentChanDescriptor = chanDescriptor
+      if (
+        currentChanDescriptor is ChanDescriptor.CompositeCatalogDescriptor &&
+        !PostsFilter.CatalogSortingOrder.current().isBump &&
+        !presenter.isCompositeCatalogFullyLoaded(currentChanDescriptor)
+      ) {
+        presenter.loadWholeCompositeCatalog()
+      } else {
+        presenter.setOrder(catalogSortingOrder, isManuallyChangedOrder = true)
+      }
     }
   }
 

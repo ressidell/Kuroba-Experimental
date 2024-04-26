@@ -495,7 +495,7 @@ class Chan : Application(), ActivityLifecycleCallbacks {
     return ChanSettingsInfo(
       applicationId = BuildConfig.APPLICATION_ID,
       isTablet = isTablet(),
-      defaultFilterOrderName = PostsFilter.Order.BUMP.orderName,
+      defaultFilterOrderName = PostsFilter.CatalogSortingOrder.BUMP.orderName,
       isDevBuild = isDevBuild(),
       isBetaBuild = AppModuleAndroidUtils.isBetaBuild(),
       bookmarkGridViewInfo = BookmarkGridViewInfo(

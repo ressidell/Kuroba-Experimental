@@ -612,7 +612,11 @@ class ThreadPresenter @Inject constructor(
     // no-op
   }
 
-  suspend fun loadWholeCompositeCatalog() {
+  fun isCompositeCatalogFullyLoaded(catalogDescriptor: ChanDescriptor.ICatalogDescriptor): Boolean {
+    return chanCatalogSnapshotCache.get(catalogDescriptor)?.isEndReached == true
+  }
+
+  fun loadWholeCompositeCatalog() {
     BackgroundUtils.ensureMainThread()
     Logger.d(TAG, "loadWholeCompositeCatalog() start")
 
@@ -662,9 +666,8 @@ class ThreadPresenter @Inject constructor(
       null
     }
 
-    @Suppress("SuspendFunctionOnCoroutineScope")
     currentFullLoadThreadJob = launch {
-      this.coroutineContext[Job.Key]?.invokeOnCompletion { cause ->
+      coroutineContext[Job.Key]?.invokeOnCompletion { cause ->
         if (cause is CancellationException) {
           Logger.d(TAG, "loadWholeCompositeCatalog() canceled")
         }
@@ -684,6 +687,8 @@ class ThreadPresenter @Inject constructor(
 
         return@launch
       }
+
+      threadPresenterCallback?.showLoading()
 
       var lastThreadLoadResult: ThreadLoadResult? = null
 
@@ -711,8 +716,6 @@ class ThreadPresenter @Inject constructor(
           Logger.d(TAG, "loadWholeCompositeCatalog() nextDescriptorToLoad == null exiting")
           break
         }
-
-        threadPresenterCallback?.showLoading()
 
         val message = "Loading catalog '${nextDescriptorToLoad.userReadableString()}' " +
           "${catalogPageToLoad}/${totalCatalogPages}"
@@ -792,13 +795,13 @@ class ThreadPresenter @Inject constructor(
       return
     }
 
-    Logger.d(TAG, "normalLoad(currentChanDescriptor=$currentChanDescriptor\nshowLoading=$showLoading\n" +
-      "chanCacheUpdateOptions=$chanCacheUpdateOptions\nchanLoadOptions=$chanLoadOptions\n" +
-      "chanCacheOptions=$chanCacheOptions\nchanReadOptions=$chanReadOptions)")
-
-    chanThreadLoadingState = ChanThreadLoadingState.Loading
-
     currentNormalLoadThreadJob = launch {
+      Logger.d(TAG, "normalLoad(currentChanDescriptor=$currentChanDescriptor\nshowLoading=$showLoading\n" +
+        "chanCacheUpdateOptions=$chanCacheUpdateOptions\nchanLoadOptions=$chanLoadOptions\n" +
+        "chanCacheOptions=$chanCacheOptions\nchanReadOptions=$chanReadOptions)")
+
+      chanThreadLoadingState = ChanThreadLoadingState.Loading
+
       if (!chanThreadManager.addRequestedChanDescriptor(currentChanDescriptor)) {
         if (verboseLogs) {
           Logger.d(TAG, "normalLoad() skipping $currentChanDescriptor because it was already requested")
@@ -886,7 +889,7 @@ class ThreadPresenter @Inject constructor(
             )
           }
 
-          Logger.d(TAG, "onChanLoaderData(${threadLoadResult.chanDescriptor}) end, took $time")
+          Logger.d(TAG, "normalLoad() onChanLoaderData(${threadLoadResult.chanDescriptor}) end, took $time")
 
           if (!successfullyProcessedNewPosts) {
             val error = getPossibleChanLoadError(currentChanDescriptor)
@@ -894,6 +897,24 @@ class ThreadPresenter @Inject constructor(
           } else if (currentChanDescriptor is ChanDescriptor.ICatalogDescriptor) {
             chanCatalogSnapshotCache.get(currentChanDescriptor)
               ?.onCatalogLoaded(catalogPageToLoad)
+
+            // Load the rest of composite catalog right away after the first page is loaded. We need to do this when loading
+            // a composite catalog with sorting order not set to BUMP.
+            if (
+              currentChanDescriptor is ChanDescriptor.CompositeCatalogDescriptor &&
+              !PostsFilter.CatalogSortingOrder.current().isBump
+            ) {
+              Logger.debug(TAG) {
+                "normalLoad() currentChanDescriptor is CompositeCatalogDescriptor and current catalog sorting order is not BUMP. " +
+                  "Loading the whole composite catalog."
+              }
+
+              currentNormalLoadThreadJob = null
+              chanThreadLoadingState = ChanThreadLoadingState.Uninitialized
+
+              loadWholeCompositeCatalog()
+              return@launch
+            }
           }
         }
       }
@@ -967,7 +988,7 @@ class ThreadPresenter @Inject constructor(
     return true
   }
 
-  suspend fun setOrder(order: PostsFilter.Order, isManuallyChangedOrder: Boolean) {
+  suspend fun setOrder(catalogSortingOrder: PostsFilter.CatalogSortingOrder, isManuallyChangedOrder: Boolean) {
     if (isBound) {
       if (isManuallyChangedOrder) {
         scrollTo(0)
@@ -2746,7 +2767,7 @@ class ThreadPresenter @Inject constructor(
       return
     }
 
-    val order = PostsFilter.Order.find(ChanSettings.boardOrder.get())
+    val catalogSortingOrder = PostsFilter.CatalogSortingOrder.current()
 
     // When processing filters which create new post hides we need to reparse those posts so that
     // their replies have the correct postlinkable types (QUOTE_TO_HIDDEN_OR_REMOVED_POST)
@@ -2757,7 +2778,7 @@ class ThreadPresenter @Inject constructor(
       filter = PostsFilter(
         chanLoadProgressNotifier = chanLoadProgressNotifier,
         postHideHelper = postHideHelper,
-        order = order
+        catalogSortingOrder = catalogSortingOrder
       ),
       refreshPostPopupHelperPosts = refreshPostPopupHelperPosts,
       additionalPostsToReparse = additionalPostsToReparse

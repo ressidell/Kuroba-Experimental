@@ -29,7 +29,6 @@ import com.github.k1rakishou.model.source.cache.thread.ChanThreadsCache
 import com.github.k1rakishou.model.util.ChanPostUtils
 import dagger.Lazy
 import okhttp3.HttpUrl
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 class ChanThreadManager(
@@ -473,7 +472,6 @@ class ChanThreadManager(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   private suspend fun loadInternal(
     page: Int?,
     compositeCatalogDescriptor: ChanDescriptor.CompositeCatalogDescriptor?,

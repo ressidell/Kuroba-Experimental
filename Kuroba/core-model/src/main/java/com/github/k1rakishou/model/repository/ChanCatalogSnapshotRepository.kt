@@ -12,7 +12,6 @@ import com.github.k1rakishou.model.source.local.ChanCatalogSnapshotLocalSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
 class ChanCatalogSnapshotRepository(
@@ -27,7 +26,6 @@ class ChanCatalogSnapshotRepository(
   @GuardedBy("mutex")
   private val alreadyPreloadedSet = hashSetWithCap<ChanDescriptor.CatalogDescriptor>(128)
 
-  @OptIn(ExperimentalTime::class)
   suspend fun preloadChanCatalogSnapshot(
     catalogDescriptor: ChanDescriptor.CatalogDescriptor,
     isUnlimitedCatalog: Boolean

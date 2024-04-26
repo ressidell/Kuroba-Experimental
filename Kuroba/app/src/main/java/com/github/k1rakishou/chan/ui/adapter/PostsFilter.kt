@@ -1,21 +1,6 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.ui.adapter
 
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.helper.ChanLoadProgressEvent
 import com.github.k1rakishou.chan.core.helper.ChanLoadProgressNotifier
 import com.github.k1rakishou.chan.core.helper.PostHideHelper
@@ -31,7 +16,7 @@ import java.util.*
 class PostsFilter(
   private val chanLoadProgressNotifier: ChanLoadProgressNotifier,
   private val postHideHelper: PostHideHelper,
-  private val order: Order
+  private val catalogSortingOrder: CatalogSortingOrder
 ) {
 
   suspend fun applyFilter(
@@ -47,8 +32,8 @@ class PostsFilter(
       )
     )
 
-    if (order != Order.BUMP && chanDescriptor is ChanDescriptor.ICatalogDescriptor) {
-      processOrder(order, posts as MutableList<ChanOriginalPost>)
+    if (catalogSortingOrder != CatalogSortingOrder.BUMP && chanDescriptor is ChanDescriptor.ICatalogDescriptor) {
+      processOrder(catalogSortingOrder, posts as MutableList<ChanOriginalPost>)
     }
 
     // Process hidden by filter and post/thread hiding
@@ -67,7 +52,7 @@ class PostsFilter(
     return indexedPosts
   }
 
-  enum class Order(var orderName: String) {
+  enum class CatalogSortingOrder(val orderName: String) {
     BUMP("bump"),
     REPLY("reply"),
     IMAGE("image"),
@@ -76,16 +61,15 @@ class PostsFilter(
     MODIFIED("modified"),
     ACTIVITY("activity");
 
-    companion object {
-      fun find(name: String): Order {
-        return values().firstOrNull { it.orderName == name }
-          ?: BUMP
-      }
+    val isBump: Boolean
+      get() = this == BUMP
 
-      @JvmStatic
-      fun isNotBumpOrder(orderString: String): Boolean {
-        val o = find(orderString)
-        return BUMP != o
+    companion object {
+      fun current(): CatalogSortingOrder {
+        val borderOrderName = ChanSettings.boardOrder.get()
+
+        return entries.firstOrNull { it.orderName == borderOrderName }
+          ?: BUMP
       }
     }
   }
@@ -93,15 +77,15 @@ class PostsFilter(
   companion object {
     private const val TAG = "PostsFilter"
 
-    fun processOrder(order: Order, posts: List<ChanOriginalPost>) {
-      when (order) {
-        Order.IMAGE -> Collections.sort(posts, IMAGE_COMPARATOR)
-        Order.REPLY -> Collections.sort(posts, REPLY_COMPARATOR)
-        Order.NEWEST -> Collections.sort(posts, NEWEST_COMPARATOR)
-        Order.OLDEST -> Collections.sort(posts, OLDEST_COMPARATOR)
-        Order.MODIFIED -> Collections.sort(posts, MODIFIED_COMPARATOR)
-        Order.ACTIVITY -> Collections.sort(posts, THREAD_ACTIVITY_COMPARATOR)
-        Order.BUMP -> {
+    fun processOrder(catalogSortingOrder: CatalogSortingOrder, posts: List<ChanOriginalPost>) {
+      when (catalogSortingOrder) {
+        CatalogSortingOrder.IMAGE -> Collections.sort(posts, IMAGE_COMPARATOR)
+        CatalogSortingOrder.REPLY -> Collections.sort(posts, REPLY_COMPARATOR)
+        CatalogSortingOrder.NEWEST -> Collections.sort(posts, NEWEST_COMPARATOR)
+        CatalogSortingOrder.OLDEST -> Collections.sort(posts, OLDEST_COMPARATOR)
+        CatalogSortingOrder.MODIFIED -> Collections.sort(posts, MODIFIED_COMPARATOR)
+        CatalogSortingOrder.ACTIVITY -> Collections.sort(posts, THREAD_ACTIVITY_COMPARATOR)
+        CatalogSortingOrder.BUMP -> {
           // no-op
         }
       }

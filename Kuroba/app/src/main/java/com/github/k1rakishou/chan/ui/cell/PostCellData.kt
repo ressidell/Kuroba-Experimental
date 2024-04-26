@@ -60,7 +60,7 @@ data class PostCellData(
   private val markedPostNo: Long?,
   var showDivider: Boolean,
   var boardPostViewMode: ChanSettings.BoardPostViewMode,
-  val boardPostsSortOrder: PostsFilter.Order,
+  val boardPostsSortOrder: PostsFilter.CatalogSortingOrder,
   val boardPage: BoardPage?,
   val neverShowPages: Boolean,
   val tapNoReply: Boolean,
@@ -806,7 +806,7 @@ data class PostCellData(
 
     if (!isViewingThread
       && !neverShowPages
-      && boardPostsSortOrder != PostsFilter.Order.BUMP
+      && boardPostsSortOrder != PostsFilter.CatalogSortingOrder.BUMP
       && boardPage != null
     ) {
       catalogRepliesTextBuilder
@@ -913,7 +913,7 @@ data class PostCellData(
 
       if (isViewingCatalog
         && !neverShowPages
-        && boardPostsSortOrder != PostsFilter.Order.BUMP
+        && boardPostsSortOrder != PostsFilter.CatalogSortingOrder.BUMP
         && boardPage != null
       ) {
         if (isNotEmpty()) {

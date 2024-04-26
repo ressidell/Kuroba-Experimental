@@ -247,7 +247,7 @@ class ThreadCellData(
 
     val textSizeSp = ChanSettings.fontSize.get().toInt()
     val detailsSizeSp = ChanSettings.detailsSizeSp()
-    val boardPostsSortOrder = PostsFilter.Order.find(ChanSettings.boardOrder.get())
+    val boardPostsSortOrder = PostsFilter.CatalogSortingOrder.current()
     val neverShowPages = ChanSettings.neverShowPages.get()
     val tapNoReply = ChanSettings.tapNoReply.get()
     val postFullDate = ChanSettings.postFullDate.get()
