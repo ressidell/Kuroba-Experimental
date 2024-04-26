@@ -99,9 +99,10 @@ class BoardArchiveController(
         ComposeEntrypoint {
           val chanTheme = LocalChanTheme.current
 
-          Box(modifier = Modifier
-            .fillMaxSize()
-            .background(chanTheme.backColorCompose)
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .background(chanTheme.backColorCompose)
           ) {
             BuildContent()
           }

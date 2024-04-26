@@ -93,7 +93,7 @@ fun LazyColumnWithFastScroller(
 
   var scrollbarDragProgress by remember(draggableScrollbar) { mutableStateOf<Float?>(null) }
 
-  BoxWithConstraints(modifier = modifier) {
+  BoxWithConstraints {
     val maxWidthPx = with(density) { maxWidth.toPx().toInt() }
     val maxHeightPx = with(density) { maxHeight.toPx().toInt() }
 
@@ -123,19 +123,21 @@ fun LazyColumnWithFastScroller(
         )
     ) {
       LazyColumn(
-        modifier = Modifier
-          .scrollbar(
-            lazyStateWrapper = lazyListStateWrapper,
-            scrollbarDimens = ScrollbarDimens.Vertical.Static(
-              width = scrollbarWidth,
-              height = scrollbarHeight
-            ),
-            scrollbarTrackColor = chanTheme.scrollbarTrackColorCompose,
-            scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
-            scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
-            contentPadding = contentPadding,
-            scrollbarManualDragProgress = scrollbarDragProgress
-          ),
+        modifier = modifier.then(
+          Modifier
+            .scrollbar(
+              lazyStateWrapper = lazyListStateWrapper,
+              scrollbarDimens = ScrollbarDimens.Vertical.Static(
+                width = scrollbarWidth,
+                height = scrollbarHeight
+              ),
+              scrollbarTrackColor = chanTheme.scrollbarTrackColorCompose,
+              scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
+              scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
+              contentPadding = contentPadding,
+              scrollbarManualDragProgress = scrollbarDragProgress
+            )
+        ),
         reverseLayout = reverseLayout,
         verticalArrangement = verticalArrangement,
         horizontalAlignment = horizontalAlignment,
