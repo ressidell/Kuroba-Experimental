@@ -12,6 +12,7 @@ import android.widget.Scroller
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.navigation.NavigationController
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import kotlin.math.abs
 import kotlin.math.max
@@ -19,6 +20,7 @@ import kotlin.math.min
 
 class ThreadControllerTracker(
   context: Context,
+  private val globalUiStateHolder: GlobalUiStateHolder,
   private val getWidthFunc: () -> Int,
   private val getHeightFunc: () -> Int,
   private val invalidateFunc: () -> Unit,
@@ -56,13 +58,8 @@ class ThreadControllerTracker(
       return false
     }
 
-    val shouldNotInterceptTouchEvent = tracking
-      || navController.isBlockingInput
-      || !(navController.topController?.swipeable ?: false)
-      || getBelowTop() == null
-      || ChanSettings.isSplitLayoutMode()
-
-    if (shouldNotInterceptTouchEvent) {
+    val shouldIgnoreTouchEvent = shouldIgnoreTouchEvent(navController)
+    if (shouldIgnoreTouchEvent) {
       return false
     }
 
@@ -261,6 +258,48 @@ class ThreadControllerTracker(
     trackingController!!.view.translationX = translationX.toFloat()
     navigationController.swipeTransitionProgress(1f - (translationX / getWidthFunc().toFloat()))
     invalidateFunc()
+  }
+
+  private fun shouldIgnoreTouchEvent(
+    navController: NavigationController
+  ): Boolean {
+
+    if (tracking) {
+      return true
+    }
+
+    if (navController.isBlockingInput) {
+      return true
+    }
+
+    val topController = navController.topController
+    if (topController?.swipeable != true) {
+      return true
+    }
+
+    val toolbarState = topController.toolbarState
+    if (toolbarState.topToolbar?.kind?.isDefaultToolbar() != true) {
+      // Do not allow swiping to close controller when the controller in not in default toolbar mode
+      // (reply/selection/search/etc)
+      return true
+    }
+
+    val controllersHoldingBottomPanel = globalUiStateHolder.bottomPanel.controllersHoldingBottomPanel.value
+    if (topController.controllerKey in controllersHoldingBottomPanel) {
+      // Do not allow swiping to close controller when the controller uses bottom panel
+      return true
+    }
+
+    val belowTop = getBelowTop() == null
+    if (belowTop) {
+      return true
+    }
+
+    if (ChanSettings.isSplitLayoutMode()) {
+      return true
+    }
+
+    return false
   }
 
   private fun getBelowTop(): Controller? {

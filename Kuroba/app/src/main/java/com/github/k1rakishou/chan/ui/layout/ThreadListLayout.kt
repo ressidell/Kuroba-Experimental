@@ -797,6 +797,11 @@ class ThreadListLayout @JvmOverloads constructor(
       return true
     }
 
+    if (threadListLayoutCallback?.kurobaToolbarState?.topToolbar?.kind?.isDefaultToolbar() != true) {
+      // Disable SwipeRefresh layout when in search/reply/selection mode
+      return true
+    }
+
     return recyclerView.canScrollVertically(-1)
   }
 

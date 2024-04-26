@@ -286,6 +286,11 @@ class BookmarksController(
         return@setOnChildScrollUpCallback true
       }
 
+      if (toolbarState.topToolbar?.kind?.isDefaultToolbar() != true) {
+        // Disable SwipeRefresh layout when in search/selection mode
+        return@setOnChildScrollUpCallback true
+      }
+
       return@setOnChildScrollUpCallback epoxyRecyclerView.canScrollVertically(-1)
     }
 

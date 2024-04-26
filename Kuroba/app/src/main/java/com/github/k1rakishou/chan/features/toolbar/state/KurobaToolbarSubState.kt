@@ -178,6 +178,20 @@ enum class ToolbarStateKind {
   Selection,
   Reply;
 
+  fun isDefaultToolbar(): Boolean {
+    return when (this) {
+      Container,
+      Catalog,
+      Thread,
+      Default -> true
+      ThreadSearch,
+      Search,
+      CatalogSearch,
+      Selection,
+      Reply -> false
+    }
+  }
+
   fun needForceShowToolbar(): Boolean {
     return when (this) {
       Container,

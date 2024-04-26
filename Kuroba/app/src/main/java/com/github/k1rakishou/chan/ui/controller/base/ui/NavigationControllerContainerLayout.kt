@@ -53,6 +53,7 @@ class NavigationControllerContainerLayout : FrameLayout {
 
     controllerTracker = ThreadControllerTracker(
       context = context,
+      globalUiStateHolder = globalUiStateHolder,
       getWidthFunc = { this.width },
       getHeightFunc = { this.height },
       invalidateFunc = { invalidate() },
