@@ -11,8 +11,8 @@ interface SnackbarManager {
   val snackbarEventFlow: SharedFlow<SnackbarInfoEvent>
   val swipedAwaySnackbars: SharedFlow<SnackbarInfo>
 
-  fun onControllerCreated(navigatorLevel: Int, controllerKey: ControllerKey)
-  fun onControllerDestroyed(navigatorLevel: Int, controllerKey: ControllerKey)
+  fun onControllerCreated(controllerKey: ControllerKey)
+  fun onControllerDestroyed(controllerKey: ControllerKey)
   fun onSnackbarSwipedAway(snackbarInfo: SnackbarInfo)
 
   fun snackbar(

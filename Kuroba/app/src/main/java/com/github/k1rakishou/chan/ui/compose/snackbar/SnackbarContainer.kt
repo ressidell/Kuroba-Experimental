@@ -163,8 +163,8 @@ fun SnackbarContainer(
               is SnackbarInfoEvent.Pop -> {
                 snackbarState.popSnackbar(snackbarInfoEvent.id)
               }
-              is SnackbarInfoEvent.RemoveAllForControllerKeys -> {
-                snackbarState.popAllOnControllers(snackbarInfoEvent.controllerKeys)
+              is SnackbarInfoEvent.PopAll -> {
+                snackbarState.popAll()
               }
             }
           }
@@ -421,7 +421,8 @@ private fun KurobaSnackbarItem(
 
           when (latestSnackbarAnimation) {
             is SnackbarAnimation.Push,
-            is SnackbarAnimation.Pop -> {
+            is SnackbarAnimation.Pop,
+            is SnackbarAnimation.Remove -> {
               fadeInOrOutAnimationJob?.cancel()
               fadeInOrOutAnimationJob = launch {
                 animateFadeInOrOut(
@@ -589,6 +590,9 @@ private suspend fun animateFadeInOrOut(
           val animatedAlpha = (0f * maxSnackbarAlpha)
           onAnimationTick(animatedAlpha)
         }
+      }
+      is SnackbarAnimation.Remove -> {
+        onAnimationTick(0f)
       }
     }
   } finally {

@@ -129,7 +129,7 @@ abstract class Controller(
     private set
 
   private val job = SupervisorJob()
-  protected val snackbarManager by lazy { snackbarManagerFactory.snackbarManager(snackbarScope) }
+  protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) { snackbarManagerFactory.snackbarManager(snackbarScope) }
   protected var controllerScope = CoroutineScope(job + Dispatchers.Main + CoroutineName("Controller_${this::class.java.simpleName}"))
 
   private val _navigationFlags = mutableStateOf<DeprecatedNavigationFlags>(DeprecatedNavigationFlags())
@@ -279,6 +279,7 @@ abstract class Controller(
       (controller.navigationController as StyledToolbarNavigationController).onChildControllerPushed(controller)
     }
 
+    snackbarManager.onControllerCreated(controllerKey)
     _topControllerState.value = topController
   }
 
@@ -302,6 +303,7 @@ abstract class Controller(
     }
 
     kurobaToolbarStateManager.remove(controller.controllerKey)
+    snackbarManager.onControllerDestroyed(controllerKey)
     _topControllerState.value = topController
   }
 

@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.unit.IntSize
-import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.common.iteration
 
 
@@ -66,8 +65,13 @@ class SnackbarState(
     }
   }
 
-  fun popAllOnControllers(controllerKeys: Set<ControllerKey>) {
-    // TODO: New snackbars.
+  fun popAll() {
+    _activeSnackbars.forEach { snackbarInfo ->
+      val snackbarIdForCompose = snackbarInfo.snackbarIdForCompose
+      _snackbarAnimations[snackbarIdForCompose] = SnackbarAnimation.Remove(snackbarIdForCompose)
+    }
+
+    isSnackbarVisible = false
   }
 
   fun onSnackbarSwipedAway(snackbarIdForCompose: Long) {
@@ -88,7 +92,8 @@ class SnackbarState(
       is SnackbarAnimation.Push -> {
         // no-op
       }
-      is SnackbarAnimation.Pop -> {
+      is SnackbarAnimation.Pop,
+      is SnackbarAnimation.Remove -> {
         val indexOfSnackbar = _activeSnackbars.indexOfFirst { snackbarInfo -> 
           snackbarInfo.snackbarIdForCompose == snackbarAnimation.snackbarId 
         }

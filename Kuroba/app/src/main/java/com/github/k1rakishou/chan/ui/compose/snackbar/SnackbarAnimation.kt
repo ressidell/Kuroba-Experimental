@@ -14,6 +14,10 @@ sealed class SnackbarAnimation {
     override val snackbarId: Long
   ) : SnackbarAnimation()
 
+  data class Remove(
+    override val snackbarId: Long
+  ) : SnackbarAnimation()
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false

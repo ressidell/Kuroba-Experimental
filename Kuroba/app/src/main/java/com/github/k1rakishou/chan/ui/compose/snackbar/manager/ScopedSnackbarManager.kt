@@ -38,14 +38,15 @@ abstract class ScopedSnackbarManager(
 
   private val _currentActiveControllers = mutableSetOf<ControllerKey>()
 
-  override fun onControllerCreated(navigatorLevel: Int, controllerKey: ControllerKey) {
-    _snackbarEventFlow.tryEmit(SnackbarInfoEvent.RemoveAllForControllerKeys(_currentActiveControllers))
+  override fun onControllerCreated(controllerKey: ControllerKey) {
     _currentActiveControllers += controllerKey
   }
 
-  override fun onControllerDestroyed(navigatorLevel: Int, controllerKey: ControllerKey) {
-    _snackbarEventFlow.tryEmit(SnackbarInfoEvent.RemoveAllForControllerKeys(setOf(controllerKey)))
+  override fun onControllerDestroyed(controllerKey: ControllerKey) {
     _currentActiveControllers -= controllerKey
+    if (_currentActiveControllers.isEmpty()) {
+      _snackbarEventFlow.tryEmit(SnackbarInfoEvent.PopAll)
+    }
   }
 
   override fun onSnackbarSwipedAway(snackbarInfo: SnackbarInfo) {
