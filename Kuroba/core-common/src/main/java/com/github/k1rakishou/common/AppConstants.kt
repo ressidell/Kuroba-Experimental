@@ -7,6 +7,7 @@ import android.os.Debug
 import android.webkit.WebSettings
 import com.github.k1rakishou.core_logger.Logger
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.acra.ACRA
 import java.io.File
 import java.util.regex.Pattern
 
@@ -34,6 +35,11 @@ open class AppConstants(
     if (overriddenUserAgent.isNotBlank()) {
       Logger.d(TAG, "userAgent() Using overridden user agent: \'${overriddenUserAgent}\'")
       return@lazy overriddenUserAgent
+    }
+
+    if (ACRA.isACRASenderServiceProcess()) {
+      Logger.d(TAG, "userAgent() ACRA process detected, using custom user-agent")
+      return@lazy String.format(USER_AGENT_FORMAT, Build.VERSION.RELEASE, Build.MODEL)
     }
 
     try {

@@ -44,6 +44,8 @@ dependencies {
     implementation "com.google.code.gson:gson:${versions.gson}"
     implementation "org.jsoup:jsoup:${versions.jsoup}"
 
+    implementation("ch.acra:acra-core:${versions.acra}")
+
     implementation("com.squareup.moshi:moshi-kotlin:${versions.moshi}")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:${versions.moshi}")
 

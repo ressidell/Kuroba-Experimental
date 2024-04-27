@@ -58,7 +58,6 @@ import com.github.k1rakishou.chan.features.settings.screens.delegate.ExportBacku
 import com.github.k1rakishou.chan.ui.compose.InsetsAwareBox
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCollapsableContent
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDivider
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextButton
 import com.github.k1rakishou.chan.ui.compose.ktu
@@ -87,11 +86,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.acra.ktx.sendWithAcra
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.format.DateTimeFormatterBuilder
 import org.joda.time.format.ISODateTimeFormat
 import java.io.IOException
+import java.util.*
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
@@ -144,24 +145,22 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
       return
     }
 
-    val className = bundle.getString(EXCEPTION_CLASS_NAME_KEY)
-    val message = bundle.getString(EXCEPTION_MESSAGE_KEY)
-    val stacktrace = bundle.getString(EXCEPTION_STACKTRACE_KEY)
+    val exception = CrashReportActivity.exception
+    CrashReportActivity.exception = null
+
     val userAgent = bundle.getString(USER_AGENT_KEY) ?: "No user-agent"
     val appLifetime = bundle.getString(APP_LIFE_TIME_KEY) ?: "-1"
 
-    if (className == null || message == null || stacktrace == null) {
-      Logger.e(
-        TAG,
-        "Bad bundle params. " +
-          "className is null (${className == null}), " +
-          "message is null (${message == null}), " +
-          "stacktrace is null (${stacktrace == null})"
-      )
+    if (exception == null) {
+      Logger.e(TAG, "Bad bundle params. Exception is null")
 
       finish()
       return
     }
+
+    val message = extractExceptionMessage(exception) ?: "<No message>"
+    val stacktrace = exception.stackTraceToString()
+    val className = exception::class.java.name
 
     activityComponent = Chan.getComponent()
       .activityComponentBuilder()
@@ -178,7 +177,7 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
     globalWindowInsetsManager.listenForWindowInsetsChanges(window, null)
     appRestarter.attachActivity(this)
 
-    Logger.e(TAG, "Got new exception: ${className}")
+    Logger.e(TAG, "Got new exception: '${className}'")
 
     window.setupEdgeToEdge()
     window.setupStatusAndNavBarColors(themeEngine.chanTheme)
@@ -186,6 +185,7 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
     setContent {
       ComposeEntrypoint {
         Content(
+          exception = exception,
           className = className,
           message = message,
           stacktrace = stacktrace,
@@ -231,6 +231,7 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
 
   @Composable
   private fun Content(
+    exception: Throwable,
     className: String,
     message: String,
     stacktrace: String,
@@ -248,6 +249,7 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
     val logs = logsMut
 
     var blockButtons by rememberSaveable { mutableStateOf(false) }
+    var crashReportSent by rememberSaveable { mutableStateOf(false) }
 
     var crashMessageSectionCollapsed by rememberSaveable { mutableStateOf(false) }
     var stacktraceSectionCollapsed by rememberSaveable { mutableStateOf(true) }
@@ -465,47 +467,24 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
 
           KurobaComposeTextButton(
             modifier = Modifier.wrapContentWidth(),
-            enabled = !blockButtons,
-            text = stringResource(id = R.string.crash_report_activity_import_backup),
+            enabled = !blockButtons && !crashReportSent,
+            text = if (crashReportSent) {
+              stringResource(id = R.string.crash_report_activity_crash_report_sent)
+            } else {
+              stringResource(id = R.string.crash_report_activity_report_crash)
+            },
             onClick = {
-              coroutineScope.launch {
-                blockButtons = true
-                try {
-                  importFromBackup(context)
-                } finally {
-                  blockButtons = false
-                }
+              blockButtons = true
+              try {
+                exception.sendWithAcra()
+                crashReportSent = true
+              } finally {
+                blockButtons = false
               }
             }
           )
 
-          Spacer(modifier = Modifier.height(16.dp))
-
-          KurobaComposeTextButton(
-            modifier = Modifier.wrapContentWidth(),
-            enabled = !blockButtons,
-            text = stringResource(id = R.string.crash_report_activity_export_backup),
-            onClick = {
-              coroutineScope.launch {
-                blockButtons = true
-                try {
-                  exportToBackup(context)
-                } finally {
-                  blockButtons = false
-                }
-              }
-            }
-          )
-
-          Spacer(modifier = Modifier.height(8.dp))
-
-          KurobaComposeDivider(
-            modifier = Modifier
-              .weight(1f)
-              .height(1.dp)
-          )
-
-          Spacer(modifier = Modifier.height(8.dp))
+          Spacer(modifier = Modifier.height(32.dp))
 
           KurobaComposeTextButton(
             modifier = Modifier.wrapContentWidth(),
@@ -543,6 +522,43 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
             text = stringResource(id = R.string.crash_report_activity_restart_the_app),
             onClick = { appRestarter.restart() }
           )
+
+          Spacer(modifier = Modifier.height(32.dp))
+
+          KurobaComposeTextButton(
+            modifier = Modifier.wrapContentWidth(),
+            enabled = !blockButtons,
+            text = stringResource(id = R.string.crash_report_activity_import_backup),
+            onClick = {
+              coroutineScope.launch {
+                blockButtons = true
+                try {
+                  importFromBackup(context)
+                } finally {
+                  blockButtons = false
+                }
+              }
+            }
+          )
+
+          Spacer(modifier = Modifier.height(16.dp))
+
+          KurobaComposeTextButton(
+            modifier = Modifier.wrapContentWidth(),
+            enabled = !blockButtons,
+            text = stringResource(id = R.string.crash_report_activity_export_backup),
+            onClick = {
+              coroutineScope.launch {
+                blockButtons = true
+                try {
+                  exportToBackup(context)
+                } finally {
+                  blockButtons = false
+                }
+              }
+            }
+          )
+
         }
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -706,13 +722,46 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
       .ignore()
   }
 
+  private fun extractExceptionMessage(exception: Throwable): String? {
+    var message = exception.message
+    var throwable: Throwable? = exception
+
+    val processed = IdentityHashMap<Throwable, Unit>()
+    processed.put(exception, Unit)
+
+    while (true) {
+      if (throwable == null) {
+        break
+      }
+
+      val parentMessage = throwable.message
+      if (parentMessage.isNullOrEmpty()) {
+        break
+      }
+
+      throwable = throwable.cause
+
+      if (throwable != null && processed.contains(throwable)) {
+        break
+      }
+
+      val isAppStacktrace = throwable
+        ?.stackTrace
+        ?.any { stackTraceElement -> stackTraceElement.className.contains("com.github.k1rakishou") }
+        ?: false
+
+      if (isAppStacktrace) {
+        message = parentMessage
+      }
+    }
+
+    return message
+  }
+
   companion object {
     private const val TAG = "CrashReportActivity"
 
     const val EXCEPTION_BUNDLE_KEY = "exception_bundle"
-    const val EXCEPTION_CLASS_NAME_KEY = "exception_class_name"
-    const val EXCEPTION_MESSAGE_KEY = "exception_message"
-    const val EXCEPTION_STACKTRACE_KEY = "exception_stacktrace"
     const val USER_AGENT_KEY = "user_agent"
     const val APP_LIFE_TIME_KEY = "app_life_time"
 
@@ -721,6 +770,8 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
     private val BACKUP_DATE_FORMAT = DateTimeFormatterBuilder()
       .append(ISODateTimeFormat.date())
       .toFormatter()
+
+    var exception: Throwable? = null
   }
 
 }

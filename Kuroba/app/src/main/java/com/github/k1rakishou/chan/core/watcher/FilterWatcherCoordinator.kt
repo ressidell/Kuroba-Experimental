@@ -85,7 +85,7 @@ class FilterWatcherCoordinator(
       return
     }
 
-    restartFilterWatcherDebouncer.post(1000L, {
+    restartFilterWatcherDebouncer.post(1000L) {
       Logger.d(TAG, "restartFilterWatcherWithTinyDelay()")
 
       awaitInitialization()
@@ -103,7 +103,7 @@ class FilterWatcherCoordinator(
       // update cycle is pretty big (4 hours minimum) we need to use another one that will update
       // filter watches right away.
       startFilterWatchingRightAway(appConstants, appContext, isCalledBySwipeToRefresh)
-    })
+    }
   }
 
   private suspend fun awaitInitialization() {

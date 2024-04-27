@@ -301,6 +301,9 @@ dependencies {
     implementation "cafe.adriel.voyager:voyager-navigator:${versions.voyager}"
     implementation "cafe.adriel.voyager:voyager-transitions:${versions.voyager}"
 
+    implementation("ch.acra:acra-http:${versions.acra}")
+    implementation("ch.acra:acra-core:${versions.acra}")
+
     // noinspection GradleDependency wants to upgrade to older version
     implementation "com.github.K1rakishou:Fuck-Storage-Access-Framework:${versions.fsaf}"
 

@@ -49,6 +49,8 @@ import android.view.inputmethod.InputMethodManager;
 
 import androidx.preference.PreferenceManager;
 
+import org.acra.ACRA;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,24 +94,8 @@ public class AndroidUtils {
     }
 
     private static AppProcessType getProcessType() {
-        String currentProcName = "";
-        int pid = android.os.Process.myPid();
-        ActivityManager manager = (ActivityManager) getAppContext().getSystemService(Context.ACTIVITY_SERVICE);
-
-        List<ActivityManager.RunningAppProcessInfo> processes = manager.getRunningAppProcesses();
-        if (processes == null) {
-            return AppProcessType.Main;
-        }
-
-        for (ActivityManager.RunningAppProcessInfo processInfo : processes) {
-            if (processInfo.pid == pid) {
-                currentProcName = processInfo.processName;
-                break;
-            }
-        }
-
-        if (currentProcName.contains(":crashReportProcess")) {
-            return AppProcessType.CrashReporting;
+        if (ACRA.isACRASenderServiceProcess()) {
+            return AppProcessType.Acra;
         }
 
         return AppProcessType.Main;
@@ -359,6 +345,6 @@ public class AndroidUtils {
 
     public enum AppProcessType {
         Main,
-        CrashReporting
+        Acra
     }
 }

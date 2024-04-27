@@ -91,6 +91,9 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.dnsoverhttps.DnsOverHttps
+import org.acra.config.httpSender
+import org.acra.data.StringFormat
+import org.acra.ktx.initAcra
 import org.joda.time.Duration
 import org.joda.time.format.PeriodFormatterBuilder
 import java.io.IOException
@@ -207,6 +210,14 @@ class Chan : Application(), ActivityLifecycleCallbacks {
       DEBUG_PROPERTY_NAME,
       if (isDev) DEBUG_PROPERTY_VALUE_ON else DEBUG_PROPERTY_VALUE_OFF
     )
+
+    initAcra {
+      buildConfigClass = BuildConfig::class.java
+      reportFormat = StringFormat.JSON
+      httpSender {
+        uri = "https://collector.tracepot.com/L2tB5o4BSv-KO-nHntCU"
+      }
+    }
 
     AndroidUtils.init(this)
     AppModuleAndroidUtils.init(this)
@@ -401,16 +412,11 @@ class Chan : Application(), ActivityLifecycleCallbacks {
   }
 
   private fun onUnhandledException(exception: Throwable) {
-    applicationCrashNotifier.onApplicationCrashed()
-
-    val message = extractExceptionMessage(exception)
-    val stacktrace = exception.stackTraceToString()
+    // Apparently there is no other way around it because when trying to deserialize the stacktrace as a string it crashes.
+    CrashReportActivity.exception = exception
 
     val bundle = Bundle()
       .apply {
-        putString(CrashReportActivity.EXCEPTION_CLASS_NAME_KEY, exception::class.java.name)
-        putString(CrashReportActivity.EXCEPTION_MESSAGE_KEY, message)
-        putString(CrashReportActivity.EXCEPTION_STACKTRACE_KEY, stacktrace)
         putString(CrashReportActivity.USER_AGENT_KEY, appConstants.get().userAgent)
         putString(CrashReportActivity.APP_LIFE_TIME_KEY, formatAppRunningTime())
       }
@@ -420,42 +426,8 @@ class Chan : Application(), ActivityLifecycleCallbacks {
     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     startActivity(intent)
-  }
 
-  private fun extractExceptionMessage(exception: Throwable): String? {
-    var message = exception.message
-    var throwable: Throwable? = exception
-
-    val processed = IdentityHashMap<Throwable, Unit>()
-    processed.put(exception, Unit)
-
-    while (true) {
-      if (throwable == null) {
-        break
-      }
-
-      val parentMessage = throwable.message
-      if (parentMessage.isNullOrEmpty()) {
-        break
-      }
-
-      throwable = throwable.cause
-
-      if (throwable != null && processed.contains(throwable)) {
-        break
-      }
-
-      val isAppStacktrace = throwable
-        ?.stackTrace
-        ?.any { stackTraceElement -> stackTraceElement.className.contains("com.github.k1rakishou") }
-        ?: false
-
-      if (isAppStacktrace) {
-        message = parentMessage
-      }
-    }
-
-    return message
+    applicationCrashNotifier.onApplicationCrashed()
   }
 
   private fun activityEnteredForeground() {

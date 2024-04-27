@@ -566,7 +566,7 @@ class ChanFilterManager(
   sealed class FilterEvent {
     abstract fun hasWatchFilter(): Boolean
 
-    object Initialized : FilterEvent() {
+    data object Initialized : FilterEvent() {
       override fun hasWatchFilter(): Boolean = false
     }
 
