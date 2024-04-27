@@ -73,6 +73,8 @@ fun KurobaDefaultToolbarContent(
     when (middleContent) {
       is ToolbarMiddleContent.Title -> {
         if (middleContent.title != null) {
+          Spacer(modifier = Modifier.width(12.dp))
+
           ToolbarTitleWithSubtitle(
             modifier = Modifier
               .weight(1f)

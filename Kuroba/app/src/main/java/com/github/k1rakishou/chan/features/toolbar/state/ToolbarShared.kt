@@ -149,7 +149,7 @@ internal fun ToolbarClickableIcon(
             rotationAnimatable.snapTo(0f)
           }
         } catch (_: CancellationException) {
-
+          // no-op
         }
       }
       .collect()

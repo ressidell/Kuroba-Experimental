@@ -73,6 +73,8 @@ fun KurobaThreadToolbarContent(
     }
 
     if (title != null) {
+      Spacer(modifier = Modifier.width(12.dp))
+
       ToolbarTitleWithSubtitle(
         modifier = Modifier
           .weight(1f)
