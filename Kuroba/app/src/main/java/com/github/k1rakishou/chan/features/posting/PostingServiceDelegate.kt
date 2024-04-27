@@ -458,7 +458,6 @@ class PostingServiceDelegate(
     val automaticallySolvedCaptchasCount = AtomicInteger()
 
     Logger.d(TAG, "runPostWaitQueueLoop($chanDescriptor) started at $startTime")
-    val lastReplyRepository = lastReplyRepository
 
     while (true) {
       ensureNotCanceled(chanDescriptor)

@@ -29,6 +29,10 @@ class Chan4CheckPostExistsRequest(
         return SystemClock.elapsedRealtime() - startTime
       }
 
+      // Wait flat 5 seconds before doing anything because 4chan doesn't return fresh posts right away after posting.
+      // There is now a ~5 seconds delay.
+      delay(5000)
+
       for (attempt in 0 until MAX_ATTEMPTS) {
         // Wait some time on each attempt before making the requests
         delay((attempt + 1) * 1000L)
@@ -189,7 +193,7 @@ class Chan4CheckPostExistsRequest(
 
   companion object {
     private const val TAG = "Chan4CheckPostExistsRequest"
-    private const val MAX_ATTEMPTS = 5
+    private const val MAX_ATTEMPTS = 7
 
     private val POST_ID_REGEX = "(\\d+)".toRegex()
   }
