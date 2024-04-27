@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.core.site.loader.internal.usecase
 
+import com.github.k1rakishou.chan.core.helper.ChanLoadProgressEvent
 import com.github.k1rakishou.chan.core.helper.ChanLoadProgressNotifier
 import com.github.k1rakishou.chan.core.helper.FilterEngine
 import com.github.k1rakishou.chan.core.manager.BoardManager
@@ -9,6 +10,7 @@ import com.github.k1rakishou.chan.core.manager.SavedReplyManager
 import com.github.k1rakishou.chan.core.site.parser.PostParser
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.common.parallelForEach
+import com.github.k1rakishou.common.parallelForEachIndexed
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.filter.ChanFilter
@@ -50,6 +52,7 @@ abstract class AbstractParsePostsUseCase(
   }
 
   protected suspend fun processFilters(
+    chanDescriptor: ChanDescriptor,
     postBuildersToParse: List<ChanPostBuilder>,
     filters: List<ChanFilter>
   ) {
@@ -57,17 +60,29 @@ abstract class AbstractParsePostsUseCase(
       return
     }
 
-    parallelForEach(postBuildersToParse, THREAD_COUNT * 2, Dispatchers.IO) { postToParse ->
+    val totalPosts = postBuildersToParse.size
+    val filtersCount = filters.size
+
+    parallelForEachIndexed(postBuildersToParse, THREAD_COUNT * 2, Dispatchers.IO) { index, postToParse ->
       if (filters.isNotEmpty()) {
         processFilters(postToParse, filters)
       }
 
-      return@parallelForEach
+      chanLoadProgressNotifier.sendProgressEvent(
+        ChanLoadProgressEvent.ProcessingFilters(
+          chanDescriptor = chanDescriptor,
+          processedPosts = index + 1,
+          totalPosts = totalPosts,
+          filtersCount = filtersCount
+        )
+      )
+
+      return@parallelForEachIndexed
     }
 
     Logger.d(TAG, "postParsingProcessFiltersStage() " +
-      "cacheHits=${filterEngine.currentCacheHits()}, " +
-      "cacheMisses=${filterEngine.currentCacheMisses()}")
+      "cacheHits: ${filterEngine.currentCacheHits()}, " +
+      "cacheMisses: ${filterEngine.currentCacheMisses()}")
   }
 
   private fun processFilters(postToParse: ChanPostBuilder, filters: List<ChanFilter>) {

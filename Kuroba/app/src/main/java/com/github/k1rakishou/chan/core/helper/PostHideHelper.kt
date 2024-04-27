@@ -21,7 +21,8 @@ import kotlinx.coroutines.withContext
 
 class PostHideHelper(
   private val postHideManager: IPostHideManager,
-  private val postFilterManager: IPostFilterManager
+  private val postFilterManager: IPostFilterManager,
+  private val chanLoadProgressNotifier: ChanLoadProgressNotifier
 ) {
 
   fun countPostHides(posts: List<ChanPost>): Int {
@@ -126,13 +127,17 @@ class PostHideHelper(
     val resultMap = linkedMapWithCap<PostDescriptor, ChanPostWithFilterResult>(posts.size)
     val processingCatalog = chanDescriptor is ChanDescriptor.ICatalogDescriptor
 
+    val postHidesCount = countPostHides(posts)
+    val postFiltersCount = countMatchedFilters(posts)
+    val totalPostsCount = posts.size
+
     val postsFastLookupMap = linkedMapWithCap<PostDescriptor, ChanPost>(posts.size)
     for (post in posts) {
       postsFastLookupMap[post.postDescriptor] = post
     }
 
     // First pass, process the posts
-    for (post in posts) {
+    for ((index, post) in posts.withIndex()) {
       val postDescriptor = post.postDescriptor
       val postHide = hiddenPostsLookupMap[postDescriptor]
       val postFilter = postFilterMap[postDescriptor]
@@ -172,77 +177,118 @@ class PostHideHelper(
         chanPost = post,
         postFilterResult = postFilterResult
       )
+
+      if (processingCatalog) {
+        chanLoadProgressNotifier.sendProgressEvent(
+          ChanLoadProgressEvent.ApplyingFilters(
+            chanDescriptor = chanDescriptor,
+            processedPosts = index + 1,
+            totalPosts = totalPostsCount,
+            postHidesCount = postHidesCount,
+            postFiltersCount = postFiltersCount
+          )
+        )
+      }
     }
 
     if (!processingCatalog) {
       val alreadyVisited = hashSetWithCap<PostDescriptor>(64)
 
       // Second pass, process the reply chains (Do not do this in the catalogs)
-      for ((sourcePost, _) in resultMap.values) {
-        val sourcePostDescriptor = sourcePost.postDescriptor
+      for ((index, chanPostWithFilterResult) in resultMap.values.withIndex()) {
+        processReplies(
+          chanPostWithFilterResult = chanPostWithFilterResult,
+          resultMap = resultMap,
+          hiddenPostsLookupMap = hiddenPostsLookupMap,
+          alreadyVisited = alreadyVisited,
+          newChanPostHides = newChanPostHides,
+          postsFastLookupMap = postsFastLookupMap,
+          postFilterMap = postFilterMap
+        )
 
-        val sourceChanPostWithFilterResult = resultMap[sourcePostDescriptor] ?: continue
-        if (sourceChanPostWithFilterResult.postFilterResult != PostFilterResult.Leave) {
-          // Already processed and we either hide or remove it, no need to process it again
-          continue
-        }
-
-        val sourcePostHide = hiddenPostsLookupMap[sourcePostDescriptor]
-        if (sourcePostHide?.manuallyRestored == true) {
-          // This post was manually unhidden/unremoved by the user. Do not auto hide/remove it again.
-          sourceChanPostWithFilterResult.postFilterResult = PostFilterResult.Leave
-          continue
-        }
-
-        for (targetPostDescriptor in sourcePost.repliesTo) {
-          alreadyVisited.clear()
-
-          val targetPostHide = findParentNonNullPostHide(
-            postDescriptor = targetPostDescriptor,
-            hiddenPostsLookupMap = hiddenPostsLookupMap,
-            newChanPostHides = newChanPostHides,
-            postMap = postsFastLookupMap,
-            alreadyVisited = alreadyVisited
+        chanLoadProgressNotifier.sendProgressEvent(
+          ChanLoadProgressEvent.ApplyingFilters(
+            chanDescriptor = chanDescriptor,
+            processedPosts = index + 1,
+            totalPosts = totalPostsCount,
+            postHidesCount = postHidesCount,
+            postFiltersCount = postFiltersCount
           )
-
-          var targetPostFilter = postFilterMap[targetPostDescriptor]
-          if (targetPostFilter == null && targetPostHide != null) {
-            targetPostFilter = postFilterMap[targetPostHide.postDescriptor]
-          }
-
-          val applyToReplies = processingCatalog
-            || (targetPostFilter?.replies == true)
-            || (targetPostHide?.applyToReplies == true)
-
-          if (!applyToReplies) {
-            continue
-          }
-
-          val targetChanPostWithFilterResult = resultMap[targetPostDescriptor]
-            ?: continue
-
-          if (targetChanPostWithFilterResult.postFilterResult == PostFilterResult.Leave) {
-            continue
-          }
-
-          val onlyHide = targetChanPostWithFilterResult.postFilterResult == PostFilterResult.Hide
-
-          createNewChanPostHide(
-            postFilter = targetPostFilter,
-            postDescriptor = sourcePostDescriptor,
-            newChanPostHides = newChanPostHides,
-            hiddenPostsLookupMap = hiddenPostsLookupMap,
-            onlyHide = onlyHide,
-            applyToReplies = applyToReplies
-          )
-
-          sourceChanPostWithFilterResult.postFilterResult = targetChanPostWithFilterResult.postFilterResult
-          break
-        }
+        )
       }
     }
 
     return resultMap
+  }
+
+  private fun processReplies(
+    chanPostWithFilterResult: ChanPostWithFilterResult,
+    resultMap: LinkedHashMap<PostDescriptor, ChanPostWithFilterResult>,
+    hiddenPostsLookupMap: MutableMap<PostDescriptor, ChanPostHide>,
+    alreadyVisited: HashSet<PostDescriptor>,
+    newChanPostHides: MutableMap<PostDescriptor, ChanPostHideWrapper>,
+    postsFastLookupMap: LinkedHashMap<PostDescriptor, ChanPost>,
+    postFilterMap: Map<PostDescriptor, PostFilter>
+  ) {
+    val sourcePost = chanPostWithFilterResult.chanPost
+    val sourcePostDescriptor = sourcePost.postDescriptor
+
+    val sourceChanPostWithFilterResult = resultMap[sourcePostDescriptor]
+      ?: return
+    if (sourceChanPostWithFilterResult.postFilterResult != PostFilterResult.Leave) {
+      // Already processed and we either hide or remove it, no need to process it again
+      return
+    }
+
+    val sourcePostHide = hiddenPostsLookupMap[sourcePostDescriptor]
+    if (sourcePostHide?.manuallyRestored == true) {
+      // This post was manually unhidden/unremoved by the user. Do not auto hide/remove it again.
+      sourceChanPostWithFilterResult.postFilterResult = PostFilterResult.Leave
+      return
+    }
+
+    for (targetPostDescriptor in sourcePost.repliesTo) {
+      alreadyVisited.clear()
+
+      val targetPostHide = findParentNonNullPostHide(
+        postDescriptor = targetPostDescriptor,
+        hiddenPostsLookupMap = hiddenPostsLookupMap,
+        newChanPostHides = newChanPostHides,
+        postMap = postsFastLookupMap,
+        alreadyVisited = alreadyVisited
+      )
+
+      var targetPostFilter = postFilterMap[targetPostDescriptor]
+      if (targetPostFilter == null && targetPostHide != null) {
+        targetPostFilter = postFilterMap[targetPostHide.postDescriptor]
+      }
+
+      val applyToReplies = (targetPostFilter?.replies == true) || (targetPostHide?.applyToReplies == true)
+      if (!applyToReplies) {
+        continue
+      }
+
+      val targetChanPostWithFilterResult = resultMap[targetPostDescriptor]
+        ?: continue
+
+      if (targetChanPostWithFilterResult.postFilterResult == PostFilterResult.Leave) {
+        continue
+      }
+
+      val onlyHide = targetChanPostWithFilterResult.postFilterResult == PostFilterResult.Hide
+
+      createNewChanPostHide(
+        postFilter = targetPostFilter,
+        postDescriptor = sourcePostDescriptor,
+        newChanPostHides = newChanPostHides,
+        hiddenPostsLookupMap = hiddenPostsLookupMap,
+        onlyHide = onlyHide,
+        applyToReplies = applyToReplies
+      )
+
+      sourceChanPostWithFilterResult.postFilterResult = targetChanPostWithFilterResult.postFilterResult
+      break
+    }
   }
 
   private fun createNewChanPostHide(

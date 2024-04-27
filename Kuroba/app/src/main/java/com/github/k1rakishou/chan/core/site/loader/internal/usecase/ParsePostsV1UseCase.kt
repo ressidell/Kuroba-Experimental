@@ -10,7 +10,7 @@ import com.github.k1rakishou.chan.core.manager.SavedReplyManager
 import com.github.k1rakishou.chan.core.site.parser.PostParseWorker
 import com.github.k1rakishou.chan.core.site.parser.PostParser
 import com.github.k1rakishou.chan.utils.BackgroundUtils
-import com.github.k1rakishou.common.parallelForEach
+import com.github.k1rakishou.common.parallelForEachIndexed
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
@@ -18,7 +18,6 @@ import com.github.k1rakishou.model.data.post.ChanPostBuilder
 import com.github.k1rakishou.model.repository.ChanPostRepository
 import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
 
@@ -42,7 +41,6 @@ class ParsePostsV1UseCase(
   chanLoadProgressNotifier
 ) {
 
-  @OptIn(ExperimentalTime::class)
   override suspend fun parseNewPostsPosts(
     chanDescriptor: ChanDescriptor,
     postParser: PostParser,
@@ -61,7 +59,10 @@ class ParsePostsV1UseCase(
     processSavedReplies(postBuildersToParse)
 
     chanLoadProgressNotifier.sendProgressEvent(
-      ChanLoadProgressEvent.ParsingPosts(chanDescriptor, postBuildersToParse.size)
+      ChanLoadProgressEvent.ParsingPosts(
+        chanDescriptor = chanDescriptor,
+        totalPosts = postBuildersToParse.size
+      )
     )
 
     val savedPosts = when (chanDescriptor) {
@@ -100,12 +101,12 @@ class ParsePostsV1UseCase(
     }
 
     val (parsedPosts, parsingDuration) = measureTimedValue {
-      return@measureTimedValue parallelForEach(
+      return@measureTimedValue parallelForEachIndexed(
         dataList = postBuildersToParse,
         parallelization = THREAD_COUNT * 2,
         dispatcher = Dispatchers.IO
-      ) { postToParse ->
-        return@parallelForEach PostParseWorker(
+      ) { index, postToParse ->
+        val chanPost = PostParseWorker(
           postBuilder = postToParse,
           postParser = postParser,
           internalIds = internalIds,
@@ -113,6 +114,16 @@ class ParsePostsV1UseCase(
           hiddenOrRemovedPosts = hiddenOrRemovedPosts,
           isParsingCatalog = chanDescriptor is ChanDescriptor.ICatalogDescriptor
         ).parse()
+
+        chanLoadProgressNotifier.sendProgressEvent(
+          ChanLoadProgressEvent.ParsingPosts(
+            chanDescriptor = chanDescriptor,
+            parsedPosts = index + 1,
+            totalPosts = postBuildersToParse.size
+          )
+        )
+
+        return@parallelForEachIndexed chanPost
       }
     }
 
@@ -121,11 +132,18 @@ class ParsePostsV1UseCase(
     val filters = loadFilters(chanDescriptor)
 
     chanLoadProgressNotifier.sendProgressEvent(
-      ChanLoadProgressEvent.ProcessingFilters(chanDescriptor, filters.size)
+      ChanLoadProgressEvent.ProcessingFilters(
+        chanDescriptor = chanDescriptor,
+        filtersCount = filters.size
+      )
     )
 
     val filterProcessingDuration = measureTime {
-      processFilters(postBuildersToParse, filters)
+      processFilters(
+        chanDescriptor = chanDescriptor,
+        postBuildersToParse = postBuildersToParse,
+        filters = filters
+      )
     }
 
     Logger.d(TAG, "parseNewPostsPosts(chanDescriptor=$chanDescriptor, " +

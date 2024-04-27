@@ -94,7 +94,9 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
@@ -193,7 +195,7 @@ class ThreadLayout @JvmOverloads constructor(
   private var controllerKey: ControllerKey? = null
   private var refreshedFromSwipe = false
   private var deletingDialog: ProgressDialog? = null
-  private var state: State? = null
+  private var threadLayoutState: State? = null
   private var searchLinkPopupOpenJob: Job? = null
 
   private val scrollToBottomDebouncer = Debouncer(false)
@@ -299,13 +301,16 @@ class ThreadLayout @JvmOverloads constructor(
     replyButton.setOnClickListener(this)
 
     coroutineScope.launch {
-      chanLoadProgressNotifier.progressEventsFlow.collect { chanLoadProgressEvent ->
-        if (chanDescriptor != chanLoadProgressEvent.chanDescriptor) {
-          return@collect
-        }
+      chanLoadProgressNotifier.progressEventsFlow
+        .filter { threadLayoutState == ThreadLayout.State.LOADING }
+        .sample(16)
+        .collect { chanLoadProgressEvent ->
+          if (chanDescriptor != chanLoadProgressEvent.chanDescriptor) {
+            return@collect
+          }
 
-        handleLoadProgressEvent(chanLoadProgressEvent)
-      }
+          handleLoadProgressEvent(chanLoadProgressEvent)
+        }
     }
 
     coroutineScope.launch {
@@ -414,7 +419,7 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   fun canChildScrollUp(): Boolean {
-    if (state != State.CONTENT) {
+    if (threadLayoutState != State.CONTENT) {
       return true
     }
 
@@ -444,15 +449,15 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   fun gainedFocus(nowFocused: ThreadControllerType) {
-    threadListLayout.gainedFocus(nowFocused, state == State.CONTENT)
+    threadListLayout.gainedFocus(nowFocused, threadLayoutState == State.CONTENT)
   }
 
   fun onShown(nowFocused: ThreadControllerType) {
-    threadListLayout.onShown(nowFocused, state == State.CONTENT)
+    threadListLayout.onShown(nowFocused, threadLayoutState == State.CONTENT)
   }
 
   fun onHidden(nowFocused: ThreadControllerType) {
-    threadListLayout.onHidden(nowFocused, state == State.CONTENT)
+    threadListLayout.onHidden(nowFocused, threadLayoutState == State.CONTENT)
   }
 
   fun setBoardPostViewMode(boardPostViewMode: BoardPostViewMode) {
@@ -507,7 +512,7 @@ class ThreadLayout @JvmOverloads constructor(
       return
     }
 
-    val initial = state != State.CONTENT
+    val initial = threadLayoutState != State.CONTENT
     val (width, _) = loadView.awaitUntilGloballyLaidOutAndGetSize(waitForWidth = true)
 
     if (refreshPostPopupHelperPosts && postPopupHelper.isOpen) {
@@ -553,7 +558,7 @@ class ThreadLayout @JvmOverloads constructor(
 
     val errorMessage = error.errorMessage
 
-    if (state == State.CONTENT) {
+    if (threadLayoutState == State.CONTENT) {
       threadListLayout.showError(errorMessage)
     } else {
       switchThreadLayoutState(State.ERROR)
@@ -791,7 +796,7 @@ class ThreadLayout @JvmOverloads constructor(
   override fun scrollTo(displayPosition: Int) {
     if (postPopupHelper.isOpen) {
       postPopupHelper.scrollTo(displayPosition)
-    } else if (state == State.CONTENT) {
+    } else if (threadLayoutState == State.CONTENT) {
       threadListLayout.scrollTo(displayPosition)
     }
   }
@@ -1196,7 +1201,7 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   private fun switchThreadLayoutState(newState: State, animateTransition: Boolean = true) {
-    val currentState = state
+    val currentState = threadLayoutState
     if (currentState == newState) {
       return
     }
@@ -1212,7 +1217,7 @@ class ThreadLayout @JvmOverloads constructor(
       threadListLayout.showToolbarIfNeeded()
     }
 
-    state = newState
+    threadLayoutState = newState
 
     threadControllerType?.let { controllerType ->
       globalUiStateHolder.updateThreadLayoutState {
@@ -1332,35 +1337,77 @@ class ThreadLayout @JvmOverloads constructor(
 
     progressStepText.text = when (chanLoadProgressEvent) {
       is ChanLoadProgressEvent.Begin -> {
-        getString(R.string.thread_layout_load_progress_preparing)
+        appResources.string(R.string.thread_layout_load_progress_preparing)
       }
       is ChanLoadProgressEvent.Loading -> {
-        getString(R.string.thread_layout_load_progress_requesting_server_data)
+        appResources.string(R.string.thread_layout_load_progress_requesting_server_data)
       }
       is ChanLoadProgressEvent.Reading -> {
-        getString(R.string.thread_layout_load_progress_reading_data_response)
+        if (chanLoadProgressEvent.totalPostsRead > 0) {
+          appResources.string(R.string.thread_layout_load_progress_reading_data_response_posts, chanLoadProgressEvent.totalPostsRead)
+        } else {
+          appResources.string(R.string.thread_layout_load_progress_reading_data_response)
+        }
       }
       is ChanLoadProgressEvent.ProcessingFilters -> {
-        getString(R.string.thread_layout_load_progress_processing_filters, chanLoadProgressEvent.filtersCount)
+        if (chanLoadProgressEvent.processedPosts > 0 && chanLoadProgressEvent.totalPosts > 0) {
+          appResources.string(
+            R.string.thread_layout_load_progress_processing_filters_posts,
+            chanLoadProgressEvent.filtersCount,
+            chanLoadProgressEvent.processedPosts,
+            chanLoadProgressEvent.totalPosts
+          )
+        } else {
+          appResources.string(
+            R.string.thread_layout_load_progress_processing_filters,
+            chanLoadProgressEvent.filtersCount
+          )
+        }
       }
       is ChanLoadProgressEvent.ParsingPosts -> {
-        getString(R.string.thread_layout_load_progress_parsing_posts, chanLoadProgressEvent.postsToParseCount)
+        if (chanLoadProgressEvent.parsedPosts > 0) {
+          appResources.string(
+            R.string.thread_layout_load_progress_parsing_posts_posts,
+            chanLoadProgressEvent.parsedPosts,
+            chanLoadProgressEvent.totalPosts
+          )
+        } else {
+          appResources.string(R.string.thread_layout_load_progress_parsing_posts, chanLoadProgressEvent.totalPosts)
+        }
       }
       is ChanLoadProgressEvent.PersistingPosts -> {
-        getString(R.string.thread_layout_load_progress_persisting_posts, chanLoadProgressEvent.postsCount)
+        appResources.string(R.string.thread_layout_load_progress_persisting_posts, chanLoadProgressEvent.postsCount)
       }
       is ChanLoadProgressEvent.ApplyingFilters -> {
-        getString(
-          R.string.thread_layout_load_progress_applying_filters,
-          chanLoadProgressEvent.postHidesCount,
-          chanLoadProgressEvent.postFiltersCount
-        )
+        if (chanLoadProgressEvent.processedPosts > 0) {
+          appResources.string(
+            R.string.thread_layout_load_progress_applying_filters_posts,
+            chanLoadProgressEvent.processedPosts,
+            chanLoadProgressEvent.totalPosts,
+            chanLoadProgressEvent.postHidesCount,
+            chanLoadProgressEvent.postFiltersCount
+          )
+        } else {
+          appResources.string(
+            R.string.thread_layout_load_progress_applying_filters,
+            chanLoadProgressEvent.postHidesCount,
+            chanLoadProgressEvent.postFiltersCount
+          )
+        }
       }
       is ChanLoadProgressEvent.RefreshingPosts -> {
-        getString(R.string.thread_layout_load_progress_diffing_results)
+        if (chanLoadProgressEvent.processedPosts > 0) {
+          appResources.string(
+            R.string.thread_layout_load_progress_diffing_results_posts,
+            chanLoadProgressEvent.processedPosts,
+            chanLoadProgressEvent.totalPosts
+          )
+        } else {
+          appResources.string(R.string.thread_layout_load_progress_diffing_results)
+        }
       }
       is ChanLoadProgressEvent.End -> {
-        getString(R.string.thread_layout_load_progress_done)
+        appResources.string(R.string.thread_layout_load_progress_done)
       }
     }
   }

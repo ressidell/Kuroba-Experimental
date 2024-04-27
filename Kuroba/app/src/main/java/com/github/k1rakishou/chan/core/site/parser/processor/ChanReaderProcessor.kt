@@ -1,21 +1,7 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.core.site.parser.processor
 
+import com.github.k1rakishou.chan.core.helper.ChanLoadProgressEvent
+import com.github.k1rakishou.chan.core.helper.ChanLoadProgressNotifier
 import com.github.k1rakishou.common.mutableListWithCap
 import com.github.k1rakishou.common.removeIfKt
 import com.github.k1rakishou.core_logger.Logger
@@ -30,11 +16,12 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class ChanReaderProcessor(
-  override val page: Int?,
   private val chanPostRepository: ChanPostRepository,
+  private val chanLoadProgressNotifier: ChanLoadProgressNotifier,
   private val chanReadOptions: ChanReadOptions,
   private val chanLoadOptions: ChanLoadOptions,
   private val options: Options,
+  override val page: Int?,
   override val chanDescriptor: ChanDescriptor
 ) : AbstractChanReaderProcessor() {
   private val toParse = mutableListWithCap<ChanPostBuilder>(64)
@@ -66,17 +53,25 @@ class ChanReaderProcessor(
   }
 
   override suspend fun addPost(postBuilder: ChanPostBuilder) {
-    lock.withLock {
+    val totalPostsRead = lock.withLock {
       if (differsFromCached(postBuilder)) {
         toParse.add(postBuilder)
       }
 
       postOrderedList.add(postBuilder.postDescriptor)
+      return@withLock postOrderedList.size
     }
+
+    chanLoadProgressNotifier.sendProgressEvent(
+      ChanLoadProgressEvent.Reading(
+        chanDescriptor = chanDescriptor,
+        totalPostsRead = totalPostsRead
+      )
+    )
   }
 
   override suspend fun addManyPosts(postBuilders: List<ChanPostBuilder>) {
-    lock.withLock {
+    val totalPostsRead = lock.withLock {
       postBuilders.forEach { postBuilder ->
         if (differsFromCached(postBuilder)) {
           toParse.add(postBuilder)
@@ -84,7 +79,16 @@ class ChanReaderProcessor(
 
         postOrderedList.add(postBuilder.postDescriptor)
       }
+
+      return@withLock postOrderedList.size
     }
+
+    chanLoadProgressNotifier.sendProgressEvent(
+      ChanLoadProgressEvent.Reading(
+        chanDescriptor = chanDescriptor,
+        totalPostsRead = totalPostsRead
+      )
+    )
   }
 
   override suspend fun applyChanReadOptions() {

@@ -377,11 +377,12 @@ class ChanThreadLoaderCoordinator(
         }
 
         val chanReaderProcessor = ChanReaderProcessor(
-          page = page,
           chanPostRepository = chanPostRepository,
+          chanLoadProgressNotifier = chanLoadProgressNotifier,
           chanReadOptions = ChanReadOptions.default(),
           chanLoadOptions = chanLoadOptions,
           options = ChanReaderProcessor.Options(),
+          page = page,
           chanDescriptor = threadDescriptor
         )
 
@@ -435,11 +436,12 @@ class ChanThreadLoaderCoordinator(
         }
 
         val chanReaderProcessor = ChanReaderProcessor(
-          page = page,
           chanPostRepository = chanPostRepository,
+          chanLoadProgressNotifier = chanLoadProgressNotifier,
           chanReadOptions = ChanReadOptions.default(),
           chanLoadOptions = ChanLoadOptions.forceUpdateAllPosts(),
           options = ChanReaderProcessor.Options(),
+          page = page,
           chanDescriptor = catalogDescriptor
         )
 
@@ -589,24 +591,37 @@ class ChanThreadLoaderCoordinator(
 
     return Try {
       val chanReaderProcessor = ChanReaderProcessor(
-        page = page,
         chanPostRepository = chanPostRepository,
+        chanLoadProgressNotifier = chanLoadProgressNotifier,
         chanReadOptions = chanReadOptions,
         chanLoadOptions = chanLoadOptions,
         options = chanReaderProcessorOptions,
+        page = page,
         chanDescriptor = chanDescriptor
       )
 
       when (chanDescriptor) {
         is ChanDescriptor.ThreadDescriptor -> {
           if (chanLoadUrl.isIncremental) {
-            chanReader.loadThreadIncremental(chanLoadUrl.urlString, responseBodyStream, chanReaderProcessor)
+            chanReader.loadThreadIncremental(
+              requestUrl = chanLoadUrl.urlString,
+              responseBodyStream = responseBodyStream,
+              chanReaderProcessor = chanReaderProcessor
+            )
           } else {
-            chanReader.loadThreadFresh(chanLoadUrl.urlString, responseBodyStream, chanReaderProcessor)
+            chanReader.loadThreadFresh(
+              requestUrl = chanLoadUrl.urlString,
+              responseBodyStream = responseBodyStream,
+              chanReaderProcessor = chanReaderProcessor
+            )
           }
         }
         is ChanDescriptor.CatalogDescriptor -> {
-          chanReader.loadCatalog(chanLoadUrl.urlString, responseBodyStream, chanReaderProcessor)
+          chanReader.loadCatalog(
+            requestUrl = chanLoadUrl.urlString,
+            responseBodyStream = responseBodyStream,
+            chanReaderProcessor = chanReaderProcessor
+          )
         }
         is ChanDescriptor.CompositeCatalogDescriptor -> {
           error("Cannot use CompositeCatalogDescriptor here")

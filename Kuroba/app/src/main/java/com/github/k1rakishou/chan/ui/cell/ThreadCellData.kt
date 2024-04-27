@@ -23,9 +23,9 @@ import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.data.post.PostIndexed
 import dagger.Lazy
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -179,7 +179,12 @@ class ThreadCellData(
       lazyCalculationJob?.cancel()
       lazyCalculationJob = coroutineScope.launch(Dispatchers.IO) {
         Logger.d(TAG, "runPreloading() start")
-        val preloadingDuration = measureTime { runPreloadingTask(prevScrollPositionData, newPostCellDataLazyList) }
+        val preloadingDuration = measureTime {
+          runPreloadingTask(
+            prevScrollPositionData = prevScrollPositionData,
+            newPostCellDataLazyList = newPostCellDataLazyList
+          )
+        }
         Logger.d(TAG, "runPreloading() end, took $preloadingDuration")
       }
     }
@@ -194,7 +199,7 @@ class ThreadCellData(
     }
   }
 
-  private fun CoroutineScope.runPreloadingTask(
+  private suspend fun runPreloadingTask(
     prevScrollPositionData: PreviousThreadScrollPositionData?,
     newPostCellDataLazyList: List<PostCellDataLazy>
   ) {
@@ -221,14 +226,17 @@ class ThreadCellData(
       return
     }
 
-    Logger.d(TAG, "runPreloading() startingPosition=$startingPosition, dataListSize=${newPostCellDataLazyList.size}")
+    val totalPosts = newPostCellDataLazyList.size
+    Logger.d(TAG, "runPreloading() startingPosition: $startingPosition, totalPosts: ${totalPosts}")
 
-    newPostCellDataLazyList
-      .bidirectionalSequenceIndexed(startingPosition.coerceIn(0, newPostCellDataLazyList.lastIndex))
-      .forEach { (_, newPostCellDataLazy) ->
-        ensureActive()
-        newPostCellDataLazy.getOrCalculate(isPrecalculating = true)
-      }
+    coroutineScope {
+      newPostCellDataLazyList
+        .bidirectionalSequenceIndexed(startingPosition.coerceIn(0, newPostCellDataLazyList.lastIndex))
+        .forEach { (_, newPostCellDataLazy) ->
+          ensureActive()
+          newPostCellDataLazy.getOrCalculate(isPrecalculating = true)
+        }
+    }
   }
 
   private suspend fun postIndexedListToLazyPostCellDataList(

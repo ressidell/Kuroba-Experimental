@@ -1150,11 +1150,16 @@ If you ever log out or if the passcode expires you will have to change reply mod
     <string name="thread_layout_load_progress_preparing">Preparing</string>
     <string name="thread_layout_load_progress_requesting_server_data">Requesting data from the server</string>
     <string name="thread_layout_load_progress_reading_data_response">Reading server response</string>
+    <string name="thread_layout_load_progress_reading_data_response_posts">Reading server response (%1$d posts read)</string>
     <string name="thread_layout_load_progress_processing_filters">Processing %1$d filters</string>
+    <string name="thread_layout_load_progress_processing_filters_posts">Processing %1$d filters (processed %2$d/%3$d posts)</string>
     <string name="thread_layout_load_progress_parsing_posts">Parsing %1$d posts</string>
+    <string name="thread_layout_load_progress_parsing_posts_posts">Parsing %1$d/%2$d posts</string>
     <string name="thread_layout_load_progress_persisting_posts">Persisting %1$d posts</string>
     <string name="thread_layout_load_progress_applying_filters">Applying filters.\nHidden/Removed posts count: %1$d.\nPosts matched by filters count: %2$d</string>
+    <string name="thread_layout_load_progress_applying_filters_posts">Applying filters to posts: %1$d/%2$d.\nHidden/Removed posts count: %3$d.\nPosts matched by filters count: %4$d</string>
     <string name="thread_layout_load_progress_diffing_results">Diffing new and old posts, applying results</string>
+    <string name="thread_layout_load_progress_diffing_results_posts">Diffing new and old posts, applying results: %1$d/%2$d</string>
     <string name="thread_layout_load_progress_done">Done</string>
 
     <string name="restore_posts">Restore posts</string>

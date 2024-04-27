@@ -23,6 +23,7 @@ import com.github.k1rakishou.chan.core.base.okhttp.ProxiedOkHttpClient
 import com.github.k1rakishou.chan.core.base.okhttp.RealDownloaderOkHttpClient
 import com.github.k1rakishou.chan.core.base.okhttp.RealProxiedOkHttpClient
 import com.github.k1rakishou.chan.core.cache.CacheHandler
+import com.github.k1rakishou.chan.core.helper.ChanLoadProgressNotifier
 import com.github.k1rakishou.chan.core.helper.FilterEngine
 import com.github.k1rakishou.chan.core.helper.FilterWatcherNotificationHelper
 import com.github.k1rakishou.chan.core.helper.ImageSaverFileManagerWrapper
@@ -613,12 +614,14 @@ class ManagerModule {
   @Provides
   fun providePostHideHelper(
     postHideManager: PostHideManager,
-    postFilterManager: PostFilterManager
+    postFilterManager: PostFilterManager,
+    chanLoadProgressNotifier: ChanLoadProgressNotifier
   ): PostHideHelper {
     deps("PostHideHelper")
     return PostHideHelper(
       postHideManager,
-      postFilterManager
+      postFilterManager,
+      chanLoadProgressNotifier
     )
   }
 
