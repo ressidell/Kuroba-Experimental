@@ -373,6 +373,8 @@ class KurobaDrawerState(
           }
 
           historyNavigationManager.doWithLockedNavStack { navStack ->
+            var atLeastOneCreated = false
+
             toCreate.forEach { navHistoryElement ->
               val navHistoryElementIndex = navStack.indexOf(navHistoryElement)
               if (navHistoryElementIndex < 0) {
@@ -388,10 +390,13 @@ class KurobaDrawerState(
               }
 
               _navigationHistoryEntryList.add(navHistoryElementIndex, navigationHistoryEntry)
+              atLeastOneCreated = true
+            }
+
+            if (atLeastOneCreated) {
+              _resetScrollPositionEvents.emit(Unit)
             }
           }
-
-          _resetScrollPositionEvents.emit(Unit)
         }
         is HistoryNavigationManager.UpdateEvent.Deleted -> {
           val descriptorsToDelete = updateEvent.navHistoryElements
@@ -421,6 +426,7 @@ class KurobaDrawerState(
             }
 
             _navigationHistoryEntryList.add(movedTo, _navigationHistoryEntryList.removeAt(movedFrom))
+            _resetScrollPositionEvents.emit(Unit)
           }
         }
         is HistoryNavigationManager.UpdateEvent.PinnedOrUnpinned -> {

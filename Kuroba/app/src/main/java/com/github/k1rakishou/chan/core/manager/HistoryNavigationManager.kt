@@ -598,12 +598,12 @@ class HistoryNavigationManager(
   }
 
   sealed class UpdateEvent {
-    object Initialized : UpdateEvent()
+    data object Initialized : UpdateEvent()
     data class Created(val navHistoryElements: Collection<NavHistoryElement>) : UpdateEvent()
     data class PinnedOrUnpinned(val navHistoryElements: Collection<NavHistoryElement>) : UpdateEvent()
     data class Moved(val navHistoryElement: NavHistoryElement) : UpdateEvent()
     data class Deleted(val navHistoryElements: Collection<NavHistoryElement>) : UpdateEvent()
-    object Cleared : UpdateEvent()
+    data object Cleared : UpdateEvent()
   }
 
   data class NewNavigationElement(

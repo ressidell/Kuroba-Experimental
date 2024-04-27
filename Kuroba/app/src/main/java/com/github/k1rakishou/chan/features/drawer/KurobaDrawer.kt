@@ -241,7 +241,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
     if (drawerGridMode) {
       val gridState = rememberLazyGridState()
 
-      AutoScrollToTopWhenSearchQueryChanges(
+      AutoScrollListToTop(
         kurobaDrawerState = kurobaDrawerState,
         searchState = searchState,
         totalItemsCountProvider = { gridState.layoutInfo.totalItemsCount },
@@ -291,7 +291,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
     } else {
       val listState = rememberLazyListState()
 
-      AutoScrollToTopWhenSearchQueryChanges(
+      AutoScrollListToTop(
         kurobaDrawerState = kurobaDrawerState,
         searchState = searchState,
         totalItemsCountProvider = { listState.layoutInfo.totalItemsCount },
@@ -337,7 +337,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
 }
 
 @Composable
-private fun AutoScrollToTopWhenSearchQueryChanges(
+private fun AutoScrollListToTop(
   kurobaDrawerState: KurobaDrawerState,
   searchState: SimpleSearchStateV2<NavigationHistoryEntry>,
   totalItemsCountProvider: () -> Int,
