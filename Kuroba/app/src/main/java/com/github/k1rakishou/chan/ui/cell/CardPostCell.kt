@@ -41,7 +41,6 @@ import com.github.k1rakishou.model.data.post.ChanPostImage
 import dagger.Lazy
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -193,7 +192,6 @@ class CardPostCell : ConstraintLayout,
 
     scope.launch {
       threadPostSearchManager.listenForSearchQueryUpdates(postCellData.chanDescriptor)
-        .onStart { onSearchQueryUpdated(threadPostSearchManager.currentSearchQuery(postCellData.chanDescriptor)) }
         .onEach { searchQuery -> onSearchQueryUpdated(searchQuery) }
         .collect()
     }
@@ -331,6 +329,8 @@ class CardPostCell : ConstraintLayout,
     comment.setText(postCellData.commentText, TextView.BufferType.SPANNABLE)
     comment.requestLayout()
     replies.setText(postCellData.repliesToThisPostText, TextView.BufferType.SPANNABLE)
+
+    onSearchQueryUpdated(threadPostSearchManager.currentSearchQuery(postCellData.chanDescriptor))
 
     bindIcons(postCellData)
 

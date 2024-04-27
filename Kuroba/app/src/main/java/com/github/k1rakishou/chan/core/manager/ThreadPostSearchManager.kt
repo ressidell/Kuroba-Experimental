@@ -39,16 +39,8 @@ class ThreadPostSearchManager(
       activeSearch.matchedPostDescriptors.map { postDescriptors -> postDescriptors.size },
       activeSearch.currentPostDescriptorIndex
     ) { matchedPostsCount, currentPostDescriptorIndex ->
-      if (currentPostDescriptorIndex == null) {
-        return@combine null
-      }
-
-      if (matchedPostsCount <= 0) {
-        return@combine null
-      }
-
       return@combine ActiveSearchToolbarInfo(
-        currentIndex = currentPostDescriptorIndex,
+        currentIndex = currentPostDescriptorIndex ?: -1,
         totalFound = matchedPostsCount
       )
     }.filterNotNull()

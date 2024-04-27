@@ -1543,7 +1543,7 @@ class ThreadPresenter @Inject constructor(
       return
     }
 
-    val position = posts.indexOfLast { postDescriptor -> postDescriptor <= needle }
+    val position = posts.indexOfLast { postDescriptor -> postDescriptor == needle }
     if (position < 0) {
       Logger.e(TAG, "scrollToPost($needle) position < 0 (${position})")
       showToast(context, getString(R.string.failed_post_find_post_to_scroll_to, needle.postNo), Toast.LENGTH_LONG)

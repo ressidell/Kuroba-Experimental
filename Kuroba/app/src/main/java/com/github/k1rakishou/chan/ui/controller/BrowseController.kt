@@ -452,9 +452,9 @@ class BrowseController(
     catalogControllerToolbarState.catalog.updateToolbarContentState(ToolbarContentState.from(state))
   }
 
-  override fun onLostFocus(wasFocused: ThreadControllerType) {
-    super.onLostFocus(wasFocused)
-    check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
+  override fun onLostFocus(nowFocused: ThreadControllerType) {
+    super.onLostFocus(nowFocused)
+    check(nowFocused == threadControllerType) { "Unexpected controllerType: $nowFocused" }
 
     catalogControllerToolbarState.invokeAfterTransitionFinished {
       if (catalogControllerToolbarState.isInReplyMode()) {
@@ -469,9 +469,9 @@ class BrowseController(
     }
   }
 
-  override fun onGainedFocus(nowFocused: ThreadControllerType) {
-    super.onGainedFocus(nowFocused)
-    check(nowFocused == threadControllerType) { "Unexpected controllerType: $nowFocused" }
+  override fun onGainedFocus(wasFocused: ThreadControllerType) {
+    super.onGainedFocus(wasFocused)
+    check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
 
     if (chanDescriptor != null && historyNavigationManager.isInitialized) {
       if (threadLayout.presenter.chanThreadLoadingState == ThreadPresenter.ChanThreadLoadingState.Loaded) {

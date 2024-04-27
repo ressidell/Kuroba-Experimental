@@ -500,8 +500,8 @@ class ThreadSlideController(
   }
 
   interface SlideChangeListener {
-    fun onGainedFocus(controllerType: ThreadControllerType)
-    fun onLostFocus(controllerType: ThreadControllerType)
+    fun onGainedFocus(wasFocused: ThreadControllerType)
+    fun onLostFocus(nowFocused: ThreadControllerType)
   }
 
   private data class SlidingPaneLockState(

@@ -213,7 +213,7 @@ fun SearchToolbarInfoText(
   currentSearchItemIndex: Int,
   onShowFoundItemsAsPopupClicked: () -> Unit
 ) {
-  if (totalFoundItems <= 0 || currentSearchItemIndex < 0) {
+  if (totalFoundItems < 0) {
     return
   }
 
@@ -225,15 +225,21 @@ fun SearchToolbarInfoText(
       .wrapContentWidth()
       .padding(horizontal = 8.dp, vertical = 4.dp)
       .kurobaClickable(
+        enabled = totalFoundItems > 0 && currentSearchItemIndex >= 0,
         bounded = false,
         onClick = { onShowFoundItemsAsPopupClicked() }
       ),
     contentAlignment = Alignment.Center
   ) {
     val textColor = ThemeEngine.resolveTextColor(chanTheme.toolbarBackgroundComposeColor)
+    val text = if (totalFoundItems == 0 || currentSearchItemIndex < 0) {
+      "--"
+    } else {
+      "${currentSearchItemIndex + 1}/${totalFoundItems}"
+    }
 
     KurobaComposeText(
-      text = "${currentSearchItemIndex + 1}/${totalFoundItems}",
+      text = text,
       color = textColor
     )
   }

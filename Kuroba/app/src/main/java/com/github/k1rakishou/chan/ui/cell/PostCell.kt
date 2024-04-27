@@ -72,7 +72,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.joda.time.DateTime
@@ -381,7 +380,6 @@ class PostCell @JvmOverloads constructor(
 
     scope.launch {
       threadPostSearchManager.listenForSearchQueryUpdates(postCellData.chanDescriptor)
-        .onStart { onSearchQueryUpdated(threadPostSearchManager.currentSearchQuery(postCellData.chanDescriptor)) }
         .onEach { searchQuery -> onSearchQueryUpdated(searchQuery) }
         .collect()
     }
@@ -629,6 +627,8 @@ class PostCell @JvmOverloads constructor(
     bindPostReplies(postCellData)
     bindGoToPostButton(postCellData)
     bindIcons(postCellData)
+
+    onSearchQueryUpdated(threadPostSearchManager.currentSearchQuery(postCellData.chanDescriptor))
 
     val dividerVisibility = if (postCellData.showDivider) {
       View.VISIBLE

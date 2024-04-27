@@ -496,8 +496,8 @@ abstract class ThreadController(
   }
 
   override fun openFiltersController(chanFilterMutable: ChanFilterMutable) {
-    if (chanDescriptor != null) {
-      chanFilterMutable.boards.add(chanDescriptor!!.boardDescriptor())
+    chanDescriptor?.let { chanDescriptor ->
+      chanFilterMutable.boards.add(chanDescriptor.boardDescriptor())
     }
 
     val filtersController = FiltersController(
@@ -508,25 +508,25 @@ abstract class ThreadController(
     pushChildController(filtersController)
   }
 
-  override fun onLostFocus(wasFocused: ThreadControllerType) {
-    if (isDevBuild()) {
-      check(wasFocused == threadControllerType) {
-        "ThreadControllerTypes do not match! wasFocused=$wasFocused, current=$threadControllerType"
-      }
-    }
-
-    threadLayout.lostFocus(wasFocused)
-  }
-
-  override fun onGainedFocus(nowFocused: ThreadControllerType) {
+  override fun onLostFocus(nowFocused: ThreadControllerType) {
     if (isDevBuild()) {
       check(nowFocused == threadControllerType) {
-        "ThreadControllerTypes do not match! nowFocused=$nowFocused, current=$threadControllerType"
+        "ThreadControllerTypes do not match! wasFocused=$nowFocused, current=$threadControllerType"
       }
     }
 
-    threadLayout.gainedFocus(nowFocused)
-    globalUiStateHolder.updateThreadLayoutState { updateFocusedController(nowFocused) }
+    threadLayout.lostFocus(nowFocused)
+  }
+
+  override fun onGainedFocus(wasFocused: ThreadControllerType) {
+    if (isDevBuild()) {
+      check(wasFocused == threadControllerType) {
+        "ThreadControllerTypes do not match! nowFocused: $wasFocused, current: $threadControllerType"
+      }
+    }
+
+    threadLayout.gainedFocus(wasFocused)
+    globalUiStateHolder.updateThreadLayoutState { updateFocusedController(wasFocused) }
   }
 
   override fun threadBackPressed(): Boolean {

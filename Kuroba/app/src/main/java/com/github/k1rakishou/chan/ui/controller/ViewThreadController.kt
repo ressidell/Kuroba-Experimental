@@ -326,9 +326,9 @@ open class ViewThreadController(
     threadControllerToolbarState.thread.updateToolbarContentState(ToolbarContentState.from(state))
   }
 
-  override fun onLostFocus(wasFocused: ThreadControllerType) {
-    super.onLostFocus(wasFocused)
-    check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
+  override fun onLostFocus(nowFocused: ThreadControllerType) {
+    super.onLostFocus(nowFocused)
+    check(nowFocused == threadControllerType) { "Unexpected controllerType: $nowFocused" }
 
     threadControllerToolbarState.invokeAfterTransitionFinished {
       if (threadControllerToolbarState.isInReplyMode()) {
@@ -343,9 +343,9 @@ open class ViewThreadController(
     }
   }
 
-  override fun onGainedFocus(nowFocused: ThreadControllerType) {
-    super.onGainedFocus(nowFocused)
-    check(nowFocused == threadControllerType) { "Unexpected controllerType: $nowFocused" }
+  override fun onGainedFocus(wasFocused: ThreadControllerType) {
+    super.onGainedFocus(wasFocused)
+    check(wasFocused == threadControllerType) { "Unexpected controllerType: $wasFocused" }
 
     if (historyNavigationManager.isInitialized) {
       if (threadLayout.presenter.chanThreadLoadingState == ThreadPresenter.ChanThreadLoadingState.Loaded) {
