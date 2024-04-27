@@ -7,7 +7,6 @@ import com.github.k1rakishou.model.data.post.ChanPostBuilder
 abstract class AbstractChanReaderProcessor {
   abstract val page: Int?
   abstract val chanDescriptor: ChanDescriptor
-  abstract val canUseEmptyBoardIfBoardDoesNotExist: Boolean
 
   @get:Synchronized
   @set:Synchronized
@@ -27,7 +26,6 @@ abstract class AbstractChanReaderProcessor {
 
   abstract suspend fun setOp(op: ChanPostBuilder?)
   abstract suspend fun addPost(postBuilder: ChanPostBuilder)
-  abstract suspend fun addManyPosts(postBuilders: List<ChanPostBuilder>)
   abstract suspend fun applyChanReadOptions()
   abstract suspend fun getToParse(): List<ChanPostBuilder>
   abstract suspend fun getThreadDescriptors(): List<ChanDescriptor.ThreadDescriptor>

@@ -73,11 +73,7 @@ class Wired7Api(
 
     val site = siteManager.bySiteDescriptor(chanReaderProcessor.chanDescriptor.siteDescriptor())
       ?: return
-    val board = if (chanReaderProcessor.canUseEmptyBoardIfBoardDoesNotExist) {
-      ChanBoard(chanReaderProcessor.chanDescriptor.boardDescriptor())
-    } else {
-      boardManager.byBoardDescriptor(chanReaderProcessor.chanDescriptor.boardDescriptor())
-    }
+    val board = boardManager.byBoardDescriptor(chanReaderProcessor.chanDescriptor.boardDescriptor())
 
     val endpoints = site.endpoints()
 

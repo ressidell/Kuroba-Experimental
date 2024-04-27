@@ -205,7 +205,7 @@ class DvachApiV2(
     val threadDescriptor = posts.first().threadDescriptor(boardDescriptor)
     val posters = extraThreadInfoMap[threadDescriptor]?.posters
 
-    val postBuilders = posts.map { threadPost ->
+    posts.forEach { threadPost ->
       val builder = ChanPostBuilder()
       builder.boardDescriptor(chanReaderProcessor.chanDescriptor.boardDescriptor())
 
@@ -300,12 +300,10 @@ class DvachApiV2(
 
           builder.addHttpIcon(ChanPostHttpIcon(iconUrl, title))
         }
-    }
+      }
 
-      return@map builder
+      chanReaderProcessor.addPost(builder)
     }
-
-    chanReaderProcessor.addManyPosts(postBuilders)
   }
 
   override suspend fun readThreadBookmarkInfoObject(

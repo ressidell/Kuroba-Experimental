@@ -100,12 +100,7 @@ class FutabaChanReader(
     val site = siteManager.bySiteDescriptor(boardDescriptor.siteDescriptor)
       ?: return
 
-    val board = if (chanReaderProcessor.canUseEmptyBoardIfBoardDoesNotExist) {
-      ChanBoard(boardDescriptor)
-    } else {
-      boardManager.byBoardDescriptor(boardDescriptor)
-    }
-
+    val board = boardManager.byBoardDescriptor(boardDescriptor)
     val endpoints = site.endpoints()
 
     // File

@@ -270,7 +270,7 @@ open class LynxchanApi(
   ) {
     var originalPostId: Long? = null
 
-    val postBuilders = posts.map { post ->
+    posts.forEach { post ->
       val builder = ChanPostBuilder()
       builder.boardDescriptor(chanReaderProcessor.chanDescriptor.boardDescriptor())
 
@@ -367,10 +367,8 @@ open class LynxchanApi(
 
       builder.postImages(postImages, builder.postDescriptor)
 
-      return@map builder
+      chanReaderProcessor.addPost(builder)
     }
-
-    chanReaderProcessor.addManyPosts(postBuilders)
   }
 
   @JsonClass(generateAdapter = true)

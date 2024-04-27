@@ -27,9 +27,6 @@ class ChanReaderProcessor(
   private val toParse = mutableListWithCap<ChanPostBuilder>(64)
   private val postOrderedList = mutableListWithCap<PostDescriptor>(64)
 
-  override val canUseEmptyBoardIfBoardDoesNotExist: Boolean
-    get() = false
-
   private val lock = Mutex()
 
   val isIncrementalUpdate: Boolean
@@ -59,27 +56,6 @@ class ChanReaderProcessor(
       }
 
       postOrderedList.add(postBuilder.postDescriptor)
-      return@withLock postOrderedList.size
-    }
-
-    chanLoadProgressNotifier.sendProgressEvent(
-      ChanLoadProgressEvent.Reading(
-        chanDescriptor = chanDescriptor,
-        totalPostsRead = totalPostsRead
-      )
-    )
-  }
-
-  override suspend fun addManyPosts(postBuilders: List<ChanPostBuilder>) {
-    val totalPostsRead = lock.withLock {
-      postBuilders.forEach { postBuilder ->
-        if (differsFromCached(postBuilder)) {
-          toParse.add(postBuilder)
-        }
-
-        postOrderedList.add(postBuilder.postDescriptor)
-      }
-
       return@withLock postOrderedList.size
     }
 
