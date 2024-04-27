@@ -159,6 +159,7 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
     }
 
     val message = extractExceptionMessage(exception) ?: "<No message>"
+    val isDebugCrash = message == "java.lang.RuntimeException: Debug crash"
     val stacktrace = exception.stackTraceToString()
     val className = exception::class.java.name
 
@@ -185,6 +186,7 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
     setContent {
       ComposeEntrypoint {
         Content(
+          isDebugCrash = isDebugCrash && !AppModuleAndroidUtils.isDevBuild(),
           exception = exception,
           className = className,
           message = message,
@@ -231,6 +233,7 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
 
   @Composable
   private fun Content(
+    isDebugCrash: Boolean,
     exception: Throwable,
     className: String,
     message: String,
@@ -467,11 +470,11 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
 
           KurobaComposeTextButton(
             modifier = Modifier.wrapContentWidth(),
-            enabled = !blockButtons && !crashReportSent,
-            text = if (crashReportSent) {
-              stringResource(id = R.string.crash_report_activity_crash_report_sent)
-            } else {
-              stringResource(id = R.string.crash_report_activity_report_crash)
+            enabled = !isDebugCrash && !blockButtons && !crashReportSent,
+            text = when {
+              isDebugCrash -> stringResource(id = R.string.crash_report_activity_debug_crash)
+              crashReportSent -> stringResource(id = R.string.crash_report_activity_crash_report_sent)
+              else -> stringResource(id = R.string.crash_report_activity_report_crash)
             },
             onClick = {
               blockButtons = true
