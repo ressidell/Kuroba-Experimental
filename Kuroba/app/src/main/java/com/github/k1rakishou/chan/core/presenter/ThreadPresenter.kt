@@ -1022,7 +1022,7 @@ class ThreadPresenter @Inject constructor(
     val initialImageUrl = foundPostDescriptor
       ?.let { postDescriptor -> chanThreadManager.getPost(postDescriptor)?.firstImage()?.imageUrl }
 
-    threadPresenterCallback?.showAlbum(initialImageUrl, postDescriptors)
+    threadPresenterCallback?.showAlbum(initialImageUrl)
   }
 
   override fun onPostBind(postCellData: PostCellData) {
@@ -2991,7 +2991,7 @@ class ThreadPresenter @Inject constructor(
 
     fun pushController(controller: Controller)
     fun showImages(chanDescriptor: ChanDescriptor, initialImageUrl: String?, transitionThumbnailUrl: String)
-    fun showAlbum(initialImageUrl: HttpUrl?, displayingPostDescriptors: List<PostDescriptor>)
+    fun showAlbum(initialImageUrl: HttpUrl?)
     fun scrollTo(displayPosition: Int)
     fun smoothScrollNewPosts(displayPosition: Int)
     fun filterPostTripcode(tripcode: CharSequence)

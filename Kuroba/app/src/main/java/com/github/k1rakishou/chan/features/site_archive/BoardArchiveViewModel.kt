@@ -14,6 +14,7 @@ import com.github.k1rakishou.chan.core.manager.SeenPostsManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.site.sites.archive.NativeArchivePost
 import com.github.k1rakishou.chan.core.site.sites.archive.NativeArchivePostList
+import com.github.k1rakishou.chan.utils.requireParams
 import com.github.k1rakishou.common.BadStatusResponseException
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.core_logger.Logger
@@ -43,9 +44,7 @@ class BoardArchiveViewModel(
     get() = _page
 
   private val catalogDescriptor: ChanDescriptor.CatalogDescriptor
-    get() = requireNotNull(savedStateHandle.get<ChanDescriptor.CatalogDescriptor>(CatalogDescriptorParam)) {
-      "catalog_descriptor is null!"
-    }
+    get() = savedStateHandle.requireParams<BoardArchiveController.Params>().catalogDescriptor
 
   var currentlySelectedThreadNo = mutableStateOf<Long?>(null)
 
@@ -203,7 +202,5 @@ class BoardArchiveViewModel(
 
   companion object {
     private const val TAG = "BoardArchiveViewModel"
-
-    const val CatalogDescriptorParam = "catalog_descriptor"
   }
 }

@@ -81,8 +81,7 @@ class ImageSearchController(
   context: Context,
   private val onImageSelected: (HttpUrl) -> Unit
 ) : BaseComposeController<ImageSearchControllerViewModel>(
-  context = context,
-  titleStringId = R.string.image_search_controller_title
+  context = context
 ) {
 
   @Inject

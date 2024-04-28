@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.AnnotatedString
-import androidx.core.os.bundleOf
 import androidx.core.text.getSpans
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
@@ -115,7 +114,7 @@ class ReplyLayoutView @JvmOverloads constructor(
 
     replyLayoutViewModel = context.requireComponentActivity().viewModelByKeyEager<ReplyLayoutViewModel>(
       key = threadControllerType.name,
-      defaultArgs = bundleOf(ReplyLayoutViewModel.ThreadControllerTypeParam to threadControllerType)
+      params = { threadControllerType }
     )
     replyLayoutViewModel.bindThreadListLayoutCallbacks(callbacks)
     replyLayoutViewModel.bindReplyLayoutViewCallbacks(this)

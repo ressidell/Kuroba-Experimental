@@ -41,7 +41,6 @@ import com.github.k1rakishou.common.isNotNullNorBlank
 import com.github.k1rakishou.common.mutableListWithCap
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
-import com.github.k1rakishou.model.data.filter.ChanFilterMutable
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.util.ChanPostUtils
 import com.github.k1rakishou.persist_state.PersistableChanState.albumLayoutGridMode
@@ -50,6 +49,7 @@ import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import javax.inject.Inject
 
+// TODO: New album. Remove me.
 class AlbumViewController(
   context: Context,
   private val chanDescriptor: ChanDescriptor,
@@ -104,7 +104,8 @@ class AlbumViewController(
   lateinit var albumThreadControllerHelpers: AlbumThreadControllerHelpers
 
   override fun injectDependencies(component: ActivityComponent) {
-    component.inject(this)
+    // TODO: New album.
+//    component.inject(this)
   }
 
   override fun onCreate() {
@@ -531,10 +532,6 @@ class AlbumViewController(
   }
 
   private class SpanInfo(val spanCount: Int, val spanWidth: Int)
-
-  interface ThreadControllerCallbacks {
-    fun openFiltersController(chanFilterMutable: ChanFilterMutable)
-  }
 
   companion object {
     private val DEFAULT_SPAN_WIDTH = dp(120f)

@@ -6,6 +6,7 @@ import com.github.k1rakishou.chan.core.di.module.activity.ActivityModule
 import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelFactoryModule
 import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelModule
 import com.github.k1rakishou.chan.core.di.scope.PerActivity
+import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupPatternSettingsController
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupSettingsController
 import com.github.k1rakishou.chan.features.bookmarks.BookmarksController
@@ -114,7 +115,6 @@ import com.github.k1rakishou.chan.ui.compose.ThreadSearchNavigationButtonsView
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
 import com.github.k1rakishou.chan.ui.compose.lazylist.ScrollbarView
 import com.github.k1rakishou.chan.ui.controller.AlbumDownloadController
-import com.github.k1rakishou.chan.ui.controller.AlbumViewController
 import com.github.k1rakishou.chan.ui.controller.BrowseController
 import com.github.k1rakishou.chan.ui.controller.CaptchaContainerController
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
@@ -219,7 +219,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(crashReportActivity: CrashReportActivity)
 
   fun inject(albumDownloadController: AlbumDownloadController)
-  fun inject(albumViewController: AlbumViewController)
   fun inject(browseController: BrowseController)
   fun inject(mainController: MainController)
   fun inject(filtersController: FiltersController)
@@ -289,6 +288,7 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(openUrlInWebViewController: OpenUrlInWebViewController)
   fun inject(createSoundMediaController: CreateSoundMediaController)
   fun inject(kurobaComposeDialogController: KurobaComposeDialogController)
+  fun inject(albumViewControllerV2: AlbumViewControllerV2)
 
   fun inject(colorizableBarButton: ColorizableBarButton)
   fun inject(colorizableButton: ColorizableButton)

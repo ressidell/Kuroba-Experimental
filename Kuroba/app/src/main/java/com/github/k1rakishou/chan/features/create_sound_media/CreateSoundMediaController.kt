@@ -26,6 +26,9 @@ import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
+import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
@@ -37,6 +40,7 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.controller.base.BaseComposeController
+import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.errorMessageOrClassName
@@ -47,8 +51,7 @@ import javax.inject.Inject
 class CreateSoundMediaController(
   context: Context
 ) : BaseComposeController<CreateSoundMediaControllerViewModel>(
-  context = context,
-  titleStringId = R.string.create_sound_media_controller_title
+  context = context
 ) {
 
   @Inject
@@ -64,6 +67,22 @@ class CreateSoundMediaController(
 
   override fun controllerVM(): Lazy<CreateSoundMediaControllerViewModel> {
     return requireComponentActivity().viewModelByKey<CreateSoundMediaControllerViewModel>()
+  }
+
+  override fun setupNavigation() {
+    updateNavigationFlags(
+      newNavigationFlags = DeprecatedNavigationFlags()
+    )
+
+    toolbarState.enterDefaultMode(
+      leftItem = BackArrowMenuItem(
+        onClick = { requireNavController().popController() }
+      ),
+      middleContent = ToolbarMiddleContent.Title(
+        title = ToolbarText.Id(R.string.create_sound_media_controller_title),
+        subtitle = null
+      )
+    )
   }
 
   @Composable

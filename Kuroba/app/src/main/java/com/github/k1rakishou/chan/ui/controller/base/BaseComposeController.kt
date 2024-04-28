@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.ui.controller.base
 
 import android.content.Context
 import androidx.annotation.CallSuper
-import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,17 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.ViewModel
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
-import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
-import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
-import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import javax.inject.Inject
 
 abstract class BaseComposeController<VM : ViewModel>(
-  context: Context,
-  @StringRes private val titleStringId: Int
+  context: Context
 ) : Controller(context) {
 
   @Inject
@@ -29,7 +24,9 @@ abstract class BaseComposeController<VM : ViewModel>(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  protected val controllerViewModel by controllerVM()
+  private val controllerViewModelLazy = controllerVM()
+  protected val controllerViewModel: VM
+    get() = controllerViewModelLazy.value
 
   final override fun onCreate() {
     super.onCreate()
@@ -54,21 +51,7 @@ abstract class BaseComposeController<VM : ViewModel>(
     }
   }
 
-  open fun setupNavigation() {
-    updateNavigationFlags(
-      newNavigationFlags = DeprecatedNavigationFlags()
-    )
-
-    toolbarState.enterDefaultMode(
-      leftItem = BackArrowMenuItem(
-        onClick = { requireNavController().popController() }
-      ),
-      middleContent = ToolbarMiddleContent.Title(
-        title = ToolbarText.Id(titleStringId),
-        subtitle = null
-      )
-    )
-  }
+  abstract fun setupNavigation()
 
   @CallSuper
   override fun onDestroy() {

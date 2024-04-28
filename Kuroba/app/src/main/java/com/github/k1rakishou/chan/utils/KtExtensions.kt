@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.Resources
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.os.Parcelable
 import android.text.TextWatcher
 import android.view.View
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
@@ -15,12 +16,13 @@ import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.airbnb.epoxy.AsyncEpoxyController
@@ -55,6 +57,7 @@ import kotlin.reflect.jvm.isAccessible
 
 
 private val TAG = "KotlinExts"
+const val ControllerParams = "controller_params"
 
 fun Int.countDigits(): Int {
   if (this == 0) {
@@ -407,36 +410,38 @@ fun <T> rememberComposableLambda(vararg keys: Any, block: @Composable (T) -> Uni
 @Composable
 inline fun <reified VM : ViewModel> rememberViewModel(
   key: String? = null,
-  noinline defaultArgs: (@DisallowComposableCalls () -> Bundle)? = null
+  noinline params: (() -> Parcelable?)? = null
 ): VM {
   val context = LocalContext.current
 
   return remember(key1 = VM::class.java, key2 = key) {
     context.requireComponentActivity().viewModelByKeyEager<VM>(
       key = key,
-      defaultArgs = defaultArgs?.invoke()
+      params = params
     )
   }
 }
 
 inline fun <reified VM : ViewModel> ComponentActivity.viewModelByKeyEager(
   key: String? = null,
-  defaultArgs: Bundle? = null
+  noinline params: (() -> Parcelable?)? = null
 ): VM {
-  return viewModelByKey(key, defaultArgs, VM::class.java)
+  return viewModelByKey(key, params, VM::class.java)
 }
 
 inline fun <reified VM : ViewModel> ComponentActivity.viewModelByKey(
   key: String? = null,
-  defaultArgs: Bundle? = null
+  noinline params: (() -> Parcelable?)? = null
 ): Lazy<VM> {
-  return lazy(LazyThreadSafetyMode.NONE) { viewModelByKey(key, defaultArgs, VM::class.java) }
+  return lazy(LazyThreadSafetyMode.NONE) {
+    return@lazy viewModelByKey(key, params, VM::class.java)
+  }
 }
 
 @PublishedApi
 internal fun <VM : ViewModel> ComponentActivity.viewModelByKey(
   key: String? = null,
-  defaultArgs: Bundle? = null,
+  params: (() -> Parcelable?)? = null,
   clazz: Class<VM>
 ): VM {
   val viewModelProviderFactory = (this as? IHasViewModelProviderFactory)
@@ -444,6 +449,11 @@ internal fun <VM : ViewModel> ComponentActivity.viewModelByKey(
 
   val factory = viewModelProviderFactory.viewModelFactory as? AbstractSavedStateViewModelFactory
     ?: throw IllegalStateException("The viewModelFactory is not an instance of AbstractSavedStateViewModelFactory")
+
+  val defaultArgs = params?.let { paramsFunc ->
+    val paramsData = paramsFunc()
+    return@let bundleOf(ControllerParams to paramsData)
+  }
 
   factory.updateDefaultArgs(defaultArgs)
 
@@ -491,4 +501,12 @@ fun Context.startActivitySafe(intent: Intent) {
     showToast(this, "Failed to start activity (${activityName}) because of an unknown error. " +
       "Error=${error.errorMessageOrClassName()}, intent=$intent", Toast.LENGTH_LONG)
   }
+}
+
+fun <T : Parcelable> SavedStateHandle.paramsOrNull(): T? {
+  return get<T>(ControllerParams)
+}
+
+inline fun <reified T : Parcelable> SavedStateHandle.requireParams(): T {
+  return requireNotNull(paramsOrNull<T>()) { "Params were not passed: ${T::class.java.simpleName}" }
 }

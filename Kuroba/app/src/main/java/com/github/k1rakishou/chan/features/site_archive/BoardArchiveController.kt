@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.features.site_archive
 
 import android.content.Context
+import android.os.Parcelable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -25,7 +26,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.os.bundleOf
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
@@ -51,6 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
+import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
 class BoardArchiveController(
@@ -66,7 +67,7 @@ class BoardArchiveController(
 
   private val viewModel by requireComponentActivity().viewModelByKey<BoardArchiveViewModel>(
     key = catalogDescriptor.serializeToString(),
-    defaultArgs = bundleOf(BoardArchiveViewModel.CatalogDescriptorParam to catalogDescriptor)
+    params = { Params(catalogDescriptor) }
   )
 
   override fun injectDependencies(component: ActivityComponent) {
@@ -371,6 +372,11 @@ class BoardArchiveController(
       )
     }
   }
+
+  @Parcelize
+  data class Params(
+    val catalogDescriptor: ChanDescriptor.CatalogDescriptor
+  ) : Parcelable
 
   companion object {
     private const val ACTION_SEARCH = 0

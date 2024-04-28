@@ -17,16 +17,12 @@ import com.github.k1rakishou.model.data.post.LoaderType
 import com.github.k1rakishou.model.data.post.PostComment
 import com.github.k1rakishou.model.util.ChanPostUtils
 import okhttp3.HttpUrl
-import java.util.*
 import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.Comparator
-import kotlin.collections.ArrayList
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
 import kotlin.concurrent.read
 import kotlin.concurrent.write
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 class ChanThread(
@@ -162,7 +158,6 @@ class ChanThread(
     return lock.read { threadPosts.toList() }
   }
 
-  @OptIn(ExperimentalTime::class)
   fun addOrUpdatePosts(newChanPosts: List<ChanPost>, postsFromServerData: PostsFromServerData?): Boolean {
     if (newChanPosts.isEmpty()) {
       return true

@@ -28,6 +28,10 @@ import com.github.k1rakishou.model.repository.ChanPostRepository
 import com.github.k1rakishou.model.source.cache.thread.ChanThreadsCache
 import com.github.k1rakishou.model.util.ChanPostUtils
 import dagger.Lazy
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import okhttp3.HttpUrl
 import kotlin.time.measureTime
 
@@ -62,6 +66,12 @@ class ChanThreadManager(
     get() = _threadDataPreloader.get()
   private val catalogDataPreloader: CatalogDataPreloader
     get() = _catalogDataPreloader.get()
+
+  private val _chanDescriptorLoadFinishedEventsFlow = MutableSharedFlow<LoadedChanDescriptor>(
+    extraBufferCapacity = Channel.UNLIMITED
+  )
+  val chanDescriptorLoadFinishedEventsFlow: SharedFlow<LoadedChanDescriptor>
+    get() = _chanDescriptorLoadFinishedEventsFlow.asSharedFlow()
 
   // Only accessed on the main thread
   private val requestedChanDescriptors = hashSetOf<ChanDescriptor>()
@@ -167,6 +177,18 @@ class ChanThreadManager(
             Logger.d(TAG, "loadThreadOrCatalog(), descriptor=${descriptor} postloadCatalogInfo took $preloadTime")
           }
           is ChanDescriptor.CompositeCatalogDescriptor -> error("Cannot use CompositeCatalogDescriptor here")
+        }
+
+        if (compositeCatalogDescriptor != null) {
+          _chanDescriptorLoadFinishedEventsFlow.emit(
+            LoadedChanDescriptor.Composite(
+              compositeCatalogDescriptor = compositeCatalogDescriptor
+            )
+          )
+        } else {
+          _chanDescriptorLoadFinishedEventsFlow.emit(
+            LoadedChanDescriptor.Regular(loadedDescriptor = chanDescriptor)
+          )
         }
       }
       is ThreadLoadResult.Error -> {
@@ -657,6 +679,16 @@ class ChanThreadManager(
     }
 
     return null
+  }
+
+  sealed interface LoadedChanDescriptor {
+    data class Composite(
+      val compositeCatalogDescriptor: ChanDescriptor.CompositeCatalogDescriptor
+    ) : LoadedChanDescriptor
+
+    data class Regular(
+      val loadedDescriptor: ChanDescriptor
+    ) : LoadedChanDescriptor
   }
 
   companion object {

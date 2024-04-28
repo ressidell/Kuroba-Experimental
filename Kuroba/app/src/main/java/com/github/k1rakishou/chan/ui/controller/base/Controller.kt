@@ -179,7 +179,12 @@ abstract class Controller(
 
   fun requireComponentActivity(): ComponentActivity {
     return (context as? ComponentActivity)
-      ?: throw IllegalStateException("Wrong context! Must be ComponentActivity")
+      ?: throw IllegalStateException("Wrong context! Expected ComponentActivity but got '${context::class.java.name}'")
+  }
+
+  fun requireControllerHostActivity(): ControllerHostActivity {
+    return (context as? ControllerHostActivity)
+      ?: throw IllegalStateException("Wrong context! Expected ControllerHostActivity but got '${context::class.java.name}'")
   }
 
   fun isViewInitialized(): Boolean = ::view.isInitialized
@@ -349,16 +354,17 @@ abstract class Controller(
         return true
       }
     }
+
     return false
   }
 
   @JvmOverloads
   open fun presentController(controller: Controller, animated: Boolean = true) {
-    val contentView = (context as ControllerHostActivity).contentView
+    val contentView = requireControllerHostActivity().contentView
     presentingThisController = controller
 
     controller.presentedByController = this
-    (context as ControllerHostActivity).pushController(controller)
+    requireControllerHostActivity().pushController(controller)
 
     controller.onCreate()
     controller.attachToView(contentView)
@@ -374,11 +380,11 @@ abstract class Controller(
   }
 
   fun isAlreadyPresenting(predicate: (Controller) -> Boolean): Boolean {
-    return (context as ControllerHostActivity).isControllerAdded(predicate)
+    return requireControllerHostActivity().isControllerAdded(predicate)
   }
 
   fun getControllerOrNull(predicate: (Controller) -> Boolean): Controller? {
-    return (context as ControllerHostActivity).getControllerOrNull(predicate)
+    return requireControllerHostActivity().getControllerOrNull(predicate)
   }
 
   open fun stopPresenting() {
@@ -386,7 +392,7 @@ abstract class Controller(
   }
 
   open fun stopPresenting(animated: Boolean) {
-    val startActivity = (context as ControllerHostActivity)
+    val startActivity = requireControllerHostActivity()
     if (!startActivity.containsController(this)) {
       return
     }

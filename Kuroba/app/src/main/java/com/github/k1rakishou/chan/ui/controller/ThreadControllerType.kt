@@ -1,8 +1,11 @@
 package com.github.k1rakishou.chan.ui.controller
 
+import android.os.Parcelable
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
+import kotlinx.parcelize.Parcelize
 
-enum class ThreadControllerType {
+@Parcelize
+enum class ThreadControllerType : Parcelable {
   Catalog,
   Thread;
 

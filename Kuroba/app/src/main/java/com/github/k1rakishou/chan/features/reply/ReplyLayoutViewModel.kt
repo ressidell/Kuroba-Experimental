@@ -43,6 +43,7 @@ import com.github.k1rakishou.chan.ui.helper.RuntimePermissionsHelper
 import com.github.k1rakishou.chan.ui.helper.picker.ImagePickHelper
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.MediaUtils
+import com.github.k1rakishou.chan.utils.requireParams
 import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
@@ -140,11 +141,8 @@ class ReplyLayoutViewModel(
       initialValue = false
     )
 
-  private val threadControllerType by lazy {
-    requireNotNull(savedStateHandle.get<ThreadControllerType>(ThreadControllerTypeParam)) {
-      "'${ThreadControllerTypeParam}' was not passed as a parameter of this ViewModel"
-    }
-  }
+  private val threadControllerType: ThreadControllerType
+    get() = savedStateHandle.requireParams()
 
   val captchaHolderCaptchaCounterUpdatesFlow: Flow<Int>
     get() = captchaHolder.listenForCaptchaUpdates()
@@ -906,7 +904,6 @@ class ReplyLayoutViewModel(
 
   companion object {
     private const val TAG = "ReplyLayoutViewModel"
-    const val ThreadControllerTypeParam = "thread_controller_type"
   }
 
 }

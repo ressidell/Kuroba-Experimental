@@ -25,6 +25,7 @@ import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.ThreadFollowHistoryManager
 import com.github.k1rakishou.chan.core.manager.ThreadPostSearchManager
 import com.github.k1rakishou.chan.core.site.Site
+import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.filters.FiltersController
 import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
@@ -84,7 +85,7 @@ abstract class ThreadController(
   SlideChangeListener,
   ApplicationVisibilityListener,
   ThemeEngine.ThemeChangesListener,
-  AlbumViewController.ThreadControllerCallbacks {
+  ThreadControllerCallbacks {
 
   @Inject
   lateinit var siteManagerLazy: Lazy<SiteManager>
@@ -240,7 +241,7 @@ abstract class ThreadController(
             return@collect
           }
 
-          showAlbum(openAlbumEvent.chanPostImage.imageUrl, threadLayout.displayingPostDescriptors)
+          showAlbum(openAlbumEvent.chanPostImage.imageUrl)
         }
     }
 
@@ -431,16 +432,20 @@ abstract class ThreadController(
     }
   }
 
-  override fun showAlbum(initialImageUrl: HttpUrl?, displayingPostDescriptors: List<PostDescriptor>) {
-    val descriptor = chanDescriptor
-      ?: return
-
-    val albumViewController = AlbumViewController(context, descriptor, displayingPostDescriptors)
-    if (!albumViewController.tryCollectingImages(initialImageUrl)) {
-      return
+  override fun showAlbum(initialImageUrl: HttpUrl?) {
+    val listenMode = when (chanDescriptor) {
+      is ChanDescriptor.ICatalogDescriptor -> AlbumViewControllerV2.ListenMode.Catalog
+      is ChanDescriptor.ThreadDescriptor -> AlbumViewControllerV2.ListenMode.Thread
+      null -> return
     }
 
-    pushController(albumViewController)
+    val albumViewControllerV2 = AlbumViewControllerV2(
+      context = context,
+      listenMode = listenMode,
+      initialImageFullUrl = initialImageUrl?.toString()
+    )
+
+    pushController(albumViewControllerV2)
   }
 
   override fun pushController(controller: Controller) {
@@ -881,4 +886,8 @@ abstract class ThreadController(
     private const val ACTION_GLOBAL_NSFW_MODE = 9106
     private const val ACTION_THIRD_EYE_SETTINGS = 9107
   }
+}
+
+interface ThreadControllerCallbacks {
+  fun openFiltersController(chanFilterMutable: ChanFilterMutable)
 }

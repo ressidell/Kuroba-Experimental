@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.core.di.module.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.github.k1rakishou.chan.core.di.key.ViewModelKey
+import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2ViewModel
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupPatternSettingsControllerViewModel
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupSettingsControllerViewModel
 import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaControllerViewModel
@@ -167,6 +168,13 @@ abstract class ViewModelModule {
   @Binds
   abstract fun bindCompositeCatalogsSetupControllerViewModel(
     impl: CompositeCatalogsSetupControllerViewModel.ViewModelFactory
+  ): ViewModelAssistedFactory<out ViewModel>
+
+  @IntoMap
+  @ViewModelKey(AlbumViewControllerV2ViewModel::class)
+  @Binds
+  abstract fun bindAlbumViewControllerV2ViewModel(
+    impl: AlbumViewControllerV2ViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
 
 }

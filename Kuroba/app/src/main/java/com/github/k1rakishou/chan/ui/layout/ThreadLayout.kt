@@ -789,8 +789,8 @@ class ThreadLayout @JvmOverloads constructor(
     callback.showImages(chanDescriptor, initialImageUrl, transitionThumbnailUrl)
   }
 
-  override fun showAlbum(initialImageUrl: HttpUrl?, displayingPostDescriptors: List<PostDescriptor>) {
-    callback.showAlbum(initialImageUrl, displayingPostDescriptors)
+  override fun showAlbum(initialImageUrl: HttpUrl?) {
+    callback.showAlbum(initialImageUrl)
   }
 
   override fun scrollTo(displayPosition: Int) {
@@ -1490,7 +1490,7 @@ class ThreadLayout @JvmOverloads constructor(
     fun pushController(controller: Controller)
     fun openMediaLinkInMediaViewer(link: String)
     fun showImages(chanDescriptor: ChanDescriptor, initialImageUrl: String?, transitionThumbnailUrl: String)
-    fun showAlbum(initialImageUrl: HttpUrl?, displayingPostDescriptors: List<PostDescriptor>)
+    fun showAlbum(initialImageUrl: HttpUrl?)
     fun onShowLoading()
     fun onShowPosts(chanDescriptor: ChanDescriptor)
     fun onShowError()
