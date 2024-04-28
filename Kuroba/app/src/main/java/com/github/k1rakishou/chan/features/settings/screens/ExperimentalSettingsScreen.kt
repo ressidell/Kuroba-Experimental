@@ -38,15 +38,6 @@ class ExperimentalSettingsScreen(
 
         group += BooleanSettingV2.createBuilder(
           context = context,
-          identifier = ExperimentalScreen.MainSettingsGroup.OkHttpAllowHttp2,
-          topDescriptionIdFunc = { R.string.setting_allow_okhttp_http2 },
-          bottomDescriptionIdFunc = { R.string.setting_allow_okhttp_http2_ipv6_description },
-          setting = ChanSettings.okHttpAllowHttp2,
-          requiresRestart = true
-        )
-
-        group += BooleanSettingV2.createBuilder(
-          context = context,
           identifier = ExperimentalScreen.MainSettingsGroup.OkHttpAllowIpv6,
           topDescriptionIdFunc = { R.string.setting_allow_okhttp_ipv6 },
           bottomDescriptionIdFunc = { R.string.setting_allow_okhttp_http2_ipv6_description },

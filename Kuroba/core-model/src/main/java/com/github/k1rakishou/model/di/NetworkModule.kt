@@ -4,7 +4,6 @@ import com.github.k1rakishou.common.dns.CompositeDnsSelector
 import dagger.Module
 import dagger.Provides
 import okhttp3.OkHttpClient
-import okhttp3.Protocol
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -18,7 +17,6 @@ class NetworkModule {
       .connectTimeout(30, TimeUnit.SECONDS)
       .readTimeout(30, TimeUnit.SECONDS)
       .writeTimeout(30, TimeUnit.SECONDS)
-      .protocols(dependencies.okHttpProtocols.protocols)
       .build()
 
     val compositeDnsSelector = CompositeDnsSelector(
@@ -32,6 +30,4 @@ class NetworkModule {
       .dns(compositeDnsSelector)
       .build()
   }
-
-  class OkHttpProtocolList(val protocols: List<Protocol>)
 }

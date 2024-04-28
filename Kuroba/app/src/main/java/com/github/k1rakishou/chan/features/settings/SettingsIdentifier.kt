@@ -2,7 +2,7 @@
 
 package com.github.k1rakishou.chan.features.settings
 
-import java.util.*
+import java.util.Locale
 
 @JvmInline
 value class Identifier(val id: String)
@@ -767,7 +767,6 @@ sealed class ExperimentalScreen(
   ) : IGroup,
     ExperimentalScreen(groupIdentifier, SettingIdentifier(settingsId)) {
 
-    object OkHttpAllowHttp2 : MainSettingsGroup("ok_http_allow_http_2")
     object OkHttpAllowIpv6 : MainSettingsGroup("ok_http_allow_ipv6")
     object OkHttpUseDnsOverHttps : MainSettingsGroup("ok_http_use_dns_over_https")
     object CloudflareForcePreload : MainSettingsGroup("cloudflare_force_preload")

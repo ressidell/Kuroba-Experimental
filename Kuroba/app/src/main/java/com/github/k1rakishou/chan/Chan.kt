@@ -21,7 +21,6 @@ import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.SystemClock
@@ -73,7 +72,6 @@ import com.github.k1rakishou.fsaf.BadPathSymbolResolutionStrategy
 import com.github.k1rakishou.fsaf.FileManager
 import com.github.k1rakishou.fsaf.manager.base_directory.DirectoryManager
 import com.github.k1rakishou.model.ModelModuleInjector
-import com.github.k1rakishou.model.di.NetworkModule
 import com.github.k1rakishou.persist_state.PersistableChanState
 import dagger.Lazy
 import io.reactivex.exceptions.UndeliverableException
@@ -89,7 +87,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
-import okhttp3.Protocol
 import okhttp3.dnsoverhttps.DnsOverHttps
 import org.acra.config.httpSender
 import org.acra.data.StringFormat
@@ -171,25 +168,6 @@ class Chan : Application(), ActivityLifecycleCallbacks {
       return DnsOverHttpsSelector(selector)
     }
   }
-
-  private val okHttpProtocols: OkHttpProtocols
-    get() {
-      Logger.deps("OkHttpProtocols")
-
-      if (ChanSettings.okHttpAllowHttp2.get()) {
-        Logger.d(Logger.DI_TAG, "Using HTTP_2 and HTTP_1_1")
-        return OkHttpProtocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
-      }
-
-      Logger.d(Logger.DI_TAG, "Using HTTP_1_1")
-      return OkHttpProtocols(listOf(Protocol.HTTP_1_1))
-    }
-
-  private val isEmulator: Boolean
-    get() = (Build.MODEL.contains("google_sdk")
-      || Build.MODEL.contains("Emulator")
-      || Build.MODEL.contains("Android SDK"))
-
 
   val applicationInForeground: Boolean
     get() = activityForegroundCounter > 0
@@ -284,7 +262,6 @@ class Chan : Application(), ActivityLifecycleCallbacks {
 
     applicationMigrationManager.performMigration(this)
 
-    val okHttpProtocols = okHttpProtocols
     val fileManager = provideApplicationFileManager()
     val imageSaverFileManagerWrapper =  provideImageSaverFileManagerWrapper()
     val threadDownloaderFileManagerWrapper =  provideThreadDownloaderFileManagerWrapper()
@@ -304,7 +281,6 @@ class Chan : Application(), ActivityLifecycleCallbacks {
       scope = applicationScope,
       normalDnsSelectorFactory = normalDnsCreatorFactory,
       dnsOverHttpsSelectorFactory = dnsOverHttpsCreatorFactory,
-      protocols = NetworkModule.OkHttpProtocolList(okHttpProtocols.protocols),
       verboseLogs = ChanSettings.verboseLogs.get(),
       isDevFlavor = isDev,
       isLowRamDevice = ChanSettings.isLowRamDevice(),
@@ -327,7 +303,6 @@ class Chan : Application(), ActivityLifecycleCallbacks {
       .applicationCoroutineScope(applicationScope)
       .normalDnsSelectorFactory(normalDnsCreatorFactory)
       .dnsOverHttpsSelectorFactory(dnsOverHttpsCreatorFactory)
-      .okHttpProtocols(okHttpProtocols)
       .appConstants(appConstants)
       .modelMainComponent(modelComponent)
       .appModule(AppModule())
@@ -557,8 +532,6 @@ class Chan : Application(), ActivityLifecycleCallbacks {
 
   override fun onActivityDestroyed(activity: Activity) {}
   override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-
-  class OkHttpProtocols(val protocols: List<Protocol>)
 
   companion object {
     private const val TAG = "Chan"

@@ -374,7 +374,6 @@ public class ChanSettings {
     //endregion
 
     //region EXPERIMENTAL
-    public static BooleanSetting okHttpAllowHttp2;
     public static BooleanSetting okHttpAllowIpv6;
     public static BooleanSetting okHttpUseDnsOverHttps;
     public static BooleanSetting cloudflareForcePreload;
@@ -610,7 +609,6 @@ public class ChanSettings {
         //endregion
 
         //region EXPERIMENTAL
-        okHttpAllowHttp2 = new BooleanSetting(provider, "ok_http_allow_http_2", true);
         okHttpAllowIpv6 = new BooleanSetting(provider, "ok_http_allow_ipv6", false);
         okHttpUseDnsOverHttps = new BooleanSetting(provider, "ok_http_use_dns_over_https", false);
         prefetchMedia = new BooleanSetting(provider, "preference_auto_load_thread", false);

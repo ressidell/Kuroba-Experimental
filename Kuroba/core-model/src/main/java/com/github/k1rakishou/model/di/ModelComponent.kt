@@ -78,7 +78,6 @@ interface ModelComponent {
     val okHttpUseDnsOverHttps: Boolean,
     val normalDnsSelectorFactory: NormalDnsSelectorFactory,
     val dnsOverHttpsSelectorFactory: DnsOverHttpsSelectorFactory,
-    val okHttpProtocols: NetworkModule.OkHttpProtocolList,
     val appConstants: AppConstants
   )
 

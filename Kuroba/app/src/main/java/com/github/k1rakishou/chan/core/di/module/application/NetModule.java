@@ -20,7 +20,6 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 
 import com.github.k1rakishou.ChanSettings;
-import com.github.k1rakishou.chan.Chan;
 import com.github.k1rakishou.chan.core.base.okhttp.CoilOkHttpClient;
 import com.github.k1rakishou.chan.core.base.okhttp.HttpLoggingInterceptorLazy;
 import com.github.k1rakishou.chan.core.base.okhttp.ProxiedOkHttpClient;
@@ -128,7 +127,6 @@ public class NetModule {
     public ProxiedOkHttpClient provideProxiedOkHttpClient(
             NormalDnsSelectorFactory normalDnsSelectorFactory,
             DnsOverHttpsSelectorFactory dnsOverHttpsSelectorFactory,
-            Chan.OkHttpProtocols okHttpProtocols,
             ProxyStorage proxyStorage,
             HttpLoggingInterceptorLazy httpLoggingInterceptorLazy,
             SiteResolver siteResolver,
@@ -139,7 +137,6 @@ public class NetModule {
         return new RealProxiedOkHttpClient(
                 normalDnsSelectorFactory,
                 dnsOverHttpsSelectorFactory,
-                okHttpProtocols,
                 proxyStorage,
                 httpLoggingInterceptorLazy,
                 siteResolver,
@@ -156,7 +153,6 @@ public class NetModule {
             Context applicationContext,
             NormalDnsSelectorFactory normalDnsSelectorFactory,
             DnsOverHttpsSelectorFactory dnsOverHttpsSelectorFactory,
-            Chan.OkHttpProtocols okHttpProtocols,
             ProxyStorage proxyStorage,
             HttpLoggingInterceptorLazy httpLoggingInterceptorLazy,
             SiteResolver siteResolver,
@@ -168,7 +164,6 @@ public class NetModule {
                 applicationContext,
                 normalDnsSelectorFactory,
                 dnsOverHttpsSelectorFactory,
-                okHttpProtocols,
                 proxyStorage,
                 httpLoggingInterceptorLazy,
                 siteResolver,
@@ -184,7 +179,6 @@ public class NetModule {
     public RealDownloaderOkHttpClient provideDownloaderOkHttpClient(
             NormalDnsSelectorFactory normalDnsSelectorFactory,
             DnsOverHttpsSelectorFactory dnsOverHttpsSelectorFactory,
-            Chan.OkHttpProtocols okHttpProtocols,
             ProxyStorage proxyStorage,
             HttpLoggingInterceptorLazy httpLoggingInterceptorLazy,
             SiteResolver siteResolver,
@@ -195,7 +189,6 @@ public class NetModule {
         return new RealDownloaderOkHttpClient(
                 normalDnsSelectorFactory,
                 dnsOverHttpsSelectorFactory,
-                okHttpProtocols,
                 proxyStorage,
                 httpLoggingInterceptorLazy,
                 siteResolver,

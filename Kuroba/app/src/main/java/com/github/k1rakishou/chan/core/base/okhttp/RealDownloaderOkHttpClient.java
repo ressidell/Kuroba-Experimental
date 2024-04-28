@@ -3,7 +3,6 @@ package com.github.k1rakishou.chan.core.base.okhttp;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.github.k1rakishou.ChanSettings;
-import com.github.k1rakishou.chan.Chan;
 import com.github.k1rakishou.chan.core.helper.ProxyStorage;
 import com.github.k1rakishou.chan.core.manager.FirewallBypassManager;
 import com.github.k1rakishou.chan.core.net.KurobaProxySelector;
@@ -22,7 +21,6 @@ import okhttp3.OkHttpClient;
 public class RealDownloaderOkHttpClient implements DownloaderOkHttpClient {
     private final NormalDnsSelectorFactory normalDnsSelectorFactory;
     private final DnsOverHttpsSelectorFactory dnsOverHttpsSelectorFactory;
-    private final Chan.OkHttpProtocols okHttpProtocols;
     private final HttpLoggingInterceptorLazy httpLoggingInterceptorLazy;
     private final ProxyStorage proxyStorage;
     private final SiteResolver siteResolver;
@@ -34,7 +32,6 @@ public class RealDownloaderOkHttpClient implements DownloaderOkHttpClient {
     public RealDownloaderOkHttpClient(
             NormalDnsSelectorFactory normalDnsSelectorFactory,
             DnsOverHttpsSelectorFactory dnsOverHttpsSelectorFactory,
-            Chan.OkHttpProtocols okHttpProtocols,
             ProxyStorage proxyStorage,
             HttpLoggingInterceptorLazy httpLoggingInterceptorLazy,
             SiteResolver siteResolver,
@@ -42,7 +39,6 @@ public class RealDownloaderOkHttpClient implements DownloaderOkHttpClient {
     ) {
         this.normalDnsSelectorFactory = normalDnsSelectorFactory;
         this.dnsOverHttpsSelectorFactory = dnsOverHttpsSelectorFactory;
-        this.okHttpProtocols = okHttpProtocols;
         this.proxyStorage = proxyStorage;
         this.httpLoggingInterceptorLazy = httpLoggingInterceptorLazy;
         this.siteResolver = siteResolver;
@@ -70,7 +66,6 @@ public class RealDownloaderOkHttpClient implements DownloaderOkHttpClient {
                             .readTimeout(5, SECONDS)
                             .writeTimeout(5, SECONDS)
                             .proxySelector(kurobaProxySelector)
-                            .protocols(okHttpProtocols.getProtocols())
                             .addInterceptor(interceptor);
 
                     HttpLoggingInterceptorInstaller.install(builder, httpLoggingInterceptorLazy);

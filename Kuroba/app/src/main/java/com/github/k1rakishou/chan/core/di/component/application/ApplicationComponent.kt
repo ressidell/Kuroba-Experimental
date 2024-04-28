@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.core.di.component.application
 
 import android.content.Context
 import com.github.k1rakishou.chan.Chan
-import com.github.k1rakishou.chan.Chan.OkHttpProtocols
 import com.github.k1rakishou.chan.core.base.okhttp.CloudFlareHandlerInterceptor
 import com.github.k1rakishou.chan.core.di.ApplicationDependencies
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
@@ -99,8 +98,6 @@ interface ApplicationComponent : ApplicationDependencies {
     fun normalDnsSelectorFactory(normalDnsSelectorFactory: NormalDnsSelectorFactory): Builder
     @BindsInstance
     fun dnsOverHttpsSelectorFactory(dnsOverHttpsSelectorFactory: DnsOverHttpsSelectorFactory): Builder
-    @BindsInstance
-    fun okHttpProtocols(okHttpProtocols: OkHttpProtocols): Builder
     @BindsInstance
     fun appConstants(appConstants: AppConstants): Builder
     @BindsInstance

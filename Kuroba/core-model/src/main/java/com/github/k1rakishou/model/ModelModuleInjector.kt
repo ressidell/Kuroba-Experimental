@@ -6,7 +6,6 @@ import com.github.k1rakishou.common.dns.DnsOverHttpsSelectorFactory
 import com.github.k1rakishou.common.dns.NormalDnsSelectorFactory
 import com.github.k1rakishou.model.di.DaggerModelComponent
 import com.github.k1rakishou.model.di.ModelComponent
-import com.github.k1rakishou.model.di.NetworkModule
 import kotlinx.coroutines.CoroutineScope
 
 object ModelModuleInjector {
@@ -18,7 +17,6 @@ object ModelModuleInjector {
     scope: CoroutineScope,
     normalDnsSelectorFactory: NormalDnsSelectorFactory,
     dnsOverHttpsSelectorFactory: DnsOverHttpsSelectorFactory,
-    protocols: NetworkModule.OkHttpProtocolList,
     verboseLogs: Boolean,
     isDevFlavor: Boolean,
     isLowRamDevice: Boolean,
@@ -34,7 +32,6 @@ object ModelModuleInjector {
       okHttpUseDnsOverHttps = okHttpUseDnsOverHttps,
       normalDnsSelectorFactory = normalDnsSelectorFactory,
       dnsOverHttpsSelectorFactory = dnsOverHttpsSelectorFactory,
-      okHttpProtocols = protocols,
       appConstants = appConstants
     )
 
