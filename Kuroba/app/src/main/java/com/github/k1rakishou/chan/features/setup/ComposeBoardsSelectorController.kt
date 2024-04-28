@@ -72,9 +72,7 @@ class ComposeBoardsSelectorController(
   @Inject
   lateinit var imageLoaderV2: ImageLoaderV2
 
-  private val viewModel by lazy {
-    requireComponentActivity().viewModelByKey<ComposeBoardsSelectorControllerViewModel>()
-  }
+  private val viewModel by requireComponentActivity().viewModelByKey<ComposeBoardsSelectorControllerViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

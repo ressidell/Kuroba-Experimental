@@ -54,7 +54,7 @@ abstract class MediaViewerActionStrip(
   private lateinit var repliesCountTextView: TextView
 
   private val scope = KurobaCoroutineScope()
-  private val controllerViewModel by lazy { context.requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>() }
+  private val controllerViewModel by context.requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>()
 
   private var mediaViewerStripCallbacks: MediaViewerBottomActionStripCallbacks? = null
   private var chanDescriptor: ChanDescriptor? = null

@@ -83,9 +83,7 @@ class BookmarkGroupSettingsController(
   private val isBookmarkMoveMode: Boolean
     get() = bookmarksToMove != null
 
-  private val viewModel by lazy {
-    requireComponentActivity().viewModelByKey<BookmarkGroupSettingsControllerViewModel>()
-  }
+  private val viewModel by requireComponentActivity().viewModelByKey<BookmarkGroupSettingsControllerViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

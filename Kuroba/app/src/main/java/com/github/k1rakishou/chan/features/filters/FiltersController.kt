@@ -128,9 +128,7 @@ class FiltersController(
   @Inject
   lateinit var importFiltersUseCase: ImportFiltersUseCase
 
-  private val viewModel by lazy {
-    requireComponentActivity().viewModelByKey<FiltersControllerViewModel>()
-  }
+  private val viewModel by requireComponentActivity().viewModelByKey<FiltersControllerViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

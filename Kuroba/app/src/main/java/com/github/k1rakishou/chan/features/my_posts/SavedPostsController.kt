@@ -76,7 +76,7 @@ class SavedPostsController(
   @Inject
   lateinit var dialogFactory: DialogFactory
 
-  private val viewModel by lazy { requireComponentActivity().viewModelByKey<SavedPostsViewModel>() }
+  private val viewModel by requireComponentActivity().viewModelByKey<SavedPostsViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

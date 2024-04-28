@@ -124,7 +124,7 @@ class LocalArchiveController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by lazy { requireComponentActivity().viewModelByKey<LocalArchiveViewModel>() }
+  private val viewModel by requireComponentActivity().viewModelByKey<LocalArchiveViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

@@ -144,9 +144,7 @@ class MainController(
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
     get() = (context as StartActivityStartupHandlerHelper.StartActivityCallbacks)
 
-  private val mainControllerViewModel by lazy {
-    requireComponentActivity().viewModelByKey<MainControllerViewModel>()
-  }
+  private val mainControllerViewModel by requireComponentActivity().viewModelByKey<MainControllerViewModel>()
 
   private val topThreadController: ThreadController?
     get() {

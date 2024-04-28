@@ -29,7 +29,7 @@ abstract class BaseComposeController<VM : ViewModel>(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  protected val controllerViewModel by lazy { controllerVM() }
+  protected val controllerViewModel by controllerVM()
 
   final override fun onCreate() {
     super.onCreate()
@@ -79,7 +79,7 @@ abstract class BaseComposeController<VM : ViewModel>(
 
   }
 
-  abstract fun controllerVM(): VM
+  abstract fun controllerVM(): Lazy<VM>
 
   @Composable
   abstract fun BuildContent()

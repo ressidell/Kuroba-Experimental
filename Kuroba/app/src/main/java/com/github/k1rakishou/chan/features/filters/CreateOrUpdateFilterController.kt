@@ -104,9 +104,7 @@ class CreateOrUpdateFilterController(
   @Inject
   lateinit var dialogFactory: DialogFactory
 
-  private val viewModel by lazy(LazyThreadSafetyMode.NONE) {
-    requireComponentActivity().viewModelByKey<FilterBoardSelectorControllerViewModel>()
-  }
+  private val viewModel by requireComponentActivity().viewModelByKey<FilterBoardSelectorControllerViewModel>()
 
   private val chanFilterMutableState = ChanFilterMutableState.fromChanFilterMutable(previousChanFilterMutable)
 

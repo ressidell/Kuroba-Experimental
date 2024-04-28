@@ -86,8 +86,11 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
   @Inject
   lateinit var snackbarManagerFactory: SnackbarManagerFactory
 
-  protected val snackbarManager by lazy { snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer) }
-  private val controllerViewModel by lazy { context.requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>() }
+  protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) {
+    snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer)
+  }
+
+  private val controllerViewModel by context.requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>()
 
   private var _mediaViewToolbar: MediaViewerToolbar? = null
 

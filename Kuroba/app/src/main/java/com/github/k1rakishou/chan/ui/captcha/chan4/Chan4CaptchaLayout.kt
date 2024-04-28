@@ -112,7 +112,7 @@ class Chan4CaptchaLayout(
   @Inject
   lateinit var dialogFactory: DialogFactory
 
-  private val viewModel by lazy { (context as ComponentActivity).viewModelByKey<Chan4CaptchaLayoutViewModel>() }
+  private val viewModel by (context as ComponentActivity).viewModelByKey<Chan4CaptchaLayoutViewModel>()
   private val scope = KurobaCoroutineScope()
 
   private var siteDescriptor: SiteDescriptor? = null

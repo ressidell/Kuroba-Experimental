@@ -412,18 +412,25 @@ inline fun <reified VM : ViewModel> rememberViewModel(
   val context = LocalContext.current
 
   return remember(key1 = VM::class.java, key2 = key) {
-    context.requireComponentActivity().viewModelByKey<VM>(
+    context.requireComponentActivity().viewModelByKeyEager<VM>(
       key = key,
       defaultArgs = defaultArgs?.invoke()
     )
   }
 }
 
-inline fun <reified VM : ViewModel> ComponentActivity.viewModelByKey(
+inline fun <reified VM : ViewModel> ComponentActivity.viewModelByKeyEager(
   key: String? = null,
   defaultArgs: Bundle? = null
 ): VM {
   return viewModelByKey(key, defaultArgs, VM::class.java)
+}
+
+inline fun <reified VM : ViewModel> ComponentActivity.viewModelByKey(
+  key: String? = null,
+  defaultArgs: Bundle? = null
+): Lazy<VM> {
+  return lazy(LazyThreadSafetyMode.NONE) { viewModelByKey(key, defaultArgs, VM::class.java) }
 }
 
 @PublishedApi

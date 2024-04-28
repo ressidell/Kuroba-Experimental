@@ -94,7 +94,7 @@ class ImageSearchController(
     component.inject(this)
   }
 
-  override fun controllerVM(): ImageSearchControllerViewModel {
+  override fun controllerVM(): Lazy<ImageSearchControllerViewModel> {
     return requireComponentActivity().viewModelByKey<ImageSearchControllerViewModel>()
   }
 

@@ -83,7 +83,7 @@ class LynxchanCaptchaLayout(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by lazy { context.requireComponentActivity().viewModelByKey<LynxchanCaptchaLayoutViewModel>() }
+  private val viewModel by context.requireComponentActivity().viewModelByKey<LynxchanCaptchaLayoutViewModel>()
   private val scope = KurobaCoroutineScope()
 
   private var siteDescriptor: SiteDescriptor? = null

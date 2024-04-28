@@ -69,9 +69,7 @@ class CompositeCatalogsSetupController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by lazy {
-    requireComponentActivity().viewModelByKey<CompositeCatalogsSetupControllerViewModel>()
-  }
+  private val viewModel by requireComponentActivity().viewModelByKey<CompositeCatalogsSetupControllerViewModel>()
 
   private val rendezvousCoroutineExecutor = RendezvousCoroutineExecutor(controllerScope)
 

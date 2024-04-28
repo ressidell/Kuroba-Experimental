@@ -62,7 +62,7 @@ class CreateSoundMediaController(
     component.inject(this)
   }
 
-  override fun controllerVM(): CreateSoundMediaControllerViewModel {
+  override fun controllerVM(): Lazy<CreateSoundMediaControllerViewModel> {
     return requireComponentActivity().viewModelByKey<CreateSoundMediaControllerViewModel>()
   }
 

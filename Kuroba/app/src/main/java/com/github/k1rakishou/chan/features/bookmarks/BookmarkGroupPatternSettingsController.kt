@@ -68,9 +68,7 @@ class BookmarkGroupPatternSettingsController(
 
   private var matcherValidationTrigger: MutableState<Int> = mutableStateOf(0)
 
-  private val viewModel by lazy {
-    requireComponentActivity().viewModelByKey<BookmarkGroupPatternSettingsControllerViewModel>()
-  }
+  private val viewModel by requireComponentActivity().viewModelByKey<BookmarkGroupPatternSettingsControllerViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

@@ -58,7 +58,7 @@ class Chan4ReportPostController(
   @Inject
   lateinit var siteManager: SiteManager
 
-  private val viewModel by lazy { requireComponentActivity().viewModelByKey<Chan4ReportPostControllerViewModel>() }
+  private val viewModel by requireComponentActivity().viewModelByKey<Chan4ReportPostControllerViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

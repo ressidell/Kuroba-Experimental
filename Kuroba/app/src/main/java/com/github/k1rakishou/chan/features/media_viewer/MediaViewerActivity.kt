@@ -38,7 +38,7 @@ import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -66,8 +66,11 @@ class MediaViewerActivity : ControllerHostActivity(),
   private lateinit var viewModelComponent: ViewModelComponent
   private lateinit var mediaViewerController: MediaViewerController
 
-  private val snackbarManager by lazy { snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer) }
-  private val viewModel by lazy { requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>() }
+  private val snackbarManager by lazy(LazyThreadSafetyMode.PUBLICATION) {
+    snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer)
+  }
+
+  private val viewModel by requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

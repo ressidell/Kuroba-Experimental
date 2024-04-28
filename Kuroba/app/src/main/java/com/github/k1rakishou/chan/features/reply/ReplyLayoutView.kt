@@ -36,7 +36,7 @@ import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertDialog
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.WebViewLink
 import com.github.k1rakishou.chan.utils.WebViewLinkMovementMethod
-import com.github.k1rakishou.chan.utils.viewModelByKey
+import com.github.k1rakishou.chan.utils.viewModelByKeyEager
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.requireComponentActivity
 import com.github.k1rakishou.common.resumeValueSafe
@@ -113,7 +113,7 @@ class ReplyLayoutView @JvmOverloads constructor(
   override fun onCreate(threadControllerType: ThreadControllerType, callbacks: ReplyLayoutViewModel.ThreadListLayoutCallbacks) {
     replyLayoutCallbacks = callbacks
 
-    replyLayoutViewModel = context.requireComponentActivity().viewModelByKey<ReplyLayoutViewModel>(
+    replyLayoutViewModel = context.requireComponentActivity().viewModelByKeyEager<ReplyLayoutViewModel>(
       key = threadControllerType.name,
       defaultArgs = bundleOf(ReplyLayoutViewModel.ThreadControllerTypeParam to threadControllerType)
     )

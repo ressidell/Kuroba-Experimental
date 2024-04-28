@@ -64,12 +64,10 @@ class BoardArchiveController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by lazy {
-    requireComponentActivity().viewModelByKey<BoardArchiveViewModel>(
-      key = catalogDescriptor.serializeToString(),
-      defaultArgs = bundleOf(BoardArchiveViewModel.CatalogDescriptorParam to catalogDescriptor)
-    )
-  }
+  private val viewModel by requireComponentActivity().viewModelByKey<BoardArchiveViewModel>(
+    key = catalogDescriptor.serializeToString(),
+    defaultArgs = bundleOf(BoardArchiveViewModel.CatalogDescriptorParam to catalogDescriptor)
+  )
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

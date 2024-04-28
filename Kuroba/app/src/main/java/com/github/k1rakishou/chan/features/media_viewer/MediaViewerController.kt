@@ -289,7 +289,7 @@ class MediaViewerController(
     override fun scrollToPost(postDescriptor: PostDescriptor) {}
   }
 
-  private val postPopupHelper by lazy {
+  private val postPopupHelper by lazy(LazyThreadSafetyMode.NONE) {
     PostPopupHelper(
       context = context,
       postCellCallback = mediaViewerPostCellCallback,
@@ -298,9 +298,7 @@ class MediaViewerController(
     )
   }
 
-  private val viewModel by lazy { requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>() }
-
-  private val mediaViewerMenuHelper by lazy {
+  private val mediaViewerMenuHelper by lazy(LazyThreadSafetyMode.NONE) {
     MediaViewerMenuHelper(
       globalWindowInsetsManager = globalWindowInsetsManager,
       snackbarManager = snackbarManager,
@@ -308,7 +306,7 @@ class MediaViewerController(
     )
   }
 
-  private val mediaLongClickMenuHelper by lazy {
+  private val mediaLongClickMenuHelper by lazy(LazyThreadSafetyMode.NONE) {
     MediaLongClickMenuHelper(
       scope = controllerScope,
       globalWindowInsetsManager = globalWindowInsetsManager,
@@ -318,6 +316,8 @@ class MediaViewerController(
       presentControllerFunc = { controller -> presentController(controller, true) }
     )
   }
+
+  private val viewModel by requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>()
 
   private val transitionAnimationAwaitable = CompletableDeferred<Unit>()
 

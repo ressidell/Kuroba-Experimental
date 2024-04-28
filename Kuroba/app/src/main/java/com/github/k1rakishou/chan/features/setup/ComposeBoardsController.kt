@@ -74,9 +74,7 @@ class ComposeBoardsController(
   @Inject
   lateinit var dialogFactory: DialogFactory
 
-  private val viewModel by lazy {
-    requireComponentActivity().viewModelByKey<ComposeBoardsControllerViewModel>()
-  }
+  private val viewModel by requireComponentActivity().viewModelByKey<ComposeBoardsControllerViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

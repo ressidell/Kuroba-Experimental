@@ -42,7 +42,7 @@ class ThreadDownloaderSettingsController(
   @Inject
   lateinit var appConstants: AppConstants
 
-  private val viewModel by lazy { requireComponentActivity().viewModelByKey<ThreadDownloaderSettingsViewModel>() }
+  private val viewModel by requireComponentActivity().viewModelByKey<ThreadDownloaderSettingsViewModel>()
 
   override fun injectDependencies(component: ActivityComponent) {
     component.inject(this)

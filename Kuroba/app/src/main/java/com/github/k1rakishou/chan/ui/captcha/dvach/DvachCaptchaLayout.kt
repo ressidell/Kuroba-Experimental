@@ -86,7 +86,7 @@ class DvachCaptchaLayout(context: Context) : TouchBlockingFrameLayout(context),
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by lazy { (context as ComponentActivity).viewModelByKey<DvachCaptchaLayoutViewModel>() }
+  private val viewModel by (context as ComponentActivity).viewModelByKey<DvachCaptchaLayoutViewModel>()
   private val scope = KurobaCoroutineScope()
 
   private var siteDescriptor: SiteDescriptor? = null
