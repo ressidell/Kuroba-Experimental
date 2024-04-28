@@ -33,30 +33,31 @@ class DvachArchiveThreadsRequest(
   }
 
   private fun readHtml(document: Document): NativeArchivePostList {
-    val archiveDiv = document.getFirstElementByClassWithValue("box-data")
+    val archiveDiv = document.getFirstElementByClassWithValue("box__data")
       ?: return NativeArchivePostList()
 
-    val links: List<Element> = archiveDiv.childNodes()
-      .filter { childNode -> childNode is Element && childNode.nodeName() == "a" }
-      as List<Element>
+    val posts = archiveDiv.childNodes()
+      .filterIsInstance<Element>()
+      .filter { childNode -> childNode.nodeName() == "a" }
+      .asSequence()
+      .mapNotNull { link ->
+        // href="/mobi/arch/2020-02-05/res/11223344.html"
+        val href = link.attr("href")
 
-    val posts = links.mapNotNull { link ->
-      // href="/mobi/arch/2020-02-05/res/11223344.html"
-      val href = link.attr("href")
+        val matcher = THREAD_NO_PATTERN.matcher(href)
+        if (!matcher.find()) {
+          return@mapNotNull null
+        }
 
-      val matcher = THREAD_NO_PATTERN.matcher(href)
-      if (!matcher.find()) {
-        return@mapNotNull null
+        val threadNo = matcher.groupOrNull(1)?.toLongOrNull()
+          ?: return@mapNotNull null
+
+        return@mapNotNull NativeArchivePost.DvachNativeArchivePost(
+          threadNo = threadNo,
+          comment = link.text()
+        )
       }
-
-      val threadNo = matcher.groupOrNull(1)?.toLongOrNull()
-        ?: return@mapNotNull null
-
-      return@mapNotNull NativeArchivePost.DvachNativeArchivePost(
-        threadNo = threadNo,
-        comment =  link.text()
-      )
-    }
+      .toList()
 
     val nextPage = extractNextPage(archiveDiv)
 
