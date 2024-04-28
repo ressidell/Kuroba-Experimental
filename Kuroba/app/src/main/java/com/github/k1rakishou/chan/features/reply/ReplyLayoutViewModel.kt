@@ -493,6 +493,18 @@ class ReplyLayoutViewModel(
     withReplyLayoutState { replyLayoutState -> replyLayoutState.removeAttachedMedia(fileUuid) }
   }
 
+  fun removeThisFileName(fileUuid: UUID) {
+    withReplyLayoutState { replyLayoutState -> replyLayoutState.removeThisFileName(fileUuid) }
+  }
+
+  fun removeThisFileMetadata(fileUuid: UUID) {
+    withReplyLayoutState { replyLayoutState -> replyLayoutState.removeThisFileMetadata(fileUuid) }
+  }
+
+  fun changeThisFileChecksum(fileUuid: UUID) {
+    withReplyLayoutState { replyLayoutState -> replyLayoutState.changeThisFileChecksum(fileUuid) }
+  }
+
   fun deleteSelectedFiles() {
     withReplyLayoutState { replyLayoutState -> replyLayoutState.deleteSelectedFiles() }
   }
@@ -519,6 +531,10 @@ class ReplyLayoutViewModel(
 
   fun hasSelectedFiles(): Boolean {
     return withReplyLayoutState { replyLayoutState -> replyLayoutState.hasSelectedFiles() } ?: false
+  }
+
+  fun selectedFilesCount(): Int {
+    return withReplyLayoutState { replyLayoutState -> replyLayoutState.selectedFilesCount() } ?: 0
   }
 
   fun allFilesSelected(): Boolean {

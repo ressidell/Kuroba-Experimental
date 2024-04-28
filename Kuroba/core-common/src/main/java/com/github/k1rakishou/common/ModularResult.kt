@@ -1,7 +1,7 @@
 package com.github.k1rakishou.common
 
 import com.github.k1rakishou.core_logger.Logger
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.Callable
 import javax.annotation.CheckReturnValue
 
@@ -12,23 +12,35 @@ sealed class ModularResult<V : Any?> {
 
   @CheckReturnValue
   fun onError(func: (Throwable) -> Unit): ModularResult<V> {
-    return when (this) {
-      is Value -> this
+    when (this) {
+      is Value -> {
+        return this
+      }
       is Error -> {
-        func(this.error)
-        this
+        try {
+          func(this.error)
+          return this
+        } catch (error: Throwable) {
+          return error(error)
+        }
       }
     }
   }
 
   @CheckReturnValue
   fun onSuccess(func: (V) -> Unit): ModularResult<V> {
-    return when (this) {
+    when (this) {
       is Value -> {
-        func(this.value)
-        this
+        try {
+          func(this.value)
+          return this
+        } catch (error: Throwable) {
+          return error(error)
+        }
       }
-      is Error -> this
+      is Error -> {
+        return this
+      }
     }
   }
 
@@ -89,9 +101,17 @@ sealed class ModularResult<V : Any?> {
 
   @CheckReturnValue
   inline fun mapError(mapper: (error: Throwable) -> Throwable): ModularResult<V> {
-    return when (this) {
-      is Error -> error(mapper(error))
-      is Value -> this
+    when (this) {
+      is Error -> {
+        return try {
+          error(mapper(error))
+        } catch (error: Throwable) {
+          error(error)
+        }
+      }
+      is Value -> {
+        return this
+      }
     }
   }
 

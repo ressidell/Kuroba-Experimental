@@ -528,6 +528,76 @@ class ReplyLayoutState(
       .ignore()
   }
 
+  fun removeThisFileName(fileUuid: UUID) {
+    coroutineScope.launch(Dispatchers.IO) {
+      val replyFileMeta = replyManager.getReplyFileByFileUuid(fileUuid)
+        .mapValue { replyFile -> replyFile?.getReplyFileMeta()?.unwrap() }
+        .onError { throwable -> showErrorToast(throwable) }
+        .valueOrNull()
+        ?: return@launch
+
+      val newFileName = replyManager.getNewImageName(replyFileMeta.fileName)
+
+      replyManager.updateFileName(
+        fileUuid = replyFileMeta.fileUuid,
+        newFileName = newFileName,
+        notifyListeners = true
+      )
+        .onError { error ->
+          Logger.e(TAG, "removeSelectedFilesName(${replyFileMeta.fileUuid}) Failed to update file name", error)
+          showErrorToast(error)
+        }
+        .onSuccess {
+          showToast(appResources.string(R.string.reply_layout_filename_removed))
+        }
+        .ignore()
+    }
+  }
+
+  fun removeThisFileMetadata(fileUuid: UUID) {
+    coroutineScope.launch(Dispatchers.IO) {
+      val replyFile = replyManager.getReplyFileByFileUuid(fileUuid)
+        .onError { throwable -> showErrorToast(throwable) }
+        .valueOrNull()
+        ?: return@launch
+
+      doWithProgressDialog {
+        val (allSuccess, updatedFileUuids) = replyLayoutHelper.removeFilesMetadata(listOf(replyFile))
+        updateAttachables(updatedFileUuids)
+
+        withContext(Dispatchers.Main) {
+          if (allSuccess) {
+            showToast(appResources.string(R.string.reply_layout_metadata_remove_success))
+          } else {
+            showErrorToast(appResources.string(R.string.reply_layout_metadata_remove_success_partial))
+          }
+        }
+      }
+    }
+  }
+
+  fun changeThisFileChecksum(fileUuid: UUID) {
+    coroutineScope.launch(Dispatchers.IO) {
+      val replyFile = replyManager.getReplyFileByFileUuid(fileUuid)
+        .onError { throwable -> showErrorToast(throwable) }
+        .valueOrNull()
+        ?: return@launch
+
+      doWithProgressDialog {
+        val (allSuccess, updatedFileUuids) = replyLayoutHelper.changeFilesChecksum(listOf(replyFile))
+        updateAttachables(updatedFileUuids)
+
+        withContext(Dispatchers.Main) {
+          if (allSuccess) {
+            showToast(appResources.string(R.string.reply_layout_checksum_change_success))
+          } else {
+            showErrorToast(appResources.string(R.string.reply_layout_checksum_change_success_partial))
+          }
+        }
+      }
+    }
+  }
+
   fun deleteSelectedFiles() {
     replyManager.deleteSelectedFiles(
       notifyListeners = true
@@ -566,12 +636,21 @@ class ReplyLayoutState(
 
   fun removeSelectedFilesMetadata() {
     coroutineScope.launch(Dispatchers.IO) {
+      val selectedFiles = replyManager.getSelectedFilesOrdered()
+      if (selectedFiles.isEmpty()) {
+        return@launch
+      }
+
       doWithProgressDialog {
-        val updatedFileUuids = replyLayoutHelper.removeSelectedFilesMetadata()
+        val (allSuccess, updatedFileUuids) = replyLayoutHelper.removeFilesMetadata(selectedFiles)
         updateAttachables(updatedFileUuids)
 
         withContext(Dispatchers.Main) {
-          showToast(appResources.string(R.string.reply_layout_metadata_remove_success))
+          if (allSuccess) {
+            showToast(appResources.string(R.string.reply_layout_metadata_remove_success))
+          } else {
+            showErrorToast(appResources.string(R.string.reply_layout_metadata_remove_success_partial))
+          }
         }
       }
     }
@@ -579,12 +658,21 @@ class ReplyLayoutState(
 
   fun changeSelectedFilesChecksum() {
     coroutineScope.launch(Dispatchers.IO) {
+      val selectedFiles = replyManager.getSelectedFilesOrdered()
+      if (selectedFiles.isEmpty()) {
+        return@launch
+      }
+
       doWithProgressDialog {
-        val updatedFileUuids = replyLayoutHelper.changeSelectedFilesChecksum()
+        val (allSuccess, updatedFileUuids) = replyLayoutHelper.changeFilesChecksum(selectedFiles)
         updateAttachables(updatedFileUuids)
 
         withContext(Dispatchers.Main) {
-          showToast(appResources.string(R.string.reply_layout_checksum_change_success))
+          if (allSuccess) {
+            showToast(appResources.string(R.string.reply_layout_checksum_change_success))
+          } else {
+            showErrorToast(appResources.string(R.string.reply_layout_checksum_change_success_partial))
+          }
         }
       }
     }
@@ -875,6 +963,10 @@ class ReplyLayoutState(
   fun hasSelectedFiles(): Boolean {
     return attachables.value.attachables
       .any { replyFileAttachable -> replyFileAttachable.selected }
+  }
+
+  fun selectedFilesCount(): Int {
+    return attachables.value.attachables.size
   }
 
   fun allFilesSelected(): Boolean {
@@ -1264,6 +1356,10 @@ class ReplyLayoutState(
     coroutineScope.launch(Dispatchers.Main) {
       callbacks.showToast(message)
     }
+  }
+
+  private fun showErrorToast(message: String) {
+    callbacks.showErrorToast(message)
   }
 
   private fun showErrorToast(throwable: Throwable) {

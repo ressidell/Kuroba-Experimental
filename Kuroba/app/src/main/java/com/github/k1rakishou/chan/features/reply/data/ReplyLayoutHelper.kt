@@ -349,9 +349,8 @@ class ReplyLayoutHelper(
     }
   }
 
-  suspend fun removeSelectedFilesMetadata(): List<UUID> {
+  suspend fun removeFilesMetadata(selectedReplyFiles: List<ReplyFile>): Pair<Boolean, List<UUID>> {
     val fileUuids = mutableListOf<UUID>()
-    val selectedReplyFiles = replyManager.getSelectedFilesOrdered()
 
     selectedReplyFiles.forEach { replyFile ->
       val replyFileMeta = replyFile.getReplyFileMeta().valueOrNull()
@@ -400,12 +399,12 @@ class ReplyLayoutHelper(
       fileUuids += replyFileMeta.fileUuid
     }
 
-    return fileUuids
+    val allSuccess = selectedReplyFiles.size == fileUuids.size
+    return allSuccess to fileUuids
   }
 
-  suspend fun changeSelectedFilesChecksum(): List<UUID> {
+  suspend fun changeFilesChecksum(selectedReplyFiles: List<ReplyFile>): Pair<Boolean, List<UUID>> {
     val fileUuids = mutableListOf<UUID>()
-    val selectedReplyFiles = replyManager.getSelectedFilesOrdered()
 
     selectedReplyFiles.forEach { replyFile ->
       val replyFileMeta = replyFile.getReplyFileMeta().valueOrNull()
@@ -454,7 +453,8 @@ class ReplyLayoutHelper(
       fileUuids += replyFileMeta.fileUuid
     }
 
-    return fileUuids
+    val allSuccess = selectedReplyFiles.size == fileUuids.size
+    return allSuccess to fileUuids
   }
 
   suspend fun getTotalFileSizeSumPerPost(chanDescriptor: ChanDescriptor): Long? {
