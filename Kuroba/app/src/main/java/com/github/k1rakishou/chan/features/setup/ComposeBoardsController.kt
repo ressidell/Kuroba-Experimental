@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.SiteManager
@@ -74,9 +74,9 @@ class ComposeBoardsController(
   @Inject
   lateinit var dialogFactory: DialogFactory
 
-  private val viewModel by requireComponentActivity().viewModelByKey<ComposeBoardsControllerViewModel>()
+  private val viewModel by viewModelByKey<ComposeBoardsControllerViewModel>()
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

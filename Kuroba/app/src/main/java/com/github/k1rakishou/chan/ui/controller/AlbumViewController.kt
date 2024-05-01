@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.ThumbnailLongtapOptionsHelper
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import javax.inject.Inject
 
-// TODO: New album. Remove me.
+// TODO: scoped viewmodels. Remove me.
 class AlbumViewController(
   context: Context,
   private val chanDescriptor: ChanDescriptor,
@@ -103,8 +103,8 @@ class AlbumViewController(
   @Inject
   lateinit var albumThreadControllerHelpers: AlbumThreadControllerHelpers
 
-  override fun injectDependencies(component: ActivityComponent) {
-    // TODO: New album.
+  override fun injectControllerDependencies(component: ControllerComponent) {
+    // TODO: scoped viewmodels.
 //    component.inject(this)
   }
 

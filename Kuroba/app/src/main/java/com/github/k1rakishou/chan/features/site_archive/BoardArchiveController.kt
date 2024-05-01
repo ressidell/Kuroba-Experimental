@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.compose.AsyncData
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
@@ -65,12 +65,12 @@ class BoardArchiveController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by requireComponentActivity().viewModelByKey<BoardArchiveViewModel>(
+  private val viewModel by viewModelByKey<BoardArchiveViewModel>(
     key = catalogDescriptor.serializeToString(),
     params = { Params(catalogDescriptor) }
   )
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

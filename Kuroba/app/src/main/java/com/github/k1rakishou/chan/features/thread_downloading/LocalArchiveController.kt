@@ -60,7 +60,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.BaseSelectionHelper
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.compose.AsyncData
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
@@ -124,9 +124,9 @@ class LocalArchiveController(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by requireComponentActivity().viewModelByKey<LocalArchiveViewModel>()
+  private val viewModel by viewModelByKey<LocalArchiveViewModel>()
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

@@ -7,7 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.chan.core.base.BaseViewModel
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
+import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ThreadBookmarkGroupManager
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.move

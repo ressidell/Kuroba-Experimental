@@ -19,7 +19,7 @@ import com.airbnb.epoxy.EpoxyViewHolder
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.BaseSelectionHelper
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
@@ -253,7 +253,7 @@ class BookmarksController(
     }
   }
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

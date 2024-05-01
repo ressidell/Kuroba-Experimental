@@ -4,7 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import com.github.k1rakishou.chan.core.base.BaseViewModel
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
+import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.ui.compose.reorder.move
 import com.github.k1rakishou.common.ModularResult

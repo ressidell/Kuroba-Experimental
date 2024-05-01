@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.manager.ThirdEyeManager
 import com.github.k1rakishou.chan.features.thirdeye.data.BooruSetting
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCustomTextField
@@ -58,7 +58,7 @@ class AddOrEditBooruController(
   override val contentAlignment: Alignment
     get() = Alignment.Center
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

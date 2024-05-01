@@ -19,6 +19,8 @@ import com.github.k1rakishou.chan.features.media_viewer.ViewableMedia
 import com.github.k1rakishou.chan.utils.AnimationUtils.fadeIn
 import com.github.k1rakishou.chan.utils.AnimationUtils.fadeOut
 import com.github.k1rakishou.chan.utils.BackgroundUtils
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.chan.utils.setEnabledFast
 import com.github.k1rakishou.chan.utils.setVisibilityFast
 import com.github.k1rakishou.chan.utils.viewModelByKey
@@ -33,7 +35,7 @@ import javax.inject.Inject
 abstract class MediaViewerActionStrip(
   context: Context,
   attributeSet: AttributeSet? = null
-) : LinearLayout(context, attributeSet) {
+) : LinearLayout(context, attributeSet), IHasViewModelScope {
 
   @Inject
   lateinit var chanThreadManager: ChanThreadManager
@@ -54,13 +56,19 @@ abstract class MediaViewerActionStrip(
   private lateinit var repliesCountTextView: TextView
 
   private val scope = KurobaCoroutineScope()
-  private val controllerViewModel by context.requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>()
+  private val controllerViewModel by viewModelByKey<MediaViewerControllerViewModel>()
 
   private var mediaViewerStripCallbacks: MediaViewerBottomActionStripCallbacks? = null
   private var chanDescriptor: ChanDescriptor? = null
   private var currentViewableMedia: ViewableMedia? = null
   private var postRepliesProcessJob: Job? = null
   private var hideShowAnimation: ValueAnimator? = null
+
+  override val viewModelScope: ViewModelScope
+    get() {
+      val componentActivity = context.requireComponentActivity()
+      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
+    }
 
   protected fun init() {
     toolbarGoToPostButton = findViewById(R.id.toolbar_go_to_post_button)

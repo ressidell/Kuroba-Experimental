@@ -13,7 +13,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.BaseViewModel
 import com.github.k1rakishou.chan.core.base.ViewModelSelectionHelper
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
+import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.ChanFilterManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager

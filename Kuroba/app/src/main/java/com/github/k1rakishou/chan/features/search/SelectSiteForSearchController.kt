@@ -3,7 +3,7 @@ package com.github.k1rakishou.chan.features.search
 import android.content.Context
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.site.sites.search.SiteGlobalSearchType
 import com.github.k1rakishou.chan.features.search.epoxy.epoxySearchSiteView
@@ -27,7 +27,7 @@ class SelectSiteForSearchController(
   private lateinit var sitesRecyclerView: ColorizableEpoxyRecyclerView
   private lateinit var clickableArea: ConstraintLayout
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

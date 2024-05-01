@@ -41,15 +41,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModelProvider
 import com.github.k1rakishou.chan.BuildConfig
 import com.github.k1rakishou.chan.Chan
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.activity.ActivityModule
+import com.github.k1rakishou.chan.core.di.module.activity.ActivityScopedViewModelFactory
 import com.github.k1rakishou.chan.core.di.module.activity.IHasActivityComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.IHasViewModelProviderFactory
+import com.github.k1rakishou.chan.core.di.module.shared.IHasViewModelProviderFactory
 import com.github.k1rakishou.chan.core.helper.AppRestarter
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.ReportManager
@@ -69,6 +69,8 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.openLink
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.showErrorToast
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupEdgeToEdge
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupStatusAndNavBarColors
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.common.AndroidUtils.setClipboardContent
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.isNotNullNorEmpty
@@ -96,7 +98,16 @@ import java.util.*
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
-class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasViewModelProviderFactory, IHasActivityComponent {
+class CrashReportActivity :
+  AppCompatActivity(),
+  FSAFActivityCallbacks,
+  IHasViewModelProviderFactory,
+  IHasActivityComponent,
+  IHasViewModelScope {
+
+  @Inject
+  override lateinit var viewModelFactory: ActivityScopedViewModelFactory
+
   @Inject
   lateinit var themeEngineLazy: Lazy<ThemeEngine>
   @Inject
@@ -111,8 +122,6 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
   lateinit var fileChooserLazy: Lazy<FileChooser>
   @Inject
   lateinit var fileManagerLazy: Lazy<FileManager>
-  @Inject
-  override lateinit var viewModelFactory: ViewModelProvider.Factory
 
   private val themeEngine: ThemeEngine
     get() = themeEngineLazy.get()
@@ -130,6 +139,10 @@ class CrashReportActivity : AppCompatActivity(), FSAFActivityCallbacks, IHasView
     get() = fileManagerLazy.get()
 
   override lateinit var activityComponent: ActivityComponent
+
+  override val viewModelScope: ViewModelScope
+    get() = ViewModelScope.ActivityScope(this, this.viewModelStore)
+
   private lateinit var viewModelComponent: ViewModelComponent
 
   override fun onCreate(savedInstanceState: Bundle?) {

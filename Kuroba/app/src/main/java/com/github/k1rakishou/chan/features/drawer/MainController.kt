@@ -18,7 +18,7 @@ import coil.transform.CircleCropTransformation
 import com.github.k1rakishou.BottomNavViewButton
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
@@ -144,7 +144,7 @@ class MainController(
   private val startActivityCallback: StartActivityStartupHandlerHelper.StartActivityCallbacks
     get() = (context as StartActivityStartupHandlerHelper.StartActivityCallbacks)
 
-  private val mainControllerViewModel by requireComponentActivity().viewModelByKey<MainControllerViewModel>()
+  private val mainControllerViewModel by viewModelByKey<MainControllerViewModel>()
 
   private val topThreadController: ThreadController?
     get() {
@@ -190,7 +190,7 @@ class MainController(
       return navigationController
     }
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

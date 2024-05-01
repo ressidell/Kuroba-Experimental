@@ -35,6 +35,7 @@ import dagger.Provides
 
 @Module
 class ActivityModule {
+
   @PerActivity
   @Provides
   fun provideUpdateManager(

@@ -1,12 +1,11 @@
-package com.github.k1rakishou.chan.core.di.module.viewmodel
+package com.github.k1rakishou.chan.core.di.module.shared
 
 import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.savedstate.SavedStateRegistryOwner
-import javax.inject.Inject
 
-class GenericViewModelFactory @Inject constructor(
+abstract class AbstractViewModelFactory(
   private val creators: Map<@JvmSuppressWildcards Class<out ViewModel>, @JvmSuppressWildcards ViewModelAssistedFactory<out ViewModel>>,
   private val savedStateRegistryOwner: SavedStateRegistryOwner
 ) : AbstractSavedStateViewModelFactory(savedStateRegistryOwner, null) {

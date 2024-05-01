@@ -5,7 +5,7 @@ import android.widget.RadioGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
@@ -22,7 +22,7 @@ class MediaViewerGesturesSettingsController(context: Context) : BaseFloatingCont
   override val snackbarScope: SnackbarScope
     get() = SnackbarScope.MediaViewer
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

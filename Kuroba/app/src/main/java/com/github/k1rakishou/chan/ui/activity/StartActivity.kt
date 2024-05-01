@@ -61,7 +61,8 @@ import javax.inject.Inject
 import kotlin.time.measureTime
 
 @DoNotStrip
-class StartActivity : ControllerHostActivity(),
+class StartActivity :
+  ControllerHostActivity(),
   FSAFActivityCallbacks,
   StartActivityStartupHandlerHelper.StartActivityCallbacks,
   ThemeEngine.ThemeChangesListener {
@@ -206,9 +207,9 @@ class StartActivity : ControllerHostActivity(),
     }
 
     setupContext(this, themeEngine.chanTheme)
-    fileChooser.setCallbacks(this)
+    initView(findViewById(android.R.id.content))
 
-    contentView = findViewById(android.R.id.content)
+    fileChooser.setCallbacks(this)
 
     window.setupEdgeToEdge()
     window.setupStatusAndNavBarColors(themeEngine.chanTheme)

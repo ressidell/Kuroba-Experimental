@@ -5,7 +5,7 @@ import android.widget.LinearLayout
 import android.widget.RadioGroup
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.RendezvousCoroutineExecutor
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.ProxyStorage
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.site.SiteRegistry
@@ -62,7 +62,7 @@ class ProxyEditorController(
   private var isControllerVisible = true
   private val saveProxyExecutor = RendezvousCoroutineExecutor(controllerScope)
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

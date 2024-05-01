@@ -1333,7 +1333,7 @@ class ThreadLayout @JvmOverloads constructor(
   }
 
   private fun handleLoadProgressEvent(chanLoadProgressEvent: ChanLoadProgressEvent) {
-    Logger.d(TAG, "handleLoadProgressEvent() $chanLoadProgressEvent")
+    Logger.verbose(TAG) { "handleLoadProgressEvent() $chanLoadProgressEvent" }
 
     progressStepText.text = when (chanLoadProgressEvent) {
       is ChanLoadProgressEvent.Begin -> {

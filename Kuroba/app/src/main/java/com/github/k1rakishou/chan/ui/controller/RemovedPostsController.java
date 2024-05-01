@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.ui.controller;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
-import static com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString;
 import static com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.inflate;
 
 import android.content.Context;
@@ -21,7 +20,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.github.k1rakishou.chan.R;
 import com.github.k1rakishou.chan.core.cache.CacheFileType;
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent;
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2;
 import com.github.k1rakishou.chan.ui.helper.RemovedPostsHelper;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton;
@@ -76,7 +75,7 @@ public class RemovedPostsController
     private RemovedPostAdapter adapter;
 
     @Override
-    protected void injectDependencies(@NotNull ActivityComponent component) {
+    protected void injectControllerDependencies(@NonNull ControllerComponent component) {
         component.inject(this);
     }
 

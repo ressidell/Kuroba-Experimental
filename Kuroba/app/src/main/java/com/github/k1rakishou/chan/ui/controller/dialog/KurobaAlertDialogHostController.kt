@@ -6,10 +6,9 @@ import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.updateLayoutParams
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
-import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isTablet
 
@@ -21,9 +20,8 @@ class KurobaAlertDialogHostController(
   private val onReady: (ViewGroup, KurobaAlertDialogHostControllerCallbacks) -> Unit
 ) : BaseFloatingController(context), KurobaAlertDialogHostControllerCallbacks {
 
-  override fun injectDependencies(component: ActivityComponent) {
-    AppModuleAndroidUtils.extractActivityComponent(context)
-      .inject(this)
+  override fun injectControllerDependencies(component: ControllerComponent) {
+    component.inject(this)
   }
 
   override fun getLayoutId(): Int = R.layout.controller_kuroba_alert_dialog_host

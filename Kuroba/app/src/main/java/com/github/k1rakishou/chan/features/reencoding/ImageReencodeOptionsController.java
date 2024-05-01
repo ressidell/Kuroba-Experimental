@@ -13,14 +13,12 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.util.Pair;
 
 import com.github.k1rakishou.chan.R;
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent;
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableRadioButton;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableSlider;
 import com.google.android.material.slider.Slider;
-
-import org.jetbrains.annotations.NotNull;
 
 public class ImageReencodeOptionsController
         extends BaseFloatingController
@@ -72,7 +70,7 @@ public class ImageReencodeOptionsController
     };
 
     @Override
-    protected void injectDependencies(@NotNull ActivityComponent component) {
+    protected void injectControllerDependencies(@NonNull ControllerComponent component) {
         component.inject(this);
     }
 

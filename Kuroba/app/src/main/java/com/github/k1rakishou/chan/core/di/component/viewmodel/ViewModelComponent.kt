@@ -1,6 +1,6 @@
 package com.github.k1rakishou.chan.core.di.component.viewmodel
 
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelModule
+import com.github.k1rakishou.chan.core.di.module.activity.ActivityScopedViewModelModule
 import com.github.k1rakishou.chan.core.di.scope.PerViewModel
 import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2ViewModel
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupPatternSettingsControllerViewModel
@@ -26,7 +26,7 @@ import com.github.k1rakishou.chan.ui.captcha.lynxchan.LynxchanCaptchaLayoutViewM
 import dagger.Subcomponent
 
 @PerViewModel
-@Subcomponent(modules = [ViewModelModule::class])
+@Subcomponent(modules = [ActivityScopedViewModelModule::class])
 abstract class ViewModelComponent {
   abstract fun inject(mediaViewerControllerViewModel: MediaViewerControllerViewModel)
   abstract fun inject(boardArchiveViewModel: BoardArchiveViewModel)

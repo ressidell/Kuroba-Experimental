@@ -3,7 +3,7 @@ package com.github.k1rakishou.chan.features.album
 import android.content.Context
 import android.os.Parcelable
 import androidx.compose.runtime.Composable
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
@@ -18,13 +18,13 @@ class AlbumViewControllerV2(
   private val initialImageFullUrl: String?
 ) : BaseComposeController<AlbumViewControllerV2ViewModel>(context) {
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 
   override fun controllerVM(): Lazy<AlbumViewControllerV2ViewModel> {
-    return requireComponentActivity().viewModelByKey<AlbumViewControllerV2ViewModel>(
-      params = { Params(listenMode) }
+    return viewModelByKey<AlbumViewControllerV2ViewModel>(
+      params = { Params(listenMode, initialImageFullUrl) }
     )
   }
 
@@ -46,15 +46,17 @@ class AlbumViewControllerV2(
 
   @Composable
   override fun BuildContent() {
+    println("TTTAAA controllerViewModel: ${controllerViewModel.hashCode()}")
     val albumItems = controllerViewModel.albumItems
 
-    // TODO: New album.
+    // TODO: scoped viewmodels.
     println("TTTAAA albumItems: ${albumItems.size}")
   }
 
   @Parcelize
   data class Params(
-    val listenMode: ListenMode
+    val listenMode: ListenMode,
+    val initialImageFullUrl: String?
   ) : Parcelable
 
   @Parcelize

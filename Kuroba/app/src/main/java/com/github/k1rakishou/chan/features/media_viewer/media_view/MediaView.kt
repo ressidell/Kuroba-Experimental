@@ -30,6 +30,8 @@ import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayoutNoBack
 import com.github.k1rakishou.chan.ui.view.CircularChunkedLoadingBar
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.BackgroundUtils
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.chan.utils.setVisibilityFast
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.AppConstants
@@ -61,7 +63,8 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
 ) : TouchBlockingFrameLayoutNoBackground(context, attributeSet, 0),
   MediaViewerToolbar.MediaViewerToolbarCallbacks,
   MediaViewerBottomActionStripCallbacks,
-  AudioPlayerView.AudioPlayerCallbacks {
+  AudioPlayerView.AudioPlayerCallbacks,
+  IHasViewModelScope {
   abstract val viewableMedia: T
   abstract val pagerPosition: Int
   abstract val totalPageItemsCount: Int
@@ -90,7 +93,7 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
     snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer)
   }
 
-  private val controllerViewModel by context.requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>()
+  private val controllerViewModel by viewModelByKey<MediaViewerControllerViewModel>()
 
   private var _mediaViewToolbar: MediaViewerToolbar? = null
 
@@ -111,6 +114,12 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
   }
 
   abstract val mediaViewerActionStrip: MediaViewerActionStrip?
+
+  override val viewModelScope: ViewModelScope
+    get() {
+      val componentActivity = context.requireComponentActivity()
+      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
+    }
 
   val bound: Boolean
     get() = _bound

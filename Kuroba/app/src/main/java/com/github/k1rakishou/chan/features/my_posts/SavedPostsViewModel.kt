@@ -10,7 +10,7 @@ import com.github.k1rakishou.chan.core.base.DebouncingCoroutineExecutor
 import com.github.k1rakishou.chan.core.base.ViewModelSelectionHelper
 import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
+import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.SavedReplyManager
 import com.github.k1rakishou.chan.features.reply.left.ReplyTextFieldHelpers
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem

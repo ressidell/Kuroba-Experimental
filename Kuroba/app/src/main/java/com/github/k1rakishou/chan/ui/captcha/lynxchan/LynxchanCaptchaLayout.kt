@@ -58,6 +58,8 @@ import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.showToast
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
@@ -72,7 +74,10 @@ import javax.inject.Inject
 class LynxchanCaptchaLayout(
   context: Context,
   private val chanDescriptor: ChanDescriptor,
-) : TouchBlockingFrameLayout(context), AuthenticationLayoutInterface {
+) :
+  TouchBlockingFrameLayout(context),
+  AuthenticationLayoutInterface,
+  IHasViewModelScope {
 
   @Inject
   lateinit var captchaHolder: CaptchaHolder
@@ -83,12 +88,18 @@ class LynxchanCaptchaLayout(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by context.requireComponentActivity().viewModelByKey<LynxchanCaptchaLayoutViewModel>()
+  private val viewModel by viewModelByKey<LynxchanCaptchaLayoutViewModel>()
   private val scope = KurobaCoroutineScope()
 
   private var siteDescriptor: SiteDescriptor? = null
   private var lynxchanCaptcha: SiteAuthentication.CustomCaptcha.LynxchanCaptcha? = null
   private var callback: AuthenticationLayoutCallback? = null
+
+  override val viewModelScope: ViewModelScope
+    get() {
+      val componentActivity = context.requireComponentActivity()
+      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
+    }
 
   init {
     AppModuleAndroidUtils.extractActivityComponent(getContext())

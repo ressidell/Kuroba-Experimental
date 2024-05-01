@@ -15,7 +15,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.util.Pair;
 
 import com.github.k1rakishou.chan.R;
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent;
 import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaController;
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity;
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController;
@@ -28,8 +28,6 @@ import com.github.k1rakishou.chan.ui.theme.widget.ColorizableEditText;
 import com.github.k1rakishou.chan.utils.BackgroundUtils;
 import com.github.k1rakishou.core_themes.ThemeEngine;
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.Locale;
@@ -74,7 +72,7 @@ public class ImageOptionsController
     AppResources appResources;
 
     @Override
-    protected void injectDependencies(@NotNull ActivityComponent component) {
+    protected void injectControllerDependencies(@NonNull ControllerComponent component) {
         component.inject(this);
     }
 

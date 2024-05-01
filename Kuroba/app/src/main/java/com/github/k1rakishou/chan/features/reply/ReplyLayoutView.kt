@@ -33,6 +33,8 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMen
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.widget.dialog.KurobaAlertDialog
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.chan.utils.WebViewLink
 import com.github.k1rakishou.chan.utils.WebViewLinkMovementMethod
 import com.github.k1rakishou.chan.utils.viewModelByKeyEager
@@ -59,7 +61,8 @@ class ReplyLayoutView @JvmOverloads constructor(
 ) : FrameLayout(context, attributeSet, defAttrStyle),
   ReplyLayoutViewModel.ReplyLayoutViewCallbacks,
   ThreadListLayout.ReplyLayoutViewCallbacks,
-  WebViewLinkMovementMethod.ClickListener {
+  WebViewLinkMovementMethod.ClickListener,
+  IHasViewModelScope {
 
   @Inject
   lateinit var dialogFactory: DialogFactory
@@ -79,6 +82,12 @@ class ReplyLayoutView @JvmOverloads constructor(
   private val dialogHandle = AtomicReference<KurobaAlertDialog.AlertDialogHandle?>(null)
   private val banDialogHandle = AtomicReference<KurobaAlertDialog.AlertDialogHandle?>(null)
   private val showPostingDialogExecutor = SerializedCoroutineExecutor(coroutineScope)
+
+  override val viewModelScope: ViewModelScope
+    get() {
+      val componentActivity = context.requireComponentActivity()
+      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
+    }
 
   init {
     AppModuleAndroidUtils.extractActivityComponent(context)
@@ -112,7 +121,7 @@ class ReplyLayoutView @JvmOverloads constructor(
   override fun onCreate(threadControllerType: ThreadControllerType, callbacks: ReplyLayoutViewModel.ThreadListLayoutCallbacks) {
     replyLayoutCallbacks = callbacks
 
-    replyLayoutViewModel = context.requireComponentActivity().viewModelByKeyEager<ReplyLayoutViewModel>(
+    replyLayoutViewModel = viewModelByKeyEager<ReplyLayoutViewModel>(
       key = threadControllerType.name,
       params = { threadControllerType }
     )

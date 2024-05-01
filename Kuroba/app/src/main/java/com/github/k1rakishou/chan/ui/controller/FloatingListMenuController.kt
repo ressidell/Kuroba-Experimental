@@ -5,7 +5,7 @@ import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.updateLayoutParams
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.ui.misc.ConstraintLayoutBias
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenu
 import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
@@ -24,7 +24,7 @@ open class FloatingListMenuController @JvmOverloads constructor(
 
   private var itemSelected = false
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

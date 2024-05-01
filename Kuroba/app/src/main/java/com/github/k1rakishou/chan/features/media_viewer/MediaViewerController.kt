@@ -10,7 +10,7 @@ import androidx.viewpager.widget.ViewPager
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.BoardManager
@@ -317,14 +317,14 @@ class MediaViewerController(
     )
   }
 
-  private val viewModel by requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>()
+  private val viewModel by viewModelByKey<MediaViewerControllerViewModel>()
 
   private val transitionAnimationAwaitable = CompletableDeferred<Unit>()
 
   private val mediaViewerAdapter: MediaViewerAdapter?
     get() = pager.adapter as? MediaViewerAdapter
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

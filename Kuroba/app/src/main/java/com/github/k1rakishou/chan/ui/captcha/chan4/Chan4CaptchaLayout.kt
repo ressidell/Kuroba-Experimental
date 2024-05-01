@@ -5,7 +5,6 @@ import android.content.Context
 import android.text.SpannableString
 import android.text.util.Linkify
 import android.widget.FrameLayout
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -86,8 +85,11 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.showToast
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.AndroidUtils
+import com.github.k1rakishou.common.requireComponentActivity
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
@@ -101,7 +103,9 @@ class Chan4CaptchaLayout(
   context: Context,
   private val chanDescriptor: ChanDescriptor,
   private val presentControllerFunc: (Controller) -> Unit
-) : TouchBlockingFrameLayout(context), AuthenticationLayoutInterface {
+) : TouchBlockingFrameLayout(context),
+  AuthenticationLayoutInterface,
+  IHasViewModelScope {
 
   @Inject
   lateinit var captchaHolder: CaptchaHolder
@@ -112,12 +116,18 @@ class Chan4CaptchaLayout(
   @Inject
   lateinit var dialogFactory: DialogFactory
 
-  private val viewModel by (context as ComponentActivity).viewModelByKey<Chan4CaptchaLayoutViewModel>()
+  private val viewModel by viewModelByKey<Chan4CaptchaLayoutViewModel>()
   private val scope = KurobaCoroutineScope()
 
   private var siteDescriptor: SiteDescriptor? = null
   private var siteAuthentication: SiteAuthentication? = null
   private var callback: AuthenticationLayoutCallback? = null
+
+  override val viewModelScope: ViewModelScope
+    get() {
+      val componentActivity = context.requireComponentActivity()
+      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
+    }
 
   init {
     AppModuleAndroidUtils.extractActivityComponent(getContext())

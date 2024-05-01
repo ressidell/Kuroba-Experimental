@@ -23,7 +23,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
@@ -42,9 +42,9 @@ class ThreadDownloaderSettingsController(
   @Inject
   lateinit var appConstants: AppConstants
 
-  private val viewModel by requireComponentActivity().viewModelByKey<ThreadDownloaderSettingsViewModel>()
+  private val viewModel by viewModelByKey<ThreadDownloaderSettingsViewModel>()
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

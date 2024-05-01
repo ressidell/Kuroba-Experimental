@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.ui.controller.base
 
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
@@ -10,9 +11,18 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.CallSuper
 import androidx.annotation.StringRes
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ViewModelStore
+import androidx.savedstate.SavedStateRegistry
+import androidx.savedstate.SavedStateRegistryController
+import androidx.savedstate.SavedStateRegistryOwner
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.base.ControllerHostActivity
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.module.controller.ControllerModule
+import com.github.k1rakishou.chan.core.di.module.controller.ControllerScopedViewModelFactory
+import com.github.k1rakishou.chan.core.di.module.shared.IHasViewModelProviderFactory
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
@@ -28,6 +38,8 @@ import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationCont
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
@@ -45,12 +57,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
-@Suppress("LeakingThis")
 @DoNotStrip
 abstract class Controller(
   @JvmField var context: Context
-) {
-  lateinit var view: ViewGroup
+) : IHasViewModelScope, IHasViewModelProviderFactory, SavedStateRegistryOwner {
+
+  @Inject
+  override lateinit var viewModelFactory: ControllerScopedViewModelFactory
 
   @Inject
   lateinit var kurobaToolbarStateManagerLazy: Lazy<KurobaToolbarStateManager>
@@ -60,6 +73,11 @@ abstract class Controller(
   lateinit var appResourcesLazy: Lazy<AppResources>
   @Inject
   lateinit var snackbarManagerFactoryLazy: Lazy<SnackbarManagerFactory>
+
+  private val _lifecycleRegistry by lazy(LazyThreadSafetyMode.NONE) { LifecycleRegistry(this) }
+  private val _savedStateRegistryController by lazy(LazyThreadSafetyMode.NONE) { SavedStateRegistryController.create(this) }
+  // TODO: scoped viewmodels. Move this thing into an activity scoped ViewModel
+  protected val viewModelStore by lazy(LazyThreadSafetyMode.NONE) { ViewModelStore() }
 
   val kurobaToolbarStateManager: KurobaToolbarStateManager
     get() = kurobaToolbarStateManagerLazy.get()
@@ -77,7 +95,19 @@ abstract class Controller(
   open var containerToolbarState: KurobaToolbarState
     get() = requireToolbarNavController().containerToolbarState
     set(value) { requireToolbarNavController().containerToolbarState = value }
+
   open val snackbarScope: SnackbarScope = SnackbarScope.Global
+
+  // TODO: scoped viewmodels. remove me!
+  override val viewModelScope: ViewModelScope
+    get() = ViewModelScope.ControllerScope(this, viewModelStore)
+
+  override val lifecycle: Lifecycle
+    get() = _lifecycleRegistry
+  override val savedStateRegistry: SavedStateRegistry
+    get() = _savedStateRegistryController.savedStateRegistry
+
+  lateinit var view: ViewGroup
 
   @JvmField
   var parentController: Controller? = null
@@ -124,13 +154,13 @@ abstract class Controller(
   val shown: Boolean
     get() = _shown
 
-  protected var compositeDisposable = CompositeDisposable()
-    @JvmName("compositeDisposable") get
-    private set
+  protected val compositeDisposable = CompositeDisposable()
+  protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) { snackbarManagerFactory.snackbarManager(snackbarScope) }
 
   private val job = SupervisorJob()
-  protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) { snackbarManagerFactory.snackbarManager(snackbarScope) }
-  protected var controllerScope = CoroutineScope(job + Dispatchers.Main + CoroutineName("Controller_${this::class.java.simpleName}"))
+  protected val controllerScope by lazy(LazyThreadSafetyMode.NONE) {
+    CoroutineScope(job + Dispatchers.Main + CoroutineName(controllerKey.key))
+  }
 
   private val _navigationFlags = mutableStateOf<DeprecatedNavigationFlags>(DeprecatedNavigationFlags())
   val hasDrawer: Boolean
@@ -189,30 +219,31 @@ abstract class Controller(
 
   fun isViewInitialized(): Boolean = ::view.isInitialized
 
-  init {
-    injectDependencies(AppModuleAndroidUtils.extractActivityComponent(context))
+  protected open fun injectControllerDependencies(component: ControllerComponent) {
+    error("Must be overridden!")
   }
-
-  protected abstract fun injectDependencies(component: ActivityComponent)
 
   @CallSuper
   open fun onCreate() {
     _alive = true
+    Logger.verbose(TAG) { "${controllerKey} onCreate" }
 
-    if (LOG_STATES) {
-      Logger.e("LOG_STATES", javaClass.simpleName + " onCreate")
-    }
+    // TODO: scoped viewmodels. Pass a Bundle here
+    Logger.verbose(TAG) { "${controllerKey} savedStateRegistryController.performRestore() start" }
+    _savedStateRegistryController.performRestore(null)
+    Logger.verbose(TAG) { "${controllerKey} savedStateRegistryController.performRestore() done" }
+
+    Logger.verbose(TAG) { "${controllerKey} initDependencies start" }
+    initDependencies()
+    Logger.verbose(TAG) { "${controllerKey} initDependencies done" }
   }
 
   @CallSuper
   open fun onShow() {
     _shown = true
-
-    if (LOG_STATES) {
-      Logger.e("LOG_STATES", javaClass.simpleName + " onShow")
-    }
-
     view.visibility = View.VISIBLE
+
+    Logger.verbose(TAG) { "${controllerKey} onShow" }
 
     for (controller in childControllers) {
       if (!controller.shown) {
@@ -224,11 +255,6 @@ abstract class Controller(
   @CallSuper
   open fun onHide() {
     _shown = false
-
-    if (LOG_STATES) {
-      Logger.e("LOG_STATES", javaClass.simpleName + " onHide")
-    }
-
     view.visibility = View.GONE
 
     for (controller in childControllers) {
@@ -236,6 +262,8 @@ abstract class Controller(
         controller.onHide()
       }
     }
+
+    Logger.verbose(TAG) { "${controllerKey} onHide" }
   }
 
   @CallSuper
@@ -244,19 +272,22 @@ abstract class Controller(
     compositeDisposable.clear()
     job.cancelChildren()
 
-    if (LOG_STATES) {
-      Logger.e("LOG_STATES", javaClass.simpleName + " onDestroy")
-    }
+    Logger.verbose(TAG) { "${controllerKey} onDestroy" }
 
     while (childControllers.size > 0) {
       removeChildController(childControllers[0])
     }
 
     if (::view.isInitialized && AndroidUtils.removeFromParentView(view)) {
-      if (LOG_STATES) {
-        Logger.e("LOG_STATES", javaClass.simpleName + " view removed onDestroy")
-      }
+      Logger.verbose(TAG) { "${controllerKey} view removed onDestroy" }
     }
+  }
+
+  @CallSuper
+  open fun saveInstanceState(outBundle: Bundle) {
+    Logger.verbose(TAG) { "${controllerKey} savedStateRegistryController.performSave() start" }
+    _savedStateRegistryController.performSave(outBundle)
+    Logger.verbose(TAG) { "${controllerKey} savedStateRegistryController.performSave() done" }
   }
 
   fun addChildController(controller: Controller) {
@@ -271,14 +302,14 @@ abstract class Controller(
       controller.navigationController = navigationController
     }
 
+    controller.onCreate()
+
     if (controller is DoubleNavigationController) {
       controller.leftControllerToolbarState?.init()
       controller.rightControllerToolbarState?.init()
     } else {
       controller.toolbarState.init()
     }
-
-    controller.onCreate()
 
     if (controller.navigationController is StyledToolbarNavigationController) {
       (controller.navigationController as StyledToolbarNavigationController).onChildControllerPushed(controller)
@@ -314,19 +345,13 @@ abstract class Controller(
 
   fun attachToParentView(parentView: ViewGroup?) {
     if (view.parent != null) {
-      if (LOG_STATES) {
-        Logger.e("LOG_STATES", javaClass.simpleName + " view removed")
-      }
-
       AndroidUtils.removeFromParentView(view)
+      Logger.verbose(TAG) { "${controllerKey} view removed" }
     }
 
     if (parentView != null) {
-      if (LOG_STATES) {
-        Logger.e("LOG_STATES", javaClass.simpleName + " view attached")
-      }
-
       attachToView(parentView)
+      Logger.verbose(TAG) { "${controllerKey} view attached" }
     }
   }
 
@@ -430,27 +455,6 @@ abstract class Controller(
     snackbarManager.globalErrorToast(appResources.string(messageId), duration)
   }
 
-  private fun finishPresenting() {
-    onHide()
-    onDestroy()
-  }
-
-  private fun attachToView(parentView: ViewGroup) {
-    var params = view.layoutParams
-    if (params == null) {
-      params = ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT
-      )
-    } else {
-      params.width = ViewGroup.LayoutParams.MATCH_PARENT
-      params.height = ViewGroup.LayoutParams.MATCH_PARENT
-    }
-
-    view.layoutParams = params
-    parentView.addView(view, view.layoutParams)
-  }
-
   fun withLayoutMode(
     phone: (() -> Unit)? = null,
     tablet: (() -> Unit)? = null
@@ -516,6 +520,37 @@ abstract class Controller(
     return this
   }
 
+  private fun finishPresenting() {
+    onHide()
+    onDestroy()
+  }
+
+  private fun attachToView(parentView: ViewGroup) {
+    var params = view.layoutParams
+    if (params == null) {
+      params = ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT
+      )
+    } else {
+      params.width = ViewGroup.LayoutParams.MATCH_PARENT
+      params.height = ViewGroup.LayoutParams.MATCH_PARENT
+    }
+
+    view.layoutParams = params
+    parentView.addView(view, view.layoutParams)
+  }
+
+  private fun initDependencies() {
+    val controllerComponent = AppModuleAndroidUtils.extractActivityComponent(context)
+      .controllerComponentBuilder()
+      .controller(this)
+      .controllerModule(ControllerModule())
+      .build()
+
+    injectControllerDependencies(controllerComponent)
+  }
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
@@ -534,7 +569,7 @@ abstract class Controller(
   }
 
   companion object {
-    private const val LOG_STATES = false
+    private const val TAG = "Controller"
   }
 
 }

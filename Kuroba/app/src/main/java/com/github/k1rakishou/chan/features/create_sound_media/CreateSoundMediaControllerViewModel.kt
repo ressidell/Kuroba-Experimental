@@ -11,7 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.chan.core.base.BaseViewModel
 import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
+import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.core.site.loader.CanceledByUserException
 import com.github.k1rakishou.chan.core.site.loader.ClientException
@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import java.net.URLEncoder
-import java.util.*
+import java.util.UUID
 import javax.inject.Inject
 
 class CreateSoundMediaControllerViewModel(

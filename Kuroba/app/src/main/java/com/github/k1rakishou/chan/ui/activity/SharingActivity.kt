@@ -6,21 +6,23 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import com.github.k1rakishou.chan.Chan
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.activity.ActivityModule
+import com.github.k1rakishou.chan.core.di.module.activity.ActivityScopedViewModelFactory
 import com.github.k1rakishou.chan.core.di.module.activity.IHasActivityComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.IHasViewModelProviderFactory
+import com.github.k1rakishou.chan.core.di.module.shared.IHasViewModelProviderFactory
 import com.github.k1rakishou.chan.core.helper.AppRestarter
 import com.github.k1rakishou.chan.core.manager.ApplicationCrashNotifier
 import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.ui.helper.picker.ImagePickHelper
 import com.github.k1rakishou.chan.ui.helper.picker.PickedFile
 import com.github.k1rakishou.chan.ui.helper.picker.ShareFilePicker
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.core_logger.Logger
@@ -32,7 +34,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class SharingActivity : AppCompatActivity(), IHasViewModelProviderFactory, IHasActivityComponent {
+class SharingActivity :
+  AppCompatActivity(),
+  IHasViewModelProviderFactory,
+  IHasActivityComponent,
+  IHasViewModelScope {
+
+  @Inject
+  override lateinit var viewModelFactory: ActivityScopedViewModelFactory
 
   @Inject
   lateinit var imagePickHelper: ImagePickHelper
@@ -44,12 +53,14 @@ class SharingActivity : AppCompatActivity(), IHasViewModelProviderFactory, IHasA
   lateinit var appRestarter: AppRestarter
   @Inject
   lateinit var applicationCrashNotifier: ApplicationCrashNotifier
-  @Inject
-  override lateinit var viewModelFactory: ViewModelProvider.Factory
 
   private val mainScope = KurobaCoroutineScope()
 
   override lateinit var activityComponent: ActivityComponent
+
+  override val viewModelScope: ViewModelScope
+    get() = ViewModelScope.ActivityScope(this, this.viewModelStore)
+
   private lateinit var viewModelComponent: ViewModelComponent
 
   override fun onCreate(savedInstanceState: Bundle?) {

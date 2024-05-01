@@ -1,8 +1,9 @@
-package com.github.k1rakishou.chan.core.di.module.viewmodel
+package com.github.k1rakishou.chan.core.di.module.activity
 
 import androidx.lifecycle.ViewModel
 import com.github.k1rakishou.chan.core.di.key.ViewModelKey
-import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2ViewModel
+import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
+import com.github.k1rakishou.chan.core.di.scope.PerActivity
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupPatternSettingsControllerViewModel
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupSettingsControllerViewModel
 import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaControllerViewModel
@@ -27,12 +28,15 @@ import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
 
+// TODO: scoped viewmodels. Move this into ControllerScopedViewModelModule? Because the viewmodels are now destroyed once
+//  the controller is destroyed so there is no point in keeping them in a module with different scope.
 @Module
-abstract class ViewModelModule {
+abstract class ActivityScopedViewModelModule {
 
-  @Binds
   @IntoMap
   @ViewModelKey(MainControllerViewModel::class)
+  @Binds
+  @PerActivity
   abstract fun bindMyViewModelFactory(
     impl: MainControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -40,6 +44,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(ReplyLayoutViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindReplyLayoutViewModel(
     impl: ReplyLayoutViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -47,6 +52,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(BoardArchiveViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindBoardArchiveViewModel(
     impl: BoardArchiveViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -54,6 +60,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(BookmarkGroupPatternSettingsControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindBookmarkGroupPatternSettingsControllerViewModel(
     impl: BookmarkGroupPatternSettingsControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -61,6 +68,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(BookmarkGroupSettingsControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindBookmarkGroupSettingsControllerViewModel(
     impl: BookmarkGroupSettingsControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -68,6 +76,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(Chan4CaptchaLayoutViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindChan4CaptchaLayoutViewModel(
     impl: Chan4CaptchaLayoutViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -75,6 +84,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(Chan4ReportPostControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindChan4ReportPostControllerViewModel(
     impl: Chan4ReportPostControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -82,6 +92,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(ComposeBoardsControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindComposeBoardsControllerViewModel(
     impl: ComposeBoardsControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -89,6 +100,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(ComposeBoardsSelectorControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindComposeBoardsSelectorControllerViewModel(
     impl: ComposeBoardsSelectorControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -96,6 +108,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(CreateSoundMediaControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindCreateSoundMediaControllerViewModel(
     impl: CreateSoundMediaControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -103,6 +116,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(DvachCaptchaLayoutViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindDvachCaptchaLayoutViewModel(
     impl: DvachCaptchaLayoutViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -110,6 +124,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(FilterBoardSelectorControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindFilterBoardSelectorControllerViewModel(
     impl: FilterBoardSelectorControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -117,6 +132,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(FiltersControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindFiltersControllerViewModel(
     impl: FiltersControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -124,6 +140,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(ImageSearchControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindImageSearchControllerViewModel(
     impl: ImageSearchControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -131,6 +148,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(LocalArchiveViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindLocalArchiveViewModel(
     impl: LocalArchiveViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -138,6 +156,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(LynxchanCaptchaLayoutViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindLynxchanCaptchaLayoutViewModel(
     impl: LynxchanCaptchaLayoutViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -145,6 +164,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(MediaViewerControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindMediaViewerControllerViewModel(
     impl: MediaViewerControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -152,6 +172,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(SavedPostsViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindSavedPostsViewModel(
     impl: SavedPostsViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -159,6 +180,7 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(ThreadDownloaderSettingsViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindThreadDownloaderSettingsViewModel(
     impl: ThreadDownloaderSettingsViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
@@ -166,15 +188,9 @@ abstract class ViewModelModule {
   @IntoMap
   @ViewModelKey(CompositeCatalogsSetupControllerViewModel::class)
   @Binds
+  @PerActivity
   abstract fun bindCompositeCatalogsSetupControllerViewModel(
     impl: CompositeCatalogsSetupControllerViewModel.ViewModelFactory
-  ): ViewModelAssistedFactory<out ViewModel>
-
-  @IntoMap
-  @ViewModelKey(AlbumViewControllerV2ViewModel::class)
-  @Binds
-  abstract fun bindAlbumViewControllerV2ViewModel(
-    impl: AlbumViewControllerV2ViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
 
 }

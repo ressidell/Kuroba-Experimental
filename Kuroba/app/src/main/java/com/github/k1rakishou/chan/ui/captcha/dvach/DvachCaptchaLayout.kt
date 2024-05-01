@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.ui.captcha.dvach
 
 import android.content.Context
 import android.widget.FrameLayout
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -69,13 +68,19 @@ import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.isNotNullNorEmpty
+import com.github.k1rakishou.common.requireComponentActivity
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
 import javax.inject.Inject
 
-class DvachCaptchaLayout(context: Context) : TouchBlockingFrameLayout(context),
-  AuthenticationLayoutInterface {
+class DvachCaptchaLayout(
+  context: Context
+) : TouchBlockingFrameLayout(context),
+  AuthenticationLayoutInterface,
+  IHasViewModelScope {
 
   @Inject
   lateinit var captchaHolder: CaptchaHolder
@@ -86,7 +91,7 @@ class DvachCaptchaLayout(context: Context) : TouchBlockingFrameLayout(context),
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val viewModel by (context as ComponentActivity).viewModelByKey<DvachCaptchaLayoutViewModel>()
+  private val viewModel by viewModelByKey<DvachCaptchaLayoutViewModel>()
   private val scope = KurobaCoroutineScope()
 
   private var siteDescriptor: SiteDescriptor? = null
@@ -97,6 +102,12 @@ class DvachCaptchaLayout(context: Context) : TouchBlockingFrameLayout(context),
     AppModuleAndroidUtils.extractActivityComponent(getContext())
       .inject(this)
   }
+
+  override val viewModelScope: ViewModelScope
+    get() {
+      val componentActivity = context.requireComponentActivity()
+      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
+    }
 
   override fun initialize(
     siteDescriptor: SiteDescriptor,

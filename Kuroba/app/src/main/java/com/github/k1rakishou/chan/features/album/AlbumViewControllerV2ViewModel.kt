@@ -5,7 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.chan.core.base.BaseViewModel
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelAssistedFactory
+import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.utils.BackgroundUtils
@@ -39,6 +39,8 @@ class AlbumViewControllerV2ViewModel(
 ) : BaseViewModel() {
   private val _currentListenMode: AlbumViewControllerV2.ListenMode
     get() = savedStateHandle.requireParams<AlbumViewControllerV2.Params>().listenMode
+  private val _initialImageFullUrl: String?
+    get() = savedStateHandle.requireParams<AlbumViewControllerV2.Params>().initialImageFullUrl
 
   private val _currentDescriptor = MutableStateFlow<ChanDescriptor?>(null)
 

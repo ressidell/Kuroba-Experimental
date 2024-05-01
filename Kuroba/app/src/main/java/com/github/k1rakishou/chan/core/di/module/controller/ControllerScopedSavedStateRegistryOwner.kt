@@ -1,0 +1,5 @@
+package com.github.k1rakishou.chan.core.di.module.controller
+
+import androidx.savedstate.SavedStateRegistryOwner
+
+class ControllerScopedSavedStateRegistryOwner(val savedStateRegistryOwner: SavedStateRegistryOwner)

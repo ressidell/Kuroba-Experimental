@@ -2,33 +2,17 @@ package com.github.k1rakishou.chan.core.di.component.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import com.github.k1rakishou.chan.core.di.ActivityDependencies
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.di.module.activity.ActivityModule
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelFactoryModule
-import com.github.k1rakishou.chan.core.di.module.viewmodel.ViewModelModule
+import com.github.k1rakishou.chan.core.di.module.activity.ActivityScopedViewModelFactoryModule
+import com.github.k1rakishou.chan.core.di.module.activity.ActivityScopedViewModelModule
 import com.github.k1rakishou.chan.core.di.scope.PerActivity
-import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2
-import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupPatternSettingsController
-import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupSettingsController
-import com.github.k1rakishou.chan.features.bookmarks.BookmarksController
 import com.github.k1rakishou.chan.features.bookmarks.BookmarksPresenter
-import com.github.k1rakishou.chan.features.bookmarks.BookmarksSortingController
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.BaseThreadBookmarkViewHolder
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.EpoxyGridThreadBookmarkViewHolder
 import com.github.k1rakishou.chan.features.bookmarks.epoxy.EpoxyListThreadBookmarkViewHolder
-import com.github.k1rakishou.chan.features.bypass.SiteFirewallBypassController
-import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaController
-import com.github.k1rakishou.chan.features.drawer.MainController
-import com.github.k1rakishou.chan.features.filters.CreateOrUpdateFilterController
-import com.github.k1rakishou.chan.features.filters.FilterBoardSelectorController
-import com.github.k1rakishou.chan.features.filters.FilterTypeSelectionController
-import com.github.k1rakishou.chan.features.filters.FiltersController
-import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController
-import com.github.k1rakishou.chan.features.image_saver.ResolveDuplicateImagesController
 import com.github.k1rakishou.chan.features.image_saver.epoxy.EpoxyDuplicateImageView
-import com.github.k1rakishou.chan.features.login.LoginController
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
-import com.github.k1rakishou.chan.features.media_viewer.MediaViewerController
-import com.github.k1rakishou.chan.features.media_viewer.MediaViewerGesturesSettingsController
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerToolbar
 import com.github.k1rakishou.chan.features.media_viewer.media_view.AudioMediaView
 import com.github.k1rakishou.chan.features.media_viewer.media_view.ExoPlayerVideoMediaView
@@ -39,25 +23,11 @@ import com.github.k1rakishou.chan.features.media_viewer.media_view.ThumbnailMedi
 import com.github.k1rakishou.chan.features.media_viewer.media_view.UnsupportedMediaView
 import com.github.k1rakishou.chan.features.media_viewer.strip.MediaViewerBottomActionStrip
 import com.github.k1rakishou.chan.features.media_viewer.strip.MediaViewerLeftActionStrip
-import com.github.k1rakishou.chan.features.mpv.EditMpvConfController
-import com.github.k1rakishou.chan.features.my_posts.SavedPostsController
-import com.github.k1rakishou.chan.features.proxies.ProxyEditorController
-import com.github.k1rakishou.chan.features.proxies.ProxySetupController
 import com.github.k1rakishou.chan.features.proxies.epoxy.EpoxyProxyView
-import com.github.k1rakishou.chan.features.reencoding.ImageOptionsController
 import com.github.k1rakishou.chan.features.reencoding.ImageOptionsHelper
-import com.github.k1rakishou.chan.features.reencoding.ImageReencodeOptionsController
 import com.github.k1rakishou.chan.features.reencoding.ImageReencodingPresenter
-import com.github.k1rakishou.chan.features.remote_image_search.ImageSearchController
 import com.github.k1rakishou.chan.features.reordering.EpoxyReorderableItemView
-import com.github.k1rakishou.chan.features.reordering.SimpleListItemsReorderingController
 import com.github.k1rakishou.chan.features.reply.ReplyLayoutView
-import com.github.k1rakishou.chan.features.report_bugs.ReportIssueController
-import com.github.k1rakishou.chan.features.report_posts.Chan4ReportPostController
-import com.github.k1rakishou.chan.features.search.GlobalSearchController
-import com.github.k1rakishou.chan.features.search.SearchResultsController
-import com.github.k1rakishou.chan.features.search.SelectBoardForSearchController
-import com.github.k1rakishou.chan.features.search.SelectSiteForSearchController
 import com.github.k1rakishou.chan.features.search.epoxy.EpoxyBoardSelectionButtonView
 import com.github.k1rakishou.chan.features.search.epoxy.EpoxySearchEndOfResultsView
 import com.github.k1rakishou.chan.features.search.epoxy.EpoxySearchErrorView
@@ -65,33 +35,16 @@ import com.github.k1rakishou.chan.features.search.epoxy.EpoxySearchPostDividerVi
 import com.github.k1rakishou.chan.features.search.epoxy.EpoxySearchPostGapView
 import com.github.k1rakishou.chan.features.search.epoxy.EpoxySearchPostView
 import com.github.k1rakishou.chan.features.search.epoxy.EpoxySearchSiteView
-import com.github.k1rakishou.chan.features.settings.MainSettingsControllerV2
 import com.github.k1rakishou.chan.features.settings.SettingsCoordinator
 import com.github.k1rakishou.chan.features.settings.epoxy.EpoxyBooleanSetting
 import com.github.k1rakishou.chan.features.settings.epoxy.EpoxyLinkSetting
 import com.github.k1rakishou.chan.features.settings.epoxy.EpoxyNoSettingsFoundView
 import com.github.k1rakishou.chan.features.settings.epoxy.EpoxySettingsGroupTitle
-import com.github.k1rakishou.chan.features.settings.screens.delegate.ExportBackupOptionsController
-import com.github.k1rakishou.chan.features.setup.AddBoardsController
-import com.github.k1rakishou.chan.features.setup.BoardSelectionController
-import com.github.k1rakishou.chan.features.setup.BoardsSetupController
-import com.github.k1rakishou.chan.features.setup.ComposeBoardsController
-import com.github.k1rakishou.chan.features.setup.ComposeBoardsSelectorController
-import com.github.k1rakishou.chan.features.setup.CompositeCatalogsSetupController
-import com.github.k1rakishou.chan.features.setup.SiteSettingsController
-import com.github.k1rakishou.chan.features.setup.SitesSetupController
 import com.github.k1rakishou.chan.features.setup.epoxy.EpoxyBoardView
 import com.github.k1rakishou.chan.features.setup.epoxy.EpoxySelectableBoardView
 import com.github.k1rakishou.chan.features.setup.epoxy.selection.BaseBoardSelectionViewHolder
 import com.github.k1rakishou.chan.features.setup.epoxy.selection.EpoxySiteSelectionView
 import com.github.k1rakishou.chan.features.setup.epoxy.site.EpoxySiteView
-import com.github.k1rakishou.chan.features.site_archive.BoardArchiveController
-import com.github.k1rakishou.chan.features.themes.ThemeGalleryController
-import com.github.k1rakishou.chan.features.themes.ThemeSettingsController
-import com.github.k1rakishou.chan.features.thirdeye.AddOrEditBooruController
-import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
-import com.github.k1rakishou.chan.features.thread_downloading.LocalArchiveController
-import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloaderSettingsController
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.activity.CrashReportActivity
 import com.github.k1rakishou.chan.ui.activity.SharingActivity
@@ -114,30 +67,8 @@ import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailViewW
 import com.github.k1rakishou.chan.ui.compose.ThreadSearchNavigationButtonsView
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
 import com.github.k1rakishou.chan.ui.compose.lazylist.ScrollbarView
-import com.github.k1rakishou.chan.ui.controller.AlbumDownloadController
-import com.github.k1rakishou.chan.ui.controller.BrowseController
-import com.github.k1rakishou.chan.ui.controller.CaptchaContainerController
-import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
-import com.github.k1rakishou.chan.ui.controller.LicensesController
-import com.github.k1rakishou.chan.ui.controller.LoadingViewController
-import com.github.k1rakishou.chan.ui.controller.LogsController
-import com.github.k1rakishou.chan.ui.controller.OpenUrlInWebViewController
-import com.github.k1rakishou.chan.ui.controller.PostLinksController
-import com.github.k1rakishou.chan.ui.controller.PostOmittedImagesController
-import com.github.k1rakishou.chan.ui.controller.RemovedPostsController
-import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
-import com.github.k1rakishou.chan.ui.controller.ViewThreadController
-import com.github.k1rakishou.chan.ui.controller.WebViewReportController
 import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
 import com.github.k1rakishou.chan.ui.controller.base.ui.SystemGestureZoneBlockerLayout
-import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostController
-import com.github.k1rakishou.chan.ui.controller.dialog.KurobaComposeDialogController
-import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
-import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
-import com.github.k1rakishou.chan.ui.controller.popup.PostRepliesPopupController
-import com.github.k1rakishou.chan.ui.controller.popup.PostSearchPopupController
-import com.github.k1rakishou.chan.ui.controller.settings.RangeSettingUpdaterController
-import com.github.k1rakishou.chan.ui.controller.settings.captcha.JsCaptchaCookiesEditorController
 import com.github.k1rakishou.chan.ui.controller.settings.captcha.JsCaptchaCookiesEditorLayout
 import com.github.k1rakishou.chan.ui.epoxy.EpoxyDividerView
 import com.github.k1rakishou.chan.ui.epoxy.EpoxyErrorView
@@ -208,87 +139,19 @@ import dagger.Subcomponent
 @Subcomponent(
   modules = [
     ActivityModule::class,
-    ViewModelFactoryModule::class,
-    ViewModelModule::class
+    ActivityScopedViewModelFactoryModule::class,
+    ActivityScopedViewModelModule::class
   ]
 )
 interface ActivityComponent : ActivityDependencies {
+  fun controllerComponentBuilder(): ControllerComponent.Builder
+
   fun inject(startActivity: StartActivity)
   fun inject(sharingActivity: SharingActivity)
   fun inject(mediaViewerActivity: MediaViewerActivity)
   fun inject(crashReportActivity: CrashReportActivity)
 
-  fun inject(albumDownloadController: AlbumDownloadController)
-  fun inject(browseController: BrowseController)
-  fun inject(mainController: MainController)
-  fun inject(filtersController: FiltersController)
-  fun inject(imageOptionsController: ImageOptionsController)
-  fun inject(imageReencodeOptionsController: ImageReencodeOptionsController)
-  fun inject(licensesController: LicensesController)
-  fun inject(loginController: LoginController)
-  fun inject(logsController: LogsController)
-  fun inject(postRepliesPopupController: PostRepliesPopupController)
-  fun inject(postSearchPopupController: PostSearchPopupController)
-  fun inject(removedPostsController: RemovedPostsController)
-  fun inject(webViewReportController: WebViewReportController)
-  fun inject(sitesSetupController: SitesSetupController)
-  fun inject(splitNavigationController: SplitNavigationController)
-  fun inject(styledToolbarNavigationController: StyledToolbarNavigationController)
-  fun inject(themeSettingsController: ThemeSettingsController)
-  fun inject(themeGalleryController: ThemeGalleryController)
-  fun inject(threadSlideController: ThreadSlideController)
-  fun inject(viewThreadController: ViewThreadController)
-  fun inject(bookmarksController: BookmarksController)
-  fun inject(rangeSettingUpdaterController: RangeSettingUpdaterController)
-  fun inject(bookmarksSortingController: BookmarksSortingController)
-  fun inject(proxyEditorController: ProxyEditorController)
-  fun inject(proxySetupController: ProxySetupController)
-  fun inject(globalSearchController: GlobalSearchController)
-  fun inject(searchResultsController: SearchResultsController)
-  fun inject(addBoardsController: AddBoardsController)
-  fun inject(boardsSetupController: BoardsSetupController)
-  fun inject(mainSettingsControllerV2: MainSettingsControllerV2)
-  fun inject(siteSettingsController: SiteSettingsController)
-  fun inject(reportIssueController: ReportIssueController)
-  fun inject(floatingListMenuController: FloatingListMenuController)
-  fun inject(jsCaptchaCookiesEditorController: JsCaptchaCookiesEditorController)
-  fun inject(loadingViewController: LoadingViewController)
-  fun inject(boardSelectionController: BoardSelectionController)
-  fun inject(postLinksController: PostLinksController)
-  fun inject(selectSiteForSearchController: SelectSiteForSearchController)
-  fun inject(selectBoardForSearchController: SelectBoardForSearchController)
-  fun inject(siteFirewallBypassController: SiteFirewallBypassController)
-  fun inject(imageSaverV2OptionsController: ImageSaverV2OptionsController)
-  fun inject(resolveDuplicateImagesController: ResolveDuplicateImagesController)
-  fun inject(kurobaAlertDialogHostController: KurobaAlertDialogHostController)
-  fun inject(simpleListItemsReorderingController: SimpleListItemsReorderingController)
-  fun inject(captchaContainerController: CaptchaContainerController)
-  fun inject(mediaViewerController: MediaViewerController)
-  fun inject(mediaViewerGesturesSettingsController: MediaViewerGesturesSettingsController)
-  fun inject(boardArchiveController: BoardArchiveController)
-  fun inject(savedPostsController: SavedPostsController)
-  fun inject(threadDownloaderSettingsController: ThreadDownloaderSettingsController)
-  fun inject(localArchiveController: LocalArchiveController)
-  fun inject(postOmittedImagesController: PostOmittedImagesController)
-  fun inject(exportBackupOptionsController: ExportBackupOptionsController)
-  fun inject(composeBoardsController: ComposeBoardsController)
-  fun inject(composeBoardsSelectorController: ComposeBoardsSelectorController)
-  fun inject(compositeCatalogsSetupController: CompositeCatalogsSetupController)
-  fun inject(createOrUpdateFilterController: CreateOrUpdateFilterController)
-  fun inject(filterTypeSelectionController: FilterTypeSelectionController)
-  fun inject(filterBoardSelectorController: FilterBoardSelectorController)
-  fun inject(bookmarkGroupSettingsController: BookmarkGroupSettingsController)
-  fun inject(bookmarkGroupPatternSettingsController: BookmarkGroupPatternSettingsController)
   fun inject(kurobaAlertController: KurobaAlertController)
-  fun inject(chan4ReportPostController: Chan4ReportPostController)
-  fun inject(thirdEyeSettingsController: ThirdEyeSettingsController)
-  fun inject(addOrEditBooruController: AddOrEditBooruController)
-  fun inject(imageSearchController: ImageSearchController)
-  fun inject(editMpvConfController: EditMpvConfController)
-  fun inject(openUrlInWebViewController: OpenUrlInWebViewController)
-  fun inject(createSoundMediaController: CreateSoundMediaController)
-  fun inject(kurobaComposeDialogController: KurobaComposeDialogController)
-  fun inject(albumViewControllerV2: AlbumViewControllerV2)
 
   fun inject(colorizableBarButton: ColorizableBarButton)
   fun inject(colorizableButton: ColorizableButton)
@@ -423,4 +286,5 @@ interface ActivityComponent : ActivityDependencies {
 
     fun build(): ActivityComponent
   }
+
 }

@@ -33,7 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
@@ -83,9 +83,9 @@ class BookmarkGroupSettingsController(
   private val isBookmarkMoveMode: Boolean
     get() = bookmarksToMove != null
 
-  private val viewModel by requireComponentActivity().viewModelByKey<BookmarkGroupSettingsControllerViewModel>()
+  private val viewModel by viewModelByKey<BookmarkGroupSettingsControllerViewModel>()
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

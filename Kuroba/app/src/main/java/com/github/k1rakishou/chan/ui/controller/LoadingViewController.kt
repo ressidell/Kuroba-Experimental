@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.View
 import android.widget.ProgressBar
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
+import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableTextView
 
@@ -19,7 +19,7 @@ class LoadingViewController : BaseFloatingController {
   private var _cancelAllowed = false
   private var _cancellationFunc: Function0<Unit>? = null
 
-  override fun injectDependencies(component: ActivityComponent) {
+  override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
   }
 

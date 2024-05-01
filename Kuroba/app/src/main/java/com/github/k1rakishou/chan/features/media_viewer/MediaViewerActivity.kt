@@ -27,7 +27,6 @@ import com.github.k1rakishou.chan.utils.FullScreenUtils.setupStatusAndNavBarColo
 import com.github.k1rakishou.chan.utils.startActivitySafe
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.AndroidUtils
-import com.github.k1rakishou.common.requireComponentActivity
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.fsaf.FileChooser
@@ -42,7 +41,8 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-class MediaViewerActivity : ControllerHostActivity(),
+class MediaViewerActivity :
+  ControllerHostActivity(),
   MediaViewerController.MediaViewerCallbacks,
   ThemeEngine.ThemeChangesListener,
   FSAFActivityCallbacks {
@@ -70,7 +70,7 @@ class MediaViewerActivity : ControllerHostActivity(),
     snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer)
   }
 
-  private val viewModel by requireComponentActivity().viewModelByKey<MediaViewerControllerViewModel>()
+  private val viewModel by viewModelByKey<MediaViewerControllerViewModel>()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -86,7 +86,8 @@ class MediaViewerActivity : ControllerHostActivity(),
       .viewModelComponentBuilder()
       .build()
 
-    contentView = findViewById(android.R.id.content)
+    initView(findViewById(android.R.id.content))
+
     AndroidUtils.getWindow(this)
       .addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 

@@ -7,26 +7,43 @@ import android.graphics.BitmapFactory
 import android.view.KeyEvent
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.core.di.module.activity.ActivityScopedViewModelFactory
 import com.github.k1rakishou.chan.core.di.module.activity.IHasActivityComponent
-import com.github.k1rakishou.chan.core.di.module.viewmodel.IHasViewModelProviderFactory
+import com.github.k1rakishou.chan.core.di.module.shared.IHasViewModelProviderFactory
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.helper.RuntimePermissionsHelper
+import com.github.k1rakishou.chan.utils.IHasViewModelScope
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.core_themes.ChanTheme
 import java.util.*
 import javax.inject.Inject
 
-abstract class ControllerHostActivity : AppCompatActivity(), IHasViewModelProviderFactory, IHasActivityComponent {
-  lateinit var contentView: ViewGroup
+abstract class ControllerHostActivity :
+  AppCompatActivity(),
+  IHasViewModelProviderFactory,
+  IHasActivityComponent,
+  IHasViewModelScope {
+
+  @Inject
+  override lateinit var viewModelFactory: ActivityScopedViewModelFactory
 
   @Inject
   lateinit var runtimePermissionsHelper: RuntimePermissionsHelper
-  @Inject
-  override lateinit var viewModelFactory: ViewModelProvider.Factory
+
+  private var _contentView: ViewGroup? = null
+  val contentView: ViewGroup
+    get() = requireNotNull(_contentView) { "contentView was not initialized!" }
+
+  final override val viewModelScope: ViewModelScope
+    get() = ViewModelScope.ActivityScope(this, this.viewModelStore)
 
   private val stack = Stack<Controller>()
+
+  fun initView(contentView: ViewGroup) {
+    _contentView = contentView
+  }
 
   override fun onDestroy() {
     while (!stack.isEmpty()) {
