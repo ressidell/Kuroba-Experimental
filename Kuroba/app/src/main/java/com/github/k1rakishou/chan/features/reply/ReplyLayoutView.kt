@@ -84,10 +84,7 @@ class ReplyLayoutView @JvmOverloads constructor(
   private val showPostingDialogExecutor = SerializedCoroutineExecutor(coroutineScope)
 
   override val viewModelScope: ViewModelScope
-    get() {
-      val componentActivity = context.requireComponentActivity()
-      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
-    }
+    get() = ViewModelScope.ActivityScope(context.requireComponentActivity())
 
   init {
     AppModuleAndroidUtils.extractActivityComponent(context)

@@ -45,6 +45,7 @@ import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
+import com.github.k1rakishou.common.requireComponentActivity
 import com.github.k1rakishou.core_logger.Logger
 import dagger.Lazy
 import io.reactivex.disposables.CompositeDisposable
@@ -80,7 +81,7 @@ abstract class Controller(
   private val _lifecycleRegistry by lazy(LazyThreadSafetyMode.NONE) { LifecycleRegistry(this) }
   private val _savedStateRegistryController by lazy(LazyThreadSafetyMode.NONE) { SavedStateRegistryController.create(this) }
   // TODO: scoped viewmodels. Move this thing into an activity scoped ViewModel so that it can outlive configuration changes.
-  protected val viewModelStore by lazy(LazyThreadSafetyMode.NONE) { ViewModelStore() }
+  val viewModelStore by lazy(LazyThreadSafetyMode.NONE) { ViewModelStore() }
 
   val kurobaToolbarStateManager: KurobaToolbarStateManager
     get() = kurobaToolbarStateManagerLazy.get()
@@ -102,10 +103,7 @@ abstract class Controller(
   open val snackbarScope: SnackbarScope = SnackbarScope.Global
 
   override val viewModelScope: ViewModelScope
-    get() {
-      val componentActivity = requireControllerHostActivity()
-      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
-    }
+    get() = ViewModelScope.ActivityScope(context.requireComponentActivity())
 
   override val lifecycle: Lifecycle
     get() = _lifecycleRegistry
@@ -290,6 +288,13 @@ abstract class Controller(
     if (::view.isInitialized && AndroidUtils.removeFromParentView(view)) {
       Logger.verbose(TAG) { "${controllerKey} view removed onDestroy" }
     }
+
+    // TODO: Add 'isBeingDestroyed' flag to onDestroy() which should be set to false when:
+    //  1. Controller is being removed by some user action (like popController).
+    //  2. Owner activity is being destroyed (isChangingOrientations == false)
+    //  In all different cases it should be false.
+    //  Call `viewModelStore.clear()` only when isBeingDestroyed == true
+    viewModelStore.clear()
   }
 
   @CallSuper

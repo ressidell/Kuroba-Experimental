@@ -96,10 +96,7 @@ class LynxchanCaptchaLayout(
   private var callback: AuthenticationLayoutCallback? = null
 
   override val viewModelScope: ViewModelScope
-    get() {
-      val componentActivity = context.requireComponentActivity()
-      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
-    }
+    get() = ViewModelScope.ActivityScope(context.requireComponentActivity())
 
   init {
     AppModuleAndroidUtils.extractActivityComponent(getContext())

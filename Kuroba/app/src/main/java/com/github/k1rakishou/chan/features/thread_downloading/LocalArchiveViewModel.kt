@@ -337,8 +337,9 @@ class LocalArchiveViewModel(
       .safeUnwrap { error ->
         Logger.e(TAG, "getThreadOriginalPostsByDatabaseId() error", error)
 
+        cachedThreadDownloadViews.clear()
+
         _state.updateState {
-          cachedThreadDownloadViews.clear()
           copy(threadDownloadsAsync = AsyncData.Error(error))
         }
 

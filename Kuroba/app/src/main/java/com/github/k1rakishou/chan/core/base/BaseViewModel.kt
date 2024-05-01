@@ -32,8 +32,10 @@ abstract class BaseViewModel : ViewModel() {
 
   protected inline fun <T> MutableStateFlow<T>.updateState(crossinline updater: T.() -> T?) {
     update { oldValue ->
-      val newValue = updater(oldValue) ?: return
-      check(oldValue !== newValue) { "State must be copied!" }
+      val newValue = updater(oldValue)
+      if (newValue == null || oldValue === newValue) {
+        return
+      }
 
       return@update newValue
     }

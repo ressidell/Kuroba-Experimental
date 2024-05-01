@@ -37,7 +37,7 @@ abstract class ControllerHostActivity :
     get() = requireNotNull(_contentView) { "contentView was not initialized!" }
 
   final override val viewModelScope: ViewModelScope
-    get() = ViewModelScope.ActivityScope(this, this.viewModelStore)
+    get() = ViewModelScope.ActivityScope(this)
 
   private val stack = Stack<Controller>()
 

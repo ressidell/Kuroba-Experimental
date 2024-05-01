@@ -104,10 +104,7 @@ class DvachCaptchaLayout(
   }
 
   override val viewModelScope: ViewModelScope
-    get() {
-      val componentActivity = context.requireComponentActivity()
-      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
-    }
+    get() = ViewModelScope.ActivityScope(context.requireComponentActivity())
 
   override fun initialize(
     siteDescriptor: SiteDescriptor,

@@ -65,10 +65,7 @@ abstract class MediaViewerActionStrip(
   private var hideShowAnimation: ValueAnimator? = null
 
   override val viewModelScope: ViewModelScope
-    get() {
-      val componentActivity = context.requireComponentActivity()
-      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
-    }
+    get() = ViewModelScope.ActivityScope(context.requireComponentActivity())
 
   protected fun init() {
     toolbarGoToPostButton = findViewById(R.id.toolbar_go_to_post_button)

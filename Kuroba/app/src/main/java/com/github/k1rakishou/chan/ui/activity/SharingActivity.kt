@@ -59,7 +59,7 @@ class SharingActivity :
   override lateinit var activityComponent: ActivityComponent
 
   override val viewModelScope: ViewModelScope
-    get() = ViewModelScope.ActivityScope(this, this.viewModelStore)
+    get() = ViewModelScope.ActivityScope(this)
 
   private lateinit var viewModelComponent: ViewModelComponent
 

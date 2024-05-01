@@ -116,10 +116,7 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
   abstract val mediaViewerActionStrip: MediaViewerActionStrip?
 
   override val viewModelScope: ViewModelScope
-    get() {
-      val componentActivity = context.requireComponentActivity()
-      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
-    }
+    get() = ViewModelScope.ActivityScope(context.requireComponentActivity())
 
   val bound: Boolean
     get() = _bound

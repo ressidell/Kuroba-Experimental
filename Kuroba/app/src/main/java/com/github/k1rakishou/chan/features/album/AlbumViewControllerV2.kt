@@ -20,7 +20,7 @@ class AlbumViewControllerV2(
 ) : BaseComposeController<AlbumViewControllerV2ViewModel>(context) {
 
   override val viewModelScope: ViewModelScope
-    get() = ViewModelScope.ControllerScope(this, this.viewModelStore)
+    get() = ViewModelScope.ControllerScope(this)
 
   override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)
@@ -50,11 +50,7 @@ class AlbumViewControllerV2(
 
   @Composable
   override fun BuildContent() {
-    println("TTTAAA controllerViewModel: ${controllerViewModel.hashCode()}")
     val albumItems = controllerViewModel.albumItems
-
-    // TODO: scoped viewmodels.
-    println("TTTAAA albumItems: ${albumItems.size}")
   }
 
   @Parcelize

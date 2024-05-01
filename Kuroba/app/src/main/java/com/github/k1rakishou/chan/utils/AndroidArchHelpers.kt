@@ -5,7 +5,6 @@ import android.os.Parcelable
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.bundleOf
 import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
@@ -14,7 +13,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import com.github.k1rakishou.chan.core.di.module.shared.IHasViewModelProviderFactory
 import com.github.k1rakishou.chan.ui.controller.base.Controller
-import com.github.k1rakishou.common.requireComponentActivity
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty1
@@ -32,35 +30,32 @@ interface IHasViewModelScope {
 
 sealed interface ViewModelScope {
   val viewModelStore: ViewModelStore
+    get() {
+      return when (this) {
+        is ActivityScope -> activity.viewModelStore
+        is ControllerScope -> controller.viewModelStore
+      }
+    }
 
   class ActivityScope(
     val activity: ComponentActivity,
-    override val viewModelStore: ViewModelStore
   ) : ViewModelScope
 
   class ControllerScope(
     val controller: Controller,
-    override val viewModelStore: ViewModelStore
   ) : ViewModelScope
 }
 
-
 @Composable
-inline fun <reified VM : ViewModel> rememberActivityViewModel(
+inline fun <reified VM : ViewModel> IHasViewModelScope.rememberViewModel(
   key: String? = null,
   noinline params: (() -> Parcelable?)? = null
 ): VM {
-  val context = LocalContext.current
-
   return remember(key1 = VM::class.java, key2 = key) {
-    val viewModelScopeOwner = context.requireComponentActivity() as IHasViewModelScope
-
-    with(viewModelScopeOwner) {
-      viewModelByKeyEager<VM>(
-        key = key,
-        params = params
-      )
-    }
+    viewModelByKeyEager<VM>(
+      key = key,
+      params = params
+    )
   }
 }
 
