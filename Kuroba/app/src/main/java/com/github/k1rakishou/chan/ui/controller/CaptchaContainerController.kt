@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.site.SiteAuthentication
 import com.github.k1rakishou.chan.core.site.sites.dvach.Dvach
@@ -40,7 +40,7 @@ class CaptchaContainerController(
 
   override fun getLayoutId(): Int = R.layout.layout_reply_captcha
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

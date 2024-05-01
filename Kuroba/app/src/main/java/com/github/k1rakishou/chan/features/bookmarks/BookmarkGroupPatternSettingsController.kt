@@ -33,7 +33,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCustomTextField
@@ -70,7 +70,7 @@ class BookmarkGroupPatternSettingsController(
 
   private val viewModel by viewModelByKey<BookmarkGroupPatternSettingsControllerViewModel>()
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

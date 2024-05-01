@@ -25,7 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCheckbox
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
@@ -41,7 +41,7 @@ class FilterTypeSelectionController(
   private val onSelected: (newFilterType: Int) -> Unit
 ) : BaseFloatingComposeController(context) {
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

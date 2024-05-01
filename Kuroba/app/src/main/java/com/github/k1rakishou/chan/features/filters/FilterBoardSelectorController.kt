@@ -39,7 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
@@ -79,7 +79,7 @@ class FilterBoardSelectorController(
 
   private val viewModel by viewModelByKey<FilterBoardSelectorControllerViewModel>()
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

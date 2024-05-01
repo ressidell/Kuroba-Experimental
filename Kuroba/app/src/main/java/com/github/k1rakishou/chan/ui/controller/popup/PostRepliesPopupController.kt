@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.ui.adapter.PostRepliesAdapter
 import com.github.k1rakishou.chan.ui.cell.PostCellData
 import com.github.k1rakishou.chan.ui.cell.PostCellInterface
@@ -76,7 +76,7 @@ class PostRepliesPopupController(
     return postDescriptors
   }
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

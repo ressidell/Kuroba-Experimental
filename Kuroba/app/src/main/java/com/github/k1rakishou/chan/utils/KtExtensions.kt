@@ -23,8 +23,8 @@ import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyRecyclerView
 import com.airbnb.epoxy.OnModelBuildFinishedListener
 import com.github.k1rakishou.chan.Chan
-import com.github.k1rakishou.chan.core.di.ActivityDependencies
-import com.github.k1rakishou.chan.core.di.ApplicationDependencies
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityDependencies
+import com.github.k1rakishou.chan.core.di.component.application.ApplicationDependencies
 import com.github.k1rakishou.chan.core.di.module.activity.IHasActivityComponent
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.ui.activity.SharingActivity

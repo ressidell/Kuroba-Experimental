@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.View
 import com.airbnb.epoxy.EpoxyController
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.BoardManager
@@ -62,7 +62,7 @@ class GlobalSearchController(
   private val inputViewRefSet = mutableListOf<WeakReference<View>>()
   private var resetSearchParameters = false
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

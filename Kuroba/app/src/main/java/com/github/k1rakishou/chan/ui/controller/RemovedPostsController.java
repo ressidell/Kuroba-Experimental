@@ -20,8 +20,9 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.github.k1rakishou.chan.R;
 import com.github.k1rakishou.chan.core.cache.CacheFileType;
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent;
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
 import com.github.k1rakishou.chan.core.image.ImageLoaderV2;
+import com.github.k1rakishou.chan.ui.helper.AppResources;
 import com.github.k1rakishou.chan.ui.helper.RemovedPostsHelper;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableCheckBox;
@@ -58,6 +59,8 @@ public class RemovedPostsController
     ImageLoaderV2 imageLoaderV2;
     @Inject
     ThemeEngine themeEngine;
+    @Inject
+    AppResources appResources;
 
     private RemovedPostsHelper removedPostsHelper;
 
@@ -75,7 +78,7 @@ public class RemovedPostsController
     private RemovedPostAdapter adapter;
 
     @Override
-    protected void injectControllerDependencies(@NonNull ControllerComponent component) {
+    protected void injectActivityDependencies(@NonNull ActivityComponent component) {
         component.inject(this);
     }
 
@@ -142,10 +145,11 @@ public class RemovedPostsController
 
         if (adapter == null) {
             adapter = new RemovedPostAdapter(
-                    context,
-                    imageLoaderV2,
-                    themeEngine,
-                    R.layout.layout_removed_posts
+              context,
+              imageLoaderV2,
+              themeEngine,
+              appResources,
+              R.layout.layout_removed_posts
             );
 
             postsListView.setAdapter(adapter);
@@ -228,6 +232,8 @@ public class RemovedPostsController
     public static class RemovedPostAdapter extends ArrayAdapter<HiddenOrRemovedPost> {
         private ImageLoaderV2 imageLoaderV2;
         private ThemeEngine themeEngine;
+        private AppResources appResources;
+
         private List<HiddenOrRemovedPost> hiddenOrRemovedPosts = new ArrayList<>();
 
         private Map<PostDescriptor, ImageLoaderV2.ImageLoaderRequestDisposable> activeImageLoadRequests = new HashMap<>();
@@ -236,6 +242,7 @@ public class RemovedPostsController
                 @NonNull Context context,
                 ImageLoaderV2 imageLoaderV2,
                 ThemeEngine themeEngine,
+                AppResources appResources,
                 int resource
         ) {
             super(context, resource);
@@ -325,9 +332,9 @@ public class RemovedPostsController
 
             if (!hiddenOrRemovedPost.manuallyRestored) {
                 if (hiddenOrRemovedPost.isHidden) {
-                    additionalPostHideInfo.append(getString(R.string.hidden_or_removed_posts_post_hidden));
+                    additionalPostHideInfo.append(appResources.string(R.string.hidden_or_removed_posts_post_hidden));
                 } else {
-                    additionalPostHideInfo.append(getString(R.string.hidden_or_removed_posts_post_removed));
+                    additionalPostHideInfo.append(appResources.string(R.string.hidden_or_removed_posts_post_removed));
                 }
             } else {
                 // we are checking additionalPostHideInfo's length to be greater than 1 because
@@ -336,7 +343,7 @@ public class RemovedPostsController
                     additionalPostHideInfo.append(", ");
                 }
 
-                additionalPostHideInfo.append(getString(R.string.hidden_or_removed_posts_post_manually_restored));
+                additionalPostHideInfo.append(appResources.string(R.string.hidden_or_removed_posts_post_manually_restored));
             }
 
             additionalPostHideInfo.append(")");

@@ -10,7 +10,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.site.SiteResolver
 import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.core_logger.Logger
@@ -38,7 +38,7 @@ class OpenUrlInWebViewController(
   private val cookieManager by lazy { CookieManager.getInstance() }
   private val webViewClient by lazy { WebViewClient() }
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

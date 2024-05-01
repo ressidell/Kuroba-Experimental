@@ -48,28 +48,29 @@ class MediaViewerControllerViewModel(
   private val currentlyDisplayedCatalogPostsRepository: CurrentlyDisplayedCatalogPostsRepository,
 ) : ViewModel() {
   private val _mediaViewerState = MutableStateFlow<MediaViewerControllerState?>(null)
-  private val _transitionInfoFlow = MutableSharedFlow<ViewableMediaParcelableHolder.TransitionInfo?>(extraBufferCapacity = 1)
-  private val _mediaViewerOptions = MutableStateFlow<MediaViewerOptions>(MediaViewerOptions())
-  private val mediaViewStateCache = LruCache<MediaLocation, MediaViewState>(offscreenPageLimit())
+  val mediaViewerState: StateFlow<MediaViewerControllerState?>
+    get() = _mediaViewerState.asStateFlow()
+  val chanDescriptor: ChanDescriptor?
+    get() = mediaViewerState.value?.descriptor
 
-  private var lastPagerIndex = -1
+  private val _transitionInfoFlow = MutableSharedFlow<ViewableMediaParcelableHolder.TransitionInfo?>(extraBufferCapacity = 1)
+  val transitionInfoFlow: SharedFlow<ViewableMediaParcelableHolder.TransitionInfo?>
+    get() = _transitionInfoFlow.asSharedFlow()
+
+  private val _mediaViewerOptions = MutableStateFlow<MediaViewerOptions>(MediaViewerOptions())
+  val mediaViewerOptions: StateFlow<MediaViewerOptions>
+    get() = _mediaViewerOptions
+
+  private val _mediaViewStateCache = LruCache<MediaLocation, MediaViewState>(offscreenPageLimit())
 
   private val defaultMuteState: Boolean
     get() = ChanSettings.videoDefaultMuted.get()
       && (ChanSettings.headsetDefaultMuted.get() || !AndroidUtils.getAudioManager().isWiredHeadsetOn)
 
+  private var lastPagerIndex = -1
   private var _isSoundMuted = defaultMuteState
   val isSoundMuted: Boolean
     get() = _isSoundMuted
-
-  val transitionInfoFlow: SharedFlow<ViewableMediaParcelableHolder.TransitionInfo?>
-    get() = _transitionInfoFlow.asSharedFlow()
-  val mediaViewerState: StateFlow<MediaViewerControllerState?>
-    get() = _mediaViewerState.asStateFlow()
-  val mediaViewerOptions: StateFlow<MediaViewerOptions>
-    get() = _mediaViewerOptions
-  val chanDescriptor: ChanDescriptor?
-    get() = mediaViewerState.value?.descriptor
 
   fun toggleIsSoundMuted() {
     _isSoundMuted = _isSoundMuted.not()
@@ -81,15 +82,15 @@ class MediaViewerControllerViewModel(
 
   fun storeMediaViewState(mediaLocation: MediaLocation, mediaViewState: MediaViewState?) {
     if (mediaViewState == null) {
-      mediaViewStateCache.remove(mediaLocation)
+      _mediaViewStateCache.remove(mediaLocation)
       return
     }
 
-    mediaViewStateCache.put(mediaLocation, mediaViewState.clone())
+    _mediaViewStateCache.put(mediaLocation, mediaViewState.clone())
   }
 
   fun getPrevMediaViewStateOrNull(mediaLocation: MediaLocation): MediaViewState? {
-    return mediaViewStateCache.get(mediaLocation)
+    return _mediaViewStateCache.get(mediaLocation)
   }
 
   suspend fun showMedia(

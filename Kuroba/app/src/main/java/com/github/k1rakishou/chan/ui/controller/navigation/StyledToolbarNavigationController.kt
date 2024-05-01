@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.ViewGroup
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarView
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
@@ -40,7 +40,7 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
       return null
     }
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

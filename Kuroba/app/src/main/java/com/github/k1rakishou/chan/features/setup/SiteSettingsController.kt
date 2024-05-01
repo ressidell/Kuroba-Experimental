@@ -3,7 +3,7 @@ package com.github.k1rakishou.chan.features.setup
 import android.content.Context
 import com.airbnb.epoxy.EpoxyController
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
@@ -55,7 +55,7 @@ class SiteSettingsController(
 
   private lateinit var epoxyRecyclerView: InsetAwareEpoxyRecyclerView
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

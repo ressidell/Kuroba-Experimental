@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.DialogFactory.Builder.Companion.newBuilder
 import com.github.k1rakishou.chan.core.helper.FilterEngine
@@ -108,7 +108,7 @@ class CreateOrUpdateFilterController(
 
   private val chanFilterMutableState = ChanFilterMutableState.fromChanFilterMutable(previousChanFilterMutable)
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

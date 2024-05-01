@@ -9,6 +9,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.controller.base.BaseComposeController
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.chan.utils.viewModelByKey
 import kotlinx.parcelize.Parcelize
 
@@ -17,6 +18,9 @@ class AlbumViewControllerV2(
   private val listenMode: ListenMode,
   private val initialImageFullUrl: String?
 ) : BaseComposeController<AlbumViewControllerV2ViewModel>(context) {
+
+  override val viewModelScope: ViewModelScope
+    get() = ViewModelScope.ControllerScope(this, this.viewModelStore)
 
   override fun injectControllerDependencies(component: ControllerComponent) {
     component.inject(this)

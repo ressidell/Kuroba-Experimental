@@ -8,7 +8,7 @@ import androidx.core.view.updateLayoutParams
 import com.airbnb.epoxy.EpoxyController
 import com.airbnb.epoxy.EpoxyRecyclerView
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.features.image_saver.epoxy.DupImage
 import com.github.k1rakishou.chan.features.image_saver.epoxy.LocalImage
@@ -77,7 +77,7 @@ class ResolveDuplicateImagesController(
     )
   }
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

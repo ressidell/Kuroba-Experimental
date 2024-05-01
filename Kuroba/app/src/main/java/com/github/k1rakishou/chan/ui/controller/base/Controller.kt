@@ -13,15 +13,16 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.base.ControllerHostActivity
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.di.module.controller.ControllerModule
-import com.github.k1rakishou.chan.core.di.module.controller.ControllerScopedViewModelFactory
 import com.github.k1rakishou.chan.core.di.module.shared.IHasViewModelProviderFactory
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarState
 import com.github.k1rakishou.chan.features.toolbar.KurobaToolbarStateManager
@@ -62,8 +63,10 @@ abstract class Controller(
   @JvmField var context: Context
 ) : IHasViewModelScope, IHasViewModelProviderFactory, SavedStateRegistryOwner {
 
-  @Inject
-  override lateinit var viewModelFactory: ControllerScopedViewModelFactory
+  private lateinit var injectedViewModelFactory: ViewModelProvider.Factory
+
+  override val viewModelFactory: ViewModelProvider.Factory
+    get() = injectedViewModelFactory
 
   @Inject
   lateinit var kurobaToolbarStateManagerLazy: Lazy<KurobaToolbarStateManager>
@@ -76,7 +79,7 @@ abstract class Controller(
 
   private val _lifecycleRegistry by lazy(LazyThreadSafetyMode.NONE) { LifecycleRegistry(this) }
   private val _savedStateRegistryController by lazy(LazyThreadSafetyMode.NONE) { SavedStateRegistryController.create(this) }
-  // TODO: scoped viewmodels. Move this thing into an activity scoped ViewModel
+  // TODO: scoped viewmodels. Move this thing into an activity scoped ViewModel so that it can outlive configuration changes.
   protected val viewModelStore by lazy(LazyThreadSafetyMode.NONE) { ViewModelStore() }
 
   val kurobaToolbarStateManager: KurobaToolbarStateManager
@@ -98,9 +101,11 @@ abstract class Controller(
 
   open val snackbarScope: SnackbarScope = SnackbarScope.Global
 
-  // TODO: scoped viewmodels. remove me!
   override val viewModelScope: ViewModelScope
-    get() = ViewModelScope.ControllerScope(this, viewModelStore)
+    get() {
+      val componentActivity = requireControllerHostActivity()
+      return ViewModelScope.ActivityScope(componentActivity, componentActivity.viewModelStore)
+    }
 
   override val lifecycle: Lifecycle
     get() = _lifecycleRegistry
@@ -218,6 +223,10 @@ abstract class Controller(
   }
 
   fun isViewInitialized(): Boolean = ::view.isInitialized
+
+  protected open fun injectActivityDependencies(component: ActivityComponent) {
+    error("Must be overridden!")
+  }
 
   protected open fun injectControllerDependencies(component: ControllerComponent) {
     error("Must be overridden!")
@@ -542,13 +551,24 @@ abstract class Controller(
   }
 
   private fun initDependencies() {
-    val controllerComponent = AppModuleAndroidUtils.extractActivityComponent(context)
-      .controllerComponentBuilder()
-      .controller(this)
-      .controllerModule(ControllerModule())
-      .build()
+    when (viewModelScope) {
+      is ViewModelScope.ControllerScope -> {
+        val controllerComponent = AppModuleAndroidUtils.extractActivityComponent(context)
+          .controllerComponentBuilder()
+          .controller(this)
+          .controllerModule(ControllerModule())
+          .build()
 
-    injectControllerDependencies(controllerComponent)
+        injectedViewModelFactory = controllerComponent.controllerScopedViewModelFactory
+        injectControllerDependencies(controllerComponent)
+      }
+      is ViewModelScope.ActivityScope -> {
+        val activityComponent = AppModuleAndroidUtils.extractActivityComponent(context)
+
+        injectedViewModelFactory = activityComponent.injectedViewModelFactory
+        injectActivityDependencies(activityComponent)
+      }
+    }
   }
 
   override fun equals(other: Any?): Boolean {

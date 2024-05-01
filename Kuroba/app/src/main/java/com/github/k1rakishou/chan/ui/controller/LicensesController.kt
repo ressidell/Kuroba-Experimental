@@ -6,6 +6,7 @@ import android.util.AndroidRuntimeException
 import android.webkit.WebView
 import android.widget.TextView
 import com.github.k1rakishou.chan.R
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
@@ -19,7 +20,7 @@ class LicensesController(
   private val url: String
 ) : Controller(context) {
 
-  override fun injectControllerDependencies(component: ControllerComponent) {
+  override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)
   }
 

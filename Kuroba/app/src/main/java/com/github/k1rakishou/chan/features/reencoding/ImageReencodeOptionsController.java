@@ -13,7 +13,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.util.Pair;
 
 import com.github.k1rakishou.chan.R;
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent;
+import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
 import com.github.k1rakishou.chan.ui.controller.BaseFloatingController;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableRadioButton;
@@ -70,7 +70,7 @@ public class ImageReencodeOptionsController
     };
 
     @Override
-    protected void injectControllerDependencies(@NonNull ControllerComponent component) {
+    protected void injectActivityDependencies(@NonNull ActivityComponent component) {
         component.inject(this);
     }
 

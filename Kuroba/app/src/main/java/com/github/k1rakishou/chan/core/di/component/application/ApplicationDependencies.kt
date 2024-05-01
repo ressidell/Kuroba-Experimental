@@ -1,4 +1,4 @@
-package com.github.k1rakishou.chan.core.di
+package com.github.k1rakishou.chan.core.di.component.application
 
 import com.github.k1rakishou.chan.Chan
 import com.github.k1rakishou.chan.core.manager.SiteManager
