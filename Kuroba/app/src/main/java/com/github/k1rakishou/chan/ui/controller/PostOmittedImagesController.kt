@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailView
 import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailViewsContainer
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
@@ -49,7 +49,7 @@ class PostOmittedImagesController(
 ) : BaseFloatingComposeController(context) {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
 
   override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)

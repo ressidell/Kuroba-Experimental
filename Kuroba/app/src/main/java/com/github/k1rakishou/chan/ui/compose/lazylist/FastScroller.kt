@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -179,7 +180,7 @@ fun LazyVerticalGridWithFastScroller(
 
   var scrollbarDragProgress by remember(draggableScrollbar) { mutableStateOf<Float?>(null) }
 
-  BoxWithConstraints(modifier = modifier) {
+  BoxWithConstraints {
     val maxWidthPx = with(density) { maxWidth.toPx().toInt() }
     val maxHeightPx = with(density) { maxHeight.toPx().toInt() }
 
@@ -209,19 +210,21 @@ fun LazyVerticalGridWithFastScroller(
         )
     ) {
       LazyVerticalGrid(
-        modifier = Modifier
-          .scrollbar(
-            lazyStateWrapper = lazyGridStateWrapper,
-            scrollbarDimens = ScrollbarDimens.Vertical.Static(
-              width = scrollbarWidth,
-              height = scrollbarHeight
-            ),
-            scrollbarTrackColor = chanTheme.scrollbarTrackColorCompose,
-            scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
-            scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
-            contentPadding = contentPadding,
-            scrollbarManualDragProgress = scrollbarDragProgress
-          ),
+        modifier = modifier.then(
+          Modifier
+            .scrollbar(
+              lazyStateWrapper = lazyGridStateWrapper,
+              scrollbarDimens = ScrollbarDimens.Vertical.Static(
+                width = scrollbarWidth,
+                height = scrollbarHeight
+              ),
+              scrollbarTrackColor = chanTheme.scrollbarTrackColorCompose,
+              scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
+              scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
+              contentPadding = contentPadding,
+              scrollbarManualDragProgress = scrollbarDragProgress
+            )
+        ),
         columns = columns,
         reverseLayout = reverseLayout,
         verticalArrangement = verticalArrangement,
@@ -239,8 +242,8 @@ fun LazyVerticalGridWithFastScroller(
 fun LazyVerticalStaggeredGridWithFastScroller(
   modifier: Modifier = Modifier,
   columns: StaggeredGridCells,
-  state: LazyStaggeredGridState,
-  contentPadding: PaddingValues,
+  state: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
+  contentPadding: PaddingValues = PaddingValues(0.dp),
   draggableScrollbar: Boolean = true,
   scrollbarWidth: Int = defaultScrollbarWidth(draggableScrollbar),
   scrollbarHeight: Int = defaultScrollbarHeight(),
@@ -261,7 +264,7 @@ fun LazyVerticalStaggeredGridWithFastScroller(
 
   var scrollbarDragProgress by remember(draggableScrollbar) { mutableStateOf<Float?>(null) }
 
-  BoxWithConstraints(modifier = modifier) {
+  BoxWithConstraints {
     val maxWidthPx = with(density) { maxWidth.toPx().toInt() }
     val maxHeightPx = with(density) { maxHeight.toPx().toInt() }
 
@@ -291,19 +294,21 @@ fun LazyVerticalStaggeredGridWithFastScroller(
         )
     ) {
       LazyVerticalStaggeredGrid(
-        modifier = Modifier
-          .scrollbar(
-            lazyStateWrapper = lazyStaggeredGridStateWrapper,
-            scrollbarDimens = ScrollbarDimens.Vertical.Static(
-              width = scrollbarWidth,
-              height = scrollbarHeight
-            ),
-            scrollbarTrackColor = chanTheme.scrollbarTrackColorCompose,
-            scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
-            scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
-            contentPadding = contentPadding,
-            scrollbarManualDragProgress = scrollbarDragProgress
-          ),
+        modifier = modifier.then(
+          Modifier
+            .scrollbar(
+              lazyStateWrapper = lazyStaggeredGridStateWrapper,
+              scrollbarDimens = ScrollbarDimens.Vertical.Static(
+                width = scrollbarWidth,
+                height = scrollbarHeight
+              ),
+              scrollbarTrackColor = chanTheme.scrollbarTrackColorCompose,
+              scrollbarThumbColorNormal = chanTheme.scrollbarThumbColorNormalCompose,
+              scrollbarThumbColorDragged = chanTheme.scrollbarThumbColorDraggedCompose,
+              contentPadding = contentPadding,
+              scrollbarManualDragProgress = scrollbarDragProgress
+            )
+        ),
         columns = columns,
         userScrollEnabled = userScrollEnabled,
         state = lazyStaggeredGridStateWrapper.lazyStaggeredGridState,

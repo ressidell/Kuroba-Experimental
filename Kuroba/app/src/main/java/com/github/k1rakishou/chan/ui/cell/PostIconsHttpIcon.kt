@@ -6,7 +6,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.dp
 import com.github.k1rakishou.chan.utils.MediaUtils
@@ -17,28 +17,28 @@ import java.io.IOException
 class PostIconsHttpIcon(
   context: Context,
   postIcons: PostIcons,
-  imageLoaderV2: Lazy<ImageLoaderV2>,
+  imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>,
   name: String,
   url: HttpUrl
-) : ImageLoaderV2.FailureAwareImageListener {
+) : ImageLoaderDeprecated.FailureAwareImageListener {
   private val context: Context
   private val postIcons: PostIcons
   private val url: HttpUrl
-  private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
   var drawable: Drawable? = null
     private set
 
   val name: String
 
-  private val imageLoaderV2: Lazy<ImageLoaderV2>
+  private val imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>
 
   init {
     this.context = context
     this.postIcons = postIcons
     this.name = name
     this.url = url
-    this.imageLoaderV2 = imageLoaderV2
+    this.imageLoaderDeprecated = imageLoaderDeprecated
   }
 
   fun request(size: Int) {
@@ -46,11 +46,11 @@ class PostIconsHttpIcon(
 
     val actualSize = size.coerceIn(MIN_SIZE_PX, MIN_SIZE_PX * 2)
 
-    requestDisposable = imageLoaderV2.get().loadFromNetwork(
+    requestDisposable = imageLoaderDeprecated.get().loadFromNetwork(
       context = context,
       requestUrl = url.toString(),
       cacheFileType = CacheFileType.SiteIcon,
-      imageSize = ImageLoaderV2.ImageSize.FixedImageSize(actualSize, actualSize),
+      imageSize = ImageLoaderDeprecated.ImageSize.FixedImageSize(actualSize, actualSize),
       transformations = emptyList(),
       listener = this
     )

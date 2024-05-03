@@ -25,24 +25,23 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
-import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.components.IconTint
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.ui.compose.image.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.controller.base.BaseComposeController
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
-import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.fsaf.FileChooser
 import java.io.File
@@ -50,12 +49,13 @@ import javax.inject.Inject
 
 class CreateSoundMediaController(
   context: Context
-) : BaseComposeController<CreateSoundMediaControllerViewModel>(
-  context = context
+) : BaseComposeController<CreateSoundMediaControllerViewModel, Nothing>(
+  context = context,
+  viewModelClass = CreateSoundMediaControllerViewModel::class.java
 ) {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var fileChooser: FileChooser
   @Inject
@@ -65,9 +65,7 @@ class CreateSoundMediaController(
     component.inject(this)
   }
 
-  override fun controllerVM(): Lazy<CreateSoundMediaControllerViewModel> {
-    return viewModelByKey<CreateSoundMediaControllerViewModel>()
-  }
+  override fun viewModelParams(): Nothing? = null
 
   override fun setupNavigation() {
     updateNavigationFlags(
@@ -86,7 +84,7 @@ class CreateSoundMediaController(
   }
 
   @Composable
-  override fun BuildContent() {
+  override fun ScreenContent() {
     val contentPadding = LocalContentPaddings.current
 
     val attachments = controllerViewModel.attachments
@@ -156,8 +154,7 @@ class CreateSoundMediaController(
       KurobaComposeImage(
         request = request,
         modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop,
-        imageLoaderV2 = imageLoaderV2
+        contentScale = ContentScale.Crop
       )
 
       KurobaComposeText(

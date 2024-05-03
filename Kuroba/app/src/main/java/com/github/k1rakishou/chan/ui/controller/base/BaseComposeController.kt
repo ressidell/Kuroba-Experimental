@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.ui.controller.base
 
 import android.content.Context
+import android.os.Parcelable
 import androidx.annotation.CallSuper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -12,11 +13,13 @@ import androidx.lifecycle.ViewModel
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.utils.viewModelByKeyWithClass
 import com.github.k1rakishou.core_themes.ThemeEngine
 import javax.inject.Inject
 
-abstract class BaseComposeController<VM : ViewModel>(
-  context: Context
+abstract class BaseComposeController<VM : ViewModel, Params: Parcelable>(
+  context: Context,
+  viewModelClass: Class<VM>,
 ) : Controller(context) {
 
   @Inject
@@ -24,9 +27,15 @@ abstract class BaseComposeController<VM : ViewModel>(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
 
-  private val controllerViewModelLazy = controllerVM()
+  private val controllerViewModelLazy: Lazy<VM> = viewModelByKeyWithClass(
+    clazz = viewModelClass,
+    params = { viewModelParams() },
+  )
+
   protected val controllerViewModel: VM
     get() = controllerViewModelLazy.value
+
+  abstract fun viewModelParams(): Params?
 
   final override fun onCreate() {
     super.onCreate()
@@ -44,7 +53,7 @@ abstract class BaseComposeController<VM : ViewModel>(
                 .fillMaxSize()
                 .background(chanTheme.backColorCompose)
           ) {
-            BuildContent()
+            ScreenContent()
           }
         }
       }
@@ -62,9 +71,7 @@ abstract class BaseComposeController<VM : ViewModel>(
 
   }
 
-  abstract fun controllerVM(): Lazy<VM>
-
   @Composable
-  abstract fun BuildContent()
+  abstract fun ScreenContent()
 
 }

@@ -21,7 +21,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import com.github.k1rakishou.chan.R;
 import com.github.k1rakishou.chan.core.cache.CacheFileType;
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent;
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2;
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated;
 import com.github.k1rakishou.chan.ui.helper.AppResources;
 import com.github.k1rakishou.chan.ui.helper.RemovedPostsHelper;
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableBarButton;
@@ -56,7 +56,7 @@ public class RemovedPostsController
     private static final String TAG = "RemovedPostsController";
 
     @Inject
-    ImageLoaderV2 imageLoaderV2;
+    ImageLoaderDeprecated imageLoaderDeprecated;
     @Inject
     ThemeEngine themeEngine;
     @Inject
@@ -146,7 +146,7 @@ public class RemovedPostsController
         if (adapter == null) {
             adapter = new RemovedPostAdapter(
               context,
-              imageLoaderV2,
+              imageLoaderDeprecated,
               themeEngine,
               appResources,
               R.layout.layout_removed_posts
@@ -230,24 +230,24 @@ public class RemovedPostsController
     }
 
     public static class RemovedPostAdapter extends ArrayAdapter<HiddenOrRemovedPost> {
-        private ImageLoaderV2 imageLoaderV2;
+        private ImageLoaderDeprecated imageLoaderDeprecated;
         private ThemeEngine themeEngine;
         private AppResources appResources;
 
         private List<HiddenOrRemovedPost> hiddenOrRemovedPosts = new ArrayList<>();
 
-        private Map<PostDescriptor, ImageLoaderV2.ImageLoaderRequestDisposable> activeImageLoadRequests = new HashMap<>();
+        private Map<PostDescriptor, ImageLoaderDeprecated.ImageLoaderRequestDisposable> activeImageLoadRequests = new HashMap<>();
 
         public RemovedPostAdapter(
-                @NonNull Context context,
-                ImageLoaderV2 imageLoaderV2,
-                ThemeEngine themeEngine,
-                AppResources appResources,
-                int resource
+          @NonNull Context context,
+          ImageLoaderDeprecated imageLoaderDeprecated,
+          ThemeEngine themeEngine,
+          AppResources appResources,
+          int resource
         ) {
             super(context, resource);
 
-            this.imageLoaderV2 = imageLoaderV2;
+            this.imageLoaderDeprecated = imageLoaderDeprecated;
             this.themeEngine = themeEngine;
         }
 
@@ -295,7 +295,7 @@ public class RemovedPostsController
             postComment.setText(hiddenOrRemovedPost.comment);
             checkbox.setChecked(hiddenOrRemovedPost.isChecked());
 
-            ImageLoaderV2.ImageLoaderRequestDisposable activeRequestDisposable = activeImageLoadRequests.remove(postDescriptor);
+            ImageLoaderDeprecated.ImageLoaderRequestDisposable activeRequestDisposable = activeImageLoadRequests.remove(postDescriptor);
             if (activeRequestDisposable != null) {
                 activeRequestDisposable.dispose();
             }
@@ -308,7 +308,7 @@ public class RemovedPostsController
                     // load only the first image
                     postImage.setVisibility(VISIBLE);
 
-                    ImageLoaderV2.ImageLoaderRequestDisposable disposable = loadImage(postImage, thumbnailUrl);
+                    ImageLoaderDeprecated.ImageLoaderRequestDisposable disposable = loadImage(postImage, thumbnailUrl);
                     activeImageLoadRequests.put(postDescriptor, disposable);
                 } else {
                     postImage.setImageBitmap(null);
@@ -351,11 +351,11 @@ public class RemovedPostsController
             return additionalPostHideInfo;
         }
 
-        private ImageLoaderV2.ImageLoaderRequestDisposable loadImage(
+        private ImageLoaderDeprecated.ImageLoaderRequestDisposable loadImage(
                 AppCompatImageView postImage,
                 HttpUrl thumbnailUrl
         ) {
-            ImageLoaderV2.FailureAwareImageListener listener = new ImageLoaderV2.FailureAwareImageListener() {
+            ImageLoaderDeprecated.FailureAwareImageListener listener = new ImageLoaderDeprecated.FailureAwareImageListener() {
                 @Override
                 public void onResponse(@NotNull BitmapDrawable drawable, boolean isImmediate) {
                     postImage.setImageBitmap(drawable.getBitmap());
@@ -375,11 +375,11 @@ public class RemovedPostsController
                 }
             };
 
-            return imageLoaderV2.loadFromNetwork(
+            return imageLoaderDeprecated.loadFromNetwork(
                     getContext(),
                     thumbnailUrl.toString(),
                     CacheFileType.PostMediaThumbnail,
-                    new ImageLoaderV2.ImageSize.FixedImageSize(
+                    new ImageLoaderDeprecated.ImageSize.FixedImageSize(
                             postImage.getWidth(),
                             postImage.getHeight()
                     ),

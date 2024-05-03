@@ -38,20 +38,20 @@ import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.features.bypass.CookieResult
 import com.github.k1rakishou.chan.features.bypass.SiteFirewallBypassController
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
-import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextField
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.ui.compose.image.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalGridWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
@@ -63,7 +63,6 @@ import com.github.k1rakishou.chan.ui.view.floating_menu.FloatingListMenuItem
 import com.github.k1rakishou.chan.ui.view.floating_menu.HeaderFloatingListMenuItem
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.findControllerOrNull
-import com.github.k1rakishou.chan.utils.viewModelByKey
 import com.github.k1rakishou.common.FirewallType
 import com.github.k1rakishou.common.isNotNullNorEmpty
 import com.github.k1rakishou.common.resumeValueSafe
@@ -80,12 +79,13 @@ import javax.inject.Inject
 class ImageSearchController(
   context: Context,
   private val onImageSelected: (HttpUrl) -> Unit
-) : BaseComposeController<ImageSearchControllerViewModel>(
-  context = context
+) : BaseComposeController<ImageSearchControllerViewModel, Nothing>(
+  context = context,
+  viewModelClass = ImageSearchControllerViewModel::class.java
 ) {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var dialogFactory: DialogFactory
 
@@ -93,7 +93,7 @@ class ImageSearchController(
     component.inject(this)
   }
 
-  override fun controllerVM(): Lazy<ImageSearchControllerViewModel> = viewModelByKey<ImageSearchControllerViewModel>()
+  override fun viewModelParams(): Nothing? = null
 
   override fun setupNavigation() {
     updateNavigationFlags(
@@ -186,7 +186,7 @@ class ImageSearchController(
   }
 
   @Composable
-  override fun BuildContent() {
+  override fun ScreenContent() {
     val chanTheme = LocalChanTheme.current
     val focusManager = LocalFocusManager.current
     val contentPaddings = LocalContentPaddings.current
@@ -501,8 +501,7 @@ class ImageSearchController(
     ) {
       KurobaComposeImage(
         request = request,
-        modifier = Modifier.fillMaxSize(),
-        imageLoaderV2 = imageLoaderV2
+        modifier = Modifier.fillMaxSize()
       )
 
       if (imageInfo != null) {

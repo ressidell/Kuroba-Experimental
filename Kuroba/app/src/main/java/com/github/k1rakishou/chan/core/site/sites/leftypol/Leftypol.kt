@@ -40,7 +40,7 @@ class Leftypol : CommonSite() {
     override fun setup() {
         setEnabled(true)
         setName(SITE_NAME)
-        setIcon(fromFavicon(imageLoaderV2, "https://leftypol.org/favicon.ico".toHttpUrl()))
+        setIcon(fromFavicon(imageLoaderDeprecated, "https://leftypol.org/favicon.ico".toHttpUrl()))
         setBoardsType(Site.BoardsType.DYNAMIC)
         setResolvable(URL_HANDLER)
         setConfig(object : CommonConfig() {

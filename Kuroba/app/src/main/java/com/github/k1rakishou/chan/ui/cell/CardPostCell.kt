@@ -12,7 +12,7 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.ChanSettings.BoardPostViewMode
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.manager.PostHighlightManager
 import com.github.k1rakishou.chan.core.manager.SeenPostsManager
@@ -55,7 +55,7 @@ class CardPostCell : ConstraintLayout,
   @Inject
   lateinit var postHighlightManagerLazy: Lazy<PostHighlightManager>
   @Inject
-  lateinit var imageLoaderV2Lazy: Lazy<ImageLoaderV2>
+  lateinit var imageLoaderDeprecatedLazy: Lazy<ImageLoaderDeprecated>
   @Inject
   lateinit var seenPostsManagerLazy: Lazy<SeenPostsManager>
   @Inject
@@ -67,8 +67,8 @@ class CardPostCell : ConstraintLayout,
     get() = themeEngineLazy.get()
   private val postHighlightManager: PostHighlightManager
     get() = postHighlightManagerLazy.get()
-  private val imageLoaderV2: ImageLoaderV2
-    get() = imageLoaderV2Lazy.get()
+  private val imageLoaderDeprecated: ImageLoaderDeprecated
+    get() = imageLoaderDeprecatedLazy.get()
   private val seenPostsManager: SeenPostsManager
     get() = seenPostsManagerLazy.get()
   private val threadPostSearchManager: ThreadPostSearchManager
@@ -522,7 +522,7 @@ class CardPostCell : ConstraintLayout,
     icons.set(PostIcons.HTTP_ICONS, postIcons.isNotEmpty())
 
     if (postIcons.isNotEmpty()) {
-      icons.setHttpIcons(imageLoaderV2Lazy, postIcons, theme, postCellData.iconSizePx)
+      icons.setHttpIcons(imageLoaderDeprecatedLazy, postIcons, theme, postCellData.iconSizePx)
     }
 
     icons.apply()

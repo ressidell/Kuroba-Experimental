@@ -7,7 +7,7 @@ import com.github.k1rakishou.chan.core.cache.CacheHandler
 import com.github.k1rakishou.chan.core.helper.AppRestarter
 import com.github.k1rakishou.chan.core.helper.ChanLoadProgressNotifier
 import com.github.k1rakishou.chan.core.helper.SitesSetupControllerOpenNotifier
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
@@ -144,7 +144,7 @@ class HelperModule {
   fun provideImagePickHelper(
     appContext: Context,
     replyManagerLazy: Lazy<ReplyManager>,
-    imageLoaderV2Lazy: Lazy<ImageLoaderV2>,
+    imageLoaderDeprecatedLazy: Lazy<ImageLoaderDeprecated>,
     shareFilePickerLazy: Lazy<ShareFilePicker>,
     localFilePickerLazy: Lazy<LocalFilePicker>,
     remoteFilePickerLazy: Lazy<RemoteFilePicker>,
@@ -156,7 +156,7 @@ class HelperModule {
     return ImagePickHelper(
       appContext,
       replyManagerLazy,
-      imageLoaderV2Lazy,
+      imageLoaderDeprecatedLazy,
       shareFilePickerLazy,
       localFilePickerLazy,
       remoteFilePickerLazy,
@@ -277,7 +277,7 @@ class HelperModule {
     siteManagerLazy: Lazy<SiteManager>,
     boardManagerLazy: Lazy<BoardManager>,
     postingLimitationsInfoManagerLazy: Lazy<PostingLimitationsInfoManager>,
-    imageLoaderV2Lazy: Lazy<ImageLoaderV2>
+    imageLoaderDeprecatedLazy: Lazy<ImageLoaderDeprecated>
   ): ReplyLayoutHelper {
     Logger.deps("ReplyLayoutHelper")
     return ReplyLayoutHelper(
@@ -286,7 +286,7 @@ class HelperModule {
       siteManagerLazy,
       boardManagerLazy,
       postingLimitationsInfoManagerLazy,
-      imageLoaderV2Lazy
+      imageLoaderDeprecatedLazy
     )
   }
 

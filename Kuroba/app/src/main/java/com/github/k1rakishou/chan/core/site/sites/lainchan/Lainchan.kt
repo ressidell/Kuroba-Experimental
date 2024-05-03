@@ -45,7 +45,7 @@ class Lainchan : CommonSite() {
     override fun setup() {
         setEnabled(true)
         setName(SITE_NAME)
-        setIcon(fromFavicon(imageLoaderV2, "https://lainchan.org/favicon.ico".toHttpUrl()))
+        setIcon(fromFavicon(imageLoaderDeprecated, "https://lainchan.org/favicon.ico".toHttpUrl()))
         setBoards(
             create(create(siteDescriptor().siteName, "λ"), "Programming"),
             create(create(siteDescriptor().siteName, "Δ"), "Do It Yourself"),

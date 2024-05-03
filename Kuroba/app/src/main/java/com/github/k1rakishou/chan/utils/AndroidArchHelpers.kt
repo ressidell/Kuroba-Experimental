@@ -75,6 +75,24 @@ inline fun <reified VM : ViewModel> IHasViewModelScope.viewModelByKey(
   }
 }
 
+fun <VM : ViewModel> IHasViewModelScope.viewModelByKeyWithClassEager(
+  clazz: Class<VM>,
+  key: String? = null,
+  params: (() -> Parcelable?)? = null
+): VM {
+  return with(viewModelScope) { viewModelByKey(key, params, clazz) }
+}
+
+fun <VM : ViewModel> IHasViewModelScope.viewModelByKeyWithClass(
+  clazz: Class<VM>,
+  key: String? = null,
+  params: (() -> Parcelable?)? = null
+): Lazy<VM> {
+  return lazy(LazyThreadSafetyMode.NONE) {
+    return@lazy with(viewModelScope) { viewModelByKey(key, params, clazz) }
+  }
+}
+
 @PublishedApi
 internal fun <VM : ViewModel> ViewModelScope.viewModelByKey(
   key: String? = null,

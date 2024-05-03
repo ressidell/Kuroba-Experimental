@@ -58,7 +58,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.compose.AsyncData
 import com.github.k1rakishou.chan.core.helper.DialogFactory
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.site.SiteAuthentication
 import com.github.k1rakishou.chan.ui.captcha.AuthenticationLayoutCallback
@@ -110,7 +110,7 @@ class Chan4CaptchaLayout(
   @Inject
   lateinit var captchaHolder: CaptchaHolder
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
   @Inject

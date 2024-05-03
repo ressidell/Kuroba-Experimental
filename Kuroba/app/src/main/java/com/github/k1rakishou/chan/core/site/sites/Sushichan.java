@@ -92,7 +92,7 @@ public class Sushichan
     public void setup() {
         setEnabled(true);
         setName(SITE_NAME);
-        setIcon(SiteIcon.fromFavicon(getImageLoaderV2(), HttpUrl.parse("https://sushigirl.us/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(getImageLoaderDeprecated(), HttpUrl.parse("https://sushigirl.us/favicon.ico")));
 
         setBoards(
                 ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "wildcard"), "artsy"),

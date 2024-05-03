@@ -34,7 +34,7 @@ class Kun8 : CommonSite() {
   override fun setup() {
     setEnabled(true)
     setName(SITE_NAME)
-    setIcon(SiteIcon.fromFavicon(imageLoaderV2, "https://media.128ducks.com/static/favicon.ico".toHttpUrl()))
+    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, "https://media.128ducks.com/static/favicon.ico".toHttpUrl()))
     setBoardsType(BoardsType.DYNAMIC)
     setResolvable(URL_HANDLER)
 

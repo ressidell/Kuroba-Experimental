@@ -1,19 +1,3 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.core.di.module.application
 
 import android.content.Context
@@ -24,20 +8,13 @@ import coil.request.CachePolicy
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.AppDependenciesInitializer
 import com.github.k1rakishou.chan.core.base.okhttp.CoilOkHttpClient
-import com.github.k1rakishou.chan.core.cache.CacheHandler
-import com.github.k1rakishou.chan.core.cache.downloader.ChunkedMediaDownloader
-import com.github.k1rakishou.chan.core.helper.ImageLoaderFileManagerWrapper
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
 import com.github.k1rakishou.chan.core.manager.ChanFilterManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
-import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.ThreadBookmarkGroupManager
-import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
-import com.github.k1rakishou.chan.core.site.SiteResolver
 import com.github.k1rakishou.chan.core.watcher.BookmarkWatcherCoordinator
 import com.github.k1rakishou.chan.core.watcher.FilterWatcherCoordinator
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
@@ -45,11 +22,9 @@ import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2ServiceDelega
 import com.github.k1rakishou.chan.features.thread_downloading.ThreadDownloadingCoordinator
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
 import com.github.k1rakishou.core_logger.Logger.deps
-import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.fsaf.FileManager
 import com.github.k1rakishou.model.repository.ImageDownloadRequestRepository
 import com.google.gson.Gson
-import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import kotlinx.coroutines.CoroutineScope
@@ -141,37 +116,6 @@ class AppModule {
           .build()
       }
       .build()
-  }
-
-  @Provides
-  @Singleton
-  fun provideImageLoaderV2(
-    appScope: CoroutineScope,
-    coilImageLoader: Lazy<ImageLoader>,
-    replyManager: Lazy<ReplyManager>,
-    themeEngine: Lazy<ThemeEngine>,
-    cacheHandler: Lazy<CacheHandler>,
-    chunkedMediaDownloader: Lazy<ChunkedMediaDownloader>,
-    imageLoaderFileManagerWrapper: Lazy<ImageLoaderFileManagerWrapper>,
-    siteResolver: Lazy<SiteResolver>,
-    coilOkHttpClient: Lazy<CoilOkHttpClient>,
-    threadDownloadManager: Lazy<ThreadDownloadManager>
-  ): ImageLoaderV2 {
-    deps("ImageLoaderV2")
-
-    return ImageLoaderV2(
-      ChanSettings.verboseLogs.get(),
-      appScope,
-      coilImageLoader,
-      replyManager,
-      themeEngine,
-      cacheHandler,
-      chunkedMediaDownloader,
-      imageLoaderFileManagerWrapper,
-      siteResolver,
-      coilOkHttpClient,
-      threadDownloadManager
-    )
   }
 
   @Provides

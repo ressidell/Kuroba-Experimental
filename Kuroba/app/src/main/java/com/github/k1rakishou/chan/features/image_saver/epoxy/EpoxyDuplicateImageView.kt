@@ -21,7 +21,7 @@ import com.airbnb.epoxy.OnViewRecycled
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.image.GrayscaleTransformation
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.image.InputFile
 import com.github.k1rakishou.chan.ui.view.SelectionCheckView
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -67,14 +67,14 @@ class EpoxyDuplicateImageView  @JvmOverloads constructor(
   private var localImage: LocalImage? = null
   private var dupImage: DupImage? = null
 
-  private var serverImageRequestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
-  private var localImageRequestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
-  private var duplicateImageRequestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var serverImageRequestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
+  private var localImageRequestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
+  private var duplicateImageRequestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
   private var wholeViewLocked = false
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var themeEngine: ThemeEngine
 
@@ -142,7 +142,7 @@ class EpoxyDuplicateImageView  @JvmOverloads constructor(
     serverImageRequestDisposable?.dispose()
     serverImageRequestDisposable = null
 
-    val imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(serverImageView)
+    val imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(serverImageView)
     val useGrayScale = wholeViewLocked || duplicateImageCheckbox.checked() || localImageCheckbox.checked()
 
     val transformation = if (useGrayScale) {
@@ -152,7 +152,7 @@ class EpoxyDuplicateImageView  @JvmOverloads constructor(
     }
 
     if (serverImage == null) {
-      serverImageRequestDisposable = imageLoaderV2.loadFromResources(
+      serverImageRequestDisposable = imageLoaderDeprecated.loadFromResources(
         context = context,
         drawableId = R.drawable.ic_image_not_found,
         imageSize = imageSize,
@@ -161,7 +161,7 @@ class EpoxyDuplicateImageView  @JvmOverloads constructor(
         listener = { bitmapDrawable -> serverImageView.setImageDrawable(bitmapDrawable) }
       )
     } else {
-      serverImageRequestDisposable = imageLoaderV2.loadFromNetwork(
+      serverImageRequestDisposable = imageLoaderDeprecated.loadFromNetwork(
         context = context,
         url = serverImage!!.url.toString(),
         cacheFileType = CacheFileType.PostMediaThumbnail,
@@ -176,7 +176,7 @@ class EpoxyDuplicateImageView  @JvmOverloads constructor(
     localImageRequestDisposable?.dispose()
     localImageRequestDisposable = null
 
-    val imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(localImageView)
+    val imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(localImageView)
     val useGrayScale = wholeViewLocked || duplicateImageCheckbox.checked() || serverImageCheckbox.checked()
 
     val transformation = if (useGrayScale) {
@@ -189,21 +189,22 @@ class EpoxyDuplicateImageView  @JvmOverloads constructor(
     localImageView.setImageDrawable(circularProgressDrawable)
 
     if (localImage == null) {
-      localImageRequestDisposable = imageLoaderV2.loadFromResources(
-        context,
-        R.drawable.ic_image_not_found,
-        imageSize,
-        Scale.FIT,
-        transformation
-      ) { bitmapDrawable -> localImageView.setImageDrawable(bitmapDrawable) }
+      localImageRequestDisposable = imageLoaderDeprecated.loadFromResources(
+        context = context,
+        drawableId = R.drawable.ic_image_not_found,
+        imageSize = imageSize,
+        scale = Scale.FIT,
+        transformations = transformation,
+        listener = { bitmapDrawable -> localImageView.setImageDrawable(bitmapDrawable) }
+      )
     } else {
-      localImageRequestDisposable = imageLoaderV2.loadFromDisk(
-        context,
-        InputFile.FileUri(context.applicationContext, localImage!!.uri),
-        imageSize,
-        Scale.FIT,
-        transformation,
-        { bitmapDrawable -> localImageView.setImageDrawable(bitmapDrawable) }
+      localImageRequestDisposable = imageLoaderDeprecated.loadFromDisk(
+        context = context,
+        inputFile = InputFile.FileUri(localImage!!.uri),
+        imageSize = imageSize,
+        scale = Scale.FIT,
+        transformations = transformation,
+        listener = { bitmapDrawable -> localImageView.setImageDrawable(bitmapDrawable) }
       )
     }
   }
@@ -212,7 +213,7 @@ class EpoxyDuplicateImageView  @JvmOverloads constructor(
     duplicateImageRequestDisposable?.dispose()
     duplicateImageRequestDisposable = null
 
-    val imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(duplicateImageView)
+    val imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(duplicateImageView)
     val useGrayScale = wholeViewLocked || localImageCheckbox.checked() || serverImageCheckbox.checked()
 
     val transformation = if (useGrayScale) {
@@ -225,21 +226,22 @@ class EpoxyDuplicateImageView  @JvmOverloads constructor(
     duplicateImageView.setImageDrawable(circularProgressDrawable)
 
     if (dupImage == null) {
-      duplicateImageRequestDisposable = imageLoaderV2.loadFromResources(
-        context,
-        R.drawable.ic_image_not_found,
-        imageSize,
-        Scale.FIT,
-        transformation
-      ) { bitmapDrawable -> duplicateImageView.setImageDrawable(bitmapDrawable) }
+      duplicateImageRequestDisposable = imageLoaderDeprecated.loadFromResources(
+        context = context,
+        drawableId = R.drawable.ic_image_not_found,
+        imageSize = imageSize,
+        scale = Scale.FIT,
+        transformations = transformation,
+        listener = { bitmapDrawable -> duplicateImageView.setImageDrawable(bitmapDrawable) }
+      )
     } else {
-      duplicateImageRequestDisposable = imageLoaderV2.loadFromDisk(
-        context,
-        InputFile.FileUri(context.applicationContext, dupImage!!.uri),
-        imageSize,
-        Scale.FIT,
-        transformation,
-        { bitmapDrawable -> duplicateImageView.setImageDrawable(bitmapDrawable) }
+      duplicateImageRequestDisposable = imageLoaderDeprecated.loadFromDisk(
+        context = context,
+        inputFile = InputFile.FileUri(dupImage!!.uri),
+        imageSize = imageSize,
+        scale = Scale.FIT,
+        transformations = transformation,
+        listener = { bitmapDrawable -> duplicateImageView.setImageDrawable(bitmapDrawable) }
       )
     }
   }

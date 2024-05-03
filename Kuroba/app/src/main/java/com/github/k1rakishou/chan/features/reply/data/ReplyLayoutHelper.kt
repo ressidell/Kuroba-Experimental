@@ -8,7 +8,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.exifinterface.media.ExifInterface
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.image.InputFile
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.PostingLimitationsInfoManager
@@ -36,7 +36,7 @@ class ReplyLayoutHelper(
   private val siteManagerLazy: Lazy<SiteManager>,
   private val boardManagerLazy: Lazy<BoardManager>,
   private val postingLimitationsInfoManagerLazy: Lazy<PostingLimitationsInfoManager>,
-  private val imageLoaderV2Lazy: Lazy<ImageLoaderV2>
+  private val imageLoaderDeprecatedLazy: Lazy<ImageLoaderDeprecated>
 ) {
   private val replyManager: ReplyManager
     get() = replyManagerLazy.get()
@@ -46,8 +46,8 @@ class ReplyLayoutHelper(
     get() = boardManagerLazy.get()
   private val postingLimitationsInfoManager: PostingLimitationsInfoManager
     get() = postingLimitationsInfoManagerLazy.get()
-  private val imageLoaderV2: ImageLoaderV2
-    get() = imageLoaderV2Lazy.get()
+  private val imageLoaderDeprecated: ImageLoaderDeprecated
+    get() = imageLoaderDeprecatedLazy.get()
 
   private val cachedReplyFileVersions = mutableMapOf<UUID, Int>()
 
@@ -387,7 +387,7 @@ class ReplyLayoutHelper(
         return@forEach
       }
 
-      val success = imageLoaderV2.calculateFilePreviewAndStoreOnDisk(
+      val success = imageLoaderDeprecated.calculateFilePreviewAndStoreOnDisk(
         appContext,
         replyFileMeta.fileUuid
       )
@@ -441,7 +441,7 @@ class ReplyLayoutHelper(
         return@forEach
       }
 
-      val success = imageLoaderV2.calculateFilePreviewAndStoreOnDisk(
+      val success = imageLoaderDeprecated.calculateFilePreviewAndStoreOnDisk(
         appContext,
         replyFileMeta.fileUuid
       )
@@ -547,7 +547,7 @@ class ReplyLayoutHelper(
     val chanBoard = boardManager.byBoardDescriptor(chanDescriptor.boardDescriptor())
       ?: return false
 
-    val isProbablyVideo = imageLoaderV2.fileIsProbablyVideoInterruptible(
+    val isProbablyVideo = imageLoaderDeprecated.fileIsProbablyVideoInterruptible(
       replyFileMeta.originalFileName,
       InputFile.JavaFile(replyFile.fileOnDisk)
     )

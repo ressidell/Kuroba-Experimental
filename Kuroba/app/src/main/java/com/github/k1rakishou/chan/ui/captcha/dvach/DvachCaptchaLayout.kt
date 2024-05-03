@@ -48,7 +48,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.compose.AsyncData
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.site.SiteAuthentication
@@ -57,13 +57,13 @@ import com.github.k1rakishou.chan.ui.captcha.AuthenticationLayoutCallback
 import com.github.k1rakishou.chan.ui.captcha.AuthenticationLayoutInterface
 import com.github.k1rakishou.chan.ui.captcha.CaptchaHolder
 import com.github.k1rakishou.chan.ui.captcha.CaptchaSolution
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
-import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextField
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.ui.compose.image.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.providers.ComposeEntrypoint
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout
@@ -85,7 +85,7 @@ class DvachCaptchaLayout(
   @Inject
   lateinit var captchaHolder: CaptchaHolder
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var siteManager: SiteManager
   @Inject
@@ -382,7 +382,6 @@ class DvachCaptchaLayout(
         .height(160.dp)
         .clickable { onReloadClick() },
       request = request,
-      imageLoaderV2 = imageLoaderV2,
       loading = { KurobaComposeProgressIndicator() },
       error = { throwable -> KurobaComposeErrorMessage(error = throwable) }
     )

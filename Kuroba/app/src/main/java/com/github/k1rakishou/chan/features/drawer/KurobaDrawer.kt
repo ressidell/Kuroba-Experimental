@@ -62,9 +62,6 @@ import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.features.drawer.data.HistoryControllerState
 import com.github.k1rakishou.chan.features.drawer.data.NavHistoryBookmarkAdditionalInfo
 import com.github.k1rakishou.chan.features.drawer.data.NavigationHistoryEntry
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
-import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.components.IconTint
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
@@ -73,6 +70,9 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeSelectionIn
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.ui.compose.image.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.lazylist.LazyColumnWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalGridWithFastScroller
@@ -537,8 +537,7 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
         contentScale = contentScale,
         modifier = Modifier
           .size(MainController.LIST_MODE_ROW_HEIGHT)
-          .padding(horizontal = 6.dp, vertical = 2.dp),
-        imageLoaderV2 = mainControllerViewModel.imageLoaderV2
+          .padding(horizontal = 6.dp, vertical = 2.dp)
       )
 
       val showDeleteButtonShortcut by remember { kurobaDrawerState.showDeleteButtonShortcut }
@@ -591,7 +590,6 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
             request = siteIconRequest,
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(20.dp),
-            imageLoaderV2 = mainControllerViewModel.imageLoaderV2,
             error = {
               Image(
                 modifier = Modifier.fillMaxSize(),
@@ -711,8 +709,7 @@ private fun LazyGridItemScope.BuildNavigationHistoryListEntryGridMode(
         contentScale = contentScale,
         modifier = Modifier
           .fillMaxWidth()
-          .height(48.dp),
-        imageLoaderV2 = mainControllerViewModel.imageLoaderV2
+          .height(48.dp)
       )
 
       val showDeleteButtonShortcut by remember { kurobaDrawerState.showDeleteButtonShortcut }
@@ -761,7 +758,6 @@ private fun LazyGridItemScope.BuildNavigationHistoryListEntryGridMode(
             request = siteIconRequest,
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(20.dp),
-            imageLoaderV2 = mainControllerViewModel.imageLoaderV2,
             error = {
               Image(
                 modifier = Modifier.fillMaxSize(),

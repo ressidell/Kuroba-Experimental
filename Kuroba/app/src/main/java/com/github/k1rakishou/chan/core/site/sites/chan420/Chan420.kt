@@ -37,7 +37,6 @@ import com.github.k1rakishou.model.data.site.SiteBoards
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
-import java.util.*
 
 @DoNotStrip
 class Chan420 : CommonSite() {
@@ -49,7 +48,7 @@ class Chan420 : CommonSite() {
   override fun setup() {
     setEnabled(true)
     setName(SITE_NAME)
-    setIcon(SiteIcon.fromFavicon(imageLoaderV2, "https://420chan.org/favicon.ico".toHttpUrl()))
+    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, "https://420chan.org/favicon.ico".toHttpUrl()))
     setBoardsType(Site.BoardsType.DYNAMIC)
     setResolvable(URL_HANDLER)
     

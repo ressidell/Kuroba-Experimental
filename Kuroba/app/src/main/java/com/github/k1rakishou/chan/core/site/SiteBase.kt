@@ -1,19 +1,3 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 package com.github.k1rakishou.chan.core.site
 
 import com.github.k1rakishou.ChanSettings
@@ -22,7 +6,7 @@ import com.github.k1rakishou.SharedPreferencesSettingProvider
 import com.github.k1rakishou.chan.Chan
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.okhttp.RealProxiedOkHttpClient
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
@@ -73,7 +57,7 @@ abstract class SiteBase : Site, CoroutineScope {
   @Inject
   lateinit var siteManager: SiteManager
   @Inject
-  lateinit var imageLoaderV2: Lazy<ImageLoaderV2>
+  lateinit var imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>
   @Inject
   lateinit var archivesManager: ArchivesManager
   @Inject

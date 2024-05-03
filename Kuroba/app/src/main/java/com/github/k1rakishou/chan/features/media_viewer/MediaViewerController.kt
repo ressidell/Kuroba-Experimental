@@ -11,8 +11,8 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.loader.KurobaImageLoader
+import com.github.k1rakishou.chan.core.image.loader.KurobaImageSize
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.manager.Chan4CloudFlareImagePreloaderManager
@@ -105,7 +105,7 @@ class MediaViewerController(
   @Inject
   lateinit var appConstantsLazy: Lazy<AppConstants>
   @Inject
-  lateinit var imageLoaderV2Lazy: Lazy<ImageLoaderV2>
+  lateinit var kurobaImageLoaderLazy: Lazy<KurobaImageLoader>
   @Inject
   lateinit var mediaViewerScrollerHelperLazy: Lazy<MediaViewerScrollerHelper>
   @Inject
@@ -153,8 +153,8 @@ class MediaViewerController(
     get() = postHideManagerLazy.get()
   private val appConstants: AppConstants
     get() = appConstantsLazy.get()
-  private val imageLoaderV2: ImageLoaderV2
-    get() = imageLoaderV2Lazy.get()
+  private val kurobaImageLoader: KurobaImageLoader
+    get() = kurobaImageLoaderLazy.get()
   private val mediaViewerScrollerHelper: MediaViewerScrollerHelper
     get() = mediaViewerScrollerHelperLazy.get()
   private val exoPlayerCache: ExoPlayerCache
@@ -739,12 +739,11 @@ class MediaViewerController(
   }
 
   override suspend fun defaultArtworkDrawable(): Drawable? {
-    return imageLoaderV2.loadFromNetworkSuspend(
+    return kurobaImageLoader.loadFromNetwork(
       context = context,
       url = AppConstants.RESOURCES_ENDPOINT + AUDIO_THUMB_FILE_NAME,
       cacheFileType = CacheFileType.PostMediaFull,
-      imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(appearPreviewImage),
-      transformations = emptyList()
+      imageSize = KurobaImageSize.MeasurableImageSize.create(appearPreviewImage)
     ).valueOrNull()
   }
 
@@ -889,11 +888,11 @@ class MediaViewerController(
     }
 
     val resultBitmap = withTimeoutOrNull(MAX_WAIT_TIME_MS) {
-      return@withTimeoutOrNull imageLoaderV2.loadFromNetworkSuspend(
+      return@withTimeoutOrNull kurobaImageLoader.loadFromNetwork(
         context = context,
         url = transitionInfo.transitionThumbnailUrl,
         cacheFileType = CacheFileType.PostMediaThumbnail,
-        imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(appearPreviewImage)
+        imageSize = KurobaImageSize.MeasurableImageSize.create(appearPreviewImage)
       ).valueOrNull()?.bitmap
     }
 

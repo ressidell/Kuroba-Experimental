@@ -1,6 +1,7 @@
 package com.github.k1rakishou.common
 
 import com.github.k1rakishou.core_logger.Logger
+import kotlinx.coroutines.CancellationException
 import java.util.Locale
 import java.util.concurrent.Callable
 import javax.annotation.CheckReturnValue
@@ -77,6 +78,20 @@ sealed class ModularResult<V : Any?> {
     }
 
     error("Expected error but actual is value")
+  }
+
+  @CheckReturnValue
+  fun wrapCancellationException(): ModularResult<V> {
+    return when (this) {
+      is Error -> {
+        if (error is CancellationException) {
+          return error(error)
+        }
+
+        return this
+      }
+      is Value -> this
+    }
   }
 
   /**

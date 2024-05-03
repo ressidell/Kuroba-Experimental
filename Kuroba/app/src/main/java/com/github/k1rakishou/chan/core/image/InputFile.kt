@@ -1,6 +1,5 @@
 package com.github.k1rakishou.chan.core.image
 
-import android.content.Context
 import android.net.Uri
 import com.github.k1rakishou.common.StringUtils
 import java.io.File
@@ -43,7 +42,5 @@ sealed class InputFile {
 
   data class JavaFile(val file: File) : InputFile()
 
-  class FileUri(inputContext: Context, val uri: Uri) : InputFile() {
-    val applicationContext: Context = inputContext.applicationContext
-  }
+  data class FileUri(val uri: Uri) : InputFile()
 }

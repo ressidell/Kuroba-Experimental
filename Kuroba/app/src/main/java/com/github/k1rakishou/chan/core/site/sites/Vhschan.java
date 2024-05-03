@@ -126,7 +126,7 @@ public class Vhschan extends CommonSite {
     public void setup() {
         setEnabled(true);
         setName(SITE_NAME);
-        setIcon(SiteIcon.fromFavicon(getImageLoaderV2(), HttpUrl.parse("https://vhschan.org/stylesheets/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(getImageLoaderDeprecated(), HttpUrl.parse("https://vhschan.org/stylesheets/favicon.ico")));
 
         setBoards(
                 ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "b"), "Betamax"),

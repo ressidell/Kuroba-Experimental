@@ -331,20 +331,24 @@ object MediaUtils {
     }
   }
 
-  suspend fun decodeFileMimeTypeInterruptible(inputFile: InputFile): String? {
+  suspend fun decodeFileMimeTypeInterruptible(appContext: Context, inputFile: InputFile): String? {
     BackgroundUtils.ensureBackgroundThread()
 
     try {
       return runInterruptible {
         MediaMetadataRetriever().use { metadataRetriever ->
           when (inputFile) {
-            is InputFile.FileUri -> metadataRetriever.setDataSource(
-              inputFile.applicationContext,
-              inputFile.uri
-            )
-            is InputFile.JavaFile -> metadataRetriever.setDataSource(
-              inputFile.file.absolutePath
-            )
+            is InputFile.FileUri -> {
+              metadataRetriever.setDataSource(
+                appContext,
+                inputFile.uri
+              )
+            }
+            is InputFile.JavaFile -> {
+              metadataRetriever.setDataSource(
+                inputFile.file.absolutePath
+              )
+            }
           }
 
           return@runInterruptible metadataRetriever.extractMetadata(
@@ -392,7 +396,7 @@ object MediaUtils {
 
     try {
       when (inputFile) {
-        is InputFile.FileUri -> metadataRetriever.setDataSource(inputFile.applicationContext, inputFile.uri)
+        is InputFile.FileUri -> metadataRetriever.setDataSource(context, inputFile.uri)
         is InputFile.JavaFile -> metadataRetriever.setDataSource(inputFile.file.absolutePath)
       }
 

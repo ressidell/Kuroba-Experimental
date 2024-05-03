@@ -61,7 +61,7 @@ import kotlinx.coroutines.flow.map
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
-import java.util.*
+import java.util.Locale
 
 @DoNotStrip
 open class Chan4 : SiteBase() {
@@ -79,7 +79,7 @@ open class Chan4 : SiteBase() {
   lateinit var chan4CaptchaSettings: GsonJsonSetting<Chan4CaptchaSettings>
   lateinit var check4chanPostAcknowledged: BooleanSetting
 
-  private val _siteIcon by lazy { SiteIcon.fromFavicon(imageLoaderV2, "https://s.4cdn.org/image/favicon.ico".toHttpUrl()) }
+  private val _siteIcon by lazy { SiteIcon.fromFavicon(imageLoaderDeprecated, "https://s.4cdn.org/image/favicon.ico".toHttpUrl()) }
 
   private val siteRequestModifier by lazy { Chan4SiteRequestModifier(this, appConstants) }
 

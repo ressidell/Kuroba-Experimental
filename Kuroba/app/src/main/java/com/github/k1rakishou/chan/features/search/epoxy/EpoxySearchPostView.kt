@@ -11,7 +11,7 @@ import com.airbnb.epoxy.ModelView
 import com.airbnb.epoxy.OnViewRecycled
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.features.search.data.ThumbnailInfo
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.setVisibilityFast
@@ -27,7 +27,7 @@ import javax.inject.Inject
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var themeEngine: ThemeEngine
 
@@ -42,7 +42,7 @@ import javax.inject.Inject
   private val searchPostThumbnailSize: Int
 
   private var postDescriptor: PostDescriptor? = null
-  private var imageDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var imageDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
   init {
     inflate(context, R.layout.epoxy_search_post_view, this)
@@ -139,11 +139,11 @@ import javax.inject.Inject
 
     searchPostImagesContainer.setVisibilityFast(View.VISIBLE)
 
-    imageDisposable = imageLoaderV2.loadFromNetwork(
+    imageDisposable = imageLoaderDeprecated.loadFromNetwork(
       context = context,
       url = thumbnailUrl.toString(),
       cacheFileType = CacheFileType.PostMediaThumbnail,
-      imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(searchPostThumbnail),
+      imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(searchPostThumbnail),
       transformations = listOf(),
       listener = { drawable -> searchPostThumbnail.setImageBitmap(drawable.bitmap) }
     )

@@ -7,7 +7,7 @@ import com.github.k1rakishou.chan.core.base.BaseViewModel
 import com.github.k1rakishou.chan.core.base.SerializedCoroutineExecutor
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
@@ -35,7 +35,7 @@ class MainControllerViewModel(
   private val archivesManagerLazy: Lazy<ArchivesManager>,
   private val chanThreadManagerLazy: Lazy<ChanThreadManager>,
   private val compositeCatalogManagerLazy: Lazy<CompositeCatalogManager>,
-  private val imageLoaderV2Lazy: Lazy<ImageLoaderV2>,
+  private val imageLoaderDeprecatedLazy: Lazy<ImageLoaderDeprecated>,
 ) : BaseViewModel() {
   private val isDevFlavor = isDevBuild()
 
@@ -45,8 +45,8 @@ class MainControllerViewModel(
     get() = bookmarksManagerLazy.get()
   private val compositeCatalogManager: CompositeCatalogManager
     get() = compositeCatalogManagerLazy.get()
-  val imageLoaderV2: ImageLoaderV2
-    get() = imageLoaderV2Lazy.get()
+  val imageLoaderDeprecated: ImageLoaderDeprecated
+    get() = imageLoaderDeprecatedLazy.get()
 
   private val _currentNavigationHasDrawer = MutableStateFlow<Boolean>(true)
   val currentNavigationHasDrawer: StateFlow<Boolean>
@@ -218,7 +218,7 @@ class MainControllerViewModel(
     private val archivesManagerLazy: Lazy<ArchivesManager>,
     private val chanThreadManagerLazy: Lazy<ChanThreadManager>,
     private val compositeCatalogManagerLazy: Lazy<CompositeCatalogManager>,
-    private val imageLoaderV2Lazy: Lazy<ImageLoaderV2>
+    private val imageLoaderDeprecatedLazy: Lazy<ImageLoaderDeprecated>
   ) : ViewModelAssistedFactory<MainControllerViewModel> {
     override fun create(handle: SavedStateHandle): MainControllerViewModel {
       return MainControllerViewModel(
@@ -230,7 +230,7 @@ class MainControllerViewModel(
         archivesManagerLazy = archivesManagerLazy,
         chanThreadManagerLazy = chanThreadManagerLazy,
         compositeCatalogManagerLazy = compositeCatalogManagerLazy,
-        imageLoaderV2Lazy = imageLoaderV2Lazy
+        imageLoaderDeprecatedLazy = imageLoaderDeprecatedLazy
       )
     }
   }

@@ -21,7 +21,7 @@ class RozenArcana : BaseFoolFuukaSite() {
 
     setEnabled(true)
     setName(SITE_NAME)
-    setIcon(SiteIcon.fromFavicon(imageLoaderV2, FAVICON_URL))
+    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, FAVICON_URL))
     setBoardsType(Site.BoardsType.DYNAMIC)
     setResolvable(URL_HANDLER)
     setConfig(object : CommonConfig() {})

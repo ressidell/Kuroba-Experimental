@@ -1,24 +1,36 @@
 package com.github.k1rakishou.chan.features.album
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.base.BaseViewModel
+import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.ui.compose.image.PostImageThumbnailKey
 import com.github.k1rakishou.chan.utils.BackgroundUtils
+import com.github.k1rakishou.chan.utils.KurobaMediaType
+import com.github.k1rakishou.chan.utils.asKurobaMediaType
 import com.github.k1rakishou.chan.utils.requireParams
 import com.github.k1rakishou.common.mutableListWithCap
 import com.github.k1rakishou.common.toHashSetBy
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
+import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.source.cache.ChanCatalogSnapshotCache
 import com.github.k1rakishou.model.source.cache.thread.ChanThreadsCache
+import com.github.k1rakishou.model.util.ChanPostUtils
+import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -26,8 +38,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import javax.inject.Inject
 
 class AlbumViewControllerV2ViewModel(
@@ -45,8 +60,16 @@ class AlbumViewControllerV2ViewModel(
   private val _currentDescriptor = MutableStateFlow<ChanDescriptor?>(null)
 
   private val _albumItems = mutableStateListOf<AlbumItemData>()
-  val albumItems: List<AlbumItemData>
+  val albumItems: SnapshotStateList<AlbumItemData>
     get() = _albumItems
+
+  val albumSpanCount = ChanSettings.albumSpanCount.listenForChanges()
+    .asFlow()
+    .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+  val albumLayoutGridMode = PersistableChanState.albumLayoutGridMode.listenForChanges()
+    .asFlow()
+    .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)
@@ -204,19 +227,80 @@ class AlbumViewControllerV2ViewModel(
 
         // TODO: FilterOutHiddenImagesUseCase
 
+        val thumbnailImage = ImageLoaderRequestData.Url(httpUrl = actualThumbnailUrl, CacheFileType.PostMediaThumbnail)
+        val fullImage = chanPostImage.imageUrl
+          ?.let { imageUrl -> ImageLoaderRequestData.Url(imageUrl, CacheFileType.PostMediaFull) }
+
         return@mapNotNull AlbumItemData(
+          isCatalogMode = actualChanDescriptor.isCatalogDescriptor(),
           postDescriptor = chanPost.postDescriptor,
-          thumbnailImage = actualThumbnailUrl.toString(),
-          fullImage = chanPostImage.imageUrl?.toString()
+          thumbnailImage = thumbnailImage,
+          fullImage = fullImage,
+          albumItemPostData = AlbumItemPostData(
+            threadSubject = when (actualChanDescriptor) {
+              is ChanDescriptor.ICatalogDescriptor ->  ChanPostUtils.getTitle(chanPost, actualChanDescriptor)
+              is ChanDescriptor.ThreadDescriptor -> null
+            },
+            mediaInfo = formatImageDetails(chanPostImage),
+            aspectRatio = calculateAspectRatio(chanPostImage)
+          ),
+          mediaType = chanPostImage.extension.asKurobaMediaType()
         )
       }
     }
   }
 
+  private fun calculateAspectRatio(chanPostImage: ChanPostImage): Float? {
+    val imageWidth = chanPostImage.imageWidth
+    val imageHeight = chanPostImage.imageHeight
+    if (imageWidth <= 0 || imageHeight <= 0) {
+      return null
+    }
+
+    return (imageWidth.toFloat() / imageHeight.toFloat()).coerceIn(MIN_RATIO, MAX_RATIO)
+  }
+
+  private fun formatImageDetails(postImage: ChanPostImage): String {
+    if (postImage.isInlined) {
+      return postImage.extension?.uppercase(Locale.ENGLISH) ?: ""
+    }
+
+    return buildString {
+      append(postImage.extension?.uppercase(Locale.ENGLISH) ?: "")
+      append(" ")
+      append(postImage.imageWidth)
+      append("x")
+      append(postImage.imageHeight)
+      append(" ")
+      append(ChanPostUtils.getReadableFileSize(postImage.size))
+    }
+  }
+
+  @Immutable
   data class AlbumItemData(
+    val isCatalogMode: Boolean,
     val postDescriptor: PostDescriptor,
-    val thumbnailImage: String,
-    val fullImage: String?
+    val thumbnailImage: ImageLoaderRequestData,
+    val fullImage: ImageLoaderRequestData?,
+    val albumItemPostData: AlbumItemPostData?,
+    val mediaType: KurobaMediaType,
+  ) {
+    val composeKey: String
+      get() = "${postDescriptor.serializeToString()}_${thumbnailImage}"
+    val albumItemDataKey: AlbumItemDataKey = AlbumItemDataKey(postDescriptor, thumbnailImage)
+  }
+
+  @Immutable
+  data class AlbumItemDataKey(
+    val postDescriptor: PostDescriptor,
+    val thumbnailImage: ImageLoaderRequestData,
+  ) : PostImageThumbnailKey
+
+  @Immutable
+  data class AlbumItemPostData(
+    val threadSubject: String?,
+    val mediaInfo: String?,
+    val aspectRatio: Float?
   )
 
   class ViewModelFactory @Inject constructor(
@@ -238,6 +322,9 @@ class AlbumViewControllerV2ViewModel(
 
   companion object {
     private const val TAG = "AlbumViewControllerV2ViewModel"
+
+    private const val MAX_RATIO = 2f
+    private const val MIN_RATIO = .4f
   }
 
 }

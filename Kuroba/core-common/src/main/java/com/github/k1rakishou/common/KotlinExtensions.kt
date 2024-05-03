@@ -69,7 +69,8 @@ import java.io.InterruptedIOException
 import java.lang.Thread.currentThread
 import java.lang.reflect.Type
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.LinkedList
+import java.util.TreeMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Matcher
@@ -157,10 +158,13 @@ suspend fun OkHttpClient.downloadIntoFile(
   }
 }
 
-fun <T> CancellableContinuation<T>.resumeValueSafe(value: T) {
+fun <T> CancellableContinuation<T>.resumeValueSafe(value: T): Boolean {
   if (isActive) {
     resume(value)
+    return true
   }
+
+  return false
 }
 
 fun CancellableContinuation<*>.resumeErrorSafe(error: Throwable) {

@@ -10,7 +10,7 @@ import com.airbnb.epoxy.ModelView
 import com.airbnb.epoxy.OnViewRecycled
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.site.SiteIcon
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.setBackgroundColorFast
@@ -27,14 +27,14 @@ import javax.inject.Inject
 ) : LinearLayout(context, attrs, defStyleAttr) {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var themeEngine: ThemeEngine
 
   private val siteIcon: AppCompatImageView
   private val siteName: MaterialTextView
 
-  private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
   init {
     inflate(context, R.layout.epoxy_search_site_view, this)
@@ -85,11 +85,11 @@ import javax.inject.Inject
 
       require(siteIcon.width > 0 && siteIcon.height > 0) { "View (siteIcon) has no size!" }
 
-      requestDisposable = imageLoaderV2.loadFromNetwork(
+      requestDisposable = imageLoaderDeprecated.loadFromNetwork(
         context = context,
         url = iconUrl.toString(),
         cacheFileType = CacheFileType.SiteIcon,
-        imageSize = ImageLoaderV2.ImageSize.FixedImageSize(
+        imageSize = ImageLoaderDeprecated.ImageSize.FixedImageSize(
           width = SiteIcon.FAVICON_SIZE,
           height = SiteIcon.FAVICON_SIZE,
         ),

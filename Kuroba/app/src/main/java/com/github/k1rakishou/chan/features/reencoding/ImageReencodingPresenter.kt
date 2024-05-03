@@ -23,7 +23,7 @@ import coil.size.Scale
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.MediaUtils
@@ -54,7 +54,7 @@ class ImageReencodingPresenter(
   @Inject
   lateinit var gson: Gson
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
 
   private val callback: ImageReencodingPresenterCallback
   private val chanDescriptor: ChanDescriptor
@@ -108,12 +108,12 @@ class ImageReencodingPresenter(
   fun loadImagePreview() {
     val displaySize = getDisplaySize(context)
 
-    val imageSize = ImageLoaderV2.ImageSize.FixedImageSize(
+    val imageSize = ImageLoaderDeprecated.ImageSize.FixedImageSize(
       width = displaySize.x,
       height = displaySize.y,
     )
 
-    imageLoaderV2.loadRelyFilePreviewFromDisk(
+    imageLoaderDeprecated.loadRelyFilePreviewFromDisk(
       context = context,
       fileUuid = fileUuid,
       imageSize = imageSize,
@@ -224,7 +224,7 @@ class ImageReencodingPresenter(
         replyFile.overwriteFileOnDisk(reencodedFile)
           .unwrap()
 
-        imageLoaderV2.calculateFilePreviewAndStoreOnDisk(
+        imageLoaderDeprecated.calculateFilePreviewAndStoreOnDisk(
           context.applicationContext,
           fileUuid
         )

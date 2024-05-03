@@ -13,7 +13,7 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.cache.CacheHandler
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
 import com.github.k1rakishou.chan.features.media_viewer.ViewableMedia
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
@@ -42,10 +42,10 @@ class ThumbnailMediaView @JvmOverloads constructor(
   private val errorText: TextView
 
   private var currentlyVisible = false
-  private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
   @Inject
-  lateinit var imageLoaderV2: Lazy<ImageLoaderV2>
+  lateinit var imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>
   @Inject
   lateinit var cacheHandler: Lazy<CacheHandler>
   @Inject
@@ -128,8 +128,8 @@ class ThumbnailMediaView @JvmOverloads constructor(
     postDescriptor: PostDescriptor?,
     parameters: ThumbnailMediaViewParameters,
     onThumbnailFullyLoaded: () -> Unit
-  ): ImageLoaderV2.ImageLoaderRequestDisposable {
-    val listener = object : ImageLoaderV2.FailureAwareImageListener {
+  ): ImageLoaderDeprecated.ImageLoaderRequestDisposable {
+    val listener = object : ImageLoaderDeprecated.FailureAwareImageListener {
       override fun onResponse(drawable: BitmapDrawable, isImmediate: Boolean) {
         requestDisposable = null
 
@@ -156,11 +156,11 @@ class ThumbnailMediaView @JvmOverloads constructor(
       }
     }
 
-    return imageLoaderV2.get().loadFromNetwork(
+    return imageLoaderDeprecated.get().loadFromNetwork(
       context = context,
       requestUrl = url.toString(),
       cacheFileType = CacheFileType.PostMediaThumbnail,
-      imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(this),
+      imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(this),
       transformations = emptyList(),
       listener = listener,
       postDescriptor = postDescriptor

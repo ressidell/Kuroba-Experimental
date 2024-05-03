@@ -41,7 +41,7 @@ import com.github.k1rakishou.chan.core.base.Debouncer
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.cache.CacheHandler
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -78,15 +78,15 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
     get() = _imageUrl
 
   private var postDescriptor: PostDescriptor? = null
-  private var imageSize: ImageLoaderV2.ImageSize? = null
+  private var imageSize: ImageLoaderDeprecated.ImageSize? = null
   private var cacheFileType: CacheFileType = CacheFileType.PostMediaThumbnail
-  private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
   private var errorText: String? = null
   private var foregroundCalculate = false
   private var imageForeground: Drawable? = null
 
   @Inject
-  lateinit var imageLoaderV2: Lazy<ImageLoaderV2>
+  lateinit var imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>
   @Inject
   lateinit var themeEngine: ThemeEngine
   @Inject
@@ -171,7 +171,7 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
     url: String,
     cacheFileType: CacheFileType,
     postDescriptor: PostDescriptor,
-    imageSize: ImageLoaderV2.ImageSize,
+    imageSize: ImageLoaderDeprecated.ImageSize,
     thumbnailViewOptions: ThumbnailViewOptions
   ) {
     scaleType = when (thumbnailViewOptions.postThumbnailScaling) {
@@ -313,7 +313,7 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
   private suspend fun setUrlInternal(
     url: String,
     postDescriptor: PostDescriptor,
-    imageSize: ImageLoaderV2.ImageSize,
+    imageSize: ImageLoaderDeprecated.ImageSize,
     thumbnailViewOptions: ThumbnailViewOptions
   ) {
     val currentAttempt = ioErrorRetryAttempt.get()
@@ -323,7 +323,7 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
       delay(currentAttempt * 2000L)
     }
 
-    val listener = object : ImageLoaderV2.FailureAwareImageListener {
+    val listener = object : ImageLoaderDeprecated.FailureAwareImageListener {
       override fun onResponse(drawable: BitmapDrawable, isImmediate: Boolean) {
         if (url != this@ThumbnailView._imageUrl) {
           // Request was canceled (probably because the parent view was unbound) so we don't
@@ -400,7 +400,7 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
         requestDisposable = null
       }
 
-      requestDisposable = imageLoaderV2.get().loadFromNetwork(
+      requestDisposable = imageLoaderDeprecated.get().loadFromNetwork(
         context = context,
         cacheFileType = cacheFileType,
         requestUrl = url,
@@ -411,7 +411,7 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
       )
     }
 
-    val isCached = imageLoaderV2.get().isImageCachedLocally(
+    val isCached = imageLoaderDeprecated.get().isImageCachedLocally(
       cacheFileType = cacheFileType,
       url = url
     )

@@ -7,6 +7,7 @@ import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.application.AppModule
 import com.github.k1rakishou.chan.core.di.module.application.HelperModule
+import com.github.k1rakishou.chan.core.di.module.application.ImageLoaderModule
 import com.github.k1rakishou.chan.core.di.module.application.JsonParserModule
 import com.github.k1rakishou.chan.core.di.module.application.LoaderModule
 import com.github.k1rakishou.chan.core.di.module.application.ManagerModule
@@ -47,6 +48,7 @@ import javax.inject.Singleton
     AppModule::class,
     JsonParserModule::class,
     HelperModule::class,
+    ImageLoaderModule::class,
     LoaderModule::class,
     ManagerModule::class,
     NetModule::class,

@@ -10,7 +10,8 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.cache.CacheHandler
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.loader.KurobaImageLoader
+import com.github.k1rakishou.chan.core.image.loader.KurobaImageSize
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
 import com.github.k1rakishou.chan.core.manager.WindowInsetsListener
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
@@ -39,7 +40,7 @@ class MrSkeletonLayout @JvmOverloads constructor(
   @Inject
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var kurobaImageLoader: KurobaImageLoader
   @Inject
   lateinit var cacheHandler: CacheHandler
 
@@ -74,20 +75,18 @@ class MrSkeletonLayout @JvmOverloads constructor(
     updateGifViewMargins()
   }
 
-  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun playRandomGif() {
     val skeletonUrl = skeletons.random(random)
 
-    val result = imageLoaderV2.loadFromNetworkSuspend(
+    val result = kurobaImageLoader.loadFromNetwork(
       context = context,
       url = skeletonUrl,
       cacheFileType = CacheFileType.PostMediaFull,
-      imageSize = ImageLoaderV2.ImageSize.Unspecified,
-      transformations = emptyList()
+      imageSize = KurobaImageSize.Unspecified
     )
 
     if (result is ModularResult.Error) {
-      Logger.e(TAG, "attachGifViewIfNeeded() error: ${result.error.errorMessageOrClassName()}")
+      Logger.e(TAG, "playRandomGif() error: ${result.error.errorMessageOrClassName()}")
 
       return
     }
@@ -99,7 +98,7 @@ class MrSkeletonLayout @JvmOverloads constructor(
       )
     }
     if (downloadedGifFile == null) {
-      Logger.e(TAG, "attachGifViewIfNeeded() downloadedGifFile == null, skeletonUrl=${skeletonUrl}")
+      Logger.e(TAG, "playRandomGif() downloadedGifFile == null, skeletonUrl=${skeletonUrl}")
 
       return
     }

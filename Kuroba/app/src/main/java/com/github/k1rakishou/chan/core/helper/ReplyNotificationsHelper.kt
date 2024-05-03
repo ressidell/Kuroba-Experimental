@@ -21,7 +21,7 @@ import com.github.k1rakishou.chan.BuildConfig
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.DebouncingCoroutineExecutor
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
 import com.github.k1rakishou.chan.core.receiver.ReplyNotificationDeleteIntentBroadcastReceiver
 import com.github.k1rakishou.chan.core.site.parser.search.SimpleCommentParser
@@ -69,7 +69,7 @@ class ReplyNotificationsHelper(
   private val notificationManager: NotificationManager,
   private val _bookmarksManager: Lazy<BookmarksManager>,
   private val _chanPostRepository: Lazy<ChanPostRepository>,
-  private val _imageLoaderV2: Lazy<ImageLoaderV2>,
+  private val _imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>,
   private val _themeEngine: Lazy<ThemeEngine>,
   private val _simpleCommentParser: Lazy<SimpleCommentParser>
 ) {
@@ -80,8 +80,8 @@ class ReplyNotificationsHelper(
     get() = _bookmarksManager.get()
   val chanPostRepository: ChanPostRepository
     get() = _chanPostRepository.get()
-  val imageLoaderV2: ImageLoaderV2
-    get() = _imageLoaderV2.get()
+  val imageLoaderDeprecated: ImageLoaderDeprecated
+    get() = _imageLoaderDeprecated.get()
   val themeEngine: ThemeEngine
     get() = _themeEngine.get()
   val simpleCommentParser: SimpleCommentParser
@@ -535,16 +535,16 @@ class ReplyNotificationsHelper(
     thumbnailUrl: HttpUrl,
   ): BitmapDrawable? {
     return suspendCancellableCoroutine { cancellableContinuation ->
-      val disposable = imageLoaderV2.loadFromNetwork(
+      val disposable = imageLoaderDeprecated.loadFromNetwork(
         context = appContext,
         requestUrl = thumbnailUrl.toString(),
         cacheFileType = CacheFileType.PostMediaThumbnail,
-        imageSize = ImageLoaderV2.ImageSize.FixedImageSize(
+        imageSize = ImageLoaderDeprecated.ImageSize.FixedImageSize(
           NOTIFICATION_THUMBNAIL_SIZE,
           NOTIFICATION_THUMBNAIL_SIZE,
         ),
         transformations = CIRCLE_CROP,
-        listener = object : ImageLoaderV2.FailureAwareImageListener {
+        listener = object : ImageLoaderDeprecated.FailureAwareImageListener {
           override fun onResponse(drawable: BitmapDrawable, isImmediate: Boolean) {
             cancellableContinuation.resumeValueSafe(drawable)
           }

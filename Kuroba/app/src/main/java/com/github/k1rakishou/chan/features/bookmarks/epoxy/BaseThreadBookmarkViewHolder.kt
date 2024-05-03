@@ -19,7 +19,7 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.image.GrayscaleTransformation
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.features.bookmarks.data.ThreadBookmarkSelection
 import com.github.k1rakishou.chan.features.bookmarks.data.ThreadBookmarkStats
 import com.github.k1rakishou.chan.ui.view.SelectionCheckView
@@ -39,12 +39,12 @@ import javax.inject.Inject
 open class BaseThreadBookmarkViewHolder : EpoxyHolder() {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var themeEngine: ThemeEngine
 
   private var imageLoaderRequestData: ImageLoaderRequestData? = null
-  private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
   private var threadDescriptor: ChanDescriptor.ThreadDescriptor? = null
   private var threadBookmarkSelection: ThreadBookmarkSelection? = null
 
@@ -356,13 +356,13 @@ open class BaseThreadBookmarkViewHolder : EpoxyHolder() {
       requestDisposable?.dispose()
       requestDisposable = null
 
-      requestDisposable = imageLoaderV2.loadFromResources(
-        context,
-        R.drawable.error_icon,
-        ImageLoaderV2.ImageSize.MeasurableImageSize.create(bookmarkImage),
-        Scale.FIT,
-        emptyList(),
-        { drawable -> bookmarkImage.setImageBitmap(drawable.bitmap) }
+      requestDisposable = imageLoaderDeprecated.loadFromResources(
+        context = context,
+        drawableId = R.drawable.error_icon,
+        imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(bookmarkImage),
+        scale = Scale.FIT,
+        transformations = emptyList(),
+        listener = { drawable -> bookmarkImage.setImageBitmap(drawable.bitmap) }
       )
 
       return
@@ -381,11 +381,11 @@ open class BaseThreadBookmarkViewHolder : EpoxyHolder() {
     requestDisposable?.dispose()
     requestDisposable = null
 
-    requestDisposable = imageLoaderV2.loadFromNetwork(
+    requestDisposable = imageLoaderDeprecated.loadFromNetwork(
       context = context,
       url = url.toString(),
       cacheFileType = CacheFileType.BookmarkThumbnail,
-      imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(bookmarkImage),
+      imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(bookmarkImage),
       transformations = transformations,
       listener = { drawable -> bookmarkImage.setImageBitmap(drawable.bitmap) }
     )

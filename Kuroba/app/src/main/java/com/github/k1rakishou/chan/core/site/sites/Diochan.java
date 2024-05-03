@@ -92,7 +92,7 @@ public class Diochan extends CommonSite {
     public void setup() {
         setEnabled(true);
         setName(SITE_NAME);
-        setIcon(SiteIcon.fromFavicon(getImageLoaderV2(), HttpUrl.parse("https://diochan.com/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(getImageLoaderDeprecated(), HttpUrl.parse("https://diochan.com/favicon.ico")));
 
         setBoards(
                 ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "b"), "Random"),

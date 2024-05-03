@@ -3,7 +3,7 @@ package com.github.k1rakishou.chan.core.site.sites
 import com.github.k1rakishou.Setting
 import com.github.k1rakishou.chan.Chan
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.net.JsonReaderRequest
 import com.github.k1rakishou.chan.core.site.ChunkDownloaderSiteProperties
 import com.github.k1rakishou.chan.core.site.ResolvedChanDescriptor
@@ -46,11 +46,11 @@ import javax.inject.Inject
 class CompositeCatalogSite : Site {
 
   @Inject
-  lateinit var _imageLoaderV2: Lazy<ImageLoaderV2>
+  lateinit var _imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>
   @Inject
   lateinit var appConstants: AppConstants
 
-  private val _siteIcon by lazy { SiteIcon.fromDrawable(_imageLoaderV2, R.drawable.composition_icon) }
+  private val _siteIcon by lazy { SiteIcon.fromDrawable(_imageLoaderDeprecated, R.drawable.composition_icon) }
 
   override val isSynthetic: Boolean
     get() = true

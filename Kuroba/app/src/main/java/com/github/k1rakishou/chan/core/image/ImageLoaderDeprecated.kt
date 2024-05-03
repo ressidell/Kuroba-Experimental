@@ -38,20 +38,17 @@ import com.github.k1rakishou.chan.core.site.SiteResolver
 import com.github.k1rakishou.chan.ui.view.widget.FixedViewSizeResolver
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.MediaUtils
-import com.github.k1rakishou.chan.utils.getLifecycleFromContext
+import com.github.k1rakishou.chan.utils.lifecycleFromContextOrNull
 import com.github.k1rakishou.common.BadContentTypeException
 import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.ModularResult.Companion.Try
-import com.github.k1rakishou.common.ModularResult.Companion.error
 import com.github.k1rakishou.common.ModularResult.Companion.value
-import com.github.k1rakishou.common.NotFoundException
 import com.github.k1rakishou.common.StringUtils
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.isCoroutineCancellationException
 import com.github.k1rakishou.common.isExceptionImportant
 import com.github.k1rakishou.common.removeIfKt
-import com.github.k1rakishou.common.resumeValueSafe
 import com.github.k1rakishou.common.rethrowCancellationException
 import com.github.k1rakishou.common.suspendCall
 import com.github.k1rakishou.common.withLockNonCancellable
@@ -71,7 +68,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -84,9 +80,11 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.measureTimedValue
 
 @DoNotStrip
-class ImageLoaderV2(
+@Deprecated("There are bugs when using suspend versions of load functions related to cancellation. Use KurobaImageLoader instead!")
+class ImageLoaderDeprecated(
   private val verboseLogs: Boolean,
   private val appScope: CoroutineScope,
+  private val appContext: Context,
   private val _imageLoader: Lazy<ImageLoader>,
   private val _replyManager: Lazy<ReplyManager>,
   private val _themeEngine: Lazy<ThemeEngine>,
@@ -134,107 +132,6 @@ class ImageLoaderV2(
         val downloaded = cacheHandler.isAlreadyDownloaded(cacheFileType, url)
 
         return@runInterruptible exists && downloaded
-      }
-    }
-  }
-
-  suspend fun loadFromResourcesSuspend(
-    context: Context,
-    @DrawableRes drawableId: Int,
-    imageSize: ImageSize,
-    transformations: List<Transformation> = emptyList()
-  ): ModularResult<BitmapDrawable> {
-    return suspendCancellableCoroutine { continuation ->
-      val disposable = loadFromResources(
-        context = context,
-        drawableId = drawableId,
-        imageSize = imageSize,
-        scale = Scale.FIT,
-        transformations = transformations
-      ) { drawable -> continuation.resumeValueSafe(value(drawable)) }
-
-      continuation.invokeOnCancellation { cause: Throwable? ->
-        if (cause == null) {
-          return@invokeOnCancellation
-        }
-
-        disposable.dispose()
-      }
-    }
-  }
-
-  suspend fun loadFromNetworkSuspend(
-    context: Context,
-    url: String,
-    cacheFileType: CacheFileType,
-    imageSize: ImageSize,
-    transformations: List<Transformation> = emptyList()
-  ): ModularResult<BitmapDrawable> {
-    return suspendCancellableCoroutine { continuation ->
-      val disposable = loadFromNetwork(
-        context = context,
-        requestUrl = url,
-        cacheFileType = cacheFileType,
-        imageSize = imageSize,
-        transformations = transformations,
-        listener = object : FailureAwareImageListener {
-          override fun onResponse(drawable: BitmapDrawable, isImmediate: Boolean) {
-            continuation.resumeValueSafe(value(drawable))
-          }
-
-          override fun onNotFound() {
-            onResponseError(NotFoundException())
-          }
-
-          override fun onResponseError(error: Throwable) {
-            continuation.resumeValueSafe(error(error))
-          }
-        })
-
-      continuation.invokeOnCancellation { cause: Throwable? ->
-        if (cause == null) {
-          return@invokeOnCancellation
-        }
-
-        disposable.dispose()
-      }
-    }
-  }
-
-  suspend fun loadFromDiskSuspend(
-    context: Context,
-    inputFile: InputFile,
-    imageSize: ImageSize,
-    transformations: List<Transformation>
-  ): ModularResult<BitmapDrawable> {
-    return suspendCancellableCoroutine { continuation ->
-      val disposable = loadFromDisk(
-        context = context,
-        inputFile = inputFile,
-        imageSize = imageSize,
-        scale = Scale.FIT,
-        transformations = transformations,
-        listener = object : FailureAwareImageListener{
-          override fun onResponse(drawable: BitmapDrawable, isImmediate: Boolean) {
-            continuation.resumeValueSafe(value(drawable))
-          }
-
-          override fun onNotFound() {
-            continuation.resumeValueSafe(error(NotFoundException()))
-          }
-
-          override fun onResponseError(error: Throwable) {
-            continuation.resumeValueSafe(error(NotFoundException()))
-          }
-        }
-      )
-
-      continuation.invokeOnCancellation { cause: Throwable? ->
-        if (cause == null) {
-          return@invokeOnCancellation
-        }
-
-        disposable.dispose()
       }
     }
   }
@@ -372,7 +269,7 @@ class ImageLoaderV2(
           activeListeners.forEachIndexed { index, activeListener ->
             val resultBitmapDrawable = applyTransformationsToDrawable(
               context = context,
-              lifecycle = context.getLifecycleFromContext(),
+              lifecycle = context.lifecycleFromContextOrNull(),
               imageFile = imageFile,
               activeListener = activeListener,
               url = url,
@@ -821,7 +718,7 @@ class ImageLoaderV2(
     transformations: List<Transformation>,
     listener: FailureAwareImageListener
   ): ImageLoaderRequestDisposable {
-    val lifecycle = context.getLifecycleFromContext()
+    val lifecycle = context.lifecycleFromContextOrNull()
     val completableDeferred = CompletableDeferred<Unit>()
 
     val job = appScope.launch(Dispatchers.Main) {
@@ -927,7 +824,7 @@ class ImageLoaderV2(
     scale: Scale,
     transformations: List<Transformation>
   ): BitmapDrawable? {
-    val lifecycle = context.getLifecycleFromContext()
+    val lifecycle = context.lifecycleFromContextOrNull()
 
     val request = with(ImageRequest.Builder(context)) {
       data(drawableId)
@@ -981,7 +878,7 @@ class ImageLoaderV2(
     }
 
     val listenerRef = AtomicReference(listener)
-    val lifecycle = context.getLifecycleFromContext()
+    val lifecycle = context.lifecycleFromContextOrNull()
 
     val request = with(ImageRequest.Builder(context)) {
       data(replyFile.previewFileOnDisk)
@@ -1149,7 +1046,7 @@ class ImageLoaderV2(
       return true
     }
 
-    return MediaUtils.decodeFileMimeTypeInterruptible(inputFile)
+    return MediaUtils.decodeFileMimeTypeInterruptible(appContext, inputFile)
       ?.let { mimeType -> MimeTypes.isVideo(mimeType) }
       ?: false
   }
@@ -1163,7 +1060,7 @@ class ImageLoaderV2(
     height: Dimension
   ): ModularResult<BitmapDrawable> {
     return Try {
-      val lifecycle = context.getLifecycleFromContext()
+      val lifecycle = context.lifecycleFromContextOrNull()
 
       val request = with(ImageRequest.Builder(context)) {
         when (inputFile) {
@@ -1269,13 +1166,13 @@ class ImageLoaderV2(
 
   sealed class ImageListenerParam {
     class SimpleImageListener(
-      val listener: ImageLoaderV2.SimpleImageListener,
+      val listener: ImageLoaderDeprecated.SimpleImageListener,
       @DrawableRes val errorDrawableId: Int,
       @DrawableRes val notFoundDrawableId: Int
     ) : ImageListenerParam()
 
     class FailureAwareImageListener(
-      val listener: ImageLoaderV2.FailureAwareImageListener
+      val listener: ImageLoaderDeprecated.FailureAwareImageListener
     ) : ImageListenerParam()
   }
 

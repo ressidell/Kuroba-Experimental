@@ -116,8 +116,8 @@ private fun SiteIconInlinedContent(
   } else {
     Shimmer(
       modifier = Modifier.fillMaxSize(),
-      backgroundColor = chanTheme.toolbarBackgroundComposeColor,
-      selectedOnBackColor = chanTheme.onToolbarBackgroundComposeColor
+      mainShimmerColor = chanTheme.toolbarBackgroundComposeColor,
+      secondaryShimmerColor = chanTheme.onToolbarBackgroundComposeColor
     )
   }
 }

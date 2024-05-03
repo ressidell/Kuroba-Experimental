@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.core_themes.ThemeEngine
 import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.cos
@@ -43,7 +44,7 @@ import kotlin.math.sqrt
 fun rememberShimmerState(
   rotation: Float = 15f,
   cornerRadius: Dp = 0.dp,
-  backgroundColor: Color
+  mainShimmerColor: Color
 ): ShimmerState {
   val cornerRadiusPx = with(LocalDensity.current) {
     remember(key1 = cornerRadius) { cornerRadius.toPx()  }
@@ -52,7 +53,7 @@ fun rememberShimmerState(
   return remember {
     ShimmerState(
       rotation = rotation,
-      backgroundColor = backgroundColor,
+      mainShimmerColor = mainShimmerColor,
       cornerRadiusPx = cornerRadiusPx
     )
   }
@@ -61,9 +62,9 @@ fun rememberShimmerState(
 @Composable
 fun Shimmer(
   modifier: Modifier = Modifier,
-  backgroundColor: Color = LocalChanTheme.current.backColorCompose,
-  selectedOnBackColor: Color = LocalChanTheme.current.selectedOnBackColor,
-  shimmerState: ShimmerState = rememberShimmerState(backgroundColor = backgroundColor)
+  mainShimmerColor: Color = LocalChanTheme.current.backColorCompose,
+  secondaryShimmerColor: Color = calculateSecondaryShimmerColor(mainShimmerColor),
+  shimmerState: ShimmerState = rememberShimmerState(mainShimmerColor = mainShimmerColor)
 ) {
   val density = LocalDensity.current
 
@@ -77,12 +78,12 @@ fun Shimmer(
     LaunchedEffect(
       maxWidth,
       maxHeight,
-      selectedOnBackColor,
+      secondaryShimmerColor,
       block = {
         shimmerState.start(
           maxWidth = maxWidth.toFloat(),
           maxHeight = maxHeight.toFloat(),
-          selectedOnBackColor = selectedOnBackColor
+          secondaryShimmerColor = secondaryShimmerColor
         )
       }
     )
@@ -96,10 +97,18 @@ fun Shimmer(
   }
 }
 
+private fun calculateSecondaryShimmerColor(mainShimmerColor: Color): Color {
+  return if (ThemeEngine.isDarkColor(mainShimmerColor)) {
+    ThemeEngine.manipulateColor(mainShimmerColor, 1.3f)
+  } else {
+    ThemeEngine.manipulateColor(mainShimmerColor, 0.7f)
+  }
+}
+
 @Stable
 class ShimmerState(
   val rotation: Float,
-  val backgroundColor: Color,
+  val mainShimmerColor: Color,
   val cornerRadiusPx: Float
 ) {
   private val animatedState = Animatable(0f)
@@ -122,7 +131,7 @@ class ShimmerState(
     android.graphics.Paint().apply {
       isAntiAlias = true
       style = android.graphics.Paint.Style.FILL
-      color = backgroundColor.toArgb()
+      color = mainShimmerColor.toArgb()
     }
   }
 
@@ -146,15 +155,15 @@ class ShimmerState(
 
   private fun Float.toRadian(): Float = (this.toDouble() / 180.0 * Math.PI).toFloat()
 
-  suspend fun start(maxWidth: Float, maxHeight: Float, selectedOnBackColor: Color) {
+  suspend fun start(maxWidth: Float, maxHeight: Float, secondaryShimmerColor: Color) {
     animatedState.snapTo(0f)
 
     pivotPoint = -Offset(0f, 0f) + Rect(0f, 0f, maxWidth, maxHeight).center
 
     val colors = listOf(
-      selectedOnBackColor.copy(alpha = 0.25f),
-      selectedOnBackColor.copy(alpha = 1.00f),
-      selectedOnBackColor.copy(alpha = 0.25f),
+      secondaryShimmerColor.copy(alpha = 0.25f),
+      secondaryShimmerColor.copy(alpha = 1.00f),
+      secondaryShimmerColor.copy(alpha = 0.25f),
     )
     val colorStops = listOf(0.0f, 0.5f, 1.0f)
 

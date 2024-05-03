@@ -289,7 +289,8 @@ abstract class Controller(
       Logger.verbose(TAG) { "${controllerKey} view removed onDestroy" }
     }
 
-    // TODO: Add 'isBeingDestroyed' flag to onDestroy() which should be set to false when:
+    // TODO: scoped viewmodels.
+    //  Add 'isBeingDestroyed' flag to onDestroy() which should be set to false when:
     //  1. Controller is being removed by some user action (like popController).
     //  2. Owner activity is being destroyed (isChangingOrientations == false)
     //  In all different cases it should be false.

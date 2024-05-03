@@ -12,7 +12,7 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.MediaUtils
 import com.github.k1rakishou.core_themes.ChanTheme
@@ -109,7 +109,7 @@ class PostIcons @JvmOverloads constructor(
   }
 
   fun setHttpIcons(
-    imageLoaderV2: Lazy<ImageLoaderV2>,
+    imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>,
     icons: List<ChanPostHttpIcon>,
     theme: ChanTheme,
     size: Int
@@ -126,7 +126,7 @@ class PostIcons @JvmOverloads constructor(
       val postIconsHttpIcon = PostIconsHttpIcon(
         context,
         this,
-        imageLoaderV2,
+        imageLoaderDeprecated,
         name,
         icon.iconUrl
       )

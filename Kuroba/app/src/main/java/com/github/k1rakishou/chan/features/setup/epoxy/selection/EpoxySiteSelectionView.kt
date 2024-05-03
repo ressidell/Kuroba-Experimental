@@ -11,7 +11,7 @@ import com.airbnb.epoxy.ModelView
 import com.airbnb.epoxy.OnViewRecycled
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.site.SiteIcon
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -26,7 +26,7 @@ class EpoxySiteSelectionView @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr), ThemeEngine.ThemeChangesListener {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var themeEngine: ThemeEngine
 
@@ -34,7 +34,7 @@ class EpoxySiteSelectionView @JvmOverloads constructor(
   private val siteName: MaterialTextView
   private val divider: View
 
-  private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
   init {
     inflate(context, R.layout.epoxy_site_selection_view, this)
@@ -78,11 +78,11 @@ class EpoxySiteSelectionView @JvmOverloads constructor(
     requestDisposable = null
 
     if (siteIcon.url != null) {
-      requestDisposable = imageLoaderV2.loadFromNetwork(
+      requestDisposable = imageLoaderDeprecated.loadFromNetwork(
         context = context,
         url = siteIcon.url!!.toString(),
         cacheFileType = CacheFileType.SiteIcon,
-        imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(siteIconView),
+        imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(siteIconView),
         transformations = listOf(),
         listener = { drawable -> siteIconView.setImageBitmap(drawable.bitmap) },
         errorDrawableId = R.drawable.error_icon

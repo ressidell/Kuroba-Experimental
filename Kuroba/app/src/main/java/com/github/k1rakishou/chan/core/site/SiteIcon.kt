@@ -6,8 +6,7 @@ import androidx.annotation.DrawableRes
 import androidx.core.graphics.drawable.toBitmap
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2.FailureAwareImageListener
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.resumeValueSafe
@@ -17,12 +16,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.HttpUrl
 
 class SiteIcon private constructor(
-  private val imageLoaderV2: Lazy<ImageLoaderV2>
+  private val imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>
 ) {
   var url: HttpUrl? = null
   var drawable: BitmapDrawable? = null
 
-  private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
   fun cancel() {
     requestDisposable?.dispose()
@@ -63,16 +62,16 @@ class SiteIcon private constructor(
 
     cancel()
 
-    requestDisposable = imageLoaderV2.get().loadFromNetwork(
+    requestDisposable = imageLoaderDeprecated.get().loadFromNetwork(
       context = context,
       requestUrl = url.toString(),
       cacheFileType = CacheFileType.SiteIcon,
-      imageSize = ImageLoaderV2.ImageSize.FixedImageSize(
+      imageSize = ImageLoaderDeprecated.ImageSize.FixedImageSize(
         FAVICON_SIZE,
         FAVICON_SIZE,
       ),
       transformations = emptyList(),
-      listener = object : FailureAwareImageListener {
+      listener = object : ImageLoaderDeprecated.FailureAwareImageListener {
         override fun onResponse(drawable: BitmapDrawable, isImmediate: Boolean) {
           this@SiteIcon.drawable = drawable
           resultFunc(drawable)
@@ -135,14 +134,14 @@ class SiteIcon private constructor(
     const val FAVICON_SIZE = 64
 
     @JvmStatic
-    fun fromFavicon(imageLoaderV2: Lazy<ImageLoaderV2>, url: HttpUrl): SiteIcon {
-      val siteIcon = SiteIcon(imageLoaderV2)
+    fun fromFavicon(imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>, url: HttpUrl): SiteIcon {
+      val siteIcon = SiteIcon(imageLoaderDeprecated)
       siteIcon.url = url
       return siteIcon
     }
 
-    fun fromDrawable(imageLoaderV2: Lazy<ImageLoaderV2>, @DrawableRes drawableId: Int): SiteIcon {
-      val siteIcon = SiteIcon(imageLoaderV2)
+    fun fromDrawable(imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>, @DrawableRes drawableId: Int): SiteIcon {
+      val siteIcon = SiteIcon(imageLoaderDeprecated)
       val drawable = AppModuleAndroidUtils.getDrawable(drawableId)
 
       siteIcon.drawable = BitmapDrawable(

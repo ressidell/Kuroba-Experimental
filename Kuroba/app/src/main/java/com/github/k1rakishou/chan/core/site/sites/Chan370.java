@@ -94,7 +94,7 @@ public class Chan370
     public void setup() {
         setEnabled(true);
         setName(SITE_NAME);
-        setIcon(SiteIcon.fromFavicon(getImageLoaderV2(), HttpUrl.parse("https://370ch.lt/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(getImageLoaderDeprecated(), HttpUrl.parse("https://370ch.lt/favicon.ico")));
 
         setBoards(
                 ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "a"), "anime ir manga"),

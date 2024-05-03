@@ -1,6 +1,9 @@
 package com.github.k1rakishou.chan.core.di.component.application
 
 import com.github.k1rakishou.chan.Chan
+import com.github.k1rakishou.chan.core.image.loader.KurobaImageLoader
+import com.github.k1rakishou.chan.core.manager.ChanThreadManager
+import com.github.k1rakishou.chan.core.manager.OnDemandContentLoaderManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
@@ -14,4 +17,7 @@ interface ApplicationDependencies {
   val globalUiStateHolder: GlobalUiStateHolder
   val appResources: AppResources
   val snackbarManagerFactory: SnackbarManagerFactory
+  val onDemandContentLoaderManager: OnDemandContentLoaderManager
+  val chanThreadManager: ChanThreadManager
+  val kurobaImageLoader: KurobaImageLoader
 }

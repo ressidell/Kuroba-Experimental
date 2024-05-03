@@ -37,16 +37,16 @@ import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequest
-import com.github.k1rakishou.chan.ui.compose.ImageLoaderRequestData
-import com.github.k1rakishou.chan.ui.compose.KurobaComposeImage
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeCard
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeTextBarButton
 import com.github.k1rakishou.chan.ui.compose.components.KurobaSearchInput
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.consumeClicks
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.ui.compose.image.KurobaComposeImage
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalGridWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
@@ -70,7 +70,7 @@ class ComposeBoardsSelectorController(
 ) : BaseFloatingComposeController(context) {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
 
   private val viewModel by viewModelByKey<ComposeBoardsSelectorControllerViewModel>()
 
@@ -261,7 +261,6 @@ class ComposeBoardsSelectorController(
           KurobaComposeImage(
             modifier = siteIconModifier,
             request = request,
-            imageLoaderV2 = imageLoaderV2,
             error = {
               Image(
                 modifier = Modifier.fillMaxSize(),

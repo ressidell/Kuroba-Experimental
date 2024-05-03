@@ -94,7 +94,7 @@ public class SoyjakParty
     public void setup() {
         setEnabled(true);
         setName(SITE_NAME);
-        setIcon(SiteIcon.fromFavicon(getImageLoaderV2(), HttpUrl.parse("https://soyjak.party/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(getImageLoaderDeprecated(), HttpUrl.parse("https://soyjak.party/favicon.ico")));
 
         setBoards(
                 ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "q"), "the 'party"),

@@ -100,7 +100,7 @@ class Dvach : CommonSite() {
 
   private val siteRequestModifier by lazy { DvachSiteRequestModifier(this, appConstants) }
   private val urlHandlerLazy = lazy { DvachSiteUrlHandler(domainUrl) }
-  private val siteIconLazy = lazy { SiteIcon.fromFavicon(imageLoaderV2, "${domainString}/favicon.ico".toHttpUrl()) }
+  private val siteIconLazy = lazy { SiteIcon.fromFavicon(imageLoaderDeprecated, "${domainString}/favicon.ico".toHttpUrl()) }
 
   val captchaV2NoJs by lazy {
     SiteAuthentication.fromCaptcha2nojs(

@@ -12,7 +12,7 @@ import com.airbnb.epoxy.OnViewRecycled
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.image.GrayscaleTransformation
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.site.SiteIcon
 import com.github.k1rakishou.chan.features.setup.data.SiteEnableState
 import com.github.k1rakishou.chan.ui.theme.widget.ColorizableSwitchMaterial
@@ -34,7 +34,7 @@ class EpoxySiteView @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr), ThemeEngine.ThemeChangesListener {
 
   @Inject
-  lateinit var imageLoaderV2: ImageLoaderV2
+  lateinit var imageLoaderDeprecated: ImageLoaderDeprecated
   @Inject
   lateinit var themeEngine: ThemeEngine
 
@@ -48,7 +48,7 @@ class EpoxySiteView @JvmOverloads constructor(
     private set
 
   private var descriptor: SiteDescriptor? = null
-  private var requestDisposable: ImageLoaderV2.ImageLoaderRequestDisposable? = null
+  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
   init {
     inflate(context, R.layout.epoxy_site_view, this)
@@ -134,11 +134,11 @@ class EpoxySiteView @JvmOverloads constructor(
       requestDisposable?.dispose()
       requestDisposable = null
 
-      requestDisposable = imageLoaderV2.loadFromNetwork(
+      requestDisposable = imageLoaderDeprecated.loadFromNetwork(
         context = context,
         url = siteIcon.url!!.toString(),
         cacheFileType = CacheFileType.SiteIcon,
-        imageSize = ImageLoaderV2.ImageSize.MeasurableImageSize.create(siteIconView),
+        imageSize = ImageLoaderDeprecated.ImageSize.MeasurableImageSize.create(siteIconView),
         transformations = transformations,
         listener = { drawable -> siteIconView.setImageBitmap(drawable.bitmap) },
         errorDrawableId = R.drawable.error_icon

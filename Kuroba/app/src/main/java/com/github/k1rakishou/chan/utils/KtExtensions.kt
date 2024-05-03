@@ -90,13 +90,19 @@ fun EpoxyController.addOneshotModelBuildListener(callback: () -> Unit) {
   })
 }
 
-fun Context.getLifecycleFromContext(): Lifecycle? {
+fun Context.lifecycleFromContextOrNull(): Lifecycle? {
   return when (this) {
     is StartActivity -> this.lifecycle
     is SharingActivity -> this.lifecycle
     is MediaViewerActivity -> this.lifecycle
-    is ContextWrapper -> (this.baseContext as? AppCompatActivity)?.getLifecycleFromContext()
+    is ContextWrapper -> (this.baseContext as? AppCompatActivity)?.lifecycleFromContextOrNull()
     else -> null
+  }
+}
+
+fun Context.lifecycleFromContent(): Lifecycle {
+  return requireNotNull(lifecycleFromContextOrNull()) {
+    "Lifecycle is null! Probably bad context: ${this::class.java.simpleName}"
   }
 }
 

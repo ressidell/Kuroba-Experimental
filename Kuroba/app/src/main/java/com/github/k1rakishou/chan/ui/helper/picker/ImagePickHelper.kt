@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import coil.size.Scale
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
-import com.github.k1rakishou.chan.core.image.ImageLoaderV2
+import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.features.reply.data.ReplyLayoutHelper
@@ -28,7 +28,7 @@ import java.util.*
 class ImagePickHelper(
   private val appContext: Context,
   private val replyManagerLazy: Lazy<ReplyManager>,
-  private val imageLoaderV2Lazy: Lazy<ImageLoaderV2>,
+  private val imageLoaderDeprecatedLazy: Lazy<ImageLoaderDeprecated>,
   private val shareFilePickerLazy: Lazy<ShareFilePicker>,
   private val localFilePickerLazy: Lazy<LocalFilePicker>,
   private val remoteFilePickerLazy: Lazy<RemoteFilePicker>,
@@ -37,8 +37,8 @@ class ImagePickHelper(
 ) {
   private val replyManager: ReplyManager
     get() = replyManagerLazy.get()
-  private val imageLoaderV2: ImageLoaderV2
-    get() = imageLoaderV2Lazy.get()
+  private val imageLoaderDeprecated: ImageLoaderDeprecated
+    get() = imageLoaderDeprecatedLazy.get()
   private val shareFilePicker: ShareFilePicker
     get() = shareFilePickerLazy.get()
   private val localFilePicker: LocalFilePicker
@@ -107,7 +107,7 @@ class ImagePickHelper(
           }
 
           withContext(Dispatchers.IO) {
-            val success = imageLoaderV2.calculateFilePreviewAndStoreOnDisk(
+            val success = imageLoaderDeprecated.calculateFilePreviewAndStoreOnDisk(
               context = appContext,
               fileUuid = replyFileMeta.fileUuid,
               scale = Scale.FIT
@@ -211,7 +211,7 @@ class ImagePickHelper(
           )
 
           withContext(Dispatchers.IO) {
-            val success = imageLoaderV2.calculateFilePreviewAndStoreOnDisk(
+            val success = imageLoaderDeprecated.calculateFilePreviewAndStoreOnDisk(
               context = appContext,
               fileUuid = replyFileMeta.fileUuid,
               scale = Scale.FIT
@@ -326,7 +326,7 @@ class ImagePickHelper(
         }
 
         withContext(Dispatchers.IO) {
-          val success = imageLoaderV2.calculateFilePreviewAndStoreOnDisk(
+          val success = imageLoaderDeprecated.calculateFilePreviewAndStoreOnDisk(
             appContext,
             replyFileMeta.fileUuid,
             Scale.FIT
