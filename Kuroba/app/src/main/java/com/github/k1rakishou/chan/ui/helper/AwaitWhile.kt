@@ -2,7 +2,7 @@ package com.github.k1rakishou.chan.ui.helper
 
 import android.os.SystemClock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 suspend fun CoroutineScope.awaitWhile(
@@ -12,12 +12,13 @@ suspend fun CoroutineScope.awaitWhile(
   val waitUntil = SystemClock.elapsedRealtime() + maxWaitTimeMs
 
   while (isActive && waitWhile()) {
-    awaitFrame()
+    delay(64)
 
     val currentTime = SystemClock.elapsedRealtime()
     if (currentTime >= waitUntil) {
-      // Timed out
-      return false
+      // Wait the last time and try again
+      delay(64)
+      return waitWhile()
     }
   }
 

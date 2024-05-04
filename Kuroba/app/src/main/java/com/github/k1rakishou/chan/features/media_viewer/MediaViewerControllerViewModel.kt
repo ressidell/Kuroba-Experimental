@@ -312,7 +312,8 @@ class MediaViewerControllerViewModel(
       images = mediaList,
       index = initialPagerIndex.get(),
       isOpeningAlbum = false,
-      postDescriptorSelector = { viewableMedia -> viewableMedia.viewableMediaMeta.ownerPostDescriptor }
+      postDescriptorSelector = { viewableMedia -> viewableMedia.viewableMediaMeta.ownerPostDescriptor },
+      elementExistsInList = { media, medias -> media in medias }
     )
 
     val output = filterOutHiddenImagesUseCase.filter(input)
@@ -328,7 +329,7 @@ class MediaViewerControllerViewModel(
     return MediaViewerControllerState(
       descriptor = viewableMediaParcelableHolder.threadDescriptor,
       loadedMedia = output.images.toMutableList(),
-      initialPagerIndex = actualInitialPagerIndex
+      initialPagerIndex = actualInitialPagerIndex ?: 0
     )
   }
 
@@ -368,7 +369,8 @@ class MediaViewerControllerViewModel(
       images = mediaList,
       index = initialPagerIndex.get(),
       isOpeningAlbum = false,
-      postDescriptorSelector = { viewableMedia -> viewableMedia.viewableMediaMeta.ownerPostDescriptor }
+      postDescriptorSelector = { viewableMedia -> viewableMedia.viewableMediaMeta.ownerPostDescriptor },
+      elementExistsInList = { media, medias -> media in medias }
     )
 
     val output = filterOutHiddenImagesUseCase.filter(input)
@@ -384,7 +386,7 @@ class MediaViewerControllerViewModel(
     return MediaViewerControllerState(
       descriptor = catalogDescriptor as ChanDescriptor,
       loadedMedia = output.images.toMutableList(),
-      initialPagerIndex = actualInitialPagerIndex
+      initialPagerIndex = actualInitialPagerIndex ?: 0
     )
   }
 

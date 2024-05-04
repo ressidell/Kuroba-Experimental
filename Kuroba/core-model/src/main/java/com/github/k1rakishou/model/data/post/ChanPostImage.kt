@@ -8,7 +8,7 @@ import com.github.k1rakishou.common.isNotNullNorEmpty
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.util.ChanPostUtils
 import okhttp3.HttpUrl
-import java.util.*
+import java.util.Locale
 
 class ChanPostImage(
   val serverFilename: String,
@@ -136,6 +136,10 @@ class ChanPostImage(
 
   fun equalUrl(other: ChanPostImage?): Boolean {
     if (other == null) {
+      return false
+    }
+
+    if (ownerPostDescriptor != other.ownerPostDescriptor) {
       return false
     }
 

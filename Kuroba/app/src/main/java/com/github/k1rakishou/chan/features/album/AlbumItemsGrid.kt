@@ -41,7 +41,7 @@ fun AlbumItemsGrid(
       .filter { scrollToPosition -> scrollToPosition >= 0 }
       .collectLatest { scrollToPosition ->
         try {
-          val success = awaitWhile(maxWaitTimeMs = 1_000L) { scrollToPosition >= state.layoutInfo.totalItemsCount }
+          val success = awaitWhile(maxWaitTimeMs = 1_000L) { state.layoutInfo.totalItemsCount >= scrollToPosition }
           if (success) {
             awaitFrame()
             state.scrollToItem(scrollToPosition)

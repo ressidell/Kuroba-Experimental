@@ -16,6 +16,7 @@ import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
+import com.github.k1rakishou.chan.core.usecase.FilterOutHiddenImagesUseCase
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.image.PostImageThumbnailKey
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
@@ -24,7 +25,7 @@ import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.KurobaMediaType
 import com.github.k1rakishou.chan.utils.asKurobaMediaType
-import com.github.k1rakishou.chan.utils.getAndConsume
+import com.github.k1rakishou.chan.utils.paramsOrNull
 import com.github.k1rakishou.chan.utils.requireParams
 import com.github.k1rakishou.common.mutableListWithCap
 import com.github.k1rakishou.common.toHashSetBy
@@ -67,10 +68,9 @@ class AlbumViewControllerV2ViewModel(
   private val chanCatalogSnapshotCache: ChanCatalogSnapshotCache,
   private val chanThreadsCache: ChanThreadsCache,
   private val snackbarManagerFactory: SnackbarManagerFactory,
-  private val compositeCatalogManager: CompositeCatalogManager
+  private val compositeCatalogManager: CompositeCatalogManager,
+  private val filterOutHiddenImagesUseCase: FilterOutHiddenImagesUseCase
 ) : BaseViewModel() {
-  private var _skippedInitialLoad = false
-
   private val _currentListenMode: AlbumViewControllerV2.ListenMode
     get() = savedStateHandle.requireParams<AlbumViewControllerV2.Params>().listenMode
 
@@ -159,11 +159,15 @@ class AlbumViewControllerV2ViewModel(
             is ChanDescriptor.ThreadDescriptor -> ChanThreadManager.LoadedChanDescriptor.Regular(currentDescriptor)
           }
 
-          val albumItems = getAlbumItemsForChanDescriptor(loadedChanDescriptor)
-          Logger.debug(TAG) { "Got ${albumItems?.size ?: 0} initial album items" }
+          val album = getAlbumItemsForChanDescriptor(
+            initialLoad = true,
+            loadedChanDescriptor = loadedChanDescriptor
+          )
 
-          if (!albumItems.isNullOrEmpty()) {
-            updateUi(albumItems)
+          Logger.debug(TAG) { "Got ${album?.albumItemDataList?.size ?: 0} initial album items" }
+
+          if (album != null && album.albumItemDataList.isNotEmpty()) {
+            updateUi(initialLoad = true, album = album)
           }
 
           return@flatMapLatest chanThreadManager.chanDescriptorLoadFinishedEventsFlow
@@ -192,9 +196,16 @@ class AlbumViewControllerV2ViewModel(
             }
         }
         .filterNotNull()
-        .mapNotNull { loadedChanDescriptor -> getAlbumItemsForChanDescriptor(loadedChanDescriptor) }
-        .filter { newAlbumItems -> newAlbumItems.isNotEmpty() }
-        .collectLatest { newAlbumItems -> updateUi(newAlbumItems) }
+        .mapNotNull { loadedChanDescriptor ->
+          return@mapNotNull getAlbumItemsForChanDescriptor(
+            initialLoad = false,
+            loadedChanDescriptor = loadedChanDescriptor
+          )
+        }
+        .filter { album -> album.albumItemDataList.isNotEmpty() }
+        .collectLatest { album ->
+          updateUi(initialLoad = false, album = album)
+        }
     }
   }
 
@@ -254,8 +265,13 @@ class AlbumViewControllerV2ViewModel(
   }
 
   private suspend fun updateUi(
-    allAlbumItems: List<AlbumItemData>
+    initialLoad: Boolean,
+    album: Album
   ) {
+    val allAlbumItems = album.albumItemDataList
+    val scrollToPosition = album.scrollToPosition
+    val initialImageFullUrl = album.initialImageFullUrl
+
     Logger.debug(TAG) { "Got ${allAlbumItems.size} album items" }
 
     val (duplicateChecker, capacity) = withContext(Dispatchers.Main) {
@@ -280,7 +296,7 @@ class AlbumViewControllerV2ViewModel(
 
     withContext(Dispatchers.Main) {
       if (newAlbumItemsToAppendList.isNotEmpty()) {
-        applyNewAlbumItems(newAlbumItemsToAppendList)
+        applyNewAlbumItems(initialLoad, newAlbumItemsToAppendList)
       }
 
       updateToolbarTitle(
@@ -288,30 +304,14 @@ class AlbumViewControllerV2ViewModel(
         chanDescriptor = _currentDescriptor.value
       )
 
-      updateScrollPosition(allAlbumItems)
+      if (scrollToPosition != null) {
+        Logger.debug(TAG) { "updateScrollPosition() '${initialImageFullUrl}' found at ${scrollToPosition}, performing scroll" }
+        _scrollToPosition.emit(scrollToPosition)
+        _lastScrollPosition.intValue = scrollToPosition
+      } else {
+        Logger.debug(TAG) { "updateScrollPosition() '${initialImageFullUrl}' failed to find scroll position" }
+      }
     }
-  }
-
-  private suspend fun updateScrollPosition(allAlbumItems: List<AlbumItemData>) {
-    val initialImageFullUrl = savedStateHandle
-      .getAndConsume<AlbumViewControllerV2.Params> { params -> params.copy(initialImageFullUrl = null) }
-      ?.initialImageFullUrl
-
-    if (initialImageFullUrl.isNullOrBlank()) {
-      Logger.debug(TAG) { "updateScrollPosition() initialImageFullUrl is null or blank" }
-      return
-    }
-
-    val indexToScrollTo = allAlbumItems
-      .indexOfFirst { albumItemData -> albumItemData.fullImage?.asUrlOrNull()?.toString() == initialImageFullUrl }
-    if (indexToScrollTo < 0) {
-      Logger.debug(TAG) { "updateScrollPosition() failed to find '${initialImageFullUrl}'" }
-      return
-    }
-
-    Logger.debug(TAG) { "updateScrollPosition() '${initialImageFullUrl}' found at ${indexToScrollTo}, performing scroll" }
-    _scrollToPosition.emit(indexToScrollTo)
-    _lastScrollPosition.intValue = indexToScrollTo
   }
 
   private suspend fun updateToolbarTitle(
@@ -350,7 +350,7 @@ class AlbumViewControllerV2ViewModel(
     )
   }
 
-  private fun applyNewAlbumItems(newAlbumItemsToAppendList: List<AlbumItemData>) {
+  private fun applyNewAlbumItems(initialLoad: Boolean, newAlbumItemsToAppendList: List<AlbumItemData>) {
     BackgroundUtils.ensureMainThread()
 
     if (newAlbumItemsToAppendList.isEmpty()) {
@@ -360,7 +360,7 @@ class AlbumViewControllerV2ViewModel(
     _albumItems.addAll(newAlbumItemsToAppendList)
 
     // Do not show the toast the first time we open AlbumViewController. Only show it for album item updates.
-    if (_skippedInitialLoad) {
+    if (!initialLoad) {
       snackbarManager.toast(
         appResources.string(
           R.string.album_screen_new_images,
@@ -368,13 +368,28 @@ class AlbumViewControllerV2ViewModel(
         )
       )
     }
+  }
 
-    _skippedInitialLoad = true
+  private fun findInitialScrollPosition(initialImageFullUrl: String?, allAlbumItems: List<ChanPostImage>): Int? {
+    if (initialImageFullUrl.isNullOrBlank()) {
+      Logger.debug(TAG) { "updateScrollPosition() initialImageFullUrl is null or blank" }
+      return null
+    }
+
+    val indexToScrollTo = allAlbumItems
+      .indexOfFirst { albumItemData -> albumItemData.imageUrl?.toString() == initialImageFullUrl }
+    if (indexToScrollTo < 0) {
+      Logger.debug(TAG) { "updateScrollPosition() failed to find '${initialImageFullUrl}'" }
+      return null
+    }
+
+    return indexToScrollTo
   }
 
   private fun getAlbumItemsForChanDescriptor(
+    initialLoad: Boolean,
     loadedChanDescriptor: ChanThreadManager.LoadedChanDescriptor
-  ): List<AlbumItemData>? {
+  ): Album? {
     BackgroundUtils.ensureBackgroundThread()
     Logger.debug(TAG) { "loadedChanDescriptor is '${loadedChanDescriptor}'" }
 
@@ -414,36 +429,72 @@ class AlbumViewControllerV2ViewModel(
 
     Logger.debug(TAG) { "Got ${posts.size} posts for '${loadedChanDescriptor}'" }
 
-    return posts.flatMap { chanPost ->
-      return@flatMap chanPost.postImages.mapNotNull { chanPostImage ->
-        val actualThumbnailUrl = chanPostImage.actualThumbnailUrl
-        if (actualThumbnailUrl == null) {
-          return@mapNotNull null
-        }
+    val allImages = posts
+      .flatMap { chanPost -> chanPost.postImages }
 
-        // TODO: FilterOutHiddenImagesUseCase
+    val initialImageFullUrl = savedStateHandle
+      .paramsOrNull<AlbumViewControllerV2.Params>()
+      ?.initialImageFullUrl
 
-        val thumbnailImage = ImageLoaderRequestData.Url(httpUrl = actualThumbnailUrl, CacheFileType.PostMediaThumbnail)
-        val fullImage = chanPostImage.imageUrl
-          ?.let { imageUrl -> ImageLoaderRequestData.Url(imageUrl, CacheFileType.PostMediaFull) }
-
-        return@mapNotNull AlbumItemData(
-          isCatalogMode = actualChanDescriptor.isCatalogDescriptor(),
-          postDescriptor = chanPost.postDescriptor,
-          thumbnailImage = thumbnailImage,
-          fullImage = fullImage,
-          albumItemPostData = AlbumItemPostData(
-            threadSubject = when (actualChanDescriptor) {
-              is ChanDescriptor.ICatalogDescriptor ->  ChanPostUtils.getTitle(chanPost, actualChanDescriptor)
-              is ChanDescriptor.ThreadDescriptor -> null
-            },
-            mediaInfo = formatImageDetails(chanPostImage),
-            aspectRatio = calculateAspectRatio(chanPostImage)
-          ),
-          mediaType = chanPostImage.extension.asKurobaMediaType()
-        )
-      }
+    val scrollToPosition = if (initialLoad) {
+      findInitialScrollPosition(initialImageFullUrl, allImages)
+    } else {
+      null
     }
+
+    val input = FilterOutHiddenImagesUseCase.Input(
+      images = allImages,
+      index = scrollToPosition,
+      isOpeningAlbum = true,
+      postDescriptorSelector = { chanPostImage -> chanPostImage.ownerPostDescriptor },
+      elementExistsInList = { image, images -> images.any { postImage -> postImage.equalUrl(image) } }
+    )
+
+    val output = filterOutHiddenImagesUseCase.filter(input)
+    val filteredImages = output.images
+    val postsMap = posts.associateBy { chanPost -> chanPost.postDescriptor }
+
+    Logger.debug(TAG) { "Got ${filteredImages.size}/${allImages.size} images for '${loadedChanDescriptor}' after filtering" }
+
+    val albumItemDataList = filteredImages.mapNotNull { chanPostImage ->
+      BackgroundUtils.ensureBackgroundThread()
+
+      val actualThumbnailUrl = chanPostImage.actualThumbnailUrl
+      if (actualThumbnailUrl == null) {
+        return@mapNotNull null
+      }
+
+      val thumbnailImage = ImageLoaderRequestData.Url(httpUrl = actualThumbnailUrl, CacheFileType.PostMediaThumbnail)
+      val fullImage = chanPostImage.imageUrl
+        ?.let { imageUrl -> ImageLoaderRequestData.Url(imageUrl, CacheFileType.PostMediaFull) }
+
+      return@mapNotNull AlbumItemData(
+        isCatalogMode = actualChanDescriptor.isCatalogDescriptor(),
+        postDescriptor = chanPostImage.ownerPostDescriptor,
+        thumbnailImage = thumbnailImage,
+        fullImage = fullImage,
+        albumItemPostData = AlbumItemPostData(
+          threadSubject = when (actualChanDescriptor) {
+            is ChanDescriptor.ICatalogDescriptor -> {
+              ChanPostUtils.getTitle(
+                post = postsMap[chanPostImage.ownerPostDescriptor],
+                chanDescriptor = actualChanDescriptor
+              )
+            }
+            is ChanDescriptor.ThreadDescriptor -> null
+          },
+          mediaInfo = formatImageDetails(chanPostImage),
+          aspectRatio = calculateAspectRatio(chanPostImage)
+        ),
+        mediaType = chanPostImage.extension.asKurobaMediaType()
+      )
+    }
+
+    return Album(
+      initialImageFullUrl = initialImageFullUrl,
+      scrollToPosition = output.index,
+      albumItemDataList = albumItemDataList
+    )
   }
 
   private fun calculateAspectRatio(chanPostImage: ChanPostImage): Float? {
@@ -476,6 +527,12 @@ class AlbumViewControllerV2ViewModel(
   data class ToolbarData(
     val title: String = "",
     val subtitle: String = ""
+  )
+
+  data class Album(
+    val initialImageFullUrl: String?,
+    val scrollToPosition: Int?,
+    val albumItemDataList: List<AlbumItemData>
   )
 
   @Immutable
@@ -520,7 +577,8 @@ class AlbumViewControllerV2ViewModel(
     private val chanCatalogSnapshotCache: ChanCatalogSnapshotCache,
     private val chanThreadsCache: ChanThreadsCache,
     private val snackbarManagerFactory: SnackbarManagerFactory,
-    private val compositeCatalogManager: CompositeCatalogManager
+    private val compositeCatalogManager: CompositeCatalogManager,
+    private val filterOutHiddenImagesUseCase: FilterOutHiddenImagesUseCase
   ) : ViewModelAssistedFactory<AlbumViewControllerV2ViewModel> {
     override fun create(handle: SavedStateHandle): AlbumViewControllerV2ViewModel {
       return AlbumViewControllerV2ViewModel(
@@ -531,7 +589,8 @@ class AlbumViewControllerV2ViewModel(
         chanCatalogSnapshotCache = chanCatalogSnapshotCache,
         chanThreadsCache = chanThreadsCache,
         snackbarManagerFactory = snackbarManagerFactory,
-        compositeCatalogManager = compositeCatalogManager
+        compositeCatalogManager = compositeCatalogManager,
+        filterOutHiddenImagesUseCase = filterOutHiddenImagesUseCase
       )
     }
   }
