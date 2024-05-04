@@ -20,7 +20,7 @@ class MediaViewerGesturesSettingsController(context: Context) : BaseFloatingCont
   override fun getLayoutId(): Int = R.layout.controller_media_viewer_gestures_settings
 
   override val snackbarScope: SnackbarScope
-    get() = SnackbarScope.MediaViewer
+    get() = SnackbarScope.MediaViewer()
 
   override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)

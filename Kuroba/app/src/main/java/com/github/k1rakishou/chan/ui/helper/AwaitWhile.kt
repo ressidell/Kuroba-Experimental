@@ -6,7 +6,7 @@ import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.isActive
 
 suspend fun CoroutineScope.awaitWhile(
-  maxWaitTimeMs: Long,
+  maxWaitTimeMs: Long = 1000L,
   waitWhile: () -> Boolean
 ): Boolean {
   val waitUntil = SystemClock.elapsedRealtime() + maxWaitTimeMs

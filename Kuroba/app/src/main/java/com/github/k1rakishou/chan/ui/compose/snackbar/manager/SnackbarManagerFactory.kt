@@ -16,12 +16,11 @@ class SnackbarManagerFactory(
   }
 
   private fun createSnackbarManager(snackbarScope: SnackbarScope): SnackbarManager {
-    return when (snackbarScope) {
-      SnackbarScope.Global -> GlobalSnackbarManager(appContext, globalUiStateHolder)
-      SnackbarScope.Catalog -> CatalogSnackbarManager(appContext, globalUiStateHolder)
-      SnackbarScope.Thread -> ThreadSnackbarManager(appContext, globalUiStateHolder)
-      SnackbarScope.MediaViewer -> MediaViewerSnackbarManager(appContext, globalUiStateHolder)
-    }
+    return ScopedSnackbarManager(
+      appContext = appContext,
+      snackbarScope = snackbarScope,
+      globalUiStateHolder = globalUiStateHolder
+    )
   }
 
 }

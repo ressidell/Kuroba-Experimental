@@ -1,11 +1,14 @@
 package com.github.k1rakishou.chan.features.album
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.IntState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.ChanSettings
+import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.BaseViewModel
 import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
@@ -14,9 +17,13 @@ import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.image.PostImageThumbnailKey
+import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
+import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
+import com.github.k1rakishou.chan.ui.helper.AppResources
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.KurobaMediaType
 import com.github.k1rakishou.chan.utils.asKurobaMediaType
+import com.github.k1rakishou.chan.utils.getAndConsume
 import com.github.k1rakishou.chan.utils.requireParams
 import com.github.k1rakishou.common.mutableListWithCap
 import com.github.k1rakishou.common.toHashSetBy
@@ -29,8 +36,13 @@ import com.github.k1rakishou.model.source.cache.thread.ChanThreadsCache
 import com.github.k1rakishou.model.util.ChanPostUtils
 import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -47,21 +59,38 @@ import javax.inject.Inject
 
 class AlbumViewControllerV2ViewModel(
   private val savedStateHandle: SavedStateHandle,
+  private val appResources: AppResources,
   private val currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager,
   private val chanThreadManager: ChanThreadManager,
   private val chanCatalogSnapshotCache: ChanCatalogSnapshotCache,
-  private val chanThreadsCache: ChanThreadsCache
+  private val chanThreadsCache: ChanThreadsCache,
+  private val snackbarManagerFactory: SnackbarManagerFactory
 ) : BaseViewModel() {
+  private var _skippedInitialLoad = false
+
   private val _currentListenMode: AlbumViewControllerV2.ListenMode
     get() = savedStateHandle.requireParams<AlbumViewControllerV2.Params>().listenMode
-  private val _initialImageFullUrl: String?
-    get() = savedStateHandle.requireParams<AlbumViewControllerV2.Params>().initialImageFullUrl
 
   private val _currentDescriptor = MutableStateFlow<ChanDescriptor?>(null)
 
   private val _albumItems = mutableStateListOf<AlbumItemData>()
   val albumItems: SnapshotStateList<AlbumItemData>
     get() = _albumItems
+
+  private val _scrollToPosition = MutableSharedFlow<Int>(
+    extraBufferCapacity = 1,
+    onBufferOverflow = BufferOverflow.DROP_OLDEST
+  )
+  val scrollToPosition: SharedFlow<Int>
+    get() = _scrollToPosition.asSharedFlow()
+
+  private val _lastScrollPosition = mutableIntStateOf(0)
+  val lastScrollPosition: IntState
+    get() = _lastScrollPosition
+
+  private val _toolbarData = MutableStateFlow<ToolbarData>(ToolbarData())
+  val toolbarData: StateFlow<ToolbarData>
+    get() = _toolbarData
 
   val albumSpanCount = ChanSettings.albumSpanCount.listenForChanges()
     .asFlow()
@@ -71,12 +100,23 @@ class AlbumViewControllerV2ViewModel(
     .asFlow()
     .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
+  private val snackbarManager by lazy {
+    val snackbarScope = when (_currentListenMode) {
+      AlbumViewControllerV2.ListenMode.Catalog -> SnackbarScope.Album(SnackbarScope.MainLayoutAnchor.Catalog)
+      AlbumViewControllerV2.ListenMode.Thread -> SnackbarScope.Album(SnackbarScope.MainLayoutAnchor.Thread)
+    }
+
+    snackbarManagerFactory.snackbarManager(snackbarScope)
+  }
+
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)
   }
 
   override suspend fun onViewModelReady() {
     viewModelScope.launch {
+      chanThreadManager.awaitUntilDependenciesInitialized()
+
       Logger.debug(TAG) { "currentListenMode: ${_currentListenMode}" }
 
       val currentDescriptorFlow = when (_currentListenMode) {
@@ -101,11 +141,12 @@ class AlbumViewControllerV2ViewModel(
       _currentDescriptor
         .flatMapLatest { currentDescriptor ->
           BackgroundUtils.ensureBackgroundThread()
-          Logger.debug(TAG) { "Got new descriptor: '${currentDescriptor}'" }
 
           if (currentDescriptor == null) {
             return@flatMapLatest flowOf(null)
           }
+
+          Logger.debug(TAG) { "Got new descriptor: '${currentDescriptor}'" }
 
           val loadedChanDescriptor = when (currentDescriptor) {
             is ChanDescriptor.CompositeCatalogDescriptor -> ChanThreadManager.LoadedChanDescriptor.Composite(currentDescriptor)
@@ -117,7 +158,7 @@ class AlbumViewControllerV2ViewModel(
           Logger.debug(TAG) { "Got ${albumItems?.size ?: 0} initial album items" }
 
           if (!albumItems.isNullOrEmpty()) {
-            applyAlbumItemsToUi(albumItems)
+            updateUi(albumItems)
           }
 
           return@flatMapLatest chanThreadManager.chanDescriptorLoadFinishedEventsFlow
@@ -147,33 +188,127 @@ class AlbumViewControllerV2ViewModel(
         }
         .filterNotNull()
         .mapNotNull { loadedChanDescriptor -> getAlbumItemsForChanDescriptor(loadedChanDescriptor) }
-        .collectLatest { newAlbumItems -> applyAlbumItemsToUi(newAlbumItems) }
+        .filter { newAlbumItems -> newAlbumItems.isNotEmpty() }
+        .collectLatest { newAlbumItems -> updateUi(newAlbumItems) }
     }
   }
 
-  private suspend fun applyAlbumItemsToUi(newAlbumItems: List<AlbumItemData>) {
-    withContext(Dispatchers.Main) {
-      Logger.debug(TAG) { "Got ${newAlbumItems.size} album items in total" }
+  fun updateLastScrollPosition(newLastScrollPosition: Int) {
+    _lastScrollPosition.intValue = newLastScrollPosition
+  }
 
+  private suspend fun updateUi(
+    allAlbumItems: List<AlbumItemData>
+  ) {
+    Logger.debug(TAG) { "Got ${allAlbumItems.size} album items" }
+
+    val (duplicateChecker, capacity) = withContext(Dispatchers.Main) {
       val duplicateChecker = _albumItems
         .toHashSetBy(capacity = _albumItems.size) { albumItemData -> albumItemData.thumbnailImage }
 
-      val capacity = (newAlbumItems.size - _albumItems.size).coerceAtLeast(16)
-      val newAlbumItemsToAppendList = mutableListWithCap<AlbumItemData>(capacity)
+      val capacity = (allAlbumItems.size - _albumItems.size).coerceAtLeast(16)
+      return@withContext duplicateChecker to capacity
+    }
 
-      newAlbumItems.forEach { newAlbumItemData ->
-        if (duplicateChecker.contains(newAlbumItemData.thumbnailImage)) {
-          return@forEach
-        }
+    val newAlbumItemsToAppendList = mutableListWithCap<AlbumItemData>(capacity)
 
-        newAlbumItemsToAppendList += newAlbumItemData
+    allAlbumItems.forEach { newAlbumItemData ->
+      if (duplicateChecker.contains(newAlbumItemData.thumbnailImage)) {
+        return@forEach
       }
 
-      Logger.debug(TAG) { "Got ${newAlbumItemsToAppendList.size} new album items in total" }
-      _albumItems.addAll(newAlbumItemsToAppendList)
-
-      // TODO: show "X new images" toast
+      newAlbumItemsToAppendList += newAlbumItemData
     }
+
+    Logger.debug(TAG) { "Got ${newAlbumItemsToAppendList.size} new album items" }
+
+    withContext(Dispatchers.Main) {
+      if (newAlbumItemsToAppendList.isNotEmpty()) {
+        applyNewAlbumItems(newAlbumItemsToAppendList)
+      }
+
+      updateToolbarTitle(
+        newAlbumItems = allAlbumItems,
+        chanDescriptor = _currentDescriptor.value
+      )
+
+      updateScrollPosition(allAlbumItems)
+    }
+  }
+
+  private suspend fun updateScrollPosition(allAlbumItems: List<AlbumItemData>) {
+    val initialImageFullUrl = savedStateHandle
+      .getAndConsume<AlbumViewControllerV2.Params> { params -> params.copy(initialImageFullUrl = null) }
+      ?.initialImageFullUrl
+
+    if (initialImageFullUrl.isNullOrBlank()) {
+      Logger.debug(TAG) { "updateScrollPosition() initialImageFullUrl is null or blank" }
+      return
+    }
+
+    val indexToScrollTo = allAlbumItems
+      .indexOfFirst { albumItemData -> albumItemData.fullImage?.asUrlOrNull()?.toString() == initialImageFullUrl }
+    if (indexToScrollTo < 0) {
+      Logger.debug(TAG) { "updateScrollPosition() failed to find '${initialImageFullUrl}'" }
+      return
+    }
+
+    Logger.debug(TAG) { "updateScrollPosition() '${initialImageFullUrl}' found at ${indexToScrollTo}, performing scroll" }
+    _scrollToPosition.emit(indexToScrollTo)
+    _lastScrollPosition.intValue = indexToScrollTo
+  }
+
+  private fun updateToolbarTitle(
+    newAlbumItems: List<AlbumItemData>,
+    chanDescriptor: ChanDescriptor?
+  ) {
+    BackgroundUtils.ensureMainThread()
+
+    val toolbarTitle = when (chanDescriptor) {
+      is ChanDescriptor.CompositeCatalogDescriptor,
+      is ChanDescriptor.CatalogDescriptor -> {
+        ChanPostUtils.getTitle(null, chanDescriptor)
+      }
+      is ChanDescriptor.ThreadDescriptor -> {
+        ChanPostUtils.getTitle(
+          chanThreadManager.getChanThread(chanDescriptor)?.getOriginalPost(),
+          chanDescriptor
+        )
+      }
+      null -> ""
+    }
+    val toolbarSubTitle = appResources.quantityString(
+      R.plurals.image,
+      newAlbumItems.size,
+      newAlbumItems.size
+    )
+
+    _toolbarData.value = ToolbarData(
+      title = toolbarTitle,
+      subtitle = toolbarSubTitle
+    )
+  }
+
+  private fun applyNewAlbumItems(newAlbumItemsToAppendList: List<AlbumItemData>) {
+    BackgroundUtils.ensureMainThread()
+
+    if (newAlbumItemsToAppendList.isEmpty()) {
+      return
+    }
+
+    _albumItems.addAll(newAlbumItemsToAppendList)
+
+    // Do not show the toast the first time we open AlbumViewController. Only show it for album item updates.
+    if (_skippedInitialLoad) {
+      snackbarManager.toast(
+        appResources.string(
+          R.string.album_screen_new_images,
+          newAlbumItemsToAppendList.size
+        )
+      )
+    }
+
+    _skippedInitialLoad = true
   }
 
   private fun getAlbumItemsForChanDescriptor(
@@ -277,6 +412,12 @@ class AlbumViewControllerV2ViewModel(
   }
 
   @Immutable
+  data class ToolbarData(
+    val title: String = "",
+    val subtitle: String = ""
+  )
+
+  @Immutable
   data class AlbumItemData(
     val isCatalogMode: Boolean,
     val postDescriptor: PostDescriptor,
@@ -286,7 +427,15 @@ class AlbumViewControllerV2ViewModel(
     val mediaType: KurobaMediaType,
   ) {
     val composeKey: String
-      get() = "${postDescriptor.serializeToString()}_${thumbnailImage}"
+      get() {
+        val fullImage = fullImage
+        if (fullImage != null) {
+          return "${postDescriptor.serializeToString()}_${thumbnailImage.uniqueKey()}_${fullImage.uniqueKey()}"
+        }
+
+        return "${postDescriptor.serializeToString()}_${thumbnailImage.uniqueKey()}"
+      }
+
     val albumItemDataKey: AlbumItemDataKey = AlbumItemDataKey(postDescriptor, thumbnailImage)
   }
 
@@ -304,18 +453,22 @@ class AlbumViewControllerV2ViewModel(
   )
 
   class ViewModelFactory @Inject constructor(
+    private val appResources: AppResources,
     private val currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager,
     private val chanThreadManager: ChanThreadManager,
     private val chanCatalogSnapshotCache: ChanCatalogSnapshotCache,
-    private val chanThreadsCache: ChanThreadsCache
+    private val chanThreadsCache: ChanThreadsCache,
+    private val snackbarManagerFactory: SnackbarManagerFactory
   ) : ViewModelAssistedFactory<AlbumViewControllerV2ViewModel> {
     override fun create(handle: SavedStateHandle): AlbumViewControllerV2ViewModel {
       return AlbumViewControllerV2ViewModel(
         savedStateHandle = handle,
+        appResources = appResources,
         currentOpenedDescriptorStateManager = currentOpenedDescriptorStateManager,
         chanThreadManager = chanThreadManager,
         chanCatalogSnapshotCache = chanCatalogSnapshotCache,
         chanThreadsCache = chanThreadsCache,
+        snackbarManagerFactory = snackbarManagerFactory
       )
     }
   }

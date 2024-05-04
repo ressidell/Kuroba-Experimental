@@ -171,6 +171,19 @@ fun <T : Parcelable> SavedStateHandle.paramsOrNull(): T? {
   return get<T>(ControllerParams)
 }
 
+fun <T : Parcelable> SavedStateHandle.updateParams(newParams: T) {
+  set<T>(ControllerParams, newParams)
+}
+
 inline fun <reified T : Parcelable> SavedStateHandle.requireParams(): T {
   return requireNotNull(paramsOrNull<T>()) { "Params were not passed: ${T::class.java.simpleName}" }
+}
+
+inline fun <reified T : Parcelable> SavedStateHandle.getAndConsume(consumer: (T) -> T): T? {
+  val params = paramsOrNull<T>()
+  if (params != null) {
+    updateParams(consumer(params))
+  }
+
+  return params
 }

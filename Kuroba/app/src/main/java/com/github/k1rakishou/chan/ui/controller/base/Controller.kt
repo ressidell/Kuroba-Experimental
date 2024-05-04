@@ -100,7 +100,7 @@ abstract class Controller(
     get() = requireToolbarNavController().containerToolbarState
     set(value) { requireToolbarNavController().containerToolbarState = value }
 
-  open val snackbarScope: SnackbarScope = SnackbarScope.Global
+  open val snackbarScope: SnackbarScope = SnackbarScope.Global()
 
   override val viewModelScope: ViewModelScope
     get() = ViewModelScope.ActivityScope(context.requireComponentActivity())
@@ -158,7 +158,9 @@ abstract class Controller(
     get() = _shown
 
   protected val compositeDisposable = CompositeDisposable()
-  protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) { snackbarManagerFactory.snackbarManager(snackbarScope) }
+  protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) {
+    snackbarManagerFactory.snackbarManager(snackbarScope)
+  }
 
   private val job = SupervisorJob()
   protected val controllerScope by lazy(LazyThreadSafetyMode.NONE) {

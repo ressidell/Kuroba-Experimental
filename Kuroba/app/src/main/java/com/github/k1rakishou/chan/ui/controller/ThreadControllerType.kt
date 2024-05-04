@@ -11,8 +11,8 @@ enum class ThreadControllerType : Parcelable {
 
   fun asSnackbarScope(): SnackbarScope {
     return when (this) {
-      Catalog -> SnackbarScope.Catalog
-      Thread -> SnackbarScope.Thread
+      Catalog -> SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Catalog)
+      Thread -> SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Thread)
     }
   }
 }

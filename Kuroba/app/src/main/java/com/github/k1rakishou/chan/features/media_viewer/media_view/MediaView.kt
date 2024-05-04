@@ -90,7 +90,7 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
   lateinit var snackbarManagerFactory: SnackbarManagerFactory
 
   protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) {
-    snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer)
+    snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer())
   }
 
   private val controllerViewModel by viewModelByKey<MediaViewerControllerViewModel>()

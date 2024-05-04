@@ -586,7 +586,7 @@ public class AppModuleAndroidUtils {
 
     private static final Lazy<SnackbarManager> snackbarManagerLazy = kotlin.LazyKt.lazy(() -> {
         ApplicationComponent applicationComponent = Chan.Companion.getComponent();
-        return applicationComponent.getSnackbarManagerFactory().snackbarManager(SnackbarScope.Global);
+        return applicationComponent.getSnackbarManagerFactory().snackbarManager(new SnackbarScope.Global());
     });
 
     public static void showToast(Context context, String message) {

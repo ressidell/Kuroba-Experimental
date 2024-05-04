@@ -16,6 +16,10 @@ class AppResources(
     }
   }
 
+  fun quantityString(stringId: Int, quantity: Int, vararg formatArgs: Any): String {
+    return appContext.resources.getQuantityString(stringId, quantity, *formatArgs)
+  }
+
   fun dimension(dimenId: Int): Float {
     return appContext.resources.getDimension(dimenId)
   }
@@ -24,7 +28,4 @@ class AppResources(
     return appContext.resources.getBoolean(boolRes)
   }
 
-  fun getQuantityString(stringId: Int, quantity: Int, vararg formatArgs: Any): String {
-    return appContext.resources.getQuantityString(stringId, quantity, *formatArgs)
-  }
 }

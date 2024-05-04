@@ -251,8 +251,16 @@ class ThreadLayout @JvmOverloads constructor(
     this.threadControllerType = threadControllerType
     this.controllerKey = controllerKey
     this.snackbarManager = when (threadControllerType) {
-      ThreadControllerType.Catalog -> snackbarManagerFactory.snackbarManager(SnackbarScope.Catalog)
-      ThreadControllerType.Thread -> snackbarManagerFactory.snackbarManager(SnackbarScope.Thread)
+      ThreadControllerType.Catalog -> {
+        snackbarManagerFactory.snackbarManager(
+          SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Catalog)
+        )
+      }
+      ThreadControllerType.Thread -> {
+        snackbarManagerFactory.snackbarManager(
+          SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Thread)
+        )
+      }
     }
 
     Logger.d(TAG, "ThreadLayout.create(threadControllerType: ${threadControllerType}, controllerKey: ${controllerKey})")
@@ -269,8 +277,16 @@ class ThreadLayout @JvmOverloads constructor(
     )
 
     when (threadControllerType) {
-      ThreadControllerType.Catalog -> snackbarContainerView.init(SnackbarScope.Catalog)
-      ThreadControllerType.Thread -> snackbarContainerView.init(SnackbarScope.Thread)
+      ThreadControllerType.Catalog -> {
+        snackbarContainerView.init(
+          SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Catalog)
+        )
+      }
+      ThreadControllerType.Thread -> {
+        snackbarContainerView.init(
+          SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Thread)
+        )
+      }
     }
 
     threadSearchNavigationButtonsView = findViewById(com.github.k1rakishou.chan.R.id.thread_search_navigation_buttons)

@@ -1011,7 +1011,7 @@ class ThreadPresenter @Inject constructor(
     }
 
     val foundPostDescriptor = postDescriptors
-      .bidirectionalSequence(startPosition = position.index)
+      .bidirectionalSequence(startPosition = position.index + 1)
       .firstOrNull { postDescriptor ->
         val postImages = chanThreadManager.getPost(postDescriptor)?.postImages
           ?: return@firstOrNull false

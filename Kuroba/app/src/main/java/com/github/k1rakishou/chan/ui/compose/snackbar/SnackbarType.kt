@@ -9,9 +9,38 @@ sealed class SnackbarType {
   data object ErrorToast : SnackbarType()
 }
 
-enum class SnackbarScope {
-  Global,
-  Catalog,
-  Thread,
-  MediaViewer
+sealed interface SnackbarScope {
+  val mainLayoutAnchor: MainLayoutAnchor?
+
+  val tag: String
+    get() {
+      val layoutAnchor = mainLayoutAnchor
+      if (layoutAnchor != null) {
+        return "SnackbarScope_${this::class.java.simpleName}_${layoutAnchor.name}"
+      }
+
+      return "SnackbarScope_${this::class.java.simpleName}"
+    }
+
+  data class Global(
+    override val mainLayoutAnchor: MainLayoutAnchor? = null
+  ) : SnackbarScope
+
+  data class PostList(
+    override val mainLayoutAnchor: MainLayoutAnchor? = null
+  ) : SnackbarScope
+
+  data class MediaViewer(
+    override val mainLayoutAnchor: MainLayoutAnchor? = null
+  ) : SnackbarScope
+
+  data class Album(
+    override val mainLayoutAnchor: MainLayoutAnchor
+  ) : SnackbarScope
+
+  enum class MainLayoutAnchor {
+    Catalog,
+    Thread
+  }
+
 }

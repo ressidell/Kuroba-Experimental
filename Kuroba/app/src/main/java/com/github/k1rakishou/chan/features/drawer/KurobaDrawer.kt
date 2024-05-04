@@ -351,11 +351,7 @@ private fun AutoScrollListToTop(
       .distinctUntilChangedBy { textFieldCharSequence -> textFieldCharSequence.length }
       .collectLatest {
         try {
-          val success = awaitWhile(
-            maxWaitTimeMs = 1000L,
-            waitWhile = { lastRememberedTotalItemsCount.intValue == totalItemsCountProvider() }
-          )
-
+          val success = awaitWhile { lastRememberedTotalItemsCount.intValue == totalItemsCountProvider() }
           if (success) {
             awaitFrame()
             scrollTopTop()

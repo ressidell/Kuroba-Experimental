@@ -19,7 +19,6 @@ import com.github.k1rakishou.BottomNavViewButton
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
-import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.BookmarksManager
@@ -208,7 +207,7 @@ class MainController(
     drawer = view.findViewById(R.id.drawer_part)
 
     snackbarContainerView = view.findViewById(R.id.snackbar_container_view)
-    snackbarContainerView.init(SnackbarScope.Global)
+    snackbarContainerView.init(SnackbarScope.Global())
 
     drawerLayout.addDrawerListener(this)
 

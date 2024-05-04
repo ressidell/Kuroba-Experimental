@@ -158,8 +158,16 @@ class ReplyLayoutViewModel(
 
   private val snackbarManager by lazy {
     when (threadControllerType) {
-      ThreadControllerType.Catalog -> snackbarManagerFactoryLazy.get().snackbarManager(SnackbarScope.Catalog)
-      ThreadControllerType.Thread -> snackbarManagerFactoryLazy.get().snackbarManager(SnackbarScope.Thread)
+      ThreadControllerType.Catalog -> {
+        snackbarManagerFactoryLazy.get().snackbarManager(
+          SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Catalog)
+        )
+      }
+      ThreadControllerType.Thread -> {
+        snackbarManagerFactoryLazy.get().snackbarManager(
+          SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Thread)
+        )
+      }
     }
   }
 

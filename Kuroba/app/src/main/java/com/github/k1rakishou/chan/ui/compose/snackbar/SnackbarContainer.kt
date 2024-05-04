@@ -16,7 +16,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -74,6 +73,7 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowSizeClass
 import com.github.k1rakishou.chan.ui.compose.window.WindowWidthSizeClass
+import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.utils.appDependencies
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -95,23 +95,15 @@ class SnackbarContainerView @JvmOverloads constructor(
       ComposeView(context).apply {
         setContent {
           ComposeEntrypoint {
-            val localContentPaddings = LocalContentPaddings.current
-
             val snackbarScopeMut by _snackbarScope
             val snackbarScope = snackbarScopeMut
-
 
             if (snackbarScope == null) {
               return@ComposeEntrypoint
             }
 
-            val snackbarManagerFactory = appDependencies().snackbarManagerFactory
-            val snackbarState = remember { SnackbarState(snackbarManagerFactory.snackbarManager(snackbarScope)) }
-
             SnackbarContainer(
-              snackbarState = snackbarState,
               snackbarScope = snackbarScope,
-              screenPaddings = localContentPaddings.asPaddingValues()
             )
           }
         }
@@ -126,13 +118,29 @@ class SnackbarContainerView @JvmOverloads constructor(
 }
 
 @Composable
-fun SnackbarContainer(
+fun Controller.SnackbarContainer(
   modifier: Modifier = Modifier,
-  snackbarState: SnackbarState,
-  snackbarScope: SnackbarScope,
-  screenPaddings: PaddingValues,
+  snackbarScope: SnackbarScope = this.snackbarScope,
   animationDuration: Int = 200
 ) {
+  com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainer(
+    modifier = modifier,
+    snackbarScope = snackbarScope,
+    animationDuration = animationDuration
+  )
+}
+
+@Composable
+fun SnackbarContainer(
+  modifier: Modifier = Modifier,
+  snackbarScope: SnackbarScope,
+  animationDuration: Int = 200
+) {
+  val localContentPaddings = LocalContentPaddings.current
+
+  val snackbarManagerFactory = appDependencies().snackbarManagerFactory
+  val snackbarState = remember { SnackbarState(snackbarManagerFactory.snackbarManager(snackbarScope)) }
+
   BoxWithConstraints(
     modifier = modifier,
     contentAlignment = Alignment.BottomCenter
@@ -211,7 +219,7 @@ fun SnackbarContainer(
       modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight()
-        .padding(screenPaddings)
+        .padding(localContentPaddings.asPaddingValues())
         .requiredWidthIn(max = maxSnackbarWidth),
       snackbars = activeSnackbars,
       animationSpecProvider = { tween(durationMillis = animationDuration) }

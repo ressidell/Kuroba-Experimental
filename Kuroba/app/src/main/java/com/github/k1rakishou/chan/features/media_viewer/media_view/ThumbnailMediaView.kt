@@ -51,7 +51,9 @@ class ThumbnailMediaView @JvmOverloads constructor(
   @Inject
   lateinit var snackbarManagerFactory: SnackbarManagerFactory
 
-  protected val snackbarManager by lazy { snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer) }
+  protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) {
+    snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer())
+  }
 
   init {
     AppModuleAndroidUtils.extractActivityComponent(context)

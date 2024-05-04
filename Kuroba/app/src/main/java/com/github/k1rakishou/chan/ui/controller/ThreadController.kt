@@ -173,8 +173,8 @@ abstract class ThreadController(
   override val snackbarScope: SnackbarScope
     get() {
       return when (threadControllerType) {
-        ThreadControllerType.Catalog -> SnackbarScope.Catalog
-        ThreadControllerType.Thread -> SnackbarScope.Thread
+        ThreadControllerType.Catalog -> SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Catalog)
+        ThreadControllerType.Thread -> SnackbarScope.PostList(mainLayoutAnchor = SnackbarScope.MainLayoutAnchor.Thread)
       }
     }
 

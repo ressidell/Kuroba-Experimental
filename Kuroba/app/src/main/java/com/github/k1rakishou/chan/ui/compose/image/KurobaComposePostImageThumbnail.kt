@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.ui.compose.image
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,6 +35,7 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
+import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.utils.KurobaMediaType
 import com.github.k1rakishou.chan.utils.appDependencies
 import com.github.k1rakishou.common.ExceptionWithShortErrorMessage
@@ -48,6 +50,7 @@ fun KurobaComposePostImageThumbnail(
   key: PostImageThumbnailKey,
   request: ImageLoaderRequest,
   mediaType: KurobaMediaType,
+  backgroundColor: Color = LocalChanTheme.current.backColorSecondaryCompose,
   hasAudio: Boolean = false,
   displayErrorMessage: Boolean = true,
   showShimmerEffectWhenLoading: Boolean = true,
@@ -69,6 +72,7 @@ fun KurobaComposePostImageThumbnail(
         onClick = { onClick(key) }
       )
       .then(modifier)
+      .background(backgroundColor)
       .onSizeChanged { intSize -> size = intSize }
   ) {
     val imageLoaderResultMut by produceState<ImageLoaderResult>(
@@ -81,7 +85,8 @@ fun KurobaComposePostImageThumbnail(
 
     if (imageLoaderResult is ImageLoaderResult.Success) {
       Image(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+          .fillMaxSize(),
         painter = imageLoaderResult.painter,
         contentDescription = contentDescription,
         contentScale = contentScale
@@ -91,10 +96,11 @@ fun KurobaComposePostImageThumbnail(
     PostImageThumbnailOverlay(
       modifier = Modifier.fillMaxSize(),
       hasAudio = hasAudio,
-      imageLoaderResult = imageLoaderResult,
-      mediaType = mediaType,
       displayErrorMessage = displayErrorMessage,
-      showShimmerEffectWhenLoading = showShimmerEffectWhenLoading
+      showShimmerEffectWhenLoading = showShimmerEffectWhenLoading,
+      mediaType = mediaType,
+      backgroundColor = backgroundColor,
+      imageLoaderResult = imageLoaderResult
     )
   }
 }
@@ -103,10 +109,11 @@ fun KurobaComposePostImageThumbnail(
 fun PostImageThumbnailOverlay(
   modifier: Modifier = Modifier,
   hasAudio: Boolean,
-  imageLoaderResult: ImageLoaderResult,
-  mediaType: KurobaMediaType,
   displayErrorMessage: Boolean,
-  showShimmerEffectWhenLoading: Boolean
+  showShimmerEffectWhenLoading: Boolean,
+  mediaType: KurobaMediaType,
+  backgroundColor: Color,
+  imageLoaderResult: ImageLoaderResult
 ) {
   Box(
     modifier = modifier,
@@ -139,7 +146,10 @@ fun PostImageThumbnailOverlay(
         )
       }
     } else if (showShimmering(imageLoaderResult, showShimmerEffectWhenLoading)) {
-      Shimmer(modifier = Modifier.fillMaxSize())
+      Shimmer(
+        modifier = Modifier.fillMaxSize(),
+        mainShimmerColor = backgroundColor
+      )
     }
   }
 }

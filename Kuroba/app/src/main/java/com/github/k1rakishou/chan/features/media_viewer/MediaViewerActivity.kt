@@ -66,8 +66,8 @@ class MediaViewerActivity :
   private lateinit var viewModelComponent: ViewModelComponent
   private lateinit var mediaViewerController: MediaViewerController
 
-  private val snackbarManager by lazy(LazyThreadSafetyMode.PUBLICATION) {
-    snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer)
+  private val snackbarManager by lazy(LazyThreadSafetyMode.NONE) {
+    snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer())
   }
 
   private val viewModel by viewModelByKey<MediaViewerControllerViewModel>()

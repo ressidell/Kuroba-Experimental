@@ -151,9 +151,28 @@ data class ImageLoaderRequest(
 
 @Immutable
 sealed class ImageLoaderRequestData {
+  fun uniqueKey(): String {
+    return when (this) {
+      is DrawableResource -> drawableId.toString()
+      is File -> absolutePath
+      is Uri -> uri.toString()
+      is Url -> httpUrl.toString()
+    }
+  }
+
+  fun asUrlOrNull(): HttpUrl? {
+    if (this is Url) {
+      return httpUrl
+    }
+
+    return null
+  }
+
   data class File(val file: java.io.File) : ImageLoaderRequestData() {
+    val absolutePath: String = file.absolutePath
+
     override fun toString(): String {
-      return "File(file=${file.absolutePath})"
+      return "File(file=${absolutePath})"
     }
   }
 

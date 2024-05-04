@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
-abstract class ScopedSnackbarManager(
+class ScopedSnackbarManager(
   private val appContext: Context,
   private val snackbarScope: SnackbarScope,
   private val globalUiStateHolder: GlobalUiStateHolder

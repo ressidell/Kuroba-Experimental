@@ -4,26 +4,62 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalStaggeredGridWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
+import com.github.k1rakishou.chan.ui.helper.awaitWhile
+import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 
 @Composable
 fun AlbumItemsStaggeredGrid(
   controllerKey: ControllerKey,
-  albumItems: SnapshotStateList<AlbumViewControllerV2ViewModel.AlbumItemData>,
+  controllerViewModel: AlbumViewControllerV2ViewModel,
   albumSpanCount: Int
 ) {
   val contentPaddings = LocalContentPaddings.current
+  val albumItems = controllerViewModel.albumItems
+
+  val state = rememberLazyStaggeredGridState(
+    initialFirstVisibleItemIndex = controllerViewModel.lastScrollPosition.intValue
+  )
+
+  LaunchedEffect(key1 = state) {
+    controllerViewModel.scrollToPosition
+      .filter { scrollToPosition -> scrollToPosition >= 0 }
+      .collectLatest { scrollToPosition ->
+        try {
+          val success = awaitWhile { scrollToPosition >= state.layoutInfo.totalItemsCount }
+          if (success) {
+            awaitFrame()
+            state.scrollToItem(scrollToPosition)
+          }
+        } catch (_: Throwable) {
+          // no-op
+        }
+      }
+  }
+
+  LaunchedEffect(key1 = state) {
+    snapshotFlow { state.firstVisibleItemIndex }
+      .debounce(100)
+      .filter { state.layoutInfo.totalItemsCount > 0 }
+      .collectLatest { firstVisibleItemIndex -> controllerViewModel.updateLastScrollPosition(firstVisibleItemIndex) }
+  }
 
   LazyVerticalStaggeredGridWithFastScroller(
     modifier = Modifier.fillMaxSize(),
     columns = StaggeredGridCells.Fixed(albumSpanCount),
+    state = state,
     verticalItemSpacing = 2.dp,
     horizontalArrangement = Arrangement.spacedBy(2.dp),
     contentPadding = remember(contentPaddings, controllerKey) { contentPaddings.asPaddingValues(controllerKey) }
@@ -45,8 +81,7 @@ fun AlbumItemsStaggeredGrid(
               }
 
               return@let modifier.aspectRatio(aspectRatio)
-            }
-          ,
+            },
           albumItemData = albumItemData
         )
       }

@@ -31,7 +31,7 @@ class SnackbarGlobalState : ISnackbarGlobalState.Readable, ISnackbarGlobalState.
   }
 
   private fun SnackbarScope.tag(): String {
-    return "SnackbarGlobalState_${this.name}"
+    return "SnackbarGlobalState_${this.tag}"
   }
 
 }

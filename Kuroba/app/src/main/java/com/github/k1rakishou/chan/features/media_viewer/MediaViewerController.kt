@@ -132,7 +132,7 @@ class MediaViewerController(
   override val viewerChanDescriptor: ChanDescriptor?
     get() = chanDescriptor
   override val snackbarScope: SnackbarScope
-    get() = SnackbarScope.MediaViewer
+    get() = SnackbarScope.MediaViewer()
 
   private lateinit var mediaViewerRootLayout: TouchBlockingFrameLayoutNoBackground
   private lateinit var appearPreviewImage: AppearTransitionImageView
@@ -341,7 +341,7 @@ class MediaViewerController(
     mediaViewerToolbar.onCreate()
 
     val snackbarContainerView = view.findViewById<SnackbarContainerView>(com.github.k1rakishou.chan.R.id.snackbar_container_view)
-    snackbarContainerView.init(SnackbarScope.MediaViewer)
+    snackbarContainerView.init(SnackbarScope.MediaViewer())
 
     globalWindowInsetsManager.addInsetsUpdatesListener(this)
 
