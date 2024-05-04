@@ -16,6 +16,7 @@ import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.helper.awaitWhile
 import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
@@ -40,7 +41,7 @@ fun AlbumItemsStaggeredGrid(
       .filter { scrollToPosition -> scrollToPosition >= 0 }
       .collectLatest { scrollToPosition ->
         try {
-          val success = awaitWhile { scrollToPosition >= state.layoutInfo.totalItemsCount }
+          val success = awaitWhile(maxWaitTimeMs = 1_000L) { scrollToPosition >= state.layoutInfo.totalItemsCount }
           if (success) {
             awaitFrame()
             state.scrollToItem(scrollToPosition)
@@ -52,6 +53,9 @@ fun AlbumItemsStaggeredGrid(
   }
 
   LaunchedEffect(key1 = state) {
+    // Give some time for scroll position restoration routine to do it's job
+    delay(2000)
+
     snapshotFlow { state.firstVisibleItemIndex }
       .debounce(100)
       .filter { state.layoutInfo.totalItemsCount > 0 }
