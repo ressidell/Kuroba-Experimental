@@ -591,7 +591,7 @@ Usually that means that you forgot to remove a space from the beginning or the e
 
     <string name="filters_screen">Filters</string>
 
-    <string name="album_screen_new_images">Got %1$d new image(s)</string>
+    <string name="album_screen_new_images">%1$d new image(s)</string>
 
     <string name="album_download_screen">Select images (%1$d / %2$d)</string>
     <string name="album_download_none_checked">Please select images to download</string>

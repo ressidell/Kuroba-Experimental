@@ -37,6 +37,7 @@ import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.utils.KurobaMediaType
+import com.github.k1rakishou.chan.utils.activityDependencies
 import com.github.k1rakishou.chan.utils.appDependencies
 import com.github.k1rakishou.common.ExceptionWithShortErrorMessage
 import javax.net.ssl.SSLException
@@ -61,6 +62,7 @@ fun KurobaComposePostImageThumbnail(
 ) {
   val context = LocalContext.current
   val kurobaImageLoader = appDependencies().kurobaImageLoader
+  val applicationVisibilityManager = activityDependencies().applicationVisibilityManager
 
   var size by remember { mutableStateOf<IntSize?>(null) }
 
@@ -79,7 +81,15 @@ fun KurobaComposePostImageThumbnail(
       initialValue = ImageLoaderResult.Loading,
       key1 = request,
       key2 = size,
-      producer = { loadImage(kurobaImageLoader, context, request, size) }
+      producer = {
+        loadImage(
+          kurobaImageLoader = kurobaImageLoader,
+          applicationVisibilityManager = applicationVisibilityManager,
+          context = context,
+          request = request,
+          size = size
+        )
+      }
     )
     val imageLoaderResult = imageLoaderResultMut
 

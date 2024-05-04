@@ -24,6 +24,7 @@ import com.github.k1rakishou.chan.utils.setVisibilityFast
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.awaitCatching
 import com.github.k1rakishou.common.errorMessageOrClassName
+import com.github.k1rakishou.common.isCancellationException
 import com.github.k1rakishou.common.isExceptionImportant
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.fsaf.file.FileDescriptorMode
@@ -404,13 +405,17 @@ class GifMediaView(
       val drawable = try {
         createGifDrawableSafe(filePath)
       } catch (e: Throwable) {
+        if (e.isCancellationException()) {
+          return@coroutineScope false
+        }
+
         Logger.e(TAG, "Error while trying to set a gif file", e)
 
         if (shown) {
           snackbarManager.errorToast(message = "Failed to draw Gif. Error: ${e.message}")
         }
 
-        return@coroutineScope true
+        return@coroutineScope false
       }
 
       if (drawable.numberOfFrames == 1) {

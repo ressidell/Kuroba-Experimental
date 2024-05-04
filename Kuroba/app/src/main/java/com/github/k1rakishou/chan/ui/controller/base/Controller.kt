@@ -175,6 +175,12 @@ abstract class Controller(
   val swipeable: Boolean
     get() = _navigationFlags.value.swipeable == true
 
+  init {
+    Logger.verbose(TAG) { "${controllerKey} initDependencies start" }
+    initDependencies()
+    Logger.verbose(TAG) { "${controllerKey} initDependencies done" }
+  }
+
   fun updateNavigationFlags(newNavigationFlags: DeprecatedNavigationFlags) {
     _navigationFlags.value = newNavigationFlags
   }
@@ -241,10 +247,6 @@ abstract class Controller(
     Logger.verbose(TAG) { "${controllerKey} savedStateRegistryController.performRestore() start" }
     _savedStateRegistryController.performRestore(null)
     Logger.verbose(TAG) { "${controllerKey} savedStateRegistryController.performRestore() done" }
-
-    Logger.verbose(TAG) { "${controllerKey} initDependencies start" }
-    initDependencies()
-    Logger.verbose(TAG) { "${controllerKey} initDependencies done" }
   }
 
   @CallSuper

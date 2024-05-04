@@ -81,19 +81,9 @@ fun interface ApplicationVisibilityListener {
 }
 
 sealed class ApplicationVisibility {
-
   fun isInForeground(): Boolean = this is Foreground
   fun isInBackground(): Boolean = this is Background
 
-  object Foreground : ApplicationVisibility() {
-    override fun toString(): String {
-      return "Foreground"
-    }
-  }
-
-  object Background : ApplicationVisibility() {
-    override fun toString(): String {
-      return "Background"
-    }
-  }
+  data object Foreground : ApplicationVisibility()
+  data object Background : ApplicationVisibility()
 }

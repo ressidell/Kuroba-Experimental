@@ -28,6 +28,7 @@ import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.utils.activityDependencies
 import com.github.k1rakishou.chan.utils.appDependencies
 import com.github.k1rakishou.common.ExceptionWithShortErrorMessage
 import okhttp3.HttpUrl
@@ -95,12 +96,21 @@ private fun BuildInnerImage(
 ) {
   val context = LocalContext.current
   val kurobaImageLoader = appDependencies().kurobaImageLoader
+  val applicationVisibility = activityDependencies().applicationVisibilityManager
 
   val imageLoaderResult by produceState<ImageLoaderResult>(
     initialValue = ImageLoaderResult.NotInitialized,
     key1 = request,
     key2 = size,
-    producer = { loadImage(kurobaImageLoader, context, request, size) }
+    producer = {
+      loadImage(
+        kurobaImageLoader = kurobaImageLoader,
+        applicationVisibilityManager = applicationVisibility,
+        context = context,
+        request = request,
+        size = size
+      )
+    }
   )
 
   when (val result = imageLoaderResult) {

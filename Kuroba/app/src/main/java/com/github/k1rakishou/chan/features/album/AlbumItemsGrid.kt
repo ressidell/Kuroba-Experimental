@@ -24,7 +24,9 @@ import kotlinx.coroutines.flow.filter
 fun AlbumItemsGrid(
   controllerKey: ControllerKey,
   controllerViewModel: AlbumViewControllerV2ViewModel,
-  albumSpanCount: Int
+  albumSpanCount: Int,
+  onClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
+  onLongClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit
 ) {
   val contentPaddings = LocalContentPaddings.current
   val albumItems = controllerViewModel.albumItems
@@ -75,7 +77,9 @@ fun AlbumItemsGrid(
           modifier = Modifier
             .fillMaxSize()
             .aspectRatio(3f / 4f),
-          albumItemData = albumItemData
+          albumItemData = albumItemData,
+          onClick = onClick,
+          onLongClick = onLongClick
         )
       }
     )

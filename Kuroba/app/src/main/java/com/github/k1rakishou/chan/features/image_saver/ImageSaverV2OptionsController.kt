@@ -83,12 +83,14 @@ class ImageSaverV2OptionsController(
     PersistableChanState.imageSaverV2PersistedOptions.get().copy()
   }
 
-  private val rootDirButtonBackgroundAnimation = RootDirBackgroundAnimationFactory.createRootDirBackgroundAnimation(
-    themeEngine = themeEngine,
-    updateBackgroundColorFunc = { newBackgroundColor ->
-      rootDir.setBackgroundColorFast(newBackgroundColor)
-    }
-  )
+  private val rootDirButtonBackgroundAnimation by lazy(LazyThreadSafetyMode.NONE) {
+    RootDirBackgroundAnimationFactory.createRootDirBackgroundAnimation(
+      themeEngine = themeEngine,
+      updateBackgroundColorFunc = { newBackgroundColor ->
+        rootDir.setBackgroundColorFast(newBackgroundColor)
+      }
+    )
+  }
 
   override fun injectActivityDependencies(component: ActivityComponent) {
     component.inject(this)

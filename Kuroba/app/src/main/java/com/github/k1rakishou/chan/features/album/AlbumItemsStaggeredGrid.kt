@@ -24,7 +24,9 @@ import kotlinx.coroutines.flow.filter
 fun AlbumItemsStaggeredGrid(
   controllerKey: ControllerKey,
   controllerViewModel: AlbumViewControllerV2ViewModel,
-  albumSpanCount: Int
+  albumSpanCount: Int,
+  onClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
+  onLongClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit
 ) {
   val contentPaddings = LocalContentPaddings.current
   val albumItems = controllerViewModel.albumItems
@@ -82,7 +84,9 @@ fun AlbumItemsStaggeredGrid(
 
               return@let modifier.aspectRatio(aspectRatio)
             },
-          albumItemData = albumItemData
+          albumItemData = albumItemData,
+          onClick = onClick,
+          onLongClick = onLongClick
         )
       }
     )

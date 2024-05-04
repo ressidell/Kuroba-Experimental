@@ -14,21 +14,33 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
+import com.github.k1rakishou.chan.core.helper.ThumbnailLongtapOptionsHelper
+import com.github.k1rakishou.chan.core.usecase.FilterOutHiddenImagesUseCase
+import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
+import com.github.k1rakishou.chan.features.media_viewer.MediaViewerOptions
+import com.github.k1rakishou.chan.features.media_viewer.helper.AlbumThreadControllerHelpers
+import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToImagePostHelper
+import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToPostHelper
+import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenThreadHelper
+import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
+import com.github.k1rakishou.chan.ui.compose.compose_task.rememberSingleInstanceCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainer
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.base.BaseComposeController
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.utils.ViewModelScope
+import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
+import javax.inject.Inject
 
 class AlbumViewControllerV2(
   context: Context,
@@ -38,6 +50,21 @@ class AlbumViewControllerV2(
   context = context,
   viewModelClass = AlbumViewControllerV2ViewModel::class.java
 ) {
+
+  @Inject
+  lateinit var thumbnailLongtapOptionsHelper: ThumbnailLongtapOptionsHelper
+  @Inject
+  lateinit var mediaViewerScrollerHelper: MediaViewerScrollerHelper
+  @Inject
+  lateinit var mediaViewerGoToImagePostHelper: MediaViewerGoToImagePostHelper
+  @Inject
+  lateinit var mediaViewerGoToPostHelper: MediaViewerGoToPostHelper
+  @Inject
+  lateinit var mediaViewerOpenThreadHelper: MediaViewerOpenThreadHelper
+  @Inject
+  lateinit var filterOutHiddenImagesUseCase: FilterOutHiddenImagesUseCase
+  @Inject
+  lateinit var albumThreadControllerHelpers: AlbumThreadControllerHelpers
 
   override val viewModelScope: ViewModelScope
     get() = ViewModelScope.ControllerScope(this)
@@ -91,7 +118,9 @@ class AlbumViewControllerV2(
         }
       }
     )
+  }
 
+  override fun onPrepare() {
     controllerScope.launch {
       controllerViewModel.toolbarData
         .onEach { toobarData ->
@@ -108,11 +137,57 @@ class AlbumViewControllerV2(
         .onEach { onAlbumLayoutGridModeToggled() }
         .collect()
     }
+
+    controllerScope.launch {
+      mediaViewerScrollerHelper.mediaViewerScrollEventsFlow
+        .collect { scrollToImageEvent ->
+          val chanDescriptor = controllerViewModel.currentDescriptor.value
+          if (chanDescriptor == null) {
+            return@collect
+          }
+
+          val descriptor = scrollToImageEvent.chanDescriptor
+          if (descriptor != chanDescriptor) {
+            return@collect
+          }
+
+          controllerViewModel.requestScrollToImage(scrollToImageEvent.chanPostImage)
+        }
+    }
+
+    controllerScope.launch {
+      mediaViewerGoToImagePostHelper.mediaViewerGoToPostEventsFlow
+        .collect { goToPostEvent ->
+          val postImage = goToPostEvent.chanPostImage
+          val chanDescriptor = goToPostEvent.chanDescriptor
+
+          requireNavController().popController {
+            albumThreadControllerHelpers.highlightPostWithImage(chanDescriptor, postImage)
+          }
+        }
+    }
+
+    controllerScope.launch {
+      mediaViewerGoToPostHelper.mediaViewerGoToPostEventsFlow
+        .collect { postDescriptor ->
+          val chanDescriptor = controllerViewModel.currentDescriptor.value
+          if (chanDescriptor == null) {
+            return@collect
+          }
+
+          if (postDescriptor.descriptor != chanDescriptor) {
+            return@collect
+          }
+
+          requireNavController().popController()
+        }
+    }
   }
 
   @Composable
   override fun ScreenContent() {
     val density = LocalDensity.current
+    val coroutineTask = rememberSingleInstanceCoroutineTask()
 
     val albumSpanCountMut by controllerViewModel.albumSpanCount.collectAsState()
     val albumSpanCount = albumSpanCountMut
@@ -135,17 +210,102 @@ class AlbumViewControllerV2(
         AlbumItemsGrid(
           controllerKey = controllerKey,
           controllerViewModel = controllerViewModel,
-          albumSpanCount = actualSpanCount
+          albumSpanCount = actualSpanCount,
+          onClick = { albumItemData ->
+            coroutineTask.launch { onImageClick(albumItemData) }
+          },
+          onLongClick = { albumItemData ->
+            coroutineTask.launch { onImageLongClick(albumItemData) }
+          }
         )
       } else {
         AlbumItemsStaggeredGrid(
           controllerKey = controllerKey,
           controllerViewModel = controllerViewModel,
-          albumSpanCount = actualSpanCount
+          albumSpanCount = actualSpanCount,
+          onClick = { albumItemData ->
+            coroutineTask.launch { onImageClick(albumItemData) }
+          },
+          onLongClick = { albumItemData ->
+            coroutineTask.launch { onImageLongClick(albumItemData) }
+          }
         )
       }
 
       SnackbarContainer(modifier = Modifier.fillMaxSize())
+    }
+  }
+
+  private suspend fun onImageLongClick(albumItemData: AlbumViewControllerV2ViewModel.AlbumItemData) {
+    val chanDescriptor = controllerViewModel.currentDescriptor.value
+    if (chanDescriptor == null) {
+      return
+    }
+
+    val postImage = controllerViewModel.findChanPostImage(albumItemData)
+    if (postImage == null) {
+      return
+    }
+
+    thumbnailLongtapOptionsHelper.onThumbnailLongTapped(
+      context = context,
+      chanDescriptor = chanDescriptor,
+      isCurrentlyInAlbum = true,
+      postImage = postImage,
+      presentControllerFunc = { controller -> presentController(controller) },
+      showFiltersControllerFunc = { },
+      openThreadFunc = { postDescriptor ->
+        withLayoutMode(
+          phone = { requireNavController().popController(false) }
+        )
+
+        mediaViewerOpenThreadHelper.tryToOpenThread(postDescriptor)
+      },
+      goToPostFunc = {
+        requireNavController().popController {
+          albumThreadControllerHelpers.highlightPostWithImage(chanDescriptor, postImage)
+        }
+      }
+    )
+  }
+
+  private suspend fun onImageClick(albumItemData: AlbumViewControllerV2ViewModel.AlbumItemData) {
+    val chanDescriptor = controllerViewModel.currentDescriptor.value
+    if (chanDescriptor == null) {
+      return
+    }
+
+    val transitionThumbnailUrl = albumItemData.thumbnailImage.asUrlOrNull()?.toString()
+    if (transitionThumbnailUrl == null) {
+      return
+    }
+
+    when (chanDescriptor) {
+      is ChanDescriptor.ICatalogDescriptor -> {
+        MediaViewerActivity.catalogMedia(
+          context = context,
+          catalogDescriptor = chanDescriptor,
+          initialImageUrl = albumItemData.fullImage?.asUrlOrNull()?.toString(),
+          transitionThumbnailUrl = transitionThumbnailUrl,
+          lastTouchCoordinates = globalWindowInsetsManager.lastTouchCoordinates(),
+          mediaViewerOptions = MediaViewerOptions(
+            mediaViewerOpenedFromAlbum = true
+          )
+        )
+      }
+      is ChanDescriptor.ThreadDescriptor -> {
+        MediaViewerActivity.threadMedia(
+          context = context,
+          threadDescriptor = chanDescriptor,
+          postDescriptorList = controllerViewModel.mapPostImagesToPostDescriptors(),
+          initialImageUrl = albumItemData.fullImage?.asUrlOrNull()?.toString(),
+          transitionThumbnailUrl = transitionThumbnailUrl,
+          lastTouchCoordinates = globalWindowInsetsManager.lastTouchCoordinates(),
+          mediaViewerOptions = MediaViewerOptions(
+            mediaViewerOpenedFromAlbum = true
+          )
+        )
+      }
     }
   }
 

@@ -8,7 +8,8 @@ import androidx.compose.ui.unit.IntSize
 import com.github.k1rakishou.chan.core.image.InputFile
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageLoader
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageSize
-import com.github.k1rakishou.chan.utils.isResumed
+import com.github.k1rakishou.chan.core.manager.ApplicationVisibilityManager
+import com.github.k1rakishou.chan.utils.isStarted
 import com.github.k1rakishou.chan.utils.lifecycleFromContent
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.core_logger.Logger
@@ -22,6 +23,7 @@ private val Delays = arrayOf<Long>(100, 200, 500, 1000, 2000, 5000, 10000)
 
 internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
   kurobaImageLoader: KurobaImageLoader,
+  applicationVisibilityManager: ApplicationVisibilityManager,
   context: Context,
   request: ImageLoaderRequest,
   size: IntSize?
@@ -43,10 +45,13 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
       break
     }
 
-    if (!lifecycle.isResumed()) {
+    val applicationVisibility = applicationVisibilityManager.getCurrentAppVisibility()
+
+    if (reloadAttempt > 0 && (!applicationVisibility.isInForeground() || !lifecycle.isStarted())) {
       Logger.error(TAG) {
-        "loadImage(${request}, ${size}) attempt ${reloadAttempt + 1}/${maxRetries}, " +
-          "lifecycle is not resumed: ${lifecycle.currentState}"
+        "loadImage(${request}, ${size}) attempt ${reloadAttempt + 1}/${maxRetries} " +
+          "can't auto reload image because either application is not in foreground: ${applicationVisibility} or " +
+          "lifecycle is not started: ${lifecycle.currentState}"
       }
 
       break
@@ -131,7 +136,11 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
           break
         }
 
-        delay(delayMs)
+        try {
+          delay(delayMs)
+        } catch (error: Throwable) {
+          break
+        }
       }
     }
   }

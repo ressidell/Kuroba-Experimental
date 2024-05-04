@@ -12,7 +12,9 @@ import com.github.k1rakishou.chan.utils.appDependencies
 @Composable
 fun AlbumItem(
   modifier: Modifier,
-  albumItemData: AlbumViewControllerV2ViewModel.AlbumItemData
+  albumItemData: AlbumViewControllerV2ViewModel.AlbumItemData,
+  onClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
+  onLongClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit
 ) {
   val onDemandContentLoaderManager = appDependencies().onDemandContentLoaderManager
 
@@ -36,12 +38,7 @@ fun AlbumItem(
     displayErrorMessage = true,
     showShimmerEffectWhenLoading = true,
     contentScale = ContentScale.Crop,
-    onClick = { albumItemDataKey ->
-      // TODO:
-    },
-    onLongClick = { albumItemDataKey ->
-      // TODO:
-
-    }
+    onClick = { onClick(albumItemData) },
+    onLongClick = { onLongClick(albumItemData) }
   )
 }

@@ -21,7 +21,8 @@ import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.data.thread.ChanThread
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -117,16 +118,10 @@ object ChanPostUtils {
     }
 
     if (chanDescriptor != null) {
-      when (chanDescriptor) {
-        is CatalogDescriptor -> {
-          return "/" + chanDescriptor.boardCode() + "/"
-        }
-        is ThreadDescriptor -> {
-          return "/" + chanDescriptor.boardCode() + "/" + chanDescriptor.threadNo
-        }
-        is ChanDescriptor.CompositeCatalogDescriptor -> {
-          return chanDescriptor.userReadableString()
-        }
+      return when (chanDescriptor) {
+        is CatalogDescriptor -> "/" + chanDescriptor.boardCode() + "/"
+        is ThreadDescriptor -> "/" + chanDescriptor.boardCode() + "/" + chanDescriptor.threadNo
+        is ChanDescriptor.CompositeCatalogDescriptor -> chanDescriptor.userReadableString()
       }
     }
 

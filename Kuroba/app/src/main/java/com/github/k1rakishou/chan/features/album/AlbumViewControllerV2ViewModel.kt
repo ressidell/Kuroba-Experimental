@@ -14,6 +14,7 @@ import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
+import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.image.PostImageThumbnailKey
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -64,7 +66,8 @@ class AlbumViewControllerV2ViewModel(
   private val chanThreadManager: ChanThreadManager,
   private val chanCatalogSnapshotCache: ChanCatalogSnapshotCache,
   private val chanThreadsCache: ChanThreadsCache,
-  private val snackbarManagerFactory: SnackbarManagerFactory
+  private val snackbarManagerFactory: SnackbarManagerFactory,
+  private val compositeCatalogManager: CompositeCatalogManager
 ) : BaseViewModel() {
   private var _skippedInitialLoad = false
 
@@ -72,6 +75,8 @@ class AlbumViewControllerV2ViewModel(
     get() = savedStateHandle.requireParams<AlbumViewControllerV2.Params>().listenMode
 
   private val _currentDescriptor = MutableStateFlow<ChanDescriptor?>(null)
+  val currentDescriptor: StateFlow<ChanDescriptor?>
+    get() = _currentDescriptor.asStateFlow()
 
   private val _albumItems = mutableStateListOf<AlbumItemData>()
   val albumItems: SnapshotStateList<AlbumItemData>
@@ -197,6 +202,57 @@ class AlbumViewControllerV2ViewModel(
     _lastScrollPosition.intValue = newLastScrollPosition
   }
 
+  fun mapPostImagesToPostDescriptors(): List<PostDescriptor> {
+    val duplicateSet = mutableSetOf<PostDescriptor>()
+
+    return albumItems.mapNotNull { postImage ->
+      if (duplicateSet.add(postImage.postDescriptor)) {
+        return@mapNotNull postImage.postDescriptor
+      }
+
+      return@mapNotNull null
+    }
+  }
+
+  suspend fun findChanPostImage(albumItemData: AlbumItemData): ChanPostImage? {
+    val thumbnailImage = albumItemData.thumbnailImage.asUrlOrNull()
+    if (thumbnailImage == null) {
+      return null
+    }
+
+    val chanPost = when (val chanDescriptor = _currentDescriptor.value) {
+      is ChanDescriptor.ICatalogDescriptor -> {
+        chanThreadManager.getChanCatalog(chanDescriptor)?.getPost(albumItemData.postDescriptor)
+      }
+      is ChanDescriptor.ThreadDescriptor -> {
+        chanThreadManager.getChanThread(chanDescriptor)?.getPost(albumItemData.postDescriptor)
+      }
+      null -> null
+    }
+
+    if (chanPost == null) {
+      return null
+    }
+
+    return chanPost.firstPostImageOrNull { chanPostImage -> chanPostImage.actualThumbnailUrl == thumbnailImage }
+  }
+
+  suspend fun requestScrollToImage(chanPostImage: ChanPostImage) {
+    val newPosition = albumItems.indexOfFirst { albumItemData ->
+      if (albumItemData.postDescriptor != chanPostImage.ownerPostDescriptor) {
+        return@indexOfFirst false
+      }
+
+      return@indexOfFirst albumItemData.thumbnailImage.asUrlOrNull() == chanPostImage.actualThumbnailUrl
+    }
+
+    if (newPosition < 0) {
+      return
+    }
+
+    _scrollToPosition.emit(newPosition)
+  }
+
   private suspend fun updateUi(
     allAlbumItems: List<AlbumItemData>
   ) {
@@ -258,7 +314,7 @@ class AlbumViewControllerV2ViewModel(
     _lastScrollPosition.intValue = indexToScrollTo
   }
 
-  private fun updateToolbarTitle(
+  private suspend fun updateToolbarTitle(
     newAlbumItems: List<AlbumItemData>,
     chanDescriptor: ChanDescriptor?
   ) {
@@ -267,7 +323,12 @@ class AlbumViewControllerV2ViewModel(
     val toolbarTitle = when (chanDescriptor) {
       is ChanDescriptor.CompositeCatalogDescriptor,
       is ChanDescriptor.CatalogDescriptor -> {
-        ChanPostUtils.getTitle(null, chanDescriptor)
+        if (chanDescriptor is ChanDescriptor.CompositeCatalogDescriptor) {
+          compositeCatalogManager.byCompositeCatalogDescriptor(chanDescriptor)?.name
+            ?: ChanPostUtils.getTitle(null, chanDescriptor)
+        } else {
+          ChanPostUtils.getTitle(null, chanDescriptor)
+        }
       }
       is ChanDescriptor.ThreadDescriptor -> {
         ChanPostUtils.getTitle(
@@ -458,7 +519,8 @@ class AlbumViewControllerV2ViewModel(
     private val chanThreadManager: ChanThreadManager,
     private val chanCatalogSnapshotCache: ChanCatalogSnapshotCache,
     private val chanThreadsCache: ChanThreadsCache,
-    private val snackbarManagerFactory: SnackbarManagerFactory
+    private val snackbarManagerFactory: SnackbarManagerFactory,
+    private val compositeCatalogManager: CompositeCatalogManager
   ) : ViewModelAssistedFactory<AlbumViewControllerV2ViewModel> {
     override fun create(handle: SavedStateHandle): AlbumViewControllerV2ViewModel {
       return AlbumViewControllerV2ViewModel(
@@ -468,7 +530,8 @@ class AlbumViewControllerV2ViewModel(
         chanThreadManager = chanThreadManager,
         chanCatalogSnapshotCache = chanCatalogSnapshotCache,
         chanThreadsCache = chanThreadsCache,
-        snackbarManagerFactory = snackbarManagerFactory
+        snackbarManagerFactory = snackbarManagerFactory,
+        compositeCatalogManager = compositeCatalogManager
       )
     }
   }

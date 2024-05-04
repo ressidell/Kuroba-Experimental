@@ -21,9 +21,7 @@ class CancellableTask(
   ) {
     synchronized(this) {
       job?.cancel()
-      job = null
-
-      val newJob = coroutineScope.launch(
+      job = coroutineScope.launch(
         context = context,
         block = {
           try {
@@ -33,8 +31,6 @@ class CancellableTask(
           }
         }
       )
-
-      job = newJob
     }
   }
 
