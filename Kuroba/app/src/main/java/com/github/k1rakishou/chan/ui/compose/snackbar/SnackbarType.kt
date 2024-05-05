@@ -1,5 +1,8 @@
 package com.github.k1rakishou.chan.ui.compose.snackbar
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 sealed class SnackbarType {
   val isToast: Boolean
     get() = this is Toast || this is ErrorToast
@@ -9,6 +12,7 @@ sealed class SnackbarType {
   data object ErrorToast : SnackbarType()
 }
 
+@Immutable
 sealed interface SnackbarScope {
   val mainLayoutAnchor: MainLayoutAnchor?
 

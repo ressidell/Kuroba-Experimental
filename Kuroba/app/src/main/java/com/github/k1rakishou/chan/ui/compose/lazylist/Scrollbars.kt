@@ -178,7 +178,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
       val duration = if (isScrollInProgress(lazyStateWrapper) || isScrollbarDragged) 150 else 500
       val delay = if (isScrollInProgress(lazyStateWrapper) || isScrollbarDragged) 0 else 1500
 
-      val thumbAlphaAnimated by animateFloatAsState(
+      val thumbAlphaAnimated = animateFloatAsState(
         targetValue = targetThumbAlpha,
         animationSpec = tween(
           durationMillis = duration,
@@ -186,7 +186,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
         )
       )
 
-      val trackAlphaAnimated by animateFloatAsState(
+      val trackAlphaAnimated = animateFloatAsState(
         targetValue = targetTrackAlpha,
         animationSpec = tween(
           durationMillis = duration,
@@ -194,7 +194,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
         )
       )
 
-      val thumbColorAnimated by animateColorAsState(
+      val thumbColorAnimated = animateColorAsState(
         targetValue = if (isScrollbarDragged) scrollbarThumbColorDragged else scrollbarThumbColorNormal,
         animationSpec = tween(durationMillis = 200)
       )
@@ -230,7 +230,7 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
 
           val firstVisibleElementIndex = lazyStateWrapper.layoutInfo.visibleItemsInfo.firstOrNull()?.index
           val needDrawScrollbar = lazyStateWrapper.totalItemsCount > lazyStateWrapper.visibleItemsCount
-            && (isScrollInProgress(lazyStateWrapper) || thumbAlphaAnimated > 0f || trackAlphaAnimated > 0f)
+            && (isScrollInProgress(lazyStateWrapper) || thumbAlphaAnimated.value > 0f || trackAlphaAnimated.value > 0f)
 
           // Draw scrollbar if total item count is greater than visible item count and either
           // currently scrolling or if any of the animations is still running and lazy column has content
@@ -270,14 +270,14 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
                 color = scrollbarTrackColor,
                 topLeft = Offset(leftPaddingPx, offsetY),
                 size = Size(this.size.width - (leftPaddingPx + rightPaddingPx), scrollbarSizeAnimatedState.value.toFloat()),
-                alpha = trackAlphaAnimated
+                alpha = trackAlphaAnimated.value
               )
 
               drawRect(
-                color = thumbColorAnimated,
+                color = thumbColorAnimated.value,
                 topLeft = Offset(offsetX, offsetY),
                 size = Size(scrollbarWidthAdjusted, scrollbarSizeAnimatedState.value.toFloat()),
-                alpha = thumbAlphaAnimated
+                alpha = thumbAlphaAnimated.value
               )
             }
             is ScrollbarDimens.Vertical -> {
@@ -317,15 +317,15 @@ fun <ItemInfo : LazyItemInfoWrapper, LayoutInfo : LazyLayoutInfoWrapper<ItemInfo
                 color = scrollbarTrackColor,
                 topLeft = topLeft,
                 size = size,
-                alpha = trackAlphaAnimated
+                alpha = trackAlphaAnimated.value
               )
 
               kotlin.run {
                 drawRect(
-                  color = thumbColorAnimated,
+                  color = thumbColorAnimated.value,
                   topLeft = Offset(offsetX, offsetY),
                   size = Size(scrollbarSizeAnimatedState.value.toFloat(), scrollbarHeightAdjusted),
-                  alpha = thumbAlphaAnimated
+                  alpha = thumbAlphaAnimated.value
                 )
               }
             }
