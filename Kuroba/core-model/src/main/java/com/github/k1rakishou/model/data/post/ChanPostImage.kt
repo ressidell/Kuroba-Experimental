@@ -150,12 +150,13 @@ class ChanPostImage(
     return imageUrl == other.imageUrl
   }
 
-  fun getThumbnailUrl(): HttpUrl? {
+  @JvmOverloads
+  fun getThumbnailUrl(isSpoilerRevealed: Boolean = false): HttpUrl? {
     if (hidden) {
       return AppConstants.HIDDEN_IMAGE_THUMBNAIL_URL
     }
 
-    if (imageSpoilered) {
+    if (!isSpoilerRevealed && imageSpoilered && spoilerThumbnailUrl != null) {
       return spoilerThumbnailUrl
     }
 

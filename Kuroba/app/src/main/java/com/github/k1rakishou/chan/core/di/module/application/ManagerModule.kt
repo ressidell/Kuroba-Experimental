@@ -47,6 +47,7 @@ import com.github.k1rakishou.chan.core.manager.PostingLimitationsInfoManager
 import com.github.k1rakishou.chan.core.manager.PrefetchStateManager
 import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.core.manager.ReportManager
+import com.github.k1rakishou.chan.core.manager.RevealedSpoilerImagesManager
 import com.github.k1rakishou.chan.core.manager.SavedReplyManager
 import com.github.k1rakishou.chan.core.manager.SeenPostsManager
 import com.github.k1rakishou.chan.core.manager.SettingsNotificationManager
@@ -1009,6 +1010,13 @@ class ManagerModule {
       appContext = appContext,
       globalUiStateHolder = globalUiStateHolder
     )
+  }
+
+  @Singleton
+  @Provides
+  fun provideRevealedSpoilerImagesManager(): RevealedSpoilerImagesManager {
+    Logger.deps("RevealedSpoilerImagesManager")
+    return RevealedSpoilerImagesManager()
   }
 
 }

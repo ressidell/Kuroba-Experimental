@@ -25,6 +25,7 @@ import com.github.k1rakishou.chan.core.manager.PrefetchState.PrefetchCompleted
 import com.github.k1rakishou.chan.core.manager.PrefetchState.PrefetchProgress
 import com.github.k1rakishou.chan.core.manager.PrefetchState.PrefetchStarted
 import com.github.k1rakishou.chan.core.manager.PrefetchStateManager
+import com.github.k1rakishou.chan.core.manager.RevealedSpoilerImagesManager
 import com.github.k1rakishou.chan.core.manager.ThirdEyeManager
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerControllerViewModel.Companion.canAutoLoad
 import com.github.k1rakishou.chan.ui.cell.PostCellData
@@ -40,16 +41,21 @@ import com.github.k1rakishou.chan.utils.setOnThrottlingLongClickListener
 import com.github.k1rakishou.common.updatePaddings
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ThemeEngine
+import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.data.post.ChanPostImageType
 import dagger.Lazy
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
 import javax.inject.Inject
 
 class PostImageThumbnailView @JvmOverloads constructor(
@@ -59,19 +65,23 @@ class PostImageThumbnailView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyle), PostImageThumbnailViewContract {
 
   @Inject
-  lateinit var _prefetchStateManager: Lazy<PrefetchStateManager>
+  lateinit var prefetchStateManagerLazy: Lazy<PrefetchStateManager>
   @Inject
-  lateinit var _thirdEyeManager: Lazy<ThirdEyeManager>
+  lateinit var thirdEyeManagerLazy: Lazy<ThirdEyeManager>
   @Inject
-  lateinit var themeEngine: ThemeEngine
+  lateinit var themeEngineLazy: Lazy<ThemeEngine>
   @Inject
-  lateinit var cacheHandler: CacheHandler
+  lateinit var cacheHandlerLazy: Lazy<CacheHandler>
+  @Inject
+  lateinit var revealedSpoilerImagesManagerLazy: Lazy<RevealedSpoilerImagesManager>
 
   private val scope = KurobaCoroutineScope()
   private val thirdEyeIcon by lazy { getDrawable(R.drawable.ic_baseline_eye_24).mutate() }
 
   private var postImage: ChanPostImage? = null
   private var canUseHighResCells: Boolean = false
+  private var thumbnailViewOptions: ThumbnailViewOptions? = null
+
   private val thumbnail: ThumbnailView
   private val thumbnailOmittedFilesCountContainer: FrameLayout
   private val thumbnailOmittedFilesCount: TextView
@@ -89,9 +99,15 @@ class PostImageThumbnailView @JvmOverloads constructor(
   private var alphaAnimator: ValueAnimator? = null
 
   private val prefetchStateManager: PrefetchStateManager
-    get() = _prefetchStateManager.get()
+    get() = prefetchStateManagerLazy.get()
   private val thirdEyeManager: ThirdEyeManager
-    get() = _thirdEyeManager.get()
+    get() = thirdEyeManagerLazy.get()
+  private val themeEngine: ThemeEngine
+    get() = themeEngineLazy.get()
+  private val cacheHandler: CacheHandler
+    get() = cacheHandlerLazy.get()
+  private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager
+    get() = revealedSpoilerImagesManagerLazy.get()
 
   init {
     if (!isInEditMode) {
@@ -120,9 +136,73 @@ class PostImageThumbnailView @JvmOverloads constructor(
 
     listenForNsfwSettingUpdates()
     listenForThirdEyeUpdates(postImage)
+    listenForRevealedSpoilers()
 
-    bindPostImage(postImage, canUseHighResCells, false, thumbnailViewOptions)
+    bindPostImage(
+      postImage = postImage,
+      canUseHighResCells = canUseHighResCells,
+      thumbnailViewOptions = thumbnailViewOptions,
+      forcedAfterPrefetchFinished = false
+    )
   }
+
+  override fun unbindPostImage() {
+    postImage = null
+    thumbnailViewOptions = null
+    canUseHighResCells = false
+    hasThirdEyeImageMaybe = false
+
+    runOrStopGlowAnimation(stop = true)
+
+    thumbnail.unbindImageUrl()
+    compositeDisposable.clear()
+    scope.cancelChildren()
+  }
+
+  override fun getViewId(): Int {
+    return this.id
+  }
+
+  override fun setViewId(id: Int) {
+    this.id = id
+  }
+
+  override fun getThumbnailView(): ThumbnailView {
+    return thumbnail
+  }
+
+  override fun equalUrls(chanPostImage: ChanPostImage): Boolean {
+    return postImage?.equalUrl(chanPostImage) == true
+  }
+
+  override fun setImageClickable(clickable: Boolean) {
+    isClickable = clickable
+  }
+
+  override fun setImageLongClickable(longClickable: Boolean) {
+    isLongClickable = longClickable
+  }
+
+  override fun setImageClickListener(token: String, listener: OnClickListener?) {
+    this.setOnThrottlingClickListener(token, listener)
+  }
+
+  override fun setImageLongClickListener(token: String, listener: OnLongClickListener?) {
+    this.setOnThrottlingLongClickListener(token, listener)
+  }
+
+  override fun setImageOmittedFilesClickListener(token: String, listener: OnClickListener?) {
+    thumbnailOmittedFilesCount.setOnThrottlingClickListener(token, listener)
+  }
+
+  fun onThumbnailViewClicked(listener: OnClickListener) {
+    thumbnail.onThumbnailViewClicked(listener)
+  }
+
+  fun onThumbnailViewLongClicked(listener: OnLongClickListener): Boolean {
+    return thumbnail.onThumbnailViewLongClicked(listener)
+  }
+
 
   private fun listenForNsfwSettingUpdates() {
     scope.launch {
@@ -132,6 +212,70 @@ class PostImageThumbnailView @JvmOverloads constructor(
           invalidate()
         }
       }
+    }
+  }
+
+  private fun listenForRevealedSpoilers() {
+    scope.launch {
+      val currentChanPostImage = postImage
+      if (currentChanPostImage != null) {
+        val isRevealed = revealedSpoilerImagesManager.isImageSpoilerImageRevealed(currentChanPostImage)
+        if (isRevealed) {
+          processSpoilerImageRevealEvent(
+            revealedImagePostDescriptor = currentChanPostImage.ownerPostDescriptor,
+            revealedImageFullUrl = currentChanPostImage.imageUrl
+          )
+        }
+      }
+
+      revealedSpoilerImagesManager.spoilerImageRevealEventsFlow
+        .onEach { revealedSpoilerImage ->
+          processSpoilerImageRevealEvent(
+            revealedImagePostDescriptor = revealedSpoilerImage.postDescriptor,
+            revealedImageFullUrl = revealedSpoilerImage.fullImageUrl
+          )
+        }
+        .collect()
+    }
+  }
+
+  private suspend fun processSpoilerImageRevealEvent(
+    revealedImagePostDescriptor: PostDescriptor,
+    revealedImageFullUrl: HttpUrl?
+  ) {
+    val currentChanPostImage = postImage
+    if (currentChanPostImage == null) {
+      return
+    }
+
+    val currentThumbnailViewOptions = thumbnailViewOptions
+    if (currentThumbnailViewOptions == null) {
+      return
+    }
+
+    if (currentThumbnailViewOptions.revealSpoilerImage) {
+      return
+    }
+
+    val currentCanUseHighResCells = canUseHighResCells
+
+    if (revealedImagePostDescriptor != currentChanPostImage.ownerPostDescriptor) {
+      return
+    }
+
+    if (revealedImageFullUrl != currentChanPostImage.imageUrl) {
+      return
+    }
+
+    val updatedThumbnailViewOptions = currentThumbnailViewOptions.copy(revealSpoilerImage = true)
+
+    withContext(NonCancellable) {
+      unbindPostImage()
+      bindPostImage(
+        postImage = currentChanPostImage,
+        canUseHighResCells = currentCanUseHighResCells,
+        thumbnailViewOptions = updatedThumbnailViewOptions
+      )
     }
   }
 
@@ -217,67 +361,11 @@ class PostImageThumbnailView @JvmOverloads constructor(
     }
   }
 
-  override fun unbindPostImage() {
-    postImage = null
-    canUseHighResCells = false
-    hasThirdEyeImageMaybe = false
-
-    runOrStopGlowAnimation(stop = true)
-
-    thumbnail.unbindImageUrl()
-    compositeDisposable.clear()
-    scope.cancelChildren()
-  }
-
-  override fun getViewId(): Int {
-    return this.id
-  }
-
-  override fun setViewId(id: Int) {
-    this.id = id
-  }
-
-  override fun getThumbnailView(): ThumbnailView {
-    return thumbnail
-  }
-
-  override fun equalUrls(chanPostImage: ChanPostImage): Boolean {
-    return postImage?.equalUrl(chanPostImage) == true
-  }
-
-  override fun setImageClickable(clickable: Boolean) {
-    isClickable = clickable
-  }
-
-  override fun setImageLongClickable(longClickable: Boolean) {
-    isLongClickable = longClickable
-  }
-
-  override fun setImageClickListener(token: String, listener: OnClickListener?) {
-    this.setOnThrottlingClickListener(token, listener)
-  }
-
-  override fun setImageLongClickListener(token: String, listener: OnLongClickListener?) {
-    this.setOnThrottlingLongClickListener(token, listener)
-  }
-
-  override fun setImageOmittedFilesClickListener(token: String, listener: OnClickListener?) {
-    thumbnailOmittedFilesCount.setOnThrottlingClickListener(token, listener)
-  }
-
-  fun onThumbnailViewClicked(listener: OnClickListener) {
-    thumbnail.onThumbnailViewClicked(listener)
-  }
-
-  fun onThumbnailViewLongClicked(listener: OnLongClickListener): Boolean {
-    return thumbnail.onThumbnailViewLongClicked(listener)
-  }
-
   private fun bindPostImage(
     postImage: ChanPostImage,
     canUseHighResCells: Boolean,
-    forcedAfterPrefetchFinished: Boolean,
-    thumbnailViewOptions: ThumbnailViewOptions
+    thumbnailViewOptions: ThumbnailViewOptions,
+    forcedAfterPrefetchFinished: Boolean
   ) {
     if (postImage == this.postImage && !forcedAfterPrefetchFinished) {
       return
@@ -304,8 +392,14 @@ class PostImageThumbnailView @JvmOverloads constructor(
 
     this.postImage = postImage
     this.canUseHighResCells = canUseHighResCells
+    this.thumbnailViewOptions = thumbnailViewOptions
 
-    val (url, cacheFileType) = getUrl(postImage, canUseHighResCells)
+    val (url, cacheFileType) = getUrl(
+      postImage = postImage,
+      canUseHighResCells = canUseHighResCells,
+      thumbnailViewOptions = thumbnailViewOptions
+    )
+
     if (url == null || cacheFileType == null || TextUtils.isEmpty(url)) {
       unbindPostImage()
       return
@@ -387,22 +481,26 @@ class PostImageThumbnailView @JvmOverloads constructor(
           bindPostImage(
             postImage = postImage!!,
             canUseHighResCells = canUseHighResCells,
-            forcedAfterPrefetchFinished = true,
-            thumbnailViewOptions = thumbnailViewOptions
+            thumbnailViewOptions = thumbnailViewOptions,
+            forcedAfterPrefetchFinished = true
           )
         }
       }
     }
   }
 
-  private fun getUrl(postImage: ChanPostImage, canUseHighResCells: Boolean): Pair<String?, CacheFileType?> {
-    val thumbnailUrl = postImage.getThumbnailUrl()
+  private fun getUrl(
+    postImage: ChanPostImage,
+    canUseHighResCells: Boolean,
+    thumbnailViewOptions: ThumbnailViewOptions
+  ): Pair<String?, CacheFileType?> {
+    val thumbnailUrl = postImage.getThumbnailUrl(isSpoilerRevealed = thumbnailViewOptions.revealSpoilerImage)
     if (thumbnailUrl == null) {
       Logger.e(TAG, "getUrl() postImage: $postImage, has no thumbnail url")
       return null to null
     }
 
-    var url: String? = postImage.getThumbnailUrl()?.toString()
+    var url: String? = thumbnailUrl.toString()
     var cacheFileType = CacheFileType.PostMediaThumbnail
 
     val hasImageUrl = postImage.imageUrl != null

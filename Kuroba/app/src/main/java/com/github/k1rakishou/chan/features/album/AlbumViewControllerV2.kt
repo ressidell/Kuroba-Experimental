@@ -38,6 +38,7 @@ import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
 import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.persist_state.PersistableChanState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onEach
@@ -45,9 +46,6 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
-// TODO: prefetch media indicator
-// TODO: third eye indicator
-// TODO: high-res cells
 class AlbumViewControllerV2(
   context: Context,
   private val listenMode: ListenMode,
@@ -275,7 +273,7 @@ class AlbumViewControllerV2(
     }
   }
 
-  private suspend fun onImageLongClick(albumItemData: AlbumViewControllerV2ViewModel.AlbumItemData) {
+  private suspend fun onImageLongClick(albumItemData: AlbumItemData) {
     val chanDescriptor = controllerViewModel.currentDescriptor.value
     if (chanDescriptor == null) {
       return
@@ -311,7 +309,7 @@ class AlbumViewControllerV2(
     )
   }
 
-  private fun updateToolbarSelectionMode(albumSelection: AlbumViewControllerV2ViewModel.AlbumSelection) {
+  private fun updateToolbarSelectionMode(albumSelection: AlbumSelection) {
     val isInSelectionMode = albumSelection.isInSelectionMode
     if (!isInSelectionMode) {
       if (toolbarState.isInSelectionMode()) {
@@ -357,11 +355,14 @@ class AlbumViewControllerV2(
     )
   }
 
-  private suspend fun onImageClick(albumItemData: AlbumViewControllerV2ViewModel.AlbumItemData) {
+  private suspend fun onImageClick(albumItemData: AlbumItemData) {
     val chanDescriptor = controllerViewModel.currentDescriptor.value
     if (chanDescriptor == null) {
       return
     }
+
+    val transitionThumbnailUrl = albumItemData.spoilerThumbnailImageUrl
+      ?: albumItemData.thumbnailImageUrl
 
     when (chanDescriptor) {
       is ChanDescriptor.ICatalogDescriptor -> {
@@ -369,7 +370,7 @@ class AlbumViewControllerV2(
           context = context,
           catalogDescriptor = chanDescriptor,
           initialImageUrl = albumItemData.fullImageUrl?.toString(),
-          transitionThumbnailUrl = albumItemData.thumbnailImageUrl.toString(),
+          transitionThumbnailUrl = transitionThumbnailUrl.toString(),
           lastTouchCoordinates = globalWindowInsetsManager.lastTouchCoordinates(),
           mediaViewerOptions = MediaViewerOptions(
             mediaViewerOpenedFromAlbum = true
@@ -382,7 +383,7 @@ class AlbumViewControllerV2(
           threadDescriptor = chanDescriptor,
           postDescriptorList = controllerViewModel.mapPostImagesToPostDescriptors(),
           initialImageUrl = albumItemData.fullImageUrl?.toString(),
-          transitionThumbnailUrl = albumItemData.thumbnailImageUrl.toString(),
+          transitionThumbnailUrl = transitionThumbnailUrl.toString(),
           lastTouchCoordinates = globalWindowInsetsManager.lastTouchCoordinates(),
           mediaViewerOptions = MediaViewerOptions(
             mediaViewerOpenedFromAlbum = true
@@ -390,6 +391,9 @@ class AlbumViewControllerV2(
         )
       }
     }
+
+    delay(1000)
+    controllerViewModel.onImageClicked(albumItemData)
   }
 
   private fun toggleLayoutModeClicked(item: ToolbarMenuItem) {

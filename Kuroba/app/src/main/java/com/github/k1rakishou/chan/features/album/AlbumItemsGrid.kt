@@ -28,9 +28,9 @@ fun AlbumItemsGrid(
   controllerKey: ControllerKey,
   controllerViewModel: AlbumViewControllerV2ViewModel,
   albumSpanCount: Int,
-  onClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
-  onLongClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
-  clearDownloadingAlbumItemState: (AlbumViewControllerV2ViewModel.DownloadingAlbumItem) -> Unit
+  onClick: (AlbumItemData) -> Unit,
+  onLongClick: (AlbumItemData) -> Unit,
+  clearDownloadingAlbumItemState: (DownloadingAlbumItem) -> Unit
 ) {
   val contentPaddings = LocalContentPaddings.current
   val albumSelection by controllerViewModel.albumSelection.collectAsState()

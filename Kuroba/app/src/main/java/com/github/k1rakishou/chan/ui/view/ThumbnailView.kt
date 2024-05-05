@@ -448,10 +448,11 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
     }
   }
 
-  class ThumbnailViewOptions(
+  data class ThumbnailViewOptions(
     val postThumbnailScaling: ChanSettings.PostThumbnailScaling = ChanSettings.postThumbnailScaling.get(),
     val drawThumbnailBackground: Boolean = ChanSettings.drawPostThumbnailBackground.get(),
-    val drawRipple: Boolean = true
+    val drawRipple: Boolean = true,
+    val revealSpoilerImage: Boolean = false
   )
 
   companion object {

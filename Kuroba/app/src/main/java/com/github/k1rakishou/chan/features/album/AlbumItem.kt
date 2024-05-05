@@ -43,11 +43,11 @@ fun AlbumItem(
   modifier: Modifier,
   isInSelectionMode: Boolean,
   isSelected: Boolean,
-  albumItemData: AlbumViewControllerV2ViewModel.AlbumItemData,
-  downloadingAlbumItem: AlbumViewControllerV2ViewModel.DownloadingAlbumItem?,
-  onClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
-  onLongClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
-  clearDownloadingAlbumItemState: (AlbumViewControllerV2ViewModel.DownloadingAlbumItem) -> Unit
+  albumItemData: AlbumItemData,
+  downloadingAlbumItem: DownloadingAlbumItem?,
+  onClick: (AlbumItemData) -> Unit,
+  onLongClick: (AlbumItemData) -> Unit,
+  clearDownloadingAlbumItemState: (DownloadingAlbumItem) -> Unit
 ) {
   val onDemandContentLoaderManager = appDependencies().onDemandContentLoaderManager
 
@@ -56,10 +56,10 @@ fun AlbumItem(
     onDispose { onDemandContentLoaderManager.onPostUnbind(albumItemData.postDescriptor, albumItemData.isCatalogMode) }
   }
 
-  val request = remember(key1 = albumItemData.thumbnailImageUrl) {
+  val request = remember(key1 = albumItemData.thumbnailImageUrl, key2 = albumItemData.spoilerThumbnailImageUrl) {
     ImageLoaderRequest(
       data = ImageLoaderRequestData.Url(
-        httpUrl = albumItemData.thumbnailImageUrl,
+        httpUrl = albumItemData.spoilerThumbnailImageUrl ?: albumItemData.thumbnailImageUrl,
         cacheFileType = CacheFileType.PostMediaThumbnail
       ),
       transformations = emptyList()
@@ -93,8 +93,8 @@ fun AlbumItem(
 @Composable
 fun DownloadingAlbumItemOverlay(
   modifier: Modifier,
-  downloadingAlbumItem: AlbumViewControllerV2ViewModel.DownloadingAlbumItem?,
-  clearDownloadingAlbumItemState: (AlbumViewControllerV2ViewModel.DownloadingAlbumItem) -> Unit
+  downloadingAlbumItem: DownloadingAlbumItem?,
+  clearDownloadingAlbumItemState: (DownloadingAlbumItem) -> Unit
 ) {
   if (downloadingAlbumItem == null) {
     return
@@ -102,17 +102,17 @@ fun DownloadingAlbumItemOverlay(
 
   LaunchedEffect(key1 = downloadingAlbumItem.state) {
     when (downloadingAlbumItem.state) {
-      AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Enqueued,
-      AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Downloading -> {
+      DownloadingAlbumItem.State.Enqueued,
+      DownloadingAlbumItem.State.Downloading -> {
         // no-op
       }
-      AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Downloaded,
-      AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.FailedToDownload,
-      AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Canceled -> {
+      DownloadingAlbumItem.State.Downloaded,
+      DownloadingAlbumItem.State.FailedToDownload,
+      DownloadingAlbumItem.State.Canceled -> {
         delay(2000)
         clearDownloadingAlbumItemState(downloadingAlbumItem)
       }
-      AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Deleted -> {
+      DownloadingAlbumItem.State.Deleted -> {
         clearDownloadingAlbumItemState(downloadingAlbumItem)
       }
     }
@@ -124,10 +124,10 @@ fun DownloadingAlbumItemOverlay(
   ) {
     Box {
       val painter = when (downloadingAlbumItem.state) {
-        AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Enqueued -> {
+        DownloadingAlbumItem.State.Enqueued -> {
           painterResource(id = R.drawable.ic_download_anim0)
         }
-        AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Downloading -> {
+        DownloadingAlbumItem.State.Downloading -> {
           var animationAtEnd by remember { mutableStateOf(false) }
 
           LaunchedEffect(downloadingAlbumItem.state) {
@@ -142,14 +142,14 @@ fun DownloadingAlbumItemOverlay(
             atEnd = animationAtEnd
           )
         }
-        AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Downloaded -> {
+        DownloadingAlbumItem.State.Downloaded -> {
           painterResource(id = R.drawable.ic_download_anim1)
         }
-        AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.FailedToDownload,
-        AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Canceled -> {
+        DownloadingAlbumItem.State.FailedToDownload,
+        DownloadingAlbumItem.State.Canceled -> {
           painterResource(id = R.drawable.ic_baseline_warning_24)
         }
-        AlbumViewControllerV2ViewModel.DownloadingAlbumItem.State.Deleted -> {
+        DownloadingAlbumItem.State.Deleted -> {
           null
         }
       }

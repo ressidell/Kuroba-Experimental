@@ -201,7 +201,6 @@ class PostImageThumbnailViewsContainer @JvmOverloads constructor(
     return true
   }
 
-  @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
   private fun bindZeroOrOneImage(postCellData: PostCellData) {
     if (postCellData.postImages.isEmpty()) {
       return
