@@ -374,10 +374,10 @@ class ImageSaverV2OptionsController(
     if (needCallCancelFunc) {
       when (options) {
         is Options.MultipleImages -> {
-          // no-op
+          options.onCanceled()
         }
         is Options.ResultDirAccessProblems -> {
-          options.onCancelClicked()
+          options.onCanceled()
         }
         is Options.SingleImage -> {
           options.onCanceled()
@@ -592,13 +592,14 @@ class ImageSaverV2OptionsController(
     ) : Options()
 
     data class MultipleImages(
-      val onSaveClicked: (ImageSaverV2Options) -> Unit
+      val onSaveClicked: (ImageSaverV2Options) -> Unit,
+      val onCanceled: () -> Unit
     ) : Options()
 
     data class ResultDirAccessProblems(
       val uniqueId: String,
       val onRetryClicked: (ImageSaverV2Options) -> Unit,
-      val onCancelClicked: () -> Unit
+      val onCanceled: () -> Unit
     ) : Options()
   }
 

@@ -181,7 +181,7 @@ class ReplyLayoutHelper(
       val replyFile = replyManager.getReplyFileByFileUuid(clickedFile.fileUuid).valueOrNull()
         ?: return@withContext null
 
-      return@withContext HashingUtil.fileHash(replyFile.fileOnDisk)
+      return@withContext HashingUtil.fileHashMd5(replyFile.fileOnDisk)
     }
 
     fun infoText(text: String): AnnotatedString {

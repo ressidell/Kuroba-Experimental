@@ -38,6 +38,7 @@ class ThumbnailLongtapOptionsHelper(
     showFiltersControllerFunc: (ChanFilterMutable) -> Unit,
     openThreadFunc: (PostDescriptor) -> Unit,
     goToPostFunc: (PostDescriptor) -> Unit,
+    selectFunc: (ChanPostImage) -> Unit
   ) {
     val fullImageName = buildString {
       append((postImage.filename ?: postImage.serverFilename))
@@ -52,6 +53,8 @@ class ThumbnailLongtapOptionsHelper(
     items += HeaderFloatingListMenuItem(THUMBNAIL_LONG_CLICK_MENU_HEADER, fullImageName)
 
     if (isCurrentlyInAlbum) {
+      items += createMenuItem(context, SELECT, R.string.action_select)
+
       if (chanDescriptor is ChanDescriptor.ICatalogDescriptor) {
         items += createMenuItem(context, OPEN_THREAD, R.string.action_open_thread)
       } else if (chanDescriptor is ChanDescriptor.ThreadDescriptor) {
@@ -95,7 +98,8 @@ class ThumbnailLongtapOptionsHelper(
           presentControllerFunc = presentControllerFunc,
           showFiltersControllerFunc = showFiltersControllerFunc,
           openThreadFunc = openThreadFunc,
-          goToPostFunc = goToPostFunc
+          goToPostFunc = goToPostFunc,
+          selectFunc = selectFunc
         )
       }
     )
@@ -111,8 +115,12 @@ class ThumbnailLongtapOptionsHelper(
     showFiltersControllerFunc: (ChanFilterMutable) -> Unit,
     openThreadFunc: (PostDescriptor) -> Unit,
     goToPostFunc: (PostDescriptor) -> Unit,
+    selectFunc: (ChanPostImage) -> Unit
   ) {
     when (id) {
+      SELECT -> {
+        selectFunc(postImage)
+      }
       OPEN_THREAD -> {
         openThreadFunc(postImage.ownerPostDescriptor)
       }
@@ -238,6 +246,7 @@ class ThumbnailLongtapOptionsHelper(
     private const val OPEN_IN_EXTERNAL_APP = 1009
     private const val OPEN_THREAD = 1010
     private const val GO_TO_POST = 1011
+    private const val SELECT = 1012
 
     private const val THUMBNAIL_LONG_CLICK_MENU_HEADER = "thumbnail_copy_menu_header"
   }

@@ -16,6 +16,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.ThumbnailLongtapOptionsHelper
 import com.github.k1rakishou.chan.core.usecase.FilterOutHiddenImagesUseCase
+import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerActivity
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerOptions
 import com.github.k1rakishou.chan.features.media_viewer.helper.AlbumThreadControllerHelpers
@@ -25,6 +26,7 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenTh
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
+import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
@@ -37,11 +39,15 @@ import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
+// TODO: prefetch media indicator
+// TODO: third eye indicator
+// TODO: high-res cells
 class AlbumViewControllerV2(
   context: Context,
   private val listenMode: ListenMode,
@@ -182,6 +188,23 @@ class AlbumViewControllerV2(
           requireNavController().popController()
         }
     }
+
+    controllerScope.launch {
+      controllerViewModel.albumSelection
+        .collectLatest { albumSelection -> updateToolbarSelectionMode(albumSelection) }
+    }
+
+    controllerScope.launch {
+      controllerViewModel.presentController
+        .collectLatest { presentController ->
+          when (presentController) {
+            is AlbumViewControllerV2ViewModel.PresentController.ImageSaverOptionsController -> {
+              val controller = ImageSaverV2OptionsController(context, presentController.options)
+              presentController(controller)
+            }
+          }
+        }
+    }
   }
 
   @Composable
@@ -224,10 +247,20 @@ class AlbumViewControllerV2(
           controllerViewModel = controllerViewModel,
           albumSpanCount = actualSpanCount,
           onClick = { albumItemData ->
-            coroutineTask.launch { onImageClick(albumItemData) }
+            if (controllerViewModel.isInSelectionMode()) {
+              controllerViewModel.toggleSelection(albumItemData)
+            } else {
+              coroutineTask.launch { onImageClick(albumItemData) }
+            }
           },
           onLongClick = { albumItemData ->
-            coroutineTask.launch { onImageLongClick(albumItemData) }
+            if (controllerViewModel.isInSelectionMode()) {
+              // TODO: start "Move to select/unselect" mode.
+              //  For now we will just toggle selection because that mode is not implemented yet.
+              controllerViewModel.toggleSelection(albumItemData)
+            } else {
+              coroutineTask.launch { onImageLongClick(albumItemData) }
+            }
           }
         )
       }
@@ -265,7 +298,56 @@ class AlbumViewControllerV2(
         requireNavController().popController {
           albumThreadControllerHelpers.highlightPostWithImage(chanDescriptor, postImage)
         }
+      },
+      selectFunc = { chanPostImage ->
+        controllerViewModel.enterSelectionMode(chanPostImage)
       }
+    )
+  }
+
+  private fun updateToolbarSelectionMode(albumSelection: AlbumViewControllerV2ViewModel.AlbumSelection) {
+    val isInSelectionMode = albumSelection.isInSelectionMode
+    if (!isInSelectionMode) {
+      if (toolbarState.isInSelectionMode()) {
+        toolbarState.pop()
+        controllerViewModel.exitSelectionMode()
+      }
+
+      return
+    }
+
+    val selectedItemsCount = albumSelection.selectedItems.size
+    val totalItemsCount = controllerViewModel.albumItems.size
+
+    if (!toolbarState.isInSelectionMode()) {
+      toolbarState.enterSelectionMode(
+        leftItem = CloseMenuItem(
+          onClick = {
+            if (toolbarState.isInSelectionMode()) {
+              toolbarState.pop()
+              controllerViewModel.exitSelectionMode()
+            }
+          }
+        ),
+        selectedItemsCount = selectedItemsCount,
+        totalItemsCount = totalItemsCount,
+        menuBuilder = {
+          withMenuItem(
+            ACTION_TOGGLE_SELECTION,
+            com.github.k1rakishou.chan.R.drawable.ic_select_all_white_24dp
+          ) { controllerViewModel.toggleAlbumItemsSelection() }
+
+          withMenuItem(
+            ACTION_DOWNLOAD_SELECTED_IMAGES,
+            com.github.k1rakishou.chan.R.drawable.ic_baseline_file_download_24
+          ) { controllerViewModel.downloadSelectedItems() }
+        }
+      )
+    }
+
+    toolbarState.selection.updateCounters(
+      selectedItemsCount = selectedItemsCount,
+      totalItemsCount = totalItemsCount
     )
   }
 
@@ -367,6 +449,9 @@ class AlbumViewControllerV2(
   companion object {
     private const val ACTION_TOGGLE_LAYOUT_MODE = 1
     private const val ACTION_TOGGLE_IMAGE_DETAILS = 2
+
+    private const val ACTION_TOGGLE_SELECTION = 1
+    private const val ACTION_DOWNLOAD_SELECTED_IMAGES = 2
   }
 
 }

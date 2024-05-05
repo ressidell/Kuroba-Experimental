@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -31,6 +33,7 @@ fun AlbumItemsGrid(
 ) {
   val contentPaddings = LocalContentPaddings.current
   val albumItems = controllerViewModel.albumItems
+  val albumSelection by controllerViewModel.albumSelection.collectAsState()
 
   val state = rememberLazyGridState(
     initialFirstVisibleItemIndex = controllerViewModel.lastScrollPosition.intValue
@@ -81,6 +84,8 @@ fun AlbumItemsGrid(
           modifier = Modifier
             .fillMaxSize()
             .aspectRatio(3f / 4f),
+          isInSelectionMode = albumSelection.selectedItems.isNotEmpty(),
+          isSelected = albumItemData.id in albumSelection.selectedItems,
           albumItemData = albumItemData,
           onClick = onClick,
           onLongClick = onLongClick

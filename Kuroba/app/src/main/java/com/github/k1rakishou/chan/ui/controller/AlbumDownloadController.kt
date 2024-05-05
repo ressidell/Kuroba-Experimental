@@ -199,6 +199,9 @@ class AlbumDownloadController(context: Context) : Controller(context),
 
         // Close this controller
         navigationController?.popController()
+      },
+      onCanceled = {
+        // no-op
       }
     )
 

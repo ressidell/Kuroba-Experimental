@@ -634,7 +634,7 @@ internal class InnerCache(
   }
 
   internal fun hashUrl(url: String): String {
-    return HashingUtil.stringHash(url)
+    return HashingUtil.stringHashMd5(url)
   }
 
   private fun formatChunkCacheFileName(

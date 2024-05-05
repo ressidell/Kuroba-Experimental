@@ -991,7 +991,6 @@ class BookmarksController(
     )
   }
 
-
   private fun initToolbar() {
     toolbarState.enterDefaultMode(
       leftItem = BackArrowMenuItem(

@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -31,6 +33,7 @@ fun AlbumItemsStaggeredGrid(
 ) {
   val contentPaddings = LocalContentPaddings.current
   val albumItems = controllerViewModel.albumItems
+  val albumSelection by controllerViewModel.albumSelection.collectAsState()
 
   val state = rememberLazyStaggeredGridState(
     initialFirstVisibleItemIndex = controllerViewModel.lastScrollPosition.intValue
@@ -88,6 +91,8 @@ fun AlbumItemsStaggeredGrid(
 
               return@let modifier.aspectRatio(aspectRatio)
             },
+          isInSelectionMode = albumSelection.selectedItems.isNotEmpty(),
+          isSelected = albumItemData.id in albumSelection.selectedItems,
           albumItemData = albumItemData,
           onClick = onClick,
           onLongClick = onLongClick

@@ -16,7 +16,7 @@ import java.io.InputStream
 
 object HashingUtil {
 
-  fun fileHash(inputFile: File): String? {
+  fun fileHashMd5(inputFile: File): String? {
     if (!inputFile.exists()) {
       return null
     }
@@ -61,12 +61,22 @@ object HashingUtil {
     }
   }
 
-  fun stringHash(inputString: String): String {
+  fun stringHashMd5(inputString: String): String {
     return inputString.encodeUtf8().md5().hex()
   }
 
-  fun stringsHash(inputStrings: Collection<String>): String {
+  fun stringsHashSha256(inputStrings: Collection<String>): String {
     return HashingSink.sha256(blackholeSink()).use { hashingSink ->
+      hashingSink.buffer().outputStream().use { outputStream ->
+        inputStrings.forEach { inputString -> inputString.encodeUtf8().write(outputStream) }
+      }
+
+      return@use hashingSink.hash.hex()
+    }
+  }
+
+  fun stringsHashSha512(inputStrings: Collection<String>): String {
+    return HashingSink.sha512(blackholeSink()).use { hashingSink ->
       hashingSink.buffer().outputStream().use { outputStream ->
         inputStrings.forEach { inputString -> inputString.encodeUtf8().write(outputStream) }
       }

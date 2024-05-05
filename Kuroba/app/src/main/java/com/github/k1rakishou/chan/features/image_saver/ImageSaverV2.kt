@@ -116,46 +116,61 @@ class ImageSaverV2(
   }
 
   fun saveMany(imageSaverV2Options: ImageSaverV2Options, simpleSaveableMediaInfoList: Collection<SimpleSaveableMediaInfo>) {
-    Logger.d(TAG, "saveMany('$imageSaverV2Options', simpleSaveableMediaInfoListCount=${simpleSaveableMediaInfoList.size})")
-
     rendezvousCoroutineExecutor.post {
-      val uniqueId = calculateUniqueId(simpleSaveableMediaInfoList)
-      val duplicatesResolution =
-        ImageSaverV2Options.DuplicatesResolution.fromRawValue(imageSaverV2Options.duplicatesResolution)
+      saveManySuspend(imageSaverV2Options, simpleSaveableMediaInfoList)
+    }
+  }
 
-      val imageDownloadRequests = simpleSaveableMediaInfoList.mapNotNull { postImage ->
-        return@mapNotNull ImageDownloadRequest(
-          uniqueId = uniqueId,
-          imageFullUrl = postImage.mediaUrl,
-          postDescriptorString = postImage.ownerPostDescriptor.serializeToString(),
-          newFileName = null,
-          status = ImageDownloadRequest.Status.Queued,
-          duplicateFileUri = null,
-          duplicatesResolution = duplicatesResolution,
-          createdOn = DateTime.now()
-        )
-      }
+  suspend fun saveManySuspend(
+    imageSaverV2Options: ImageSaverV2Options,
+    simpleSaveableMediaInfoList: Collection<SimpleSaveableMediaInfo>
+  ): String? {
+    val uniqueId = calculateUniqueId(simpleSaveableMediaInfoList)
 
-      val actualImageDownloadRequests = imageDownloadRequestRepository.createMany(
-        imageDownloadRequests
-      )
-        .safeUnwrap { error ->
-          Logger.e(TAG, "Failed to create image download request", error)
-          return@post
-        }
+    val duplicatesResolution =
+      ImageSaverV2Options.DuplicatesResolution.fromRawValue(imageSaverV2Options.duplicatesResolution)
 
-      if (actualImageDownloadRequests.isEmpty()) {
-        // This request is already active
-        Logger.d(TAG, "saveMany('$imageSaverV2Options', simpleSaveableMediaInfoListCount=${simpleSaveableMediaInfoList.size})")
-        return@post
-      }
-
-      startImageSaverService(
+    val imageDownloadRequests = simpleSaveableMediaInfoList.map { postImage ->
+      return@map ImageDownloadRequest(
         uniqueId = uniqueId,
-        imageSaverV2Options = imageSaverV2Options,
-        downloadType = ImageSaverV2Service.BATCH_IMAGE_DOWNLOAD_TYPE
+        imageFullUrl = postImage.mediaUrl,
+        postDescriptorString = postImage.ownerPostDescriptor.serializeToString(),
+        newFileName = null,
+        status = ImageDownloadRequest.Status.Queued,
+        duplicateFileUri = null,
+        duplicatesResolution = duplicatesResolution,
+        createdOn = DateTime.now()
       )
     }
+
+    val actualImageDownloadRequests = imageDownloadRequestRepository.createMany(
+      imageDownloadRequests
+    )
+      .safeUnwrap { error ->
+        Logger.e(TAG, "saveMany() Failed to create image download request for uniqueId: ${uniqueId}", error)
+        return null
+      }
+
+    if (actualImageDownloadRequests.isEmpty()) {
+      // This request is already active
+      Logger.debug(TAG) { "saveMany() actualImageDownloadRequests is empty for uniqueId: ${uniqueId}" }
+      return null
+    }
+
+    startImageSaverService(
+      uniqueId = uniqueId,
+      imageSaverV2Options = imageSaverV2Options,
+      downloadType = ImageSaverV2Service.BATCH_IMAGE_DOWNLOAD_TYPE
+    )
+
+    Logger.debug(TAG) {
+      "saveMany() Successfully enqueued image download request! " +
+        "imageSaverV2Options: '$imageSaverV2Options', " +
+        "simpleSaveableMediaInfoListCount: ${simpleSaveableMediaInfoList.size}, " +
+        "uniqueId: ${uniqueId}"
+    }
+
+    return uniqueId
   }
 
   fun downloadMediaAndShare(postImage: ChanPostImage, onShareResult: (ModularResult<Unit>) -> Unit) {
@@ -305,17 +320,19 @@ class ImageSaverV2(
     val imageSaverV2OptionsJson = gson.toJson(imageSaverV2Options)
     ImageSaverV2Service.startService(appContext, uniqueId, downloadType, imageSaverV2OptionsJson)
 
-    Logger.d(TAG, "startBackgroundBookmarkWatchingWorkIfNeeded() " +
-      "uniqueId='$uniqueId', imageSaverV2Options=$imageSaverV2Options, downloadType=$downloadType")
+    Logger.debug(TAG) {
+      "startImageSaverService() uniqueId: '$uniqueId', " +
+        "imageSaverV2Options: $imageSaverV2Options, downloadType: $downloadType"
+    }
   }
 
   private fun calculateUniqueId(simpleSaveableMediaInfoList: Collection<SimpleSaveableMediaInfo>): String {
     check(simpleSaveableMediaInfoList.isNotEmpty()) { "simpleSaveableMediaInfoList must not be empty" }
 
     val urls = simpleSaveableMediaInfoList.map { chanPostImage -> chanPostImage.mediaUrl.toString() }
-    val md5Hash = HashingUtil.stringsHash(urls)
+    val hash = HashingUtil.stringsHashSha256(urls)
 
-    return "${TAG}_$md5Hash"
+    return "${TAG}_$hash"
   }
 
   data class SimpleSaveableMediaInfo(
