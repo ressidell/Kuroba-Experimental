@@ -56,6 +56,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -738,7 +739,6 @@ class AlbumViewControllerV2ViewModel(
         currentOpenedDescriptorStateManager.currentCatalogDescriptorFlow
           .map { catalogDescriptor -> catalogDescriptor as ChanDescriptor? }
       }
-
       AlbumViewControllerV2.ListenMode.Thread -> {
         currentOpenedDescriptorStateManager.currentThreadDescriptorFlow
           .map { threadDescriptor -> threadDescriptor as ChanDescriptor? }
@@ -746,8 +746,14 @@ class AlbumViewControllerV2ViewModel(
     }
 
     currentDescriptorFlow
+      .distinctUntilChanged()
       .collectLatest { currentDescriptor ->
         Logger.debug(TAG) { "listenForCurrentChanDescriptor() currentDescriptor changed to '${currentDescriptor}'" }
+
+        _albumItems.clear()
+        _albumSelection.value = AlbumSelection()
+        _downloadingAlbumItems.clear()
+        _lastScrollPosition.intValue = 0
         _currentDescriptor.value = currentDescriptor
       }
   }

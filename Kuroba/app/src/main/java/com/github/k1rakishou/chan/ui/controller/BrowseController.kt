@@ -505,8 +505,10 @@ class BrowseController(
         // Create a threadview inside a toolbarnav in the right part of the split layout
         if (splitNav.rightController() is StyledToolbarNavigationController) {
           val navigationController = splitNav.rightController() as StyledToolbarNavigationController
-          if (navigationController.topController is ViewThreadController) {
-            val viewThreadController = navigationController.topController as ViewThreadController
+          val viewThreadController = navigationController
+            .lastChildControllerOrNull<ViewThreadController> { controller -> controller is ViewThreadController }
+
+          if (viewThreadController != null) {
             viewThreadController.loadThread(descriptor)
             viewThreadController.onShow()
             viewThreadController.onGainedFocus(ThreadControllerType.Thread)

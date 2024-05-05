@@ -193,6 +193,16 @@ abstract class Controller(
     return null
   }
 
+  fun <T : Controller> lastChildControllerOrNull(predicate: (Controller) -> Boolean): T? {
+    for (controller in childControllers.asReversed()) {
+      if (predicate(controller)) {
+        return controller as? T
+      }
+    }
+
+    return null
+  }
+
   fun requireToolbarNavController(): ToolbarNavigationController {
     if (this is ToolbarNavigationController) {
       return this
