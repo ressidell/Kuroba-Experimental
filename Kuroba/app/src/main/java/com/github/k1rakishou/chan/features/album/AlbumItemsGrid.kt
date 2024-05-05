@@ -29,11 +29,13 @@ fun AlbumItemsGrid(
   controllerViewModel: AlbumViewControllerV2ViewModel,
   albumSpanCount: Int,
   onClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
-  onLongClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit
+  onLongClick: (AlbumViewControllerV2ViewModel.AlbumItemData) -> Unit,
+  clearDownloadingAlbumItemState: (AlbumViewControllerV2ViewModel.DownloadingAlbumItem) -> Unit
 ) {
   val contentPaddings = LocalContentPaddings.current
-  val albumItems = controllerViewModel.albumItems
   val albumSelection by controllerViewModel.albumSelection.collectAsState()
+  val albumItems = controllerViewModel.albumItems
+  val downloadingAlbumItems = controllerViewModel.downloadingAlbumItems
 
   val state = rememberLazyGridState(
     initialFirstVisibleItemIndex = controllerViewModel.lastScrollPosition.intValue
@@ -84,11 +86,13 @@ fun AlbumItemsGrid(
           modifier = Modifier
             .fillMaxSize()
             .aspectRatio(3f / 4f),
-          isInSelectionMode = albumSelection.selectedItems.isNotEmpty(),
+          isInSelectionMode = albumSelection.isInSelectionMode,
           isSelected = albumItemData.id in albumSelection.selectedItems,
           albumItemData = albumItemData,
+          downloadingAlbumItem = downloadingAlbumItems[albumItemData.id],
           onClick = onClick,
-          onLongClick = onLongClick
+          onLongClick = onLongClick,
+          clearDownloadingAlbumItemState = clearDownloadingAlbumItemState
         )
       }
     )

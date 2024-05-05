@@ -239,6 +239,9 @@ class AlbumViewControllerV2(
           },
           onLongClick = { albumItemData ->
             coroutineTask.launch { onImageLongClick(albumItemData) }
+          },
+          clearDownloadingAlbumItemState = { downloadingAlbumItem ->
+            controllerViewModel.clearDownloadingAlbumItemState(downloadingAlbumItem)
           }
         )
       } else {
@@ -261,6 +264,9 @@ class AlbumViewControllerV2(
             } else {
               coroutineTask.launch { onImageLongClick(albumItemData) }
             }
+          },
+          clearDownloadingAlbumItemState = { downloadingAlbumItem ->
+            controllerViewModel.clearDownloadingAlbumItemState(downloadingAlbumItem)
           }
         )
       }
@@ -357,18 +363,13 @@ class AlbumViewControllerV2(
       return
     }
 
-    val transitionThumbnailUrl = albumItemData.thumbnailImage.asUrlOrNull()?.toString()
-    if (transitionThumbnailUrl == null) {
-      return
-    }
-
     when (chanDescriptor) {
       is ChanDescriptor.ICatalogDescriptor -> {
         MediaViewerActivity.catalogMedia(
           context = context,
           catalogDescriptor = chanDescriptor,
-          initialImageUrl = albumItemData.fullImage?.asUrlOrNull()?.toString(),
-          transitionThumbnailUrl = transitionThumbnailUrl,
+          initialImageUrl = albumItemData.fullImageUrl?.toString(),
+          transitionThumbnailUrl = albumItemData.thumbnailImageUrl.toString(),
           lastTouchCoordinates = globalWindowInsetsManager.lastTouchCoordinates(),
           mediaViewerOptions = MediaViewerOptions(
             mediaViewerOpenedFromAlbum = true
@@ -380,8 +381,8 @@ class AlbumViewControllerV2(
           context = context,
           threadDescriptor = chanDescriptor,
           postDescriptorList = controllerViewModel.mapPostImagesToPostDescriptors(),
-          initialImageUrl = albumItemData.fullImage?.asUrlOrNull()?.toString(),
-          transitionThumbnailUrl = transitionThumbnailUrl,
+          initialImageUrl = albumItemData.fullImageUrl?.toString(),
+          transitionThumbnailUrl = albumItemData.thumbnailImageUrl.toString(),
           lastTouchCoordinates = globalWindowInsetsManager.lastTouchCoordinates(),
           mediaViewerOptions = MediaViewerOptions(
             mediaViewerOpenedFromAlbum = true

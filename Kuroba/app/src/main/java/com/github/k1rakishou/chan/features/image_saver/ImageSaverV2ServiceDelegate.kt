@@ -44,6 +44,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -58,11 +59,10 @@ import okhttp3.ResponseBody
 import okhttp3.internal.closeQuietly
 import java.io.IOException
 import java.io.InputStream
-import java.util.*
+import java.util.LinkedList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
 class ImageSaverV2ServiceDelegate(
@@ -91,6 +91,12 @@ class ImageSaverV2ServiceDelegate(
 
   private val fileManager: FileManager
     get() = imageSaverFileManager.fileManager
+
+  private val _downloadingImagesFlow = MutableSharedFlow<DownloadingImageState>(
+    extraBufferCapacity = Channel.UNLIMITED
+  )
+  val downloadingImagesFlow: SharedFlow<DownloadingImageState>
+    get() = _downloadingImagesFlow.asSharedFlow()
 
   private val notificationUpdatesFlow = MutableSharedFlow<ImageSaverDelegateResult>(
     extraBufferCapacity = 16,
@@ -127,6 +133,14 @@ class ImageSaverV2ServiceDelegate(
       activeNotificationIdQueue.remove(uniqueId)
       activeDownloads.remove(uniqueId)
     }
+
+    val downloadingImageState = DownloadingImageState(
+      uniqueId = uniqueId,
+      imageFullUrl = null,
+      postDescriptor = null,
+      state = DownloadingImageState.State.Deleted
+    )
+    _downloadingImagesFlow.emit(downloadingImageState)
   }
 
   suspend fun cancelDownload(uniqueId: String) {
@@ -142,6 +156,14 @@ class ImageSaverV2ServiceDelegate(
       activeNotificationIdQueue.remove(uniqueId)
       activeDownloads[uniqueId]?.cancel()
     }
+
+    val downloadingImageState = DownloadingImageState(
+      uniqueId = uniqueId,
+      imageFullUrl = null,
+      postDescriptor = null,
+      state = DownloadingImageState.State.Canceled
+    )
+    _downloadingImagesFlow.emit(downloadingImageState)
   }
 
   suspend fun createDownloadContext(uniqueId: String): Int {
@@ -190,7 +212,6 @@ class ImageSaverV2ServiceDelegate(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   private suspend fun downloadImagesInternal(
     imageDownloadInputData: ImageSaverV2Service.ImageDownloadInputData
   ): Int {
@@ -206,6 +227,14 @@ class ImageSaverV2ServiceDelegate(
     val failedRequests = AtomicInteger(0)
     val duplicates = AtomicInteger(0)
     val canceledRequests = AtomicInteger(0)
+
+    val downloadingImageState = DownloadingImageState(
+      uniqueId = uniqueId,
+      imageFullUrl = null,
+      postDescriptor = null,
+      state = DownloadingImageState.State.Downloading
+    )
+    _downloadingImagesFlow.emit(downloadingImageState)
 
     val imageDownloadRequests = when (imageDownloadInputData) {
       is ImageSaverV2Service.SingleImageDownloadInputData -> {
@@ -422,11 +451,11 @@ class ImageSaverV2ServiceDelegate(
     }
 
     val downloadImageResult = downloadSingleImageInternal(
-      hasResultDirAccessErrors,
-      hasOutOfDiskSpaceErrors,
-      currentChanPostImage,
-      imageDownloadInputData,
-      imageDownloadRequest
+      hasResultDirAccessErrors = hasResultDirAccessErrors,
+      hasOutOfDiskSpaceErrors = hasOutOfDiskSpaceErrors,
+      currentChanPostImage = currentChanPostImage,
+      imageDownloadInputData = imageDownloadInputData,
+      imageDownloadRequest = imageDownloadRequest
     )
 
     when (downloadImageResult) {
@@ -465,6 +494,39 @@ class ImageSaverV2ServiceDelegate(
         // Something have happened with the output directory (it was deleted or something like that)
         hasResultDirAccessErrors.set(true)
         canceledRequests.incrementAndGet()
+      }
+    }
+
+    when (downloadImageResult) {
+      is DownloadImageResult.Canceled -> {
+        val downloadingImageState = DownloadingImageState(
+          uniqueId = imageDownloadRequest.uniqueId,
+          imageFullUrl = imageDownloadRequest.imageFullUrl,
+          postDescriptor = PostDescriptor.deserializeFromString(imageDownloadRequest.postDescriptorString),
+          state = DownloadingImageState.State.Canceled
+        )
+        _downloadingImagesFlow.emit(downloadingImageState)
+      }
+      is DownloadImageResult.DuplicateFound,
+      is DownloadImageResult.Failure,
+      is DownloadImageResult.OutOfDiskSpaceError,
+      is DownloadImageResult.ResultDirectoryError -> {
+        val downloadingImageState = DownloadingImageState(
+          uniqueId = imageDownloadRequest.uniqueId,
+          imageFullUrl = imageDownloadRequest.imageFullUrl,
+          postDescriptor = PostDescriptor.deserializeFromString(imageDownloadRequest.postDescriptorString),
+          state = DownloadingImageState.State.FailedToDownload
+        )
+        _downloadingImagesFlow.emit(downloadingImageState)
+      }
+      is DownloadImageResult.Success -> {
+        val downloadingImageState = DownloadingImageState(
+          uniqueId = imageDownloadRequest.uniqueId,
+          imageFullUrl = imageDownloadRequest.imageFullUrl,
+          postDescriptor = PostDescriptor.deserializeFromString(imageDownloadRequest.postDescriptorString),
+          state = DownloadingImageState.State.Downloaded
+        )
+        _downloadingImagesFlow.emit(downloadingImageState)
       }
     }
 
@@ -1006,6 +1068,21 @@ class ImageSaverV2ServiceDelegate(
   class NotFoundException : Exception("Not found on server")
   class OutOfDiskSpaceException : Exception("Out of disk space")
 
+  data class DownloadingImageState(
+    val uniqueId: String,
+    val imageFullUrl: HttpUrl?,
+    val postDescriptor: PostDescriptor?,
+    val state: State
+  ) {
+    enum class State {
+      Downloading,
+      Downloaded,
+      FailedToDownload,
+      Canceled,
+      Deleted
+    }
+  }
+
   class DownloadContext(
     private val canceled: AtomicBoolean = AtomicBoolean(false)
   ) {
@@ -1076,7 +1153,7 @@ class ImageSaverV2ServiceDelegate(
 
     fun isNotEmpty(): Boolean = count() > 0
 
-    object Empty : DownloadedImages() {
+    data object Empty : DownloadedImages() {
       override val outputDirUri: Uri?
         get() = null
 

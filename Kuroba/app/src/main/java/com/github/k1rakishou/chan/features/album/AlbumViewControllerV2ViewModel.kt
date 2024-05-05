@@ -4,13 +4,14 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.IntState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.BaseViewModel
-import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
@@ -19,7 +20,7 @@ import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManag
 import com.github.k1rakishou.chan.core.usecase.FilterOutHiddenImagesUseCase
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2OptionsController
-import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2ServiceDelegate
 import com.github.k1rakishou.chan.ui.compose.image.PostImageThumbnailKey
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.compose.snackbar.manager.SnackbarManagerFactory
@@ -54,6 +55,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -61,11 +63,13 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -80,7 +84,8 @@ class AlbumViewControllerV2ViewModel(
   private val snackbarManagerFactory: SnackbarManagerFactory,
   private val compositeCatalogManager: CompositeCatalogManager,
   private val filterOutHiddenImagesUseCase: FilterOutHiddenImagesUseCase,
-  private val imageSaverV2: ImageSaverV2
+  private val imageSaverV2: ImageSaverV2,
+  private val imageSaverV2ServiceDelegate: ImageSaverV2ServiceDelegate
 ) : BaseViewModel() {
   private val _albumItemIdCounter = AtomicLong(0)
   private var _enqueueAlbumItemsDownloadJob: Job? = null
@@ -99,6 +104,10 @@ class AlbumViewControllerV2ViewModel(
   private val _albumSelection = MutableStateFlow<AlbumSelection>(AlbumSelection())
   val albumSelection: StateFlow<AlbumSelection>
     get() = _albumSelection
+
+  private val _downloadingAlbumItems = mutableStateMapOf<Long, DownloadingAlbumItem>()
+  val downloadingAlbumItems: SnapshotStateMap<Long, DownloadingAlbumItem>
+    get() = _downloadingAlbumItems
 
   private val _scrollToPosition = MutableSharedFlow<Int>(
     extraBufferCapacity = 1,
@@ -151,6 +160,12 @@ class AlbumViewControllerV2ViewModel(
     viewModelScope.launch(Dispatchers.IO) {
       loadAndUpdateAlbumItems()
     }
+
+    viewModelScope.launch {
+      imageSaverV2ServiceDelegate.downloadingImagesFlow
+        .onEach { downloadingImageState -> handleDownloadingImageState(downloadingImageState) }
+        .collect()
+    }
   }
 
   fun updateLastScrollPosition(newLastScrollPosition: Int) {
@@ -174,10 +189,7 @@ class AlbumViewControllerV2ViewModel(
   }
 
   fun findChanPostImage(albumItemData: AlbumItemData): ChanPostImage? {
-    val thumbnailImage = albumItemData.thumbnailImage.asUrlOrNull()
-    if (thumbnailImage == null) {
-      return null
-    }
+    val thumbnailImage = albumItemData.thumbnailImageUrl
 
     val chanPost = when (val chanDescriptor = _currentDescriptor.value) {
       is ChanDescriptor.ICatalogDescriptor -> {
@@ -211,7 +223,7 @@ class AlbumViewControllerV2ViewModel(
         return@indexOfFirst false
       }
 
-      return@indexOfFirst albumItemData.thumbnailImage.asUrlOrNull() == chanPostImage.actualThumbnailUrl
+      return@indexOfFirst albumItemData.thumbnailImageUrl == chanPostImage.actualThumbnailUrl
     }
 
     if (newPosition < 0) {
@@ -249,11 +261,26 @@ class AlbumViewControllerV2ViewModel(
   }
 
   fun isInSelectionMode(): Boolean {
-    return _albumSelection.value.isNotEmpty()
+    return _albumSelection.value.isInSelectionMode
   }
 
   fun exitSelectionMode() {
     _albumSelection.value = AlbumSelection()
+  }
+
+  fun clearDownloadingAlbumItemState(downloadingAlbumItem: DownloadingAlbumItem) {
+    clearDownloadingAlbumItemState(downloadingAlbumItem.albumItemDataId)
+  }
+
+  fun clearDownloadingAlbumItemState(albumItemDataId: Long) {
+    _downloadingAlbumItems.remove(albumItemDataId)
+
+    val albumItemDataIndex = _albumItems
+      .indexOfFirst { albumItemData -> albumItemData.id == albumItemDataId }
+    if (albumItemDataIndex >= 0) {
+      val albumItemData = _albumItems[albumItemDataIndex]
+      _albumItems[albumItemDataIndex] = albumItemData.copy(downloadUniqueId = null)
+    }
   }
 
   fun downloadSelectedItems() {
@@ -331,6 +358,32 @@ class AlbumViewControllerV2ViewModel(
         return@launch
       }
 
+      _albumSelection.value.selectedItems.forEach { albumItemDataId ->
+        val albumItemDataIndex = _albumItems.indexOfFirst { albumItemData -> albumItemData.id == albumItemDataId }
+        if (albumItemDataIndex < 0) {
+          return@forEach
+        }
+
+        val albumItemData = _albumItems[albumItemDataIndex]
+
+        val fullImageUrl = albumItemData.fullImageUrl
+        if (fullImageUrl == null) {
+          return@forEach
+        }
+
+        _downloadingAlbumItems.put(
+          albumItemDataId,
+          DownloadingAlbumItem(
+            albumItemDataId = albumItemDataId,
+            downloadUniqueId = downloadUniqueId,
+            fullImageUrl = fullImageUrl,
+            state = DownloadingAlbumItem.State.Enqueued
+          )
+        )
+
+        _albumItems[albumItemDataIndex] = albumItemData.copy(downloadUniqueId = downloadUniqueId)
+      }
+
       Logger.debug(TAG) {
         "downloadSelectedItems() Successfully enqueued a download with id downloadUniqueId: '${downloadUniqueId}'"
       }
@@ -351,7 +404,7 @@ class AlbumViewControllerV2ViewModel(
 
     val (duplicateChecker, capacity) = withContext(Dispatchers.Main) {
       val duplicateChecker = _albumItems
-        .toHashSetBy(capacity = _albumItems.size) { albumItemData -> albumItemData.thumbnailImage }
+        .toHashSetBy(capacity = _albumItems.size) { albumItemData -> albumItemData.thumbnailImageUrl }
 
       val capacity = (allAlbumItems.size - _albumItems.size).coerceAtLeast(16)
       return@withContext duplicateChecker to capacity
@@ -360,7 +413,7 @@ class AlbumViewControllerV2ViewModel(
     val newAlbumItemsToAppendList = mutableListWithCap<AlbumItemData>(capacity)
 
     allAlbumItems.forEach { newAlbumItemData ->
-      if (duplicateChecker.contains(newAlbumItemData.thumbnailImage)) {
+      if (duplicateChecker.contains(newAlbumItemData.thumbnailImageUrl)) {
         return@forEach
       }
 
@@ -539,16 +592,12 @@ class AlbumViewControllerV2ViewModel(
         return@mapNotNull null
       }
 
-      val thumbnailImage = ImageLoaderRequestData.Url(httpUrl = actualThumbnailUrl, CacheFileType.PostMediaThumbnail)
-      val fullImage = chanPostImage.imageUrl
-        ?.let { imageUrl -> ImageLoaderRequestData.Url(imageUrl, CacheFileType.PostMediaFull) }
-
       return@mapNotNull AlbumItemData(
         id = _albumItemIdCounter.getAndIncrement(),
         isCatalogMode = actualChanDescriptor.isCatalogDescriptor(),
         postDescriptor = chanPostImage.ownerPostDescriptor,
-        thumbnailImage = thumbnailImage,
-        fullImage = fullImage,
+        thumbnailImageUrl = actualThumbnailUrl,
+        fullImageUrl = chanPostImage.imageUrl,
         albumItemPostData = AlbumItemPostData(
           threadSubject = when (actualChanDescriptor) {
             is ChanDescriptor.ICatalogDescriptor -> {
@@ -562,7 +611,8 @@ class AlbumViewControllerV2ViewModel(
           mediaInfo = formatImageDetails(chanPostImage),
           aspectRatio = calculateAspectRatio(chanPostImage)
         ),
-        mediaType = chanPostImage.extension.asKurobaMediaType()
+        mediaType = chanPostImage.extension.asKurobaMediaType(),
+        downloadUniqueId = null
       )
     }
 
@@ -668,6 +718,76 @@ class AlbumViewControllerV2ViewModel(
       }
   }
 
+  private fun handleDownloadingImageState(downloadingImageState: ImageSaverV2ServiceDelegate.DownloadingImageState) {
+    val uniqueId = downloadingImageState.uniqueId
+    val imageFullUrl = downloadingImageState.imageFullUrl
+    val postDescriptor = downloadingImageState.postDescriptor
+    val state = downloadingImageState.state
+
+    if (imageFullUrl == null || postDescriptor == null) {
+      val downloadingAlbumItemKeys = _downloadingAlbumItems.values
+        .filter { downloadingAlbumItem -> downloadingAlbumItem.downloadUniqueId == uniqueId }
+        .map { downloadingAlbumItem -> downloadingAlbumItem.albumItemDataId }
+
+      downloadingAlbumItemKeys.forEach { downloadingAlbumItemKey ->
+        val newState = when (downloadingImageState.state) {
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading,
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded,
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload,
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled -> {
+            _downloadingAlbumItems[downloadingAlbumItemKey]?.copy(state = DownloadingAlbumItem.State.from(state))
+          }
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> {
+            _downloadingAlbumItems.remove(downloadingAlbumItemKey)
+            null
+          }
+        }
+
+        if (newState != null) {
+          _downloadingAlbumItems[downloadingAlbumItemKey] = newState
+        }
+
+        when (downloadingImageState.state) {
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading,
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded,
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload -> {
+            // no-op
+          }
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled,
+          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> {
+            clearDownloadingAlbumItemState(downloadingAlbumItemKey)
+          }
+        }
+      }
+    } else {
+      val albumItemData = _albumItems.firstOrNull { albumItemData ->
+        return@firstOrNull albumItemData.postDescriptor == postDescriptor &&
+          albumItemData.fullImageUrl == imageFullUrl
+      }
+
+      if (albumItemData == null) {
+        return
+      }
+
+      val newState = when (downloadingImageState.state) {
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading,
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded,
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload,
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled -> {
+          _downloadingAlbumItems[albumItemData.id]?.copy(state = DownloadingAlbumItem.State.from(state))
+        }
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> {
+          _downloadingAlbumItems.remove(albumItemData.id)
+          null
+        }
+      }
+
+      if (newState != null) {
+        _downloadingAlbumItems[albumItemData.id] = newState
+      }
+    }
+  }
+
   private fun calculateAspectRatio(chanPostImage: ChanPostImage): Float? {
     val imageWidth = chanPostImage.imageWidth
     val imageHeight = chanPostImage.imageHeight
@@ -701,6 +821,35 @@ class AlbumViewControllerV2ViewModel(
   }
 
   @Immutable
+  data class DownloadingAlbumItem(
+    val albumItemDataId: Long,
+    val downloadUniqueId: String,
+    val fullImageUrl: HttpUrl,
+    val state: State
+  ) {
+    enum class State {
+      Enqueued,
+      Downloading,
+      Downloaded,
+      FailedToDownload,
+      Canceled,
+      Deleted;
+
+      companion object {
+        fun from(state: ImageSaverV2ServiceDelegate.DownloadingImageState.State): State {
+          return when (state) {
+            ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading -> Downloading
+            ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded -> Downloaded
+            ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload -> FailedToDownload
+            ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled -> Canceled
+            ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> Deleted
+          }
+        }
+      }
+    }
+  }
+
+  @Immutable
   data class ToolbarData(
     val title: String = "",
     val subtitle: String = ""
@@ -717,28 +866,25 @@ class AlbumViewControllerV2ViewModel(
     val id: Long,
     val isCatalogMode: Boolean,
     val postDescriptor: PostDescriptor,
-    val thumbnailImage: ImageLoaderRequestData,
-    val fullImage: ImageLoaderRequestData?,
+    val thumbnailImageUrl: HttpUrl,
+    val fullImageUrl: HttpUrl?,
     val albumItemPostData: AlbumItemPostData?,
     val mediaType: KurobaMediaType,
+    val downloadUniqueId: String?
   ) {
     val composeKey: String
       get() {
-        val fullImage = fullImage
-        if (fullImage != null) {
-          return "${postDescriptor.serializeToString()}_${thumbnailImage.uniqueKey()}_${fullImage.uniqueKey()}"
+        val fullImageUrl = fullImageUrl
+        if (fullImageUrl != null) {
+          return "${postDescriptor.serializeToString()}_${thumbnailImageUrl}_${fullImageUrl}"
         }
 
-        return "${postDescriptor.serializeToString()}_${thumbnailImage.uniqueKey()}"
+        return "${postDescriptor.serializeToString()}_${thumbnailImageUrl}"
       }
 
-    val albumItemDataKey: AlbumItemDataKey = AlbumItemDataKey(postDescriptor, thumbnailImage)
+    val albumItemDataKey: AlbumItemDataKey = AlbumItemDataKey(postDescriptor, thumbnailImageUrl)
 
     fun isEqualToChanPostImage(chanPostImage: ChanPostImage): Boolean {
-      val thumbnailImageUrl = thumbnailImage.asUrlOrNull()
-        ?: return false
-      val fullImageUrl = fullImage?.asUrlOrNull()
-
       return thumbnailImageUrl == chanPostImage.actualThumbnailUrl &&
         fullImageUrl == chanPostImage.imageUrl &&
         postDescriptor == chanPostImage.ownerPostDescriptor
@@ -748,7 +894,7 @@ class AlbumViewControllerV2ViewModel(
   @Immutable
   data class AlbumItemDataKey(
     val postDescriptor: PostDescriptor,
-    val thumbnailImage: ImageLoaderRequestData,
+    val thumbnailImageUrl: HttpUrl,
   ) : PostImageThumbnailKey
 
   @Immutable
@@ -770,7 +916,7 @@ class AlbumViewControllerV2ViewModel(
     }
 
     fun addAll(albumItemIds: PersistentSet<Long>): AlbumSelection {
-      return copy(selectedItems = selectedItems.addAll(selectedItems))
+      return copy(selectedItems = selectedItems.addAll(albumItemIds))
     }
 
     fun contains(albumItemId: Long): Boolean {
@@ -796,7 +942,8 @@ class AlbumViewControllerV2ViewModel(
     private val snackbarManagerFactory: SnackbarManagerFactory,
     private val compositeCatalogManager: CompositeCatalogManager,
     private val filterOutHiddenImagesUseCase: FilterOutHiddenImagesUseCase,
-    private val imageSaverV2: ImageSaverV2
+    private val imageSaverV2: ImageSaverV2,
+    private val imageSaverV2ServiceDelegate: ImageSaverV2ServiceDelegate
   ) : ViewModelAssistedFactory<AlbumViewControllerV2ViewModel> {
     override fun create(handle: SavedStateHandle): AlbumViewControllerV2ViewModel {
       return AlbumViewControllerV2ViewModel(
@@ -809,7 +956,8 @@ class AlbumViewControllerV2ViewModel(
         snackbarManagerFactory = snackbarManagerFactory,
         compositeCatalogManager = compositeCatalogManager,
         filterOutHiddenImagesUseCase = filterOutHiddenImagesUseCase,
-        imageSaverV2 = imageSaverV2
+        imageSaverV2 = imageSaverV2,
+        imageSaverV2ServiceDelegate = imageSaverV2ServiceDelegate
       )
     }
   }
