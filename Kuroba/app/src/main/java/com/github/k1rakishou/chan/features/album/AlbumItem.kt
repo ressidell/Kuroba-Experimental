@@ -7,9 +7,12 @@ import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -27,22 +30,28 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
 import com.github.k1rakishou.chan.ui.compose.image.KurobaComposePostImageThumbnail
+import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.utils.appDependencies
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+
+private const val TransparentBlackColorAlpha = 0.4f
 
 @Composable
 fun AlbumItem(
   modifier: Modifier,
   isInSelectionMode: Boolean,
   isSelected: Boolean,
+  showAlbumViewsImageDetails: Boolean,
   albumItemData: AlbumItemData,
   downloadingAlbumItem: DownloadingAlbumItem?,
   onClick: (AlbumItemData) -> Unit,
@@ -68,10 +77,12 @@ fun AlbumItem(
 
   Box(
     modifier = modifier
-      .albumItemSelection(isInSelectionMode, isSelected)
+      .then(
+        Modifier.albumItemSelection(isInSelectionMode, isSelected)
+      )
   ) {
     KurobaComposePostImageThumbnail(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxWidth(),
       key = albumItemData.albumItemDataKey,
       request = request,
       mediaType = albumItemData.mediaType,
@@ -87,11 +98,66 @@ fun AlbumItem(
       downloadingAlbumItem = downloadingAlbumItem,
       clearDownloadingAlbumItemState = clearDownloadingAlbumItemState
     )
+
+    AlbumItemIndicators(
+      modifier = Modifier
+        .fillMaxWidth()
+        .wrapContentHeight()
+        .align(Alignment.TopCenter)
+    )
+
+    if (showAlbumViewsImageDetails && albumItemData.albumItemPostData?.isNotEmpty() == true) {
+      AlbumItemInfo(
+        modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight()
+          .align(Alignment.BottomCenter),
+        albumItemPostData = albumItemData.albumItemPostData
+      )
+    }
   }
 }
 
 @Composable
-fun DownloadingAlbumItemOverlay(
+private fun AlbumItemInfo(
+  modifier: Modifier,
+  albumItemPostData: AlbumViewControllerV2ViewModel.AlbumItemPostData
+) {
+  Column(
+    modifier = modifier
+      .drawBehind { drawRect(Color.Black.copy(alpha = TransparentBlackColorAlpha)) }
+      .padding(horizontal = 2.dp, vertical = 4.dp),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    if (albumItemPostData.threadSubject != null) {
+      KurobaComposeText(
+        text = albumItemPostData.threadSubject,
+        color = Color.White,
+        maxLines = 1,
+        fontSize = 10.ktu,
+        overflow = TextOverflow.Ellipsis
+      )
+    }
+
+    if (albumItemPostData.mediaInfo != null) {
+      KurobaComposeText(
+        text = albumItemPostData.mediaInfo,
+        color = Color.White,
+        maxLines = 1,
+        fontSize = 10.ktu,
+        overflow = TextOverflow.Ellipsis
+      )
+    }
+  }
+}
+
+@Composable
+private fun AlbumItemIndicators(modifier: Modifier) {
+  // TODO("Not yet implemented")
+}
+
+@Composable
+private fun DownloadingAlbumItemOverlay(
   modifier: Modifier,
   downloadingAlbumItem: DownloadingAlbumItem?,
   clearDownloadingAlbumItemState: (DownloadingAlbumItem) -> Unit
@@ -158,7 +224,7 @@ fun DownloadingAlbumItemOverlay(
         Image(
           modifier = Modifier
             .size(40.dp)
-            .drawBehind { drawCircle(color = Color.Black.copy(alpha = 0.5f)) }
+            .drawBehind { drawCircle(color = Color.Black.copy(alpha = TransparentBlackColorAlpha)) }
             .padding(4.dp),
           painter = painter,
           contentDescription = null,

@@ -34,6 +34,7 @@ fun AlbumItemsStaggeredGrid(
 ) {
   val contentPaddings = LocalContentPaddings.current
   val albumSelection by controllerViewModel.albumSelection.collectAsState()
+  val showAlbumViewsImageDetails by controllerViewModel.showAlbumViewsImageDetails.collectAsState()
   val albumItems = controllerViewModel.albumItems
   val downloadingAlbumItems = controllerViewModel.downloadingAlbumItems
 
@@ -95,6 +96,7 @@ fun AlbumItemsStaggeredGrid(
             },
           isInSelectionMode = albumSelection.isInSelectionMode,
           isSelected = albumItemData.id in albumSelection.selectedItems,
+          showAlbumViewsImageDetails = showAlbumViewsImageDetails ?: false,
           albumItemData = albumItemData,
           downloadingAlbumItem = downloadingAlbumItems[albumItemData.id],
           onClick = onClick,

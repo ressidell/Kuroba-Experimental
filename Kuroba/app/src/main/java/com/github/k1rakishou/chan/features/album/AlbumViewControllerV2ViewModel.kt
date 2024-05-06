@@ -30,6 +30,7 @@ import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.asKurobaMediaType
 import com.github.k1rakishou.chan.utils.paramsOrNull
 import com.github.k1rakishou.chan.utils.requireParams
+import com.github.k1rakishou.common.isNotNullNorBlank
 import com.github.k1rakishou.common.mutableListWithCap
 import com.github.k1rakishou.common.resumeValueSafe
 import com.github.k1rakishou.common.toHashSetBy
@@ -137,6 +138,10 @@ class AlbumViewControllerV2ViewModel(
     .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
   val albumLayoutGridMode = PersistableChanState.albumLayoutGridMode.listenForChanges()
+    .asFlow()
+    .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+  val showAlbumViewsImageDetails = PersistableChanState.showAlbumViewsImageDetails.listenForChanges()
     .asFlow()
     .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
@@ -896,7 +901,11 @@ class AlbumViewControllerV2ViewModel(
     val threadSubject: String?,
     val mediaInfo: String?,
     val aspectRatio: Float?
-  )
+  ) {
+    fun isNotEmpty(): Boolean {
+      return threadSubject.isNotNullNorBlank() || mediaInfo.isNotNullNorBlank()
+    }
+  }
 
   class ViewModelFactory @Inject constructor(
     private val appResources: AppResources,
