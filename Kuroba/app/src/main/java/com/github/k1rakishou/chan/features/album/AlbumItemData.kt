@@ -28,6 +28,8 @@ data class AlbumItemData(
       return "${postDescriptor.serializeToString()}_${thumbnailImageUrl}"
     }
 
+  val fullImageUrlString: String? = fullImageUrl?.toString()
+
   val albumItemDataKey: AlbumViewControllerV2ViewModel.AlbumItemDataKey =
     AlbumViewControllerV2ViewModel.AlbumItemDataKey(postDescriptor, thumbnailImageUrl)
 

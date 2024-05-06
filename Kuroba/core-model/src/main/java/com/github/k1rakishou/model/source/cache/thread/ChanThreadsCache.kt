@@ -17,7 +17,6 @@ import com.github.k1rakishou.model.data.thread.ChanThread
 import com.github.k1rakishou.model.source.cache.ChanCatalogSnapshotCache
 import com.github.k1rakishou.model.util.ensureBackgroundThread
 import org.joda.time.Period
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
@@ -209,6 +208,13 @@ class ChanThreadsCache(
 
   fun getThread(threadDescriptor: ChanDescriptor.ThreadDescriptor): ChanThread? {
     return chanThreads[threadDescriptor]
+  }
+
+  fun getPost(chanDescriptor: ChanDescriptor, postDescriptor: PostDescriptor): ChanPost? {
+    return when (chanDescriptor) {
+      is ChanDescriptor.ICatalogDescriptor -> getCatalog(chanDescriptor)?.getPost(postDescriptor)
+      is ChanDescriptor.ThreadDescriptor -> getThread(chanDescriptor)?.getPost(postDescriptor)
+    }
   }
 
   fun contains(chanDescriptor: ChanDescriptor): Boolean {

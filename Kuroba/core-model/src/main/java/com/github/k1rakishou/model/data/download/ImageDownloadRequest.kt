@@ -25,7 +25,7 @@ data class ImageDownloadRequest(
 
     companion object {
       fun fromRawValue(rawValue: Int): Status? {
-        return values().firstOrNull { status -> status.rawValue == rawValue }
+        return entries.firstOrNull { status -> status.rawValue == rawValue }
       }
     }
   }

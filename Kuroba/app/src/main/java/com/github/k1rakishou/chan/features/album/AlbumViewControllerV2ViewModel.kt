@@ -32,7 +32,6 @@ import com.github.k1rakishou.chan.utils.paramsOrNull
 import com.github.k1rakishou.chan.utils.requireParams
 import com.github.k1rakishou.common.isNotNullNorBlank
 import com.github.k1rakishou.common.mutableListWithCap
-import com.github.k1rakishou.common.resumeValueSafe
 import com.github.k1rakishou.common.toHashSetBy
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
@@ -41,12 +40,10 @@ import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.source.cache.ChanCatalogSnapshotCache
 import com.github.k1rakishou.model.source.cache.thread.ChanThreadsCache
 import com.github.k1rakishou.model.util.ChanPostUtils
-import com.github.k1rakishou.persist_state.ImageSaverV2Options
 import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,7 +65,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import java.util.Locale
@@ -90,7 +86,6 @@ class AlbumViewControllerV2ViewModel(
   private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager
 ) : BaseViewModel() {
   private val _albumItemIdCounter = AtomicLong(0)
-  private var _enqueueAlbumItemsDownloadJob: Job? = null
 
   private val _currentListenMode: AlbumViewControllerV2.ListenMode
     get() = savedStateHandle.requireParams<AlbumViewControllerV2.Params>().listenMode
@@ -145,6 +140,10 @@ class AlbumViewControllerV2ViewModel(
     .asFlow()
     .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
+  val globalNsfwMode = ChanSettings.globalNsfwMode.listenForChanges()
+    .asFlow()
+    .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
   private val snackbarManager by lazy {
     val snackbarScope = when (_currentListenMode) {
       AlbumViewControllerV2.ListenMode.Catalog -> SnackbarScope.Album(SnackbarScope.MainLayoutAnchor.Catalog)
@@ -152,6 +151,14 @@ class AlbumViewControllerV2ViewModel(
     }
 
     snackbarManagerFactory.snackbarManager(snackbarScope)
+  }
+
+  private val downloadImagesHelper by lazy {
+    DownloadImagesHelper(
+      viewModelScope = viewModelScope,
+      snackbarManager = snackbarManager,
+      imageSaverV2 = imageSaverV2
+    )
   }
 
   override fun injectDependencies(component: ViewModelComponent) {
@@ -312,113 +319,40 @@ class AlbumViewControllerV2ViewModel(
       .copy(spoilerThumbnailImageUrl = null)
   }
 
-  fun downloadSelectedItems() {
-    _enqueueAlbumItemsDownloadJob?.cancel()
-    _enqueueAlbumItemsDownloadJob = viewModelScope.launch {
-      val albumSelection = _albumSelection.value
-
-      val selectedCount = albumSelection.size
-      if (selectedCount <= 0) {
-        Logger.debug(TAG) { "downloadSelectedItems() album selection is empty" }
-        snackbarManager.errorToast(R.string.album_download_none_checked)
-        return@launch
-      }
-
-      Logger.debug(TAG) { "downloadSelectedItems() selectedItemsCount: ${albumSelection.size}" }
-
-      val simpleSaveableMediaInfoList = ArrayList<ImageSaverV2.SimpleSaveableMediaInfo>(selectedCount)
-
-      for (albumItemId in albumSelection.selectedItems) {
-        val chanPostImage = findChanPostImage(albumItemId)
-        if (chanPostImage == null) {
-          continue
-        }
-
-        if (chanPostImage.isInlined || chanPostImage.hidden) {
-          // Do not download inlined files via the Album downloads (because they often
-          // fail with SSL exceptions) and we can't really trust those files.
-          // Also don't download filter hidden items
-          continue
-        }
-
-        val simpleSaveableMediaInfo = ImageSaverV2.SimpleSaveableMediaInfo.fromChanPostImage(chanPostImage)
-        if (simpleSaveableMediaInfo != null) {
-          simpleSaveableMediaInfoList.add(simpleSaveableMediaInfo)
-        }
-      }
-
-      if (simpleSaveableMediaInfoList.isEmpty()) {
-        Logger.debug(TAG) { "downloadSelectedItems() simpleSaveableMediaInfoList is empty" }
-        snackbarManager.errorToast(R.string.album_download_no_suitable_images)
-        return@launch
-      }
-
-      Logger.debug(TAG) { "downloadSelectedItems() simpleSaveableMediaInfoList: ${simpleSaveableMediaInfoList.size}" }
-
-      val updatedImageSaverV2Options = suspendCancellableCoroutine<ImageSaverV2Options?> { continuation ->
-        val options = ImageSaverV2OptionsController.Options.MultipleImages(
-          onSaveClicked = { updatedImageSaverV2Options ->
-            continuation.resumeValueSafe(updatedImageSaverV2Options)
-          },
-          onCanceled = {
-            continuation.resumeValueSafe(null)
-          }
-        )
-
-        if (!_presentController.tryEmit(PresentController.ImageSaverOptionsController(options))) {
-          continuation.cancel()
-        }
-      }
-
-      if (updatedImageSaverV2Options == null) {
-        Logger.debug(TAG) { "downloadSelectedItems() updatedImageSaverV2Options is null" }
-        snackbarManager.errorToast(R.string.album_download_canceled_by_user)
-        return@launch
-      }
-
-      val downloadUniqueId = imageSaverV2.saveManySuspend(
-        imageSaverV2Options = updatedImageSaverV2Options,
-        simpleSaveableMediaInfoList = simpleSaveableMediaInfoList
-      )
-
-      if (downloadUniqueId == null) {
-        Logger.debug(TAG) { "downloadSelectedItems() downloadUniqueId is null" }
-        snackbarManager.errorToast(R.string.album_download_failed_to_enqueue_download)
-        return@launch
-      }
-
-      _albumSelection.value.selectedItems.forEach { albumItemDataId ->
-        val albumItemDataIndex = _albumItems.indexOfFirst { albumItemData -> albumItemData.id == albumItemDataId }
-        if (albumItemDataIndex < 0) {
-          return@forEach
-        }
-
-        val albumItemData = _albumItems[albumItemDataIndex]
-
-        val fullImageUrl = albumItemData.fullImageUrl
-        if (fullImageUrl == null) {
-          return@forEach
-        }
-
-        _downloadingAlbumItems.put(
-          albumItemDataId,
-          DownloadingAlbumItem(
-            albumItemDataId = albumItemDataId,
-            downloadUniqueId = downloadUniqueId,
-            fullImageUrl = fullImageUrl,
-            state = DownloadingAlbumItem.State.Enqueued
-          )
-        )
-
-        _albumItems[albumItemDataIndex] = albumItemData.copy(downloadUniqueId = downloadUniqueId)
-      }
-
-      Logger.debug(TAG) {
-        "downloadSelectedItems() Successfully enqueued a download with id downloadUniqueId: '${downloadUniqueId}'"
-      }
-
-      exitSelectionMode()
+  fun downloadImage(chanPostImage: ChanPostImage, showOptions: Boolean) {
+    val albumItemData = findAlbumItemData(chanPostImage)
+    if (albumItemData == null) {
+      return
     }
+
+    _albumSelection.value = _albumSelection.value.add(albumItemData.id)
+
+    downloadImagesHelper.downloadImage(
+      albumSelection = _albumSelection.value,
+      albumItems = _albumItems,
+      downloadingAlbumItems = _downloadingAlbumItems,
+      chanPostImage = chanPostImage,
+      showOptions = showOptions,
+      presentImageSaverOptionsController = { options ->
+        val controller = PresentController.ImageSaverOptionsController(options)
+        _presentController.tryEmit(controller)
+      },
+      exitSelectionMode = { exitSelectionMode() }
+    )
+  }
+
+  fun downloadSelectedItems() {
+    downloadImagesHelper.downloadSelectedItems(
+      albumSelection = _albumSelection.value,
+      albumItems = _albumItems,
+      downloadingAlbumItems = _downloadingAlbumItems,
+      findChanPostImage = { albumItemId -> findChanPostImage(albumItemId) },
+      presentImageSaverOptionsController = { options ->
+        val controller = PresentController.ImageSaverOptionsController(options)
+        _presentController.tryEmit(controller)
+      },
+      exitSelectionMode = { exitSelectionMode() }
+    )
   }
 
   private suspend fun updateUi(

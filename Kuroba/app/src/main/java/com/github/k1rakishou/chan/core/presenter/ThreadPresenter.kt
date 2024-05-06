@@ -1719,7 +1719,8 @@ class ThreadPresenter @Inject constructor(
       },
       openThreadFunc = { },
       goToPostFunc = { },
-      selectFunc = { }
+      selectFunc = { },
+      downloadMediaFileFunc = null
     )
 
   }

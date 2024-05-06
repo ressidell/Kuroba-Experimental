@@ -37,10 +37,12 @@ import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.ui.compose.image.KurobaComposePostImageIndicators
 import com.github.k1rakishou.chan.ui.compose.image.KurobaComposePostImageThumbnail
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.utils.appDependencies
+import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -51,7 +53,9 @@ fun AlbumItem(
   modifier: Modifier,
   isInSelectionMode: Boolean,
   isSelected: Boolean,
+  isNsfwModeEnabled: Boolean,
   showAlbumViewsImageDetails: Boolean,
+  currentDescriptor: ChanDescriptor?,
   albumItemData: AlbumItemData,
   downloadingAlbumItem: DownloadingAlbumItem?,
   onClick: (AlbumItemData) -> Unit,
@@ -86,6 +90,7 @@ fun AlbumItem(
       key = albumItemData.albumItemDataKey,
       request = request,
       mediaType = albumItemData.mediaType,
+      isNsfwModeEnabled = isNsfwModeEnabled,
       displayErrorMessage = true,
       showShimmerEffectWhenLoading = true,
       contentScale = ContentScale.Crop,
@@ -99,12 +104,16 @@ fun AlbumItem(
       clearDownloadingAlbumItemState = clearDownloadingAlbumItemState
     )
 
-    AlbumItemIndicators(
-      modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight()
-        .align(Alignment.TopCenter)
-    )
+    if (currentDescriptor != null && albumItemData.fullImageUrlString != null) {
+      KurobaComposePostImageIndicators(
+        modifier = Modifier
+          .align(Alignment.TopStart),
+        chanDescriptor = currentDescriptor,
+        postDescriptor = albumItemData.postDescriptor,
+        imageFullUrlString = albumItemData.fullImageUrlString,
+        backgroundAlpha = TransparentBlackColorAlpha
+      )
+    }
 
     if (showAlbumViewsImageDetails && albumItemData.albumItemPostData?.isNotEmpty() == true) {
       AlbumItemInfo(
@@ -149,11 +158,6 @@ private fun AlbumItemInfo(
       )
     }
   }
-}
-
-@Composable
-private fun AlbumItemIndicators(modifier: Modifier) {
-  // TODO("Not yet implemented")
 }
 
 @Composable

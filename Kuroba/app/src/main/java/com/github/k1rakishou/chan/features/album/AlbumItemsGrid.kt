@@ -35,6 +35,9 @@ fun AlbumItemsGrid(
   val contentPaddings = LocalContentPaddings.current
   val albumSelection by controllerViewModel.albumSelection.collectAsState()
   val showAlbumViewsImageDetails by controllerViewModel.showAlbumViewsImageDetails.collectAsState()
+  val globalNsfwMode by controllerViewModel.globalNsfwMode.collectAsState()
+  val currentDescriptor by controllerViewModel.currentDescriptor.collectAsState()
+
   val albumItems = controllerViewModel.albumItems
   val downloadingAlbumItems = controllerViewModel.downloadingAlbumItems
 
@@ -89,7 +92,9 @@ fun AlbumItemsGrid(
             .aspectRatio(3f / 4f),
           isInSelectionMode = albumSelection.isInSelectionMode,
           isSelected = albumItemData.id in albumSelection.selectedItems,
+          isNsfwModeEnabled = globalNsfwMode ?: false,
           showAlbumViewsImageDetails = showAlbumViewsImageDetails ?: false,
+          currentDescriptor = currentDescriptor,
           albumItemData = albumItemData,
           downloadingAlbumItem = downloadingAlbumItems[albumItemData.id],
           onClick = onClick,

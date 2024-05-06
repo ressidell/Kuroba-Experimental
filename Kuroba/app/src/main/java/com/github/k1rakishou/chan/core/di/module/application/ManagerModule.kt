@@ -35,6 +35,7 @@ import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
+import com.github.k1rakishou.chan.core.manager.DownloadedImagesManager
 import com.github.k1rakishou.chan.core.manager.FirewallBypassManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
 import com.github.k1rakishou.chan.core.manager.NotificationAutoDismissManager
@@ -730,8 +731,8 @@ class ManagerModule {
   fun provideImageSaverV2Delegate(
     appScope: CoroutineScope,
     appConstants: AppConstants,
-    cacheHandler: Lazy<CacheHandler>,
-    downloaderOkHttpClient: Lazy<RealDownloaderOkHttpClient>,
+    cacheHandler: CacheHandler,
+    downloaderOkHttpClient: RealDownloaderOkHttpClient,
     notificationManagerCompat: NotificationManagerCompat,
     imageSaverFileManagerWrapper: ImageSaverFileManagerWrapper,
     siteResolver: SiteResolver,
@@ -739,7 +740,8 @@ class ManagerModule {
     imageDownloadRequestRepository: ImageDownloadRequestRepository,
     chanThreadManager: ChanThreadManager,
     threadDownloadManager: ThreadDownloadManager,
-    notificationAutoDismissManager: NotificationAutoDismissManager
+    notificationAutoDismissManager: NotificationAutoDismissManager,
+    downloadedImagesManager: DownloadedImagesManager
   ): ImageSaverV2ServiceDelegate {
     deps("ImageSaverV2ServiceDelegate")
     return ImageSaverV2ServiceDelegate(
@@ -755,7 +757,8 @@ class ManagerModule {
       imageDownloadRequestRepository,
       chanThreadManager,
       threadDownloadManager,
-      notificationAutoDismissManager
+      notificationAutoDismissManager,
+      downloadedImagesManager
     )
   }
 
@@ -1017,6 +1020,13 @@ class ManagerModule {
   fun provideRevealedSpoilerImagesManager(): RevealedSpoilerImagesManager {
     Logger.deps("RevealedSpoilerImagesManager")
     return RevealedSpoilerImagesManager()
+  }
+
+  @Singleton
+  @Provides
+  fun provideDownloadedImagesManager(fileManager: FileManager): DownloadedImagesManager {
+    Logger.deps("DownloadedImagesManager")
+    return DownloadedImagesManager(fileManager)
   }
 
 }

@@ -305,6 +305,9 @@ class AlbumViewControllerV2(
       },
       selectFunc = { chanPostImage ->
         controllerViewModel.enterSelectionMode(chanPostImage)
+      },
+      downloadMediaFileFunc = { chanPostImage, showOptions ->
+        controllerViewModel.downloadImage(chanPostImage, showOptions)
       }
     )
   }

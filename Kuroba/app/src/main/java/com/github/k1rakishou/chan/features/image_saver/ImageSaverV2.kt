@@ -76,42 +76,8 @@ class ImageSaverV2(
   }
 
   fun save(imageSaverV2Options: ImageSaverV2Options, simpleSaveableMediaInfo: SimpleSaveableMediaInfo, newFileName: String?) {
-    Logger.d(TAG, "save('$imageSaverV2Options', mediaUrl='${simpleSaveableMediaInfo.mediaUrl}', newFileName='$newFileName')")
-
     rendezvousCoroutineExecutor.post {
-      val uniqueId = calculateUniqueId(listOf(simpleSaveableMediaInfo))
-      val duplicatesResolution =
-        ImageSaverV2Options.DuplicatesResolution.fromRawValue(imageSaverV2Options.duplicatesResolution)
-
-      val imageDownloadRequest = ImageDownloadRequest(
-        uniqueId = uniqueId,
-        imageFullUrl = simpleSaveableMediaInfo.mediaUrl,
-        postDescriptorString = simpleSaveableMediaInfo.ownerPostDescriptor.serializeToString(),
-        newFileName = newFileName,
-        status = ImageDownloadRequest.Status.Queued,
-        duplicateFileUri = null,
-        duplicatesResolution = duplicatesResolution,
-        createdOn = DateTime.now()
-      )
-
-      val actualImageDownloadRequest = imageDownloadRequestRepository.create(imageDownloadRequest)
-        .safeUnwrap { error ->
-          Logger.e(TAG, "Failed to create image download request", error)
-          return@post
-        }
-
-      if (actualImageDownloadRequest == null) {
-        // This request is already active
-        Logger.d(TAG, "save('$imageSaverV2Options', mediaUrl='${simpleSaveableMediaInfo.mediaUrl}', " +
-          "newFileName='$newFileName') request is already active")
-        return@post
-      }
-
-      startImageSaverService(
-        uniqueId = uniqueId,
-        imageSaverV2Options = imageSaverV2Options,
-        downloadType = ImageSaverV2Service.SINGLE_IMAGE_DOWNLOAD_TYPE
-      )
+      saveSuspend(imageSaverV2Options, simpleSaveableMediaInfo, newFileName)
     }
   }
 
@@ -119,6 +85,55 @@ class ImageSaverV2(
     rendezvousCoroutineExecutor.post {
       saveManySuspend(imageSaverV2Options, simpleSaveableMediaInfoList)
     }
+  }
+
+  suspend fun saveSuspend(
+    imageSaverV2Options: ImageSaverV2Options,
+    simpleSaveableMediaInfo: SimpleSaveableMediaInfo,
+    newFilename: String?
+  ): String? {
+    Logger.debug(TAG) {
+      "save('$imageSaverV2Options', mediaUrl: '${simpleSaveableMediaInfo.mediaUrl}', newFilename: '$newFilename')"
+    }
+
+    val uniqueId = calculateUniqueId(listOf(simpleSaveableMediaInfo))
+    val duplicatesResolution =
+      ImageSaverV2Options.DuplicatesResolution.fromRawValue(imageSaverV2Options.duplicatesResolution)
+
+    val imageDownloadRequest = ImageDownloadRequest(
+      uniqueId = uniqueId,
+      imageFullUrl = simpleSaveableMediaInfo.mediaUrl,
+      postDescriptorString = simpleSaveableMediaInfo.ownerPostDescriptor.serializeToString(),
+      newFileName = newFilename,
+      status = ImageDownloadRequest.Status.Queued,
+      duplicateFileUri = null,
+      duplicatesResolution = duplicatesResolution,
+      createdOn = DateTime.now()
+    )
+
+    val actualImageDownloadRequest = imageDownloadRequestRepository.create(imageDownloadRequest)
+      .safeUnwrap { error ->
+        Logger.error(TAG, error) { "Failed to create image download request" }
+        return null
+      }
+
+    if (actualImageDownloadRequest == null) {
+      // This request is already active
+      Logger.debug(TAG) {
+        "save('$imageSaverV2Options', mediaUrl: '${simpleSaveableMediaInfo.mediaUrl}', " +
+          "newFileName: '$newFilename') request is already active"
+      }
+
+      return null
+    }
+
+    startImageSaverService(
+      uniqueId = uniqueId,
+      imageSaverV2Options = imageSaverV2Options,
+      downloadType = ImageSaverV2Service.SINGLE_IMAGE_DOWNLOAD_TYPE
+    )
+
+    return uniqueId
   }
 
   suspend fun saveManySuspend(

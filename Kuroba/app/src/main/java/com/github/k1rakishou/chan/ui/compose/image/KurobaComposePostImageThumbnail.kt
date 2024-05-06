@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -53,6 +54,7 @@ fun KurobaComposePostImageThumbnail(
   mediaType: KurobaMediaType,
   backgroundColor: Color = LocalChanTheme.current.backColorSecondaryCompose,
   hasAudio: Boolean = false,
+  isNsfwModeEnabled: Boolean = false,
   displayErrorMessage: Boolean = true,
   showShimmerEffectWhenLoading: Boolean = true,
   contentScale: ContentScale = ContentScale.Crop,
@@ -95,7 +97,15 @@ fun KurobaComposePostImageThumbnail(
 
     if (imageLoaderResult is ImageLoaderResult.Success) {
       Image(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+          .fillMaxSize()
+          .drawWithContent {
+            drawContent()
+
+            if (isNsfwModeEnabled) {
+              drawRect(color = Color.DarkGray.copy(alpha = 0.9f))
+            }
+          },
         painter = imageLoaderResult.painter,
         contentDescription = contentDescription,
         contentScale = contentScale

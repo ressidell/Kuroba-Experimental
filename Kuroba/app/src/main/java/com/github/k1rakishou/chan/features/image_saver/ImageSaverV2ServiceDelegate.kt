@@ -9,6 +9,7 @@ import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.cache.CacheHandler
 import com.github.k1rakishou.chan.core.helper.ImageSaverFileManagerWrapper
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
+import com.github.k1rakishou.chan.core.manager.DownloadedImagesManager
 import com.github.k1rakishou.chan.core.manager.NotificationAutoDismissManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.site.SiteResolver
@@ -38,13 +39,13 @@ import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.repository.ChanPostImageRepository
 import com.github.k1rakishou.model.repository.ImageDownloadRequestRepository
 import com.github.k1rakishou.persist_state.ImageSaverV2Options
-import dagger.Lazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -69,8 +70,8 @@ class ImageSaverV2ServiceDelegate(
   private val verboseLogs: Boolean,
   private val appScope: CoroutineScope,
   private val appConstants: AppConstants,
-  private val cacheHandler: Lazy<CacheHandler>,
-  private val downloaderOkHttpClient: Lazy<RealDownloaderOkHttpClient>,
+  private val cacheHandler: CacheHandler,
+  private val downloaderOkHttpClient: RealDownloaderOkHttpClient,
   private val notificationManagerCompat: NotificationManagerCompat,
   private val imageSaverFileManager: ImageSaverFileManagerWrapper,
   private val siteResolver: SiteResolver,
@@ -78,7 +79,8 @@ class ImageSaverV2ServiceDelegate(
   private val imageDownloadRequestRepository: ImageDownloadRequestRepository,
   private val chanThreadManager: ChanThreadManager,
   private val threadDownloadManager: ThreadDownloadManager,
-  private val notificationAutoDismissManager: NotificationAutoDismissManager
+  private val notificationAutoDismissManager: NotificationAutoDismissManager,
+  private val downloadedImagesManager: DownloadedImagesManager
 ) {
   private val mutex = Mutex()
 
@@ -191,6 +193,10 @@ class ImageSaverV2ServiceDelegate(
 
   suspend fun downloadImages(imageDownloadInputData: ImageSaverV2Service.ImageDownloadInputData) {
     stopServiceFlow.emit(ServiceStopCommand.Cancel)
+
+    // Wait 1 second before doing anything so that other classes that listen for image downloads have ti to setup
+    // their listeners/etc.
+    delay(1000)
 
     serializedCoroutineExecutor.post {
       try {
@@ -485,6 +491,11 @@ class ImageSaverV2ServiceDelegate(
         }
 
         completedRequests.incrementAndGet()
+
+        downloadedImagesManager.onImageDownloaded(
+          outputFileUri = downloadImageResult.outputFileUri,
+          imageDownloadRequest = downloadImageResult.imageDownloadRequest
+        )
       }
       is DownloadImageResult.OutOfDiskSpaceError -> {
         hasOutOfDiskSpaceErrors.set(true)
@@ -929,8 +940,9 @@ class ImageSaverV2ServiceDelegate(
         is ResultFile.Skip -> {
           if (outputFileResult.fileIsNotEmpty) {
             return@Try DownloadImageResult.Success(
-              outputFileResult.outputDirUri,
-              imageDownloadRequest
+              outputDirUri = outputFileResult.outputDirUri,
+              outputFileUri = outputFileResult.outputFileUri,
+              imageDownloadRequest = imageDownloadRequest
             )
           }
 
@@ -944,6 +956,7 @@ class ImageSaverV2ServiceDelegate(
 
       val outputFile = outputFileResult.file
       val outputDirUri = outputFileResult.outputDirUri
+      val outputFileUri = outputFileResult.outputFileUri
 
       val actualOutputFile = fileManager.create(outputFile)
       if (actualOutputFile == null) {
@@ -984,7 +997,11 @@ class ImageSaverV2ServiceDelegate(
         }
       }
 
-      return@Try DownloadImageResult.Success(outputDirUri, imageDownloadRequest)
+      return@Try DownloadImageResult.Success(
+        outputDirUri = outputDirUri,
+        outputFileUri = outputFileUri,
+        imageDownloadRequest = imageDownloadRequest
+      )
     }.mapErrorToValue { error -> DownloadImageResult.Failure(error, true) }
   }
 
@@ -1001,8 +1018,8 @@ class ImageSaverV2ServiceDelegate(
     var localInputStream: InputStream? = null
 
     try {
-      if (cacheHandler.get().cacheFileExists(cacheFileType, fileUrl)) {
-        val cachedFile = cacheHandler.get().getCacheFileOrNull(cacheFileType, fileUrl)
+      if (cacheHandler.cacheFileExists(cacheFileType, fileUrl)) {
+        val cachedFile = cacheHandler.getCacheFileOrNull(cacheFileType, fileUrl)
         if (cachedFile != null && cachedFile.canRead() && cachedFile.length() > 0) {
           localInputStream = cachedFile.inputStream()
         }
@@ -1044,7 +1061,7 @@ class ImageSaverV2ServiceDelegate(
       site.requestModifier().modifyMediaDownloadRequest(site, requestBuilder)
     }
 
-    val response = downloaderOkHttpClient.get().okHttpClient().suspendCall(requestBuilder.build())
+    val response = downloaderOkHttpClient.okHttpClient().suspendCall(requestBuilder.build())
 
     if (!response.isSuccessful) {
       if (response.code == 404) {
@@ -1098,6 +1115,7 @@ class ImageSaverV2ServiceDelegate(
   sealed class DownloadImageResult {
     data class Success(
       val outputDirUri: Uri,
+      val outputFileUri: Uri,
       val imageDownloadRequest: ImageDownloadRequest,
     ) : DownloadImageResult()
 

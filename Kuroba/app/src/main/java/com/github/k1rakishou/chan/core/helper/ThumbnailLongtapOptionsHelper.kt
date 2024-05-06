@@ -38,7 +38,8 @@ class ThumbnailLongtapOptionsHelper(
     showFiltersControllerFunc: (ChanFilterMutable) -> Unit,
     openThreadFunc: (PostDescriptor) -> Unit,
     goToPostFunc: (PostDescriptor) -> Unit,
-    selectFunc: (ChanPostImage) -> Unit
+    selectFunc: (ChanPostImage) -> Unit,
+    downloadMediaFileFunc: ((ChanPostImage, Boolean) -> Unit)?
   ) {
     val fullImageName = buildString {
       append((postImage.filename ?: postImage.serverFilename))
@@ -99,7 +100,8 @@ class ThumbnailLongtapOptionsHelper(
           showFiltersControllerFunc = showFiltersControllerFunc,
           openThreadFunc = openThreadFunc,
           goToPostFunc = goToPostFunc,
-          selectFunc = selectFunc
+          selectFunc = selectFunc,
+          downloadMediaFileFunc = downloadMediaFileFunc
         )
       }
     )
@@ -115,7 +117,8 @@ class ThumbnailLongtapOptionsHelper(
     showFiltersControllerFunc: (ChanFilterMutable) -> Unit,
     openThreadFunc: (PostDescriptor) -> Unit,
     goToPostFunc: (PostDescriptor) -> Unit,
-    selectFunc: (ChanPostImage) -> Unit
+    selectFunc: (ChanPostImage) -> Unit,
+    downloadMediaFileFunc: ((ChanPostImage, Boolean) -> Unit)?
   ) {
     when (id) {
       SELECT -> {
@@ -182,9 +185,19 @@ class ThumbnailLongtapOptionsHelper(
         }
       }
       DOWNLOAD_MEDIA_FILE_CONTENT -> {
+        if (downloadMediaFileFunc != null) {
+          downloadMediaFileFunc(postImage, false)
+          return
+        }
+
         downloadMediaFile(context, false, postImage, presentControllerFunc)
       }
       DOWNLOAD_WITH_OPTIONS_MEDIA_FILE_CONTENT -> {
+        if (downloadMediaFileFunc != null) {
+          downloadMediaFileFunc(postImage, true)
+          return
+        }
+
         downloadMediaFile(context, true, postImage, presentControllerFunc)
       }
     }
