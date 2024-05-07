@@ -5,6 +5,7 @@ import androidx.compose.runtime.IntState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.SavedStateHandle
@@ -160,6 +161,15 @@ class AlbumViewControllerV2ViewModel(
       imageSaverV2 = imageSaverV2
     )
   }
+
+  private val autoClearDownloadingAlbumItemState = AutoClearDownloadingAlbumItemState(
+    viewModelScope = viewModelScope,
+    clearDownloadingAlbumItemState = { toClear ->
+      Snapshot.withMutableSnapshot {
+        toClear.forEach { albumItemDataId -> clearDownloadingAlbumItemState(albumItemDataId) }
+      }
+    }
+  )
 
   override fun injectDependencies(component: ViewModelComponent) {
     component.inject(this)
@@ -716,39 +726,52 @@ class AlbumViewControllerV2ViewModel(
     val postDescriptor = downloadingImageState.postDescriptor
     val state = downloadingImageState.state
 
+    fun processAlbumItem(
+      downloadingAlbumItemKey: Long,
+      downloadingImageState: ImageSaverV2ServiceDelegate.DownloadingImageState
+    ) {
+      val newState = when (downloadingImageState.state) {
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading,
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded,
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload,
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled -> {
+          _downloadingAlbumItems[downloadingAlbumItemKey]?.copy(state = DownloadingAlbumItem.State.from(state))
+        }
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> {
+          null
+        }
+      }
+
+      if (newState != null) {
+        _downloadingAlbumItems[downloadingAlbumItemKey] = newState
+      }
+
+      when (downloadingImageState.state) {
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading -> {
+          // no-op
+        }
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded,
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload -> {
+          autoClearDownloadingAlbumItemState.enqueue(downloadingAlbumItemKey)
+        }
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled,
+        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> {
+          clearDownloadingAlbumItemState(downloadingAlbumItemKey)
+        }
+      }
+    }
+
     if (imageFullUrl == null || postDescriptor == null) {
       val downloadingAlbumItemKeys = _downloadingAlbumItems.values
         .filter { downloadingAlbumItem -> downloadingAlbumItem.downloadUniqueId == uniqueId }
         .map { downloadingAlbumItem -> downloadingAlbumItem.albumItemDataId }
 
-      downloadingAlbumItemKeys.forEach { downloadingAlbumItemKey ->
-        val newState = when (downloadingImageState.state) {
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading,
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded,
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload,
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled -> {
-            _downloadingAlbumItems[downloadingAlbumItemKey]?.copy(state = DownloadingAlbumItem.State.from(state))
-          }
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> {
-            _downloadingAlbumItems.remove(downloadingAlbumItemKey)
-            null
-          }
-        }
-
-        if (newState != null) {
-          _downloadingAlbumItems[downloadingAlbumItemKey] = newState
-        }
-
-        when (downloadingImageState.state) {
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading,
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded,
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload -> {
-            // no-op
-          }
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled,
-          ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> {
-            clearDownloadingAlbumItemState(downloadingAlbumItemKey)
-          }
+      Snapshot.withMutableSnapshot {
+        downloadingAlbumItemKeys.forEach { downloadingAlbumItemKey ->
+          processAlbumItem(
+            downloadingAlbumItemKey = downloadingAlbumItemKey,
+            downloadingImageState = downloadingImageState
+          )
         }
       }
     } else {
@@ -761,22 +784,10 @@ class AlbumViewControllerV2ViewModel(
         return
       }
 
-      val newState = when (downloadingImageState.state) {
-        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloading,
-        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Downloaded,
-        ImageSaverV2ServiceDelegate.DownloadingImageState.State.FailedToDownload,
-        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Canceled -> {
-          _downloadingAlbumItems[albumItemData.id]?.copy(state = DownloadingAlbumItem.State.from(state))
-        }
-        ImageSaverV2ServiceDelegate.DownloadingImageState.State.Deleted -> {
-          _downloadingAlbumItems.remove(albumItemData.id)
-          null
-        }
-      }
-
-      if (newState != null) {
-        _downloadingAlbumItems[albumItemData.id] = newState
-      }
+      processAlbumItem(
+        downloadingAlbumItemKey = albumItemData.id,
+        downloadingImageState = downloadingImageState
+      )
     }
   }
 
