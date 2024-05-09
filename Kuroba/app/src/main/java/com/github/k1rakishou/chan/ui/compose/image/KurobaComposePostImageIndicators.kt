@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.FloatState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -62,6 +63,8 @@ fun KurobaComposePostImageIndicators(
   displayThirdEyeIndicator: Boolean = true
 ) {
   var iconsState by remember(key1 = Unit) { mutableStateOf(IconsState()) }
+  val prefetchProgress = remember { mutableFloatStateOf(1f) }
+
   val iconSize = 18.dp
 
   AnimatedVisibility(
@@ -96,11 +99,7 @@ fun KurobaComposePostImageIndicators(
       if (iconsState.showPrefetchLoadingIndicator) {
         PrefetchIndicator(
           iconSize = iconSize,
-          postDescriptor = postDescriptor,
-          imageFullUrlString = imageFullUrlString,
-          onPrefetchEnded = {
-            iconsState = iconsState.copy(showPrefetchLoadingIndicator = false)
-          }
+          prefetchProgress = prefetchProgress
         )
       }
     }
@@ -111,13 +110,67 @@ fun KurobaComposePostImageIndicators(
       chanDescriptor = chanDescriptor,
       postDescriptor = postDescriptor,
       imageFullUrlString = imageFullUrlString,
-      onThirdEyeStateChanged = { hasThirdEyeImage -> iconsState = iconsState.copy(showThirdEyeIndicator = hasThirdEyeImage) },
-      startOrStopPulseAnimation = { start -> iconsState = iconsState.copy(playThirdEyePulseAnimation = start) }
+      onThirdEyeStateChanged = { hasThirdEyeImage ->
+        if (iconsState.showThirdEyeIndicator != hasThirdEyeImage) {
+          iconsState = iconsState.copy(showThirdEyeIndicator = hasThirdEyeImage)
+        }
+      },
+      startOrStopPulseAnimation = { startAnimation ->
+        if (iconsState.playThirdEyePulseAnimation != startAnimation) {
+          iconsState = iconsState.copy(playThirdEyePulseAnimation = startAnimation)
+        }
+      }
     )
   }
 
   if (displayPrefetchMediaIndicator) {
     val chanThreadsCache = appDependencies().chanThreadsCache
+    val prefetchStateManager = appDependencies().prefetchStateManager
+
+    val prefetchingEnabled = remember { mutableStateOf(false) }
+    val alreadyPrefetched = remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = Unit) {
+      prefetchStateManager.prefetchEventFlow
+        .filter { prefetchState ->
+          val postImage = prefetchState.postImage
+          return@filter postImage.ownerPostDescriptor == postDescriptor &&
+            postImage.imageUrl?.toString() == imageFullUrlString
+        }
+        .onEach { prefetchState ->
+          if (!prefetchingEnabled.value || alreadyPrefetched.value) {
+            if (iconsState.showPrefetchLoadingIndicator) {
+              iconsState = iconsState.copy(showPrefetchLoadingIndicator = false)
+            }
+
+            return@onEach
+          }
+
+          onPrefetchStateChanged(
+            prefetchState = prefetchState,
+            onPrefetchStarted = {
+              if (!iconsState.showPrefetchLoadingIndicator) {
+                iconsState = iconsState.copy(showPrefetchLoadingIndicator = true)
+              }
+            },
+            onPrefetchProgressUpdated = { progress ->
+              if (!iconsState.showPrefetchLoadingIndicator) {
+                iconsState = iconsState.copy(showPrefetchLoadingIndicator = true)
+              }
+
+              if (prefetchProgress.floatValue != progress) {
+                prefetchProgress.floatValue = progress
+              }
+            },
+            onPrefetchEnded = {
+              if (iconsState.showPrefetchLoadingIndicator) {
+                iconsState = iconsState.copy(showPrefetchLoadingIndicator = false)
+              }
+            }
+          )
+        }
+        .collect()
+    }
 
     LaunchedEffect(key1 = Unit) {
       val chanPostImage = withContext(Dispatchers.Default) {
@@ -136,8 +189,8 @@ fun KurobaComposePostImageIndicators(
         ChanSettings.showPrefetchLoadingIndicator.listenForChanges().asFlow()
       ) { prefetchMedia, showPrefetchLoadingIndicator -> prefetchMedia && showPrefetchLoadingIndicator }
         .onEach { showIndicator ->
-          val isAlreadyPrefetched = chanPostImage?.isPrefetched == true
-          iconsState = iconsState.copy(showPrefetchLoadingIndicator = showIndicator && !isAlreadyPrefetched)
+          prefetchingEnabled.value = showIndicator
+          alreadyPrefetched.value = prefetchStateManager.isPrefetched(chanPostImage) == true
         }
         .collect()
     }
@@ -158,7 +211,7 @@ fun KurobaComposePostImageIndicators(
           imageFullUrl = imageFullUrl
         )
 
-        if (isImageDownloaded) {
+        if (isImageDownloaded && !iconsState.showImageDownloadedIndicator) {
           iconsState = iconsState.copy(showImageDownloadedIndicator = true)
         }
       } catch (error: CancellationException) {
@@ -167,7 +220,10 @@ fun KurobaComposePostImageIndicators(
 
       downloadedImagesManager.downloadedImageKeyEventsFlow
         .onEach { downloadedImageKey ->
-          if (downloadedImageKey.postDescriptor == postDescriptor && downloadedImageKey.fullImageUrl.toString() == imageFullUrlString) {
+          if (downloadedImageKey.postDescriptor == postDescriptor &&
+            downloadedImageKey.fullImageUrl.toString() == imageFullUrlString &&
+            !iconsState.showImageDownloadedIndicator
+          ) {
             iconsState = iconsState.copy(showImageDownloadedIndicator = true)
           }
         }
@@ -188,41 +244,9 @@ private fun ImageDownloadedIndicator(iconSize: Dp) {
 @Composable
 private fun PrefetchIndicator(
   iconSize: Dp,
-  postDescriptor: PostDescriptor,
-  imageFullUrlString: String,
-  onPrefetchEnded: () -> Unit
+  prefetchProgress: FloatState
 ) {
   val chanTheme = LocalChanTheme.current
-
-  val prefetchStateManager = appDependencies().prefetchStateManager
-  val prefetchProgress = remember { mutableFloatStateOf(1f) }
-
-  LaunchedEffect(key1 = postDescriptor, key2 = imageFullUrlString) {
-    prefetchStateManager.listenForPrefetchStateUpdates()
-      .asFlow()
-      .filter { prefetchState ->
-        val postImage = prefetchState.postImage
-        return@filter postImage.ownerPostDescriptor == postDescriptor &&
-          postImage.imageUrl?.toString() == imageFullUrlString
-      }
-      .onEach { prefetchState ->
-        onPrefetchStateChanged(
-          prefetchState = prefetchState,
-          onPrefetchStarted = {
-            // no-op
-          },
-          onPrefetchProgressUpdated = { progress ->
-            if (prefetchProgress.floatValue != progress) {
-              prefetchProgress.floatValue = progress
-            }
-          },
-          onPrefetchEnded = {
-            onPrefetchEnded()
-          }
-        )
-      }
-      .collect()
-  }
 
   Box(
     modifier = Modifier

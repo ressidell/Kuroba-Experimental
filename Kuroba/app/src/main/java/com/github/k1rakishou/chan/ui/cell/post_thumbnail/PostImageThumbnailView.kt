@@ -45,11 +45,12 @@ import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.github.k1rakishou.model.data.post.ChanPostImage
 import com.github.k1rakishou.model.data.post.ChanPostImageType
 import dagger.Lazy
-import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -92,7 +93,6 @@ class PostImageThumbnailView @JvmOverloads constructor(
   private val playIconBounds = Rect()
   private val thirdEyeIconBounds = Rect()
   private val circularProgressDrawableBounds = Rect()
-  private val compositeDisposable = CompositeDisposable()
   private var segmentedCircleDrawable: SegmentedCircleDrawable? = null
   private var hasThirdEyeImageMaybe: Boolean = false
   private var nsfwMode: Boolean = false
@@ -114,7 +114,6 @@ class PostImageThumbnailView @JvmOverloads constructor(
       AppModuleAndroidUtils.extractActivityComponent(getContext())
         .inject(this)
       setWillNotDraw(false)
-      prefetchingEnabled = ChanSettings.prefetchMedia.get()
     }
 
     inflate(context, R.layout.post_image_thumbnail_view, this)
@@ -132,11 +131,20 @@ class PostImageThumbnailView @JvmOverloads constructor(
     canUseHighResCells: Boolean,
     thumbnailViewOptions: ThumbnailViewOptions
   ) {
+    if (this.postImage != null) {
+      unbindPostImage()
+    }
+
     this.nsfwMode = ChanSettings.globalNsfwMode.get()
+    this.prefetchingEnabled = ChanSettings.prefetchMedia.get()
 
     listenForNsfwSettingUpdates()
     listenForThirdEyeUpdates(postImage)
     listenForRevealedSpoilers()
+
+    if (prefetchingEnabled) {
+      listenForPrefetchEvents(postImage)
+    }
 
     bindPostImage(
       postImage = postImage,
@@ -155,7 +163,6 @@ class PostImageThumbnailView @JvmOverloads constructor(
     runOrStopGlowAnimation(stop = true)
 
     thumbnail.unbindImageUrl()
-    compositeDisposable.clear()
     scope.cancelChildren()
   }
 
@@ -203,6 +210,13 @@ class PostImageThumbnailView @JvmOverloads constructor(
     return thumbnail.onThumbnailViewLongClicked(listener)
   }
 
+  private fun listenForPrefetchEvents(postImage: ChanPostImage) {
+    scope.launch {
+      prefetchStateManager.prefetchEventFlow
+        .filter { prefetchState -> prefetchState.postImage.equalUrl(postImage) }
+        .collectLatest { prefetchState -> onPrefetchStateChanged(prefetchState) }
+    }
+  }
 
   private fun listenForNsfwSettingUpdates() {
     scope.launch {
@@ -382,14 +396,6 @@ class PostImageThumbnailView @JvmOverloads constructor(
       }
     }
 
-    if (prefetchingEnabled) {
-      val disposable = prefetchStateManager.listenForPrefetchStateUpdates()
-        .filter { prefetchState -> prefetchState.postImage.equalUrl(postImage) }
-        .subscribe { prefetchState: PrefetchState -> onPrefetchStateChanged(prefetchState) }
-
-      compositeDisposable.add(disposable)
-    }
-
     this.postImage = postImage
     this.canUseHighResCells = canUseHighResCells
     this.thumbnailViewOptions = thumbnailViewOptions
@@ -504,7 +510,8 @@ class PostImageThumbnailView @JvmOverloads constructor(
     var cacheFileType = CacheFileType.PostMediaThumbnail
 
     val hasImageUrl = postImage.imageUrl != null
-    val prefetchingDisabledOrAlreadyPrefetched = !ChanSettings.prefetchMedia.get() || postImage.isPrefetched
+    val prefetchingDisabledOrAlreadyPrefetched = !ChanSettings.prefetchMedia.get()
+      || prefetchStateManager.isPrefetched(postImage)
 
     val highRes = hasImageUrl
       && ChanSettings.highResCells.get()

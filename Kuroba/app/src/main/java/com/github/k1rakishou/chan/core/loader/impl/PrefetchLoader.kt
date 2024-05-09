@@ -185,18 +185,6 @@ class PrefetchLoader(
   }
 
   private fun onPrefetchCompleted(postImage: ChanPostImage, success: Boolean = true) {
-    if (success) {
-      val post = chanThreadManager.get().getPost(postImage.ownerPostDescriptor)
-      if (post != null) {
-        val chanPostImage = post.postImages
-          .firstOrNull { chanPostImage -> chanPostImage.equalUrl(postImage) }
-
-        if (chanPostImage != null) {
-          chanPostImage.isPrefetched = true
-        }
-      }
-    }
-
     prefetchStateManager.onPrefetchCompleted(postImage, success)
   }
 

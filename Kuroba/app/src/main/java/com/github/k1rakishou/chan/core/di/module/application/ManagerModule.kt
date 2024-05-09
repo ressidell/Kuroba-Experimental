@@ -634,14 +634,16 @@ class ManagerModule {
   fun provideChan4CloudFlareImagePreloaderManager(
     appScope: CoroutineScope,
     realProxiedOkHttpClient: RealProxiedOkHttpClient,
-    chanThreadsCache: ChanThreadsCache
+    chanThreadsCache: ChanThreadsCache,
+    prefetchStateManager: PrefetchStateManager
   ): Chan4CloudFlareImagePreloaderManager {
     deps("Chan4CloudFlareImagePreloaderManager")
     return Chan4CloudFlareImagePreloaderManager(
       appScope,
       ChanSettings.verboseLogs.get(),
       realProxiedOkHttpClient,
-      chanThreadsCache
+      chanThreadsCache,
+      prefetchStateManager
     )
   }
 

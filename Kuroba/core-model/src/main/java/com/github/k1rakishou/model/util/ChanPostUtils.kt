@@ -306,9 +306,6 @@ object ChanPostUtils {
       if (postImage1.actualThumbnailUrl != postImage2.actualThumbnailUrl) {
         return true
       }
-      if (postImage1.isPrefetched != postImage2.isPrefetched) {
-        return true
-      }
       if (postImage1.loadedFileSize != postImage2.loadedFileSize) {
         return true
       }

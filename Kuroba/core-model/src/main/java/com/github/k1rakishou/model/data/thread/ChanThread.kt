@@ -925,8 +925,6 @@ class ChanThread(
         .firstOrNull { postImage -> postImage.equalUrl(newPostImage) }
         ?: return@forEach
 
-      newPostImage.isPrefetched = oldPostImage.isPrefetched
-
       if (oldPostImage.loadedFileSize != null) {
         newPostImage.setSize(oldPostImage.loadedFileSize!!)
       }

@@ -50,10 +50,6 @@ class ChanPostImage(
   val loadedFileSize: Long?
     get() = _loadedFileSize
 
-  @get:Synchronized
-  @set:Synchronized
-  var isPrefetched = false
-
   @Synchronized
   fun setSize(newSize: Long) {
     _loadedFileSize = newSize
@@ -93,8 +89,6 @@ class ChanPostImage(
       if (::ownerPostDescriptor.isInitialized) {
         newPostImage.ownerPostDescriptor = ownerPostDescriptor
       }
-
-      newPostImage.isPrefetched = isPrefetched
     }
   }
 
@@ -102,7 +96,7 @@ class ChanPostImage(
     return type === ChanPostImageType.MOVIE || type === ChanPostImageType.GIF
   }
 
-  fun canBeUsedForCloudflarePreloading(): Boolean {
+  fun canBeUsedForCloudflarePreloading(isPrefetched: Boolean): Boolean {
     if (isInlined) {
       return false
     }

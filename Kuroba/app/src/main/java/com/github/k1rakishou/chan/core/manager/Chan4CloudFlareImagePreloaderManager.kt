@@ -35,7 +35,8 @@ class Chan4CloudFlareImagePreloaderManager(
   private val appScope: CoroutineScope,
   private val verboseLogsEnabled: Boolean,
   private val realProxiedOkHttpClient: RealProxiedOkHttpClient,
-  private val chanThreadsCache: ChanThreadsCache
+  private val chanThreadsCache: ChanThreadsCache,
+  private val prefetchStateManager: PrefetchStateManager
 ) {
   private val lock = ReentrantReadWriteLock()
 
@@ -300,7 +301,9 @@ class Chan4CloudFlareImagePreloaderManager(
     val imagesToLoad = mutableListOf<ChanPostImage>()
 
     val success = chanThread.iteratePostImages(postDescriptor) { postImage ->
-      if (!postImage.canBeUsedForCloudflarePreloading()) {
+      val isPrefetched = prefetchStateManager.isPrefetched(postImage)
+
+      if (!postImage.canBeUsedForCloudflarePreloading(isPrefetched)) {
         Logger.d(TAG, "preloadImagesForPost() Cannot preload image: ${postImage.serverFilename}")
         return@iteratePostImages
       }
