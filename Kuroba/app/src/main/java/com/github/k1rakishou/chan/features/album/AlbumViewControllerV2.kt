@@ -112,6 +112,12 @@ class AlbumViewControllerV2(
           onClick = { item -> toggleLayoutModeClicked(item) }
         )
 
+        withMenuItem(
+          id = ACTION_ENTER_DOWNLOAD_MODE,
+          drawableId = com.github.k1rakishou.chan.R.drawable.ic_baseline_file_download_24,
+          onClick = { controllerViewModel.enterSelectionMode() }
+        )
+
         withOverflowMenu {
           withCheckableOverflowMenuItem(
             id = ACTION_TOGGLE_IMAGE_DETAILS,
@@ -481,7 +487,8 @@ class AlbumViewControllerV2(
 
   companion object {
     private const val ACTION_TOGGLE_LAYOUT_MODE = 1
-    private const val ACTION_TOGGLE_IMAGE_DETAILS = 2
+    private const val ACTION_ENTER_DOWNLOAD_MODE = 2
+    private const val ACTION_TOGGLE_IMAGE_DETAILS = 3
 
     private const val ACTION_TOGGLE_SELECTION = 1
     private const val ACTION_DOWNLOAD_SELECTED_IMAGES = 2

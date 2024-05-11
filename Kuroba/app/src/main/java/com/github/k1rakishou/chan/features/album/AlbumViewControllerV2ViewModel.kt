@@ -270,6 +270,17 @@ class AlbumViewControllerV2ViewModel(
     )
   }
 
+  fun enterSelectionMode() {
+    val selectedItemIds = _albumItems
+      .filter { albumItemData -> albumItemData.downloadUniqueId == null }
+      .map { albumItemData -> albumItemData.id }
+
+    _albumSelection.value = AlbumSelection(
+      isInSelectionMode = true,
+      selectedItems = selectedItemIds.toPersistentSet()
+    )
+  }
+
   fun toggleSelection(albumItemData: AlbumItemData) {
     _albumSelection.value = if (_albumSelection.value.contains(albumItemData.id)) {
       _albumSelection.value.remove(albumItemData.id)
