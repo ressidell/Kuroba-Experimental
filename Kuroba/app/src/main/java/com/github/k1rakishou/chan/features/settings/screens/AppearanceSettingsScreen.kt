@@ -397,26 +397,6 @@ class AppearanceSettingsScreen(
           setting = ChanSettings.catalogSpanCount
         )
 
-        group += ListSettingV2.createBuilder<Int>(
-          context = context,
-          identifier = AppearanceScreen.LayoutGroup.AlbumColumnsCount,
-          topDescriptionIdFunc = { R.string.setting_album_span_count },
-          bottomDescriptionStringFunc = { itemName -> itemName },
-          items = ALL_COLUMNS,
-          groupId = "album_column_count",
-          itemNameMapper = { columnsCount ->
-            when (columnsCount) {
-              AUTO_COLUMN -> context.getString(R.string.setting_span_count_default)
-              in ALL_COLUMNS_EXCLUDING_AUTO -> {
-                context.getString(R.string.setting_span_count_item, columnsCount)
-              }
-              else -> throw IllegalArgumentException("Bad columns count: $columnsCount")
-            }
-          },
-          requiresUiRefresh = true,
-          setting = ChanSettings.albumSpanCount
-        )
-
         group += BooleanSettingV2.createBuilder(
           context = context,
           identifier = AppearanceScreen.LayoutGroup.NeverHideToolbar,
@@ -526,9 +506,9 @@ class AppearanceSettingsScreen(
   }
 
   companion object {
-    private const val AUTO_COLUMN = 0
-    private val ALL_COLUMNS = listOf(AUTO_COLUMN, 1, 2, 3, 4, 5)
-    private val ALL_COLUMNS_EXCLUDING_AUTO = setOf(1, 2, 3, 4, 5)
+    const val AUTO_COLUMN = 0
+    val ALL_COLUMNS = listOf(AUTO_COLUMN, 1, 2, 3, 4, 5)
+    val ALL_COLUMNS_EXCLUDING_AUTO = setOf(1, 2, 3, 4, 5)
 
     @JvmStatic
     fun clampColumnsCount(columns: Int): Int {

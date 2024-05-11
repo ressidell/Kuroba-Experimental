@@ -15,6 +15,7 @@ import com.github.k1rakishou.chan.core.cache.downloader.ChunkedMediaDownloader
 import com.github.k1rakishou.chan.core.cache.downloader.DownloadRequestExtraInfo
 import com.github.k1rakishou.chan.core.cache.downloader.FileCacheListener
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
+import com.github.k1rakishou.chan.core.manager.RevealedSpoilerImagesManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
 import com.github.k1rakishou.chan.features.media_viewer.MediaViewerControllerViewModel
@@ -46,6 +47,7 @@ import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import com.google.android.exoplayer2.upstream.DataSource
 import dagger.Lazy
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.HttpUrl
 import java.io.File
@@ -88,6 +90,8 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
   lateinit var threadDownloadManager: ThreadDownloadManager
   @Inject
   lateinit var snackbarManagerFactory: SnackbarManagerFactory
+  @Inject
+  lateinit var revealedSpoilerImagesManager: RevealedSpoilerImagesManager
 
   protected val snackbarManager by lazy(LazyThreadSafetyMode.NONE) {
     snackbarManagerFactory.snackbarManager(SnackbarScope.MediaViewer())
@@ -199,6 +203,7 @@ abstract class MediaView<T : ViewableMedia, S : MediaViewState> constructor(
     }
 
     show(isLifecycleChange)
+    scope.launch { revealedSpoilerImagesManager.onImageClicked(viewableMedia) }
 
     Logger.d(TAG, "onShow(${pagerPosition}/${totalPageItemsCount}, ${viewableMedia.mediaLocation})")
   }

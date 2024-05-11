@@ -33,7 +33,6 @@ import com.github.k1rakishou.chan.core.manager.PageRequestManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.manager.PostHideManager
 import com.github.k1rakishou.chan.core.manager.PostHighlightManager
-import com.github.k1rakishou.chan.core.manager.RevealedSpoilerImagesManager
 import com.github.k1rakishou.chan.core.manager.SavedReplyManager
 import com.github.k1rakishou.chan.core.manager.SeenPostsManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
@@ -150,8 +149,7 @@ class ThreadPresenter @Inject constructor(
   private val currentOpenedDescriptorStateManagerLazy: Lazy<CurrentOpenedDescriptorStateManager>,
   private val chanCatalogSnapshotCacheLazy: Lazy<ChanCatalogSnapshotCache>,
   private val compositeCatalogManagerLazy: Lazy<CompositeCatalogManager>,
-  private val refreshChan4CaptchaTicketUseCaseLazy: Lazy<RefreshChan4CaptchaTicketUseCase>,
-  private val revealedSpoilerImagesManagerLazy: Lazy<RevealedSpoilerImagesManager>
+  private val refreshChan4CaptchaTicketUseCaseLazy: Lazy<RefreshChan4CaptchaTicketUseCase>
 ) : PostAdapterCallback,
   PostCellCallback,
   ThreadStatusCell.Callback,
@@ -212,8 +210,6 @@ class ThreadPresenter @Inject constructor(
     get() = mediaViewerGoToPostHelperLazy.get()
   private val refreshChan4CaptchaTicketUseCase: RefreshChan4CaptchaTicketUseCase
     get() = refreshChan4CaptchaTicketUseCaseLazy.get()
-  private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager
-    get() = revealedSpoilerImagesManagerLazy.get()
 
   override val endOfCatalogReached: Boolean
     get() {
@@ -1694,11 +1690,6 @@ class ThreadPresenter @Inject constructor(
       initialImageUrl = initialImageUrl,
       transitionThumbnailUrl = transitionThumbnailUrl
     )
-
-    launch {
-      delay(1000)
-      revealedSpoilerImagesManager.onImageClicked(postImage)
-    }
   }
 
   override fun onThumbnailLongClicked(chanDescriptor: ChanDescriptor, postImage: ChanPostImage) {

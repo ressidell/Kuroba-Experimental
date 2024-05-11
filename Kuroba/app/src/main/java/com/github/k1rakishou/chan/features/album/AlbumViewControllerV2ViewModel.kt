@@ -321,25 +321,6 @@ class AlbumViewControllerV2ViewModel(
     }
   }
 
-  suspend fun onImageClicked(clickedAlbumItemData: AlbumItemData) {
-    if (clickedAlbumItemData.spoilerThumbnailImageUrl == null) {
-      // No spoiler or already revealed
-      return
-    }
-
-    revealedSpoilerImagesManager.onImageClicked(clickedAlbumItemData)
-
-    val indexOfExistingAlbumItemData = _albumItems
-      .indexOfFirst { albumItemData -> albumItemData.id == clickedAlbumItemData.id }
-
-    if (indexOfExistingAlbumItemData < 0) {
-      return
-    }
-
-    _albumItems[indexOfExistingAlbumItemData] = _albumItems[indexOfExistingAlbumItemData]
-      .copy(spoilerThumbnailImageUrl = null)
-  }
-
   fun downloadImage(chanPostImage: ChanPostImage, showOptions: Boolean) {
     val albumItemData = findAlbumItemData(chanPostImage)
     if (albumItemData == null) {

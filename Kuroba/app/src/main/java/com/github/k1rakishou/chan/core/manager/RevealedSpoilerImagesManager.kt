@@ -2,6 +2,8 @@ package com.github.k1rakishou.chan.core.manager
 
 import androidx.annotation.GuardedBy
 import com.github.k1rakishou.chan.features.album.AlbumItemData
+import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
+import com.github.k1rakishou.chan.features.media_viewer.ViewableMedia
 import com.github.k1rakishou.common.hashSetWithCap
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
@@ -30,6 +32,25 @@ class RevealedSpoilerImagesManager {
   suspend fun isImageSpoilerImageRevealed(albumItemData: AlbumItemData): Boolean {
     return _revealedSpoilerImages[albumItemData.postDescriptor.threadDescriptor()]
       ?.isImageSpoilerImageRevealed(albumItemData) ?: false
+  }
+
+  suspend fun onImageClicked(viewableMedia: ViewableMedia) {
+    if (viewableMedia.spoilerLocation == null) {
+      return
+    }
+
+    val postDescriptor = viewableMedia.postDescriptor
+      ?: return
+
+    val revealedImagesInThread = _revealedSpoilerImages.getOrPut(
+      key = postDescriptor.threadDescriptor(),
+      defaultValue = { RevealedImagesInThread() }
+    )
+
+    val revealedSpoilerImage = revealedImagesInThread.add(viewableMedia)
+    if (revealedSpoilerImage != null) {
+      _spoilerImageRevealEventsFlow.emit(revealedSpoilerImage)
+    }
   }
 
   suspend fun onImageClicked(albumItemData: AlbumItemData) {
@@ -85,6 +106,14 @@ class RevealedSpoilerImagesManager {
       return revealedSpoilerImage
     }
 
+    suspend fun add(viewableMedia: ViewableMedia): RevealedSpoilerImage? {
+      val revealedSpoilerImage = viewableMedia.toRevealedSpoilerImage()
+        ?: return null
+
+      mutex.withLock { _revealedImages.add(revealedSpoilerImage) }
+      return revealedSpoilerImage
+    }
+
     suspend fun isImageSpoilerImageRevealed(chanPostImage: ChanPostImage): Boolean {
       val revealedSpoilerImage = chanPostImage.toRevealedSpoilerImage()
         ?: return false
@@ -114,6 +143,32 @@ class RevealedSpoilerImagesManager {
       return RevealedSpoilerImage(
         postDescriptor = postDescriptor,
         thumbnailUrl = thumbnailImageUrl,
+        fullImageUrl = fullImageUrl
+      )
+    }
+
+    private fun ViewableMedia.toRevealedSpoilerImage(): RevealedSpoilerImage? {
+      val postDescriptor = postDescriptor
+        ?: return null
+      val previewLocation = previewLocation
+        ?: return null
+      val mediaLocation = mediaLocation
+
+      val thumbnailUrl = if (previewLocation is MediaLocation.Remote) {
+        previewLocation.url
+      } else {
+        return null
+      }
+
+      val fullImageUrl = if (mediaLocation is MediaLocation.Remote) {
+        mediaLocation.url
+      } else {
+        null
+      }
+
+      return RevealedSpoilerImage(
+        postDescriptor = postDescriptor,
+        thumbnailUrl = thumbnailUrl,
         fullImageUrl = fullImageUrl
       )
     }

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.di.component.controller.ControllerComponent
 import com.github.k1rakishou.chan.core.helper.ThumbnailLongtapOptionsHelper
@@ -26,6 +27,7 @@ import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerGoToPo
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerOpenThreadHelper
 import com.github.k1rakishou.chan.features.media_viewer.helper.MediaViewerScrollerHelper
 import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen
+import com.github.k1rakishou.chan.features.settings.screens.AppearanceSettingsScreen.Companion.clampColumnsCount
 import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
@@ -34,16 +36,19 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.compose_task.rememberSingleInstanceCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarContainer
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
+import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
 import com.github.k1rakishou.chan.ui.controller.base.BaseComposeController
 import com.github.k1rakishou.chan.ui.controller.base.DeprecatedNavigationFlags
+import com.github.k1rakishou.chan.ui.view.floating_menu.CheckableFloatingListMenuItem
 import com.github.k1rakishou.chan.utils.ViewModelScope
+import com.github.k1rakishou.common.resumeValueSafe
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.persist_state.PersistableChanState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
@@ -125,6 +130,12 @@ class AlbumViewControllerV2(
             visible = true,
             checked = PersistableChanState.showAlbumViewsImageDetails.get(),
             onClick = { onToggleAlbumViewsImageInfoToggled() }
+          )
+
+          withOverflowMenuItem(
+            id = ACTION_ALBUM_COLUMNS_COUNT,
+            stringId = R.string.setting_album_span_count,
+            onClick = { controllerScope.launch { onChangeAlbumColumnsCountClicked() } }
           )
         }
       }
@@ -425,9 +436,6 @@ class AlbumViewControllerV2(
         )
       }
     }
-
-    delay(1000)
-    controllerViewModel.onImageClicked(albumItemData)
   }
 
   private fun toggleLayoutModeClicked(item: ToolbarMenuItem) {
@@ -461,16 +469,58 @@ class AlbumViewControllerV2(
       ?.updateChecked(PersistableChanState.showAlbumViewsImageDetails.toggle())
   }
 
+  private suspend fun onChangeAlbumColumnsCountClicked() {
+    val currentColumnsCount = ChanSettings.albumSpanCount.get()
+
+    val items = AppearanceSettingsScreen.ALL_COLUMNS.mapIndexed { index, columnsCount ->
+      val name = if (columnsCount == AppearanceSettingsScreen.AUTO_COLUMN) {
+        appResources.string(R.string.setting_span_count_default)
+      } else {
+        appResources.string(R.string.setting_span_count_item, columnsCount)
+      }
+
+      return@mapIndexed CheckableFloatingListMenuItem(
+        key = index,
+        name = name,
+        value = columnsCount,
+        groupId = "album_column_count",
+        checked = columnsCount == currentColumnsCount
+      )
+    }
+
+    val clickedColumnCount = suspendCancellableCoroutine<Int?> { continuation ->
+      val controller = FloatingListMenuController(
+        context = context,
+        items = items,
+        constraintLayoutBias = globalWindowInsetsManager.lastTouchCoordinatesAsConstraintLayoutBias(),
+        itemClickListener = { clickedItem -> continuation.resumeValueSafe(clickedItem.value as Int?) },
+        menuDismissListener = { continuation.resumeValueSafe(null) }
+      )
+
+      requireNavController().presentController(controller)
+    }
+
+    if (clickedColumnCount == null) {
+      return
+    }
+
+    if (clickedColumnCount !in AppearanceSettingsScreen.ALL_COLUMNS) {
+      return
+    }
+
+    ChanSettings.albumSpanCount.set(clickedColumnCount)
+  }
+
   private fun Density.calculateActualSpanCount(albumSpanCount: Int, maxWidth: Int): Int {
     val defaultSpanWidth = 120.dp.roundToPx()
 
     val actualAlbumSpanCount = if (albumSpanCount <= 0) {
       maxWidth / defaultSpanWidth
     } else {
-      maxWidth / albumSpanCount
+      albumSpanCount
     }
 
-    return AppearanceSettingsScreen.clampColumnsCount(actualAlbumSpanCount)
+    return clampColumnsCount(actualAlbumSpanCount)
   }
 
   @Parcelize
@@ -489,6 +539,7 @@ class AlbumViewControllerV2(
     private const val ACTION_TOGGLE_LAYOUT_MODE = 1
     private const val ACTION_ENTER_DOWNLOAD_MODE = 2
     private const val ACTION_TOGGLE_IMAGE_DETAILS = 3
+    private const val ACTION_ALBUM_COLUMNS_COUNT = 4
 
     private const val ACTION_TOGGLE_SELECTION = 1
     private const val ACTION_DOWNLOAD_SELECTED_IMAGES = 2
