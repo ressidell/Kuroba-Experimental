@@ -113,7 +113,6 @@ import com.github.k1rakishou.chan.ui.cell.post_thumbnail.PostImageThumbnailViewW
 import com.github.k1rakishou.chan.ui.compose.ThreadSearchNavigationButtonsView
 import com.github.k1rakishou.chan.ui.compose.bottom_panel.KurobaComposeIconPanel
 import com.github.k1rakishou.chan.ui.compose.lazylist.ScrollbarView
-import com.github.k1rakishou.chan.ui.controller.AlbumDownloadController
 import com.github.k1rakishou.chan.ui.controller.BrowseController
 import com.github.k1rakishou.chan.ui.controller.CaptchaContainerController
 import com.github.k1rakishou.chan.ui.controller.FloatingListMenuController
@@ -223,7 +222,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(controller: Controller)
   fun inject(addBoardsController: AddBoardsController)
   fun inject(addOrEditBooruController: AddOrEditBooruController)
-  fun inject(albumDownloadController: AlbumDownloadController)
   fun inject(boardArchiveController: BoardArchiveController)
   fun inject(boardSelectionController: BoardSelectionController)
   fun inject(browseController: BrowseController)

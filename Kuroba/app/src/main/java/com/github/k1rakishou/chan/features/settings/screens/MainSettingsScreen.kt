@@ -123,14 +123,6 @@ class MainSettingsScreen(
 
         group += LinkSettingV2.createBuilder(
           context = context,
-          identifier = MainScreen.AboutAppGroup.TryKurobaExLite,
-          topDescriptionIdFunc = { R.string.settings_try_kuroba_ex_lite },
-          bottomDescriptionIdFunc = { R.string.settings_try_kuroba_ex_lite_bottom },
-          callback = { openLink("https://github.com/K1rakishou/KurobaExLite") }
-        )
-
-        group += LinkSettingV2.createBuilder(
-          context = context,
           identifier = MainScreen.AboutAppGroup.ReportTrackerLink,
           topDescriptionIdFunc = { R.string.settings_report_tracker_link },
           bottomDescriptionIdFunc = { R.string.settings_report_tracker_link_description },
