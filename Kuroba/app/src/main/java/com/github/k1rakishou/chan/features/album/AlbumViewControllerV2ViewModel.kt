@@ -837,8 +837,9 @@ class AlbumViewControllerV2ViewModel(
 
   @Immutable
   data class AlbumItemDataKey(
-    val postDescriptor: PostDescriptor,
-    val thumbnailImageUrl: HttpUrl,
+    override val postDescriptor: PostDescriptor,
+    override val thumbnailImageUrl: HttpUrl,
+    override val fullImageUrl: HttpUrl?
   ) : PostImageThumbnailKey
 
   @Immutable

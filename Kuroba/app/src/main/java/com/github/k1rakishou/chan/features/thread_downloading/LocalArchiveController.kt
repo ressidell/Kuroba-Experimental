@@ -573,6 +573,7 @@ class LocalArchiveController(
 
               KurobaComposeImage(
                 request = imageLoaderRequest,
+                controllerKey = null,
                 modifier = Modifier
                   .height(100.dp)
                   .width(60.dp)

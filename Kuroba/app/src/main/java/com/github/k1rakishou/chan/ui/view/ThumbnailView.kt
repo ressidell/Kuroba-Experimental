@@ -417,11 +417,8 @@ open class ThumbnailView : AppCompatImageView, ThemeEngine.ThemeChangesListener 
     )
 
     val fastScroller = globalUiStateHolder.fastScroller
-    val isDraggingCatalogScroller = fastScroller.isDraggingFastScroller()
-    val isDraggingThreadScroller = fastScroller.isDraggingFastScroller()
-    val isDraggingCatalogOrThreadFastScroller = isDraggingCatalogScroller || isDraggingThreadScroller
 
-    if (!isDraggingCatalogOrThreadFastScroller && isCached) {
+    if (!fastScroller.isDraggingFastScroller() && isCached) {
       loadImage()
     } else {
       debouncer.post(IMAGE_REQUEST_DEBOUNCER_TIMEOUT_MS) { loadImage() }

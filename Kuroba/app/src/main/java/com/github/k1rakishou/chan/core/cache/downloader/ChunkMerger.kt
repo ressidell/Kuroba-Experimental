@@ -12,8 +12,7 @@ import java.io.File
 internal class ChunkMerger(
   private val fileManager: FileManager,
   private val cacheHandlerLazy: Lazy<CacheHandler>,
-  private val activeDownloads: ActiveDownloads,
-  private val verboseLogs: Boolean
+  private val activeDownloads: ActiveDownloads
 ) {
   private val cacheHandler: CacheHandler
     get() = cacheHandlerLazy.get()
@@ -24,10 +23,7 @@ internal class ChunkMerger(
     output: File
   ) {
     BackgroundUtils.ensureBackgroundThread()
-
-    if (verboseLogs) {
-      Logger.debug(TAG) { "mergeChunksIntoCacheFile($mediaUrl), chunks to merge count: ${chunkSuccessEvents.size}" }
-    }
+    Logger.verbose(TAG) { "mergeChunksIntoCacheFile($mediaUrl), chunks to merge count: ${chunkSuccessEvents.size}" }
 
     val isRunning = activeDownloads.get(mediaUrl)?.cancelableDownload?.isRunning() ?: false
     if (!isRunning) {
@@ -35,12 +31,12 @@ internal class ChunkMerger(
     }
 
     try {
-      // Must be sorted in ascending order!!!
-      val sortedChunkEvents = chunkSuccessEvents.sortedBy { event -> event.chunk.start }
-
       if (!output.exists()) {
         throw MediaDownloadException.GenericException("Output file '${output.absolutePath}' does not exist")
       }
+
+      // Must be sorted in ascending order!!!
+      val sortedChunkEvents = chunkSuccessEvents.sortedBy { event -> event.chunk.start }
 
       output.outputStream().use { outputStream ->
         // Iterate each chunk and write it to the output file
@@ -73,6 +69,7 @@ internal class ChunkMerger(
 
   private fun markFileAsDownloaded(actualOutput: File, mediaUrl: HttpUrl) {
     BackgroundUtils.ensureBackgroundThread()
+    Logger.verbose(TAG) { "markFileAsDownloaded($mediaUrl) actualOutput: ${actualOutput.absolutePath}" }
 
     val request = checkNotNull(activeDownloads.get(mediaUrl)) {
       "Active downloads does not have url: ${mediaUrl} even though it was just downloaded"

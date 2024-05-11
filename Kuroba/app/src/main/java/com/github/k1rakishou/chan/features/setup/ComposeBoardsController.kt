@@ -318,6 +318,7 @@ class ComposeBoardsController(
                       .size(28.dp)
                       .padding(horizontal = 4.dp)
                       .align(Alignment.CenterVertically),
+                    controllerKey = null,
                     request = imageLoaderRequest,
                     error = {
                       Image(

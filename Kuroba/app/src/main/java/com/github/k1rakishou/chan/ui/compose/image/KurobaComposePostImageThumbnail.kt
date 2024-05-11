@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -37,20 +38,55 @@ import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.utils.KurobaMediaType
 import com.github.k1rakishou.chan.utils.activityDependencies
 import com.github.k1rakishou.chan.utils.appDependencies
 import com.github.k1rakishou.common.ExceptionWithShortErrorMessage
+import com.github.k1rakishou.model.data.descriptor.PostDescriptor
+import okhttp3.HttpUrl
 import javax.net.ssl.SSLException
 
 @Immutable
-interface PostImageThumbnailKey
+interface PostImageThumbnailKey {
+  val postDescriptor: PostDescriptor
+  val thumbnailImageUrl: HttpUrl
+  val fullImageUrl: HttpUrl?
+}
+
+@Stable
+class ImageLoaderRequestProvider(
+  val key: FullKey,
+  val provide: suspend () -> ImageLoaderRequest?
+) {
+
+  @Immutable
+  class FullKey(
+    val keys: Array<Any?>
+  ) {
+
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as FullKey
+
+      return keys.contentEquals(other.keys)
+    }
+
+    override fun hashCode(): Int {
+      return keys.contentHashCode()
+    }
+  }
+
+}
 
 @Composable
 fun KurobaComposePostImageThumbnail(
   modifier: Modifier,
-  key: PostImageThumbnailKey,
-  request: ImageLoaderRequest,
+  controllerKey: ControllerKey,
+  postImageThumbnailKey: PostImageThumbnailKey,
+  requestProvider: ImageLoaderRequestProvider,
   mediaType: KurobaMediaType,
   backgroundColor: Color = LocalChanTheme.current.backColorSecondaryCompose,
   hasAudio: Boolean = false,
@@ -64,16 +100,17 @@ fun KurobaComposePostImageThumbnail(
 ) {
   val context = LocalContext.current
   val kurobaImageLoader = appDependencies().kurobaImageLoader
+  val globalUiStateHolder = appDependencies().globalUiStateHolder
   val applicationVisibilityManager = activityDependencies().applicationVisibilityManager
 
-  var size by remember { mutableStateOf<IntSize?>(null) }
+  var size by remember { mutableStateOf<IntSize>(IntSize.Zero) }
 
   Box(
     modifier = Modifier
       .kurobaClickable(
         bounded = true,
-        onLongClick = { onLongClick(key) },
-        onClick = { onClick(key) }
+        onLongClick = { onLongClick(postImageThumbnailKey) },
+        onClick = { onClick(postImageThumbnailKey) }
       )
       .drawBehind { drawRect(color = backgroundColor) }
       .onSizeChanged { intSize -> size = intSize }
@@ -81,14 +118,16 @@ fun KurobaComposePostImageThumbnail(
   ) {
     val imageLoaderResultMut by produceState<ImageLoaderResult>(
       initialValue = ImageLoaderResult.Loading,
-      key1 = request,
+      key1 = requestProvider.key,
       key2 = size,
       producer = {
         loadImage(
           kurobaImageLoader = kurobaImageLoader,
           applicationVisibilityManager = applicationVisibilityManager,
+          globalUiStateHolder = globalUiStateHolder,
           context = context,
-          request = request,
+          controllerKey = controllerKey,
+          requestProvider = requestProvider,
           size = size
         )
       }

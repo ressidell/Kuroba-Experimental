@@ -41,6 +41,8 @@ import com.github.k1rakishou.chan.ui.compose.lazylist.wrapper.LazyListStateWrapp
 import com.github.k1rakishou.chan.ui.compose.lazylist.wrapper.LazyStaggeredGridStateWrapper
 import com.github.k1rakishou.chan.ui.compose.lazylist.wrapper.LazyStateWrapper
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
+import com.github.k1rakishou.chan.utils.appDependencies
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -86,6 +88,8 @@ fun LazyColumnWithFastScroller(
   val chanTheme = LocalChanTheme.current
   val density = LocalDensity.current
 
+  val globalUiStateHolder = appDependencies().globalUiStateHolder
+
   val paddingTop = remember(contentPadding) { contentPadding.calculateTopPadding() }
   val paddingBottom = remember(contentPadding) { contentPadding.calculateBottomPadding() }
 
@@ -109,6 +113,7 @@ fun LazyColumnWithFastScroller(
             if (draggableScrollbar) {
               processFastScrollerInputs(
                 coroutineScope = coroutineScope,
+                globalUiStateHolder = globalUiStateHolder,
                 lazyStateWrapper = lazyListStateWrapper,
                 width = maxWidthPx,
                 paddingTop = with(density) { paddingTop.roundToPx() },
@@ -172,6 +177,8 @@ fun LazyVerticalGridWithFastScroller(
   val chanTheme = LocalChanTheme.current
   val density = LocalDensity.current
 
+  val globalUiStateHolder = appDependencies().globalUiStateHolder
+
   val paddingTop = remember(contentPadding) { contentPadding.calculateTopPadding() }
   val paddingBottom = remember(contentPadding) { contentPadding.calculateBottomPadding() }
 
@@ -195,6 +202,7 @@ fun LazyVerticalGridWithFastScroller(
             if (draggableScrollbar) {
               processFastScrollerInputs(
                 coroutineScope = coroutineScope,
+                globalUiStateHolder = globalUiStateHolder,
                 lazyStateWrapper = lazyGridStateWrapper,
                 width = maxWidthPx,
                 paddingTop = with(density) { paddingTop.roundToPx() },
@@ -256,6 +264,8 @@ fun LazyVerticalStaggeredGridWithFastScroller(
   val chanTheme = LocalChanTheme.current
   val density = LocalDensity.current
 
+  val globalUiStateHolder = appDependencies().globalUiStateHolder
+
   val paddingTop = remember(contentPadding) { contentPadding.calculateTopPadding() }
   val paddingBottom = remember(contentPadding) { contentPadding.calculateBottomPadding() }
 
@@ -279,6 +289,7 @@ fun LazyVerticalStaggeredGridWithFastScroller(
             if (draggableScrollbar) {
               processFastScrollerInputs(
                 coroutineScope = coroutineScope,
+                globalUiStateHolder = globalUiStateHolder,
                 lazyStateWrapper = lazyStaggeredGridStateWrapper,
                 width = maxWidthPx,
                 paddingTop = with(density) { paddingTop.roundToPx() },
@@ -326,6 +337,7 @@ suspend fun <
   LayoutInfo : LazyLayoutInfoWrapper<ItemInfo>
 > PointerInputScope.processFastScrollerInputs(
   coroutineScope: CoroutineScope,
+  globalUiStateHolder: GlobalUiStateHolder,
   lazyStateWrapper: LazyStateWrapper<ItemInfo, LayoutInfo>,
   width: Int,
   paddingTop: Int,
@@ -372,6 +384,10 @@ suspend fun <
     var job: Job? = null
 
     try {
+      globalUiStateHolder.updateFastScrollerState {
+        updateIsDraggingFastScroller(true)
+      }
+
       while (true) {
         val nextEvent = awaitPointerEvent(pass = PointerEventPass.Initial)
         if (nextEvent.type != PointerEventType.Move) {
@@ -415,6 +431,10 @@ suspend fun <
       job = null
 
       onScrollbarDragStateUpdated(null)
+
+      globalUiStateHolder.updateFastScrollerState {
+        updateIsDraggingFastScroller(false)
+      }
     }
   }
 }

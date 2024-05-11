@@ -248,7 +248,7 @@ class ChanPostRepository(
     if (postDescriptor.isOP()) {
       return chanThreadsCache.getOriginalPostFromCache(postDescriptor)
     } else {
-      return chanThreadsCache.getPostFromCache(postDescriptor)
+      return chanThreadsCache.getThreadPostFromCache(postDescriptor)
     }
   }
 
@@ -787,7 +787,7 @@ class ChanPostRepository(
     val fromCache = if (chanPost is ChanOriginalPost) {
       chanThreadsCache.getOriginalPostFromCache(chanPost.postDescriptor)
     } else {
-      chanThreadsCache.getPostFromCache(chanPost.postDescriptor)
+      chanThreadsCache.getThreadPostFromCache(chanPost.postDescriptor)
     }
 
     if (fromCache == null) {

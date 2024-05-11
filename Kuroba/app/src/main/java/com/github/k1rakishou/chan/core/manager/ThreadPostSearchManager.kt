@@ -93,7 +93,7 @@ class ThreadPostSearchManager(
         return@parallelForEachOrdered null
       }
 
-      val chanPost = chanThreadsCache.getPostFromCache(postDescriptor)
+      val chanPost = chanThreadsCache.getPostFromCache(chanDescriptor, postDescriptor)
         ?: return@parallelForEachOrdered null
 
       if (!checkMatchesQuery(chanPost, searchQuery)) {

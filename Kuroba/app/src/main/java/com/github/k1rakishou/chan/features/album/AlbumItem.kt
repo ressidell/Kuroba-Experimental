@@ -32,21 +32,37 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
+import com.github.k1rakishou.chan.core.cache.CacheHandler
+import com.github.k1rakishou.chan.features.media_viewer.MediaViewerControllerViewModel
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
+import com.github.k1rakishou.chan.ui.compose.data.ChanDescriptorUi
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestProvider
 import com.github.k1rakishou.chan.ui.compose.image.KurobaComposePostImageIndicators
 import com.github.k1rakishou.chan.ui.compose.image.KurobaComposePostImageThumbnail
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
+import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.appDependencies
+import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
+import com.github.k1rakishou.model.data.post.ChanPostImage
+import com.github.k1rakishou.model.data.post.ChanPostImageType
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
 
+private const val TAG = "AlbumItem"
 private const val TransparentBlackColorAlpha = 0.4f
+private const val HighResCellsMaxSpanCountPhone = 3
+private const val HighResCellsMaxSpanCountTablet = 5
 
 @Composable
 fun AlbumItem(
@@ -55,7 +71,9 @@ fun AlbumItem(
   isSelected: Boolean,
   isNsfwModeEnabled: Boolean,
   showAlbumViewsImageDetails: Boolean,
-  currentDescriptor: ChanDescriptor?,
+  albumSpanCount: Int,
+  controllerKey: ControllerKey,
+  chanDescriptorUi: ChanDescriptorUi?,
   albumItemData: AlbumItemData,
   downloadingAlbumItem: DownloadingAlbumItem?,
   onClick: (AlbumItemData) -> Unit,
@@ -66,16 +84,14 @@ fun AlbumItem(
 
   DisposableEffect(key1 = Unit) {
     onDemandContentLoaderManager.onPostBind(albumItemData.postDescriptor, albumItemData.isCatalogMode)
-    onDispose { onDemandContentLoaderManager.onPostUnbind(albumItemData.postDescriptor, albumItemData.isCatalogMode) }
+    onDispose { onDemandContentLoaderManager.onPostUnbind(albumItemData.postDescriptor, true) }
   }
 
-  val request = remember(key1 = albumItemData.thumbnailImageUrl, key2 = albumItemData.spoilerThumbnailImageUrl) {
-    ImageLoaderRequest(
-      data = ImageLoaderRequestData.Url(
-        httpUrl = albumItemData.spoilerThumbnailImageUrl ?: albumItemData.thumbnailImageUrl,
-        cacheFileType = CacheFileType.PostMediaThumbnail
-      ),
-      transformations = emptyList()
+  val requestProvider = remember(key1 = albumItemData, key2 = albumSpanCount, key3 = chanDescriptorUi) {
+    getImageLoaderRequestProvider(
+      chanDescriptor = chanDescriptorUi?.chanDescriptor,
+      albumItemData = albumItemData,
+      albumSpanCount = albumSpanCount
     )
   }
 
@@ -87,8 +103,9 @@ fun AlbumItem(
   ) {
     KurobaComposePostImageThumbnail(
       modifier = Modifier.fillMaxWidth(),
-      key = albumItemData.albumItemDataKey,
-      request = request,
+      controllerKey = controllerKey,
+      postImageThumbnailKey = albumItemData.albumItemDataKey,
+      requestProvider = requestProvider,
       mediaType = albumItemData.mediaType,
       isNsfwModeEnabled = isNsfwModeEnabled,
       displayErrorMessage = true,
@@ -104,11 +121,11 @@ fun AlbumItem(
       clearDownloadingAlbumItemState = clearDownloadingAlbumItemState
     )
 
-    if (currentDescriptor != null && albumItemData.fullImageUrlString != null) {
+    if (chanDescriptorUi != null && albumItemData.fullImageUrlString != null) {
       KurobaComposePostImageIndicators(
         modifier = Modifier
           .align(Alignment.TopStart),
-        chanDescriptor = currentDescriptor,
+        chanDescriptor = chanDescriptorUi.chanDescriptor,
         postDescriptor = albumItemData.postDescriptor,
         imageFullUrlString = albumItemData.fullImageUrlString,
         backgroundAlpha = TransparentBlackColorAlpha
@@ -275,4 +292,95 @@ private fun Modifier.albumItemSelection(
       )
     }
   }
+}
+
+private fun getImageLoaderRequestProvider(
+  chanDescriptor: ChanDescriptor?,
+  albumItemData: AlbumItemData,
+  albumSpanCount: Int
+): ImageLoaderRequestProvider {
+  val cacheHandler = appDependencies().cacheHandler
+  val chanThreadsCache = appDependencies().chanThreadsCache
+  val revealedSpoilerImagesManager = appDependencies().revealedSpoilerImagesManager
+
+  return ImageLoaderRequestProvider(
+    key = ImageLoaderRequestProvider.FullKey(arrayOf(chanDescriptor, albumItemData, albumItemData)),
+    provide = {
+      if (chanDescriptor == null) {
+        return@ImageLoaderRequestProvider null
+      }
+
+      return@ImageLoaderRequestProvider withContext(Dispatchers.IO) {
+        val postImage = chanThreadsCache.getPostFromCache(chanDescriptor, albumItemData.postDescriptor)
+          ?.firstPostImageOrNull { chanPostImage ->
+            return@firstPostImageOrNull chanPostImage.actualThumbnailUrl == albumItemData.thumbnailImageUrl
+              && chanPostImage.imageUrl == albumItemData.fullImageUrl
+          }
+
+        if (postImage == null) {
+          Logger.error(TAG) { "getImageLoaderRequestProvider() failed to find postImage for ${albumItemData}" }
+          return@withContext null
+        }
+
+        val revealSpoilerImage = revealedSpoilerImagesManager.isImageSpoilerImageRevealed(postImage)
+
+        val canUseHighResCells = if (AppModuleAndroidUtils.isTablet()) {
+          albumSpanCount <= HighResCellsMaxSpanCountTablet
+        } else {
+          albumSpanCount <= HighResCellsMaxSpanCountPhone
+        }
+
+        val (imageUrl, cacheFileType) = getImageUrlAndCacheFileType(
+          cacheHandler = cacheHandler,
+          postImage = postImage,
+          canUseHighResCells = canUseHighResCells,
+          revealSpoilerImage = revealSpoilerImage
+        )
+
+        if (imageUrl == null || cacheFileType == null) {
+          Logger.error(TAG) {
+            "getImageLoaderRequestProvider() failed to determine which imageUrl or cacheFileType to use " +
+              "(imageUrl: ${imageUrl}, cacheFileType: ${cacheFileType})"
+          }
+
+          return@withContext null
+        }
+
+        return@withContext ImageLoaderRequest(
+          data = ImageLoaderRequestData.Url(
+            httpUrl = imageUrl,
+            cacheFileType = cacheFileType
+          ),
+          transformations = emptyList()
+        )
+      }
+    }
+  )
+}
+
+private fun getImageUrlAndCacheFileType(
+  cacheHandler: CacheHandler,
+  postImage: ChanPostImage,
+  canUseHighResCells: Boolean,
+  revealSpoilerImage: Boolean
+): Pair<HttpUrl?, CacheFileType?> {
+  val thumbnailUrl = postImage.getThumbnailUrl(isSpoilerRevealed = revealSpoilerImage)
+  if (thumbnailUrl == null) {
+    Logger.e(TAG, "getUrl() postImage: $postImage, has no thumbnail url")
+    return null to null
+  }
+
+  val highRes = postImage.imageUrl != null
+    && ChanSettings.highResCells.get()
+    && postImage.canBeUsedAsHighResolutionThumbnail()
+    && canUseHighResCells
+    && postImage.type == ChanPostImageType.STATIC
+    && MediaViewerControllerViewModel.canAutoLoad(cacheHandler, postImage)
+
+  if (!highRes) {
+    return thumbnailUrl to CacheFileType.PostMediaThumbnail
+  }
+
+  Logger.verbose(TAG) { "getUrl() using high-res thumbnail for ${postImage.actualThumbnailUrl}" }
+  return postImage.imageUrl to CacheFileType.PostMediaFull
 }

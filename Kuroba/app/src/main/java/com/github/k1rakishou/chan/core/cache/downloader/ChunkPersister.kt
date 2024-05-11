@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.core.cache.downloader
 
 import com.github.k1rakishou.chan.core.cache.CacheHandler
 import com.github.k1rakishou.common.exhaustive
+import com.github.k1rakishou.common.rethrowCancellationException
 import com.github.k1rakishou.core_logger.Logger
 import dagger.Lazy
 import kotlinx.coroutines.channels.ProducerScope
@@ -20,13 +21,12 @@ import java.util.concurrent.atomic.AtomicLong
 
 internal class ChunkPersister(
   private val cacheHandlerLazy: Lazy<CacheHandler>,
-  private val activeDownloads: ActiveDownloads,
-  private val verboseLogs: Boolean
+  private val activeDownloads: ActiveDownloads
 ) {
   private val cacheHandler: CacheHandler
     get() = cacheHandlerLazy.get()
 
-  fun storeChunkInFile(
+  suspend fun storeChunkInFile(
     producerScope: ProducerScope<ChunkDownloadEvent>,
     mediaUrl: HttpUrl,
     chunkResponse: ChunkResponse,
@@ -41,9 +41,7 @@ internal class ChunkPersister(
     val response = chunkResponse.response
 
     try {
-      if (verboseLogs) {
-        Logger.debug(TAG) { "storeChunkInFile($chunkIndex, $mediaUrl) called for chunk: ${chunk}" }
-      }
+      Logger.verbose(TAG) { "storeChunkInFile($chunkIndex, $mediaUrl) called for chunk: ${chunk}" }
 
       if (chunk.isWholeFile() && totalChunksCount > 1) {
         throw IllegalStateException("storeChunkInFile($chunkIndex, $mediaUrl) Bad amount of chunks, " +
@@ -60,8 +58,7 @@ internal class ChunkPersister(
 
       val chunkCacheFile = cacheHandler.getOrCreateChunkCacheFile(
         cacheFileType = request.cacheFileType,
-        chunkStart = chunk.start,
-        chunkEnd = chunk.end,
+        chunk = chunk,
         url = mediaUrl.toString()
       ) ?: throw IOException("Couldn't create chunk cache file")
 
@@ -101,7 +98,7 @@ internal class ChunkPersister(
           }
         }
 
-        Logger.debug(TAG) {
+        Logger.verbose(TAG) {
           "storeChunkInFile($chunkIndex, $mediaUrl) success for chunk: ${chunk}"
         }
       } catch (error: Throwable) {
@@ -200,6 +197,15 @@ internal class ChunkPersister(
       chunkSize / 24
     }
 
+    Logger.verbose(TAG) {
+      "readBodyLoop($chunk, $mediaUrl) " +
+        "chunkSize: ${chunkSize}, " +
+        "notifySize: ${notifySize}, " +
+        "totalDownloaded: ${totalDownloaded.get()}, " +
+        "chunkIndex: ${chunkIndex}, " +
+        "chunkCacheFile: ${chunkCacheFile.absolutePath}"
+    }
+
     try {
       activeDownloads.updateDownloaded(mediaUrl, chunkIndex, 0L)
 
@@ -248,8 +254,8 @@ internal class ChunkPersister(
         }
       }
 
-      if (verboseLogs) {
-        Logger.debug(TAG) { "readBodyLoop($chunk, $mediaUrl) SUCCESS for chunk: ${chunk}" }
+      Logger.verbose(TAG) {
+        "readBodyLoop($chunk, $mediaUrl) SUCCESS. downloaded: ${downloaded}, chunkSize: ${chunkSize}"
       }
 
       producerScope.trySend(
@@ -260,6 +266,8 @@ internal class ChunkPersister(
         )
       )
     } catch (error: Throwable) {
+      Logger.error(TAG) { "readBodyLoop($chunk, $mediaUrl) error: ${error.rethrowCancellationException()}" }
+
       // Handle StreamResetExceptions and such
       if (DownloaderUtils.isCancellationError(error)) {
         activeDownloads.throwCancellationException(mediaUrl)

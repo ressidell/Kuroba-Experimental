@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.features.album
 
 import android.content.Context
 import android.os.Parcelable
+import android.view.MotionEvent
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -125,6 +126,10 @@ class AlbumViewControllerV2(
   }
 
   override fun onPrepare() {
+    globalUiStateHolder.updateMainUiState {
+      startTrackingScrollSpeed(controllerKey)
+    }
+
     controllerScope.launch {
       controllerViewModel.toolbarData
         .onEach { toobarData ->
@@ -202,6 +207,26 @@ class AlbumViewControllerV2(
             }
           }
         }
+    }
+  }
+
+  override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+    if (!isTouchInsideView(event)) {
+      return false
+    }
+
+    globalUiStateHolder.updateMainUiState {
+      updateScrollSpeed(controllerKey, event)
+    }
+
+    return true
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+
+    globalUiStateHolder.updateMainUiState {
+      stopTrackingScrollSpeed(controllerKey)
     }
   }
 

@@ -14,6 +14,7 @@ import com.github.k1rakishou.chan.core.site.SiteResolver
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.common.BadContentTypeException
 import com.github.k1rakishou.common.ModularResult
+import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.suspendCall
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.fsaf.FileManager
@@ -87,7 +88,7 @@ class KurobaImageFromNetworkLoaderImpl(
 
       val cacheFile = cacheHandler.getOrCreateCacheFile(cacheFileType, url)
       if (cacheFile == null) {
-        Logger.e(TAG, "loadFromNetworkIntoFile() cacheHandler.getOrCreateCacheFile('$url') -> null")
+        Logger.e(TAG, "loadFromNetworkIntoFile(${url}) cacheHandler.getOrCreateCacheFile() -> null")
         throw KurobaImageLoaderException("Failed to get or create cache file")
       }
 
@@ -98,6 +99,8 @@ class KurobaImageFromNetworkLoaderImpl(
           cacheFile = cacheFile
         )
       } catch (error: Throwable) {
+        Logger.error(TAG) { "loadFromNetworkIntoFile(${url}) error: ${error.errorMessageOrClassName()}" }
+
         if (!chunkedMediaDownloader.isRunning(url)) {
           cacheHandler.deleteCacheFile(cacheFileType, cacheFile)
         }

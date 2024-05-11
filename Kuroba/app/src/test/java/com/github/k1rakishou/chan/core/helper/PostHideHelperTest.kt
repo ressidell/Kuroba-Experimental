@@ -23,6 +23,7 @@ class PostHideHelperTest {
   private var postHideHelper = PostHideHelper(
     Mockito.mock(IPostHideManager::class.java),
     Mockito.mock(IPostFilterManager::class.java),
+    ChanLoadProgressNotifier()
   )
 
   @Test

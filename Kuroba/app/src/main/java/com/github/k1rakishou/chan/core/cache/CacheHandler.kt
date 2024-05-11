@@ -1,6 +1,7 @@
 package com.github.k1rakishou.chan.core.cache
 
 import com.github.k1rakishou.ChanSettings
+import com.github.k1rakishou.chan.core.cache.downloader.Chunk
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.Generators
@@ -10,12 +11,10 @@ import com.github.k1rakishou.common.mbytesToBytes
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.util.ChanPostUtils
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.measureTime
 
@@ -38,10 +37,8 @@ class CacheHandler(
   private val autoLoadThreadImages: Boolean,
   private val appConstants: AppConstants
 ) {
-  private val innerCaches = ConcurrentHashMap<CacheFileType, InnerCache>()
-  private val cacheHandlerDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-
   private val temporaryFilesCleared = AtomicBoolean(false)
+  private val innerCaches = ConcurrentHashMap<CacheFileType, InnerCache>()
 
   init {
     val duration = measureTime { init() }
@@ -64,8 +61,8 @@ class CacheHandler(
       diskCacheDir.mkdirs()
     }
 
-    Logger.d(TAG, "diskCacheDir=${diskCacheDir.absolutePath}, " +
-      "totalFileCacheDiskSize=${ChanPostUtils.getReadableFileSize(totalFileCacheDiskSizeBytes)}")
+    Logger.d(TAG, "diskCacheDir: ${diskCacheDir.absolutePath}, " +
+      "totalFileCacheDiskSize: ${ChanPostUtils.getReadableFileSize(totalFileCacheDiskSizeBytes)}")
 
     for (cacheFileType in CacheFileType.entries) {
       if (innerCaches.containsKey(cacheFileType)) {
@@ -86,8 +83,7 @@ class CacheHandler(
         cacheDirFile = innerCacheDirFile,
         chunksCacheDirFile = innerCacheChunksDirFile,
         fileCacheDiskSizeBytes = cacheFileType.calculateDiskSize(totalFileCacheDiskSizeBytes),
-        cacheFileType = cacheFileType,
-        isDevBuild = ENABLE_LOGGING
+        cacheFileType = cacheFileType
       )
 
       innerCaches.put(cacheFileType, innerCache)
@@ -132,12 +128,9 @@ class CacheHandler(
 
   fun getCacheFileOrNull(cacheFileType: CacheFileType, url: String): File? {
     BackgroundUtils.ensureBackgroundThread()
-    val innerCache = getInnerCacheByFileType(cacheFileType)
-    val file = innerCache.getCacheFileOrNull(url)
 
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "getCacheFileOrNull($cacheFileType, $url) -> ${file?.name}")
-    }
+    val file = getInnerCacheByFileType(cacheFileType).getCacheFileOrNull(url)
+    Logger.verbose(TAG) { "getCacheFileOrNull($cacheFileType, $url) -> ${file?.name}" }
 
     return file
   }
@@ -148,70 +141,71 @@ class CacheHandler(
    * */
   fun getOrCreateCacheFile(cacheFileType: CacheFileType, url: String): File? {
     BackgroundUtils.ensureBackgroundThread()
-    val innerCache = getInnerCacheByFileType(cacheFileType)
-    val file = innerCache.getOrCreateCacheFile(url)
 
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "getOrCreateCacheFile($cacheFileType, $url) -> ${file?.name}")
+    val file = getInnerCacheByFileType(cacheFileType).getOrCreateCacheFile(url)
+    Logger.verbose(TAG) { "getOrCreateCacheFile($cacheFileType, $url) -> ${file?.name}" }
+
+    return file
+  }
+
+  fun getChunkCacheFileOrNull(cacheFileType: CacheFileType, chunk: Chunk, url: String): File? {
+    BackgroundUtils.ensureBackgroundThread()
+
+    val file = getInnerCacheByFileType(cacheFileType).getChunkCacheFileOrNull(chunk.start, chunk.end, url)
+    Logger.verbose(TAG) {
+      "getChunkCacheFileOrNull($cacheFileType, $chunk, $url) -> ${file?.absolutePath}"
     }
 
     return file
   }
 
-  fun getChunkCacheFileOrNull(cacheFileType: CacheFileType, chunkStart: Long, chunkEnd: Long, url: String): File? {
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "getChunkCacheFileOrNull($cacheFileType, $chunkStart..$chunkEnd, $url)")
-    }
-
+  fun getOrCreateChunkCacheFile(cacheFileType: CacheFileType, chunk: Chunk, url: String): File? {
     BackgroundUtils.ensureBackgroundThread()
-    val innerCache = getInnerCacheByFileType(cacheFileType)
 
-    return innerCache.getChunkCacheFileOrNull(chunkStart, chunkEnd, url)
-  }
+    val file = getInnerCacheByFileType(cacheFileType).getOrCreateChunkCacheFile(chunk.start, chunk.end, url)
+    Logger.verbose(TAG) { "getOrCreateChunkCacheFile(${cacheFileType}, ${chunk}, ${url})" }
 
-  fun getOrCreateChunkCacheFile(cacheFileType: CacheFileType, chunkStart: Long, chunkEnd: Long, url: String): File? {
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "getOrCreateChunkCacheFile($cacheFileType, $chunkStart..$chunkEnd, $url)")
-    }
-
-    BackgroundUtils.ensureBackgroundThread()
-    val innerCache = getInnerCacheByFileType(cacheFileType)
-
-    return innerCache.getOrCreateChunkCacheFile(chunkStart, chunkEnd, url)
+    return file
   }
 
   fun cacheFileExists(cacheFileType: CacheFileType, fileUrl: String): Boolean {
     val innerCache = getInnerCacheByFileType(cacheFileType)
     val fileName = innerCache.formatCacheFileName(innerCache.hashUrl(fileUrl))
     val exists = innerCache.containsFile(fileName)
-
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "cacheFileExists($cacheFileType, $fileUrl) -> $exists")
-    }
+    Logger.verbose(TAG) { "cacheFileExists($cacheFileType, $fileUrl) -> $exists" }
 
     return exists
   }
 
   suspend fun deleteCacheFileByUrlSuspend(cacheFileType: CacheFileType, url: String): Boolean {
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "deleteCacheFileByUrlSuspend($cacheFileType, $url)")
-    }
-
     val innerCache = getInnerCacheByFileType(cacheFileType)
 
-    return withContext(cacheHandlerDispatcher) {
-      return@withContext innerCache.deleteCacheFile(innerCache.hashUrl(url))
+    return withContext(Dispatchers.IO) {
+      val deleted = innerCache.deleteCacheFile(innerCache.hashUrl(url))
+      Logger.verbose(TAG) { "deleteCacheFileByUrlSuspend($cacheFileType, $url) -> ${deleted}"}
+
+      return@withContext deleted
     }
   }
 
   fun deleteCacheFileByUrl(cacheFileType: CacheFileType, url: String): Boolean {
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "deleteCacheFileByUrl($cacheFileType, $url)")
-    }
-
     val innerCache = getInnerCacheByFileType(cacheFileType)
 
-    return getInnerCacheByFileType(cacheFileType).deleteCacheFile(innerCache.hashUrl(url))
+    val deleted = getInnerCacheByFileType(cacheFileType).deleteCacheFile(innerCache.hashUrl(url))
+    Logger.verbose(TAG) { "deleteCacheFileByUrl($cacheFileType, $url) -> ${deleted}" }
+
+    return deleted
+  }
+
+  /**
+   * Deletes a cache file with it's meta. Also decreases the total cache size variable by the size
+   * of the file.
+   * */
+  fun deleteCacheFile(cacheFileType: CacheFileType, cacheFile: File): Boolean {
+    val deleted = getInnerCacheByFileType(cacheFileType).deleteCacheFile(cacheFile.name)
+    Logger.verbose(TAG) { "deleteCacheFile($cacheFileType, ${cacheFile.absolutePath}) -> ${deleted}" }
+
+    return deleted
   }
 
   fun isAlreadyDownloaded(cacheFileType: CacheFileType, fileUrl: String): Boolean {
@@ -219,10 +213,7 @@ class CacheHandler(
 
     val innerCache = getInnerCacheByFileType(cacheFileType)
     val alreadyDownloaded = isAlreadyDownloaded(cacheFileType, innerCache.getCacheFileByUrl(fileUrl))
-
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "isAlreadyDownloaded($cacheFileType, $fileUrl) -> $alreadyDownloaded")
-    }
+    Logger.verbose(TAG) { "isAlreadyDownloaded($cacheFileType, $fileUrl) -> $alreadyDownloaded" }
 
     return alreadyDownloaded
   }
@@ -238,10 +229,7 @@ class CacheHandler(
     BackgroundUtils.ensureBackgroundThread()
 
     val alreadyDownloaded = getInnerCacheByFileType(cacheFileType).isAlreadyDownloaded(cacheFile)
-
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "isAlreadyDownloaded($cacheFileType, ${cacheFile.absolutePath}) -> $alreadyDownloaded")
-    }
+    Logger.verbose(TAG) { "isAlreadyDownloaded($cacheFileType, ${cacheFile.absolutePath}) -> $alreadyDownloaded" }
 
     return alreadyDownloaded
   }
@@ -250,28 +238,23 @@ class CacheHandler(
     BackgroundUtils.ensureBackgroundThread()
 
     val markedAsDownloaded = getInnerCacheByFileType(cacheFileType).markFileDownloaded(output)
-
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "markFileDownloaded($cacheFileType, ${output.absolutePath}) -> $markedAsDownloaded")
-    }
+    Logger.verbose(TAG) { "markFileDownloaded($cacheFileType, ${output.absolutePath}) -> $markedAsDownloaded" }
 
     return markedAsDownloaded
   }
 
   fun getSize(cacheFileType: CacheFileType): Long {
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "getSize($cacheFileType)")
-    }
+    val size = getInnerCacheByFileType(cacheFileType).getSize()
+    Logger.verbose(TAG) { "getSize($cacheFileType) -> ${size}" }
 
-    return getInnerCacheByFileType(cacheFileType).getSize()
+    return size
   }
 
   fun getMaxSize(cacheFileType: CacheFileType): Long {
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "getMaxSize($cacheFileType)")
-    }
+    val maxSize = getInnerCacheByFileType(cacheFileType).getMaxSize()
+    Logger.verbose(TAG) { "getMaxSize($cacheFileType) -> ${maxSize}" }
 
-    return getInnerCacheByFileType(cacheFileType).getMaxSize()
+    return maxSize
   }
 
   /**
@@ -282,12 +265,12 @@ class CacheHandler(
   fun fileWasAdded(cacheFileType: CacheFileType, fileLen: Long) {
     val totalSize = getInnerCacheByFileType(cacheFileType).fileWasAdded(fileLen)
 
-    if (ENABLE_LOGGING) {
+    Logger.verbose(TAG) {
       val maxSizeFormatted = ChanPostUtils.getReadableFileSize(getInnerCacheByFileType(cacheFileType).getMaxSize())
       val fileLenFormatted = ChanPostUtils.getReadableFileSize(fileLen)
       val totalSizeFormatted = ChanPostUtils.getReadableFileSize(totalSize)
 
-      Logger.d(TAG, "fileWasAdded($cacheFileType, ${fileLenFormatted}) -> (${totalSizeFormatted} / ${maxSizeFormatted})")
+      return@verbose "fileWasAdded(${cacheFileType}, ${fileLenFormatted}) -> (${totalSizeFormatted} / ${maxSizeFormatted})"
     }
   }
 
@@ -295,23 +278,8 @@ class CacheHandler(
    * For now only used in developer settings. Clears the cache completely.
    * */
   fun clearCache(cacheFileType: CacheFileType) {
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "clearCache($cacheFileType)")
-    }
-
     getInnerCacheByFileType(cacheFileType).clearCache()
-  }
-
-  /**
-   * Deletes a cache file with it's meta. Also decreases the total cache size variable by the size
-   * of the file.
-   * */
-  fun deleteCacheFile(cacheFileType: CacheFileType, cacheFile: File): Boolean {
-    if (ENABLE_LOGGING) {
-      Logger.d(TAG, "deleteCacheFile($cacheFileType, ${cacheFile.absolutePath})")
-    }
-
-    return getInnerCacheByFileType(cacheFileType).deleteCacheFile(cacheFile.name)
+    Logger.verbose(TAG) { "clearCache($cacheFileType)" }
   }
 
   private fun getInnerCacheByFileType(cacheFileType: CacheFileType): InnerCache {
@@ -320,6 +288,5 @@ class CacheHandler(
 
   companion object {
     private const val TAG = "CacheHandler"
-    private const val ENABLE_LOGGING = false
   }
 }

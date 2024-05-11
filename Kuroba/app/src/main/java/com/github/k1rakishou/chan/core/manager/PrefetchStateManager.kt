@@ -13,7 +13,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-// TODO: clear cache when clearing PostImagesFull disk cache
 class PrefetchStateManager {
   private val _prefetchEventFlow = MutableSharedFlow<PrefetchState>(
     extraBufferCapacity = 1024,
@@ -25,20 +24,36 @@ class PrefetchStateManager {
   private val lock = ReentrantReadWriteLock()
 
   @GuardedBy("lock")
-  private val _prefetchedChanPostImages = hashSetWithCap<PrefetchedChanPostImage>(initialCapacity = 1024)
+  private val _prefetchingChanPostImages = hashSetWithCap<PrefetchChanPostImage>(initialCapacity = 32)
+  @GuardedBy("lock")
+  private val _prefetchedChanPostImages = hashSetWithCap<PrefetchChanPostImage>(initialCapacity = 1024)
+
+  fun isPrefetching(postImage: ChanPostImage?): Boolean {
+    if (postImage == null) {
+      return false
+    }
+
+    val prefetchChanPostImage = PrefetchChanPostImage.fromChanPostImage(postImage)
+    return lock.read { _prefetchingChanPostImages.contains(prefetchChanPostImage) }
+  }
 
   fun isPrefetched(postImage: ChanPostImage?): Boolean {
     if (postImage == null) {
       return false
     }
 
-    val prefetchedChanPostImage = PrefetchedChanPostImage.fromChanPostImage(postImage)
-    return lock.read { _prefetchedChanPostImages.contains(prefetchedChanPostImage) }
+    val prefetchChanPostImage = PrefetchChanPostImage.fromChanPostImage(postImage)
+    return lock.read { _prefetchedChanPostImages.contains(prefetchChanPostImage) }
   }
 
   fun onPrefetchStarted(postImage: ChanPostImage) {
     if (isPrefetched(postImage)) {
       return
+    }
+
+    val prefetchChanPostImage = PrefetchChanPostImage.fromChanPostImage(postImage)
+    if (prefetchChanPostImage != null) {
+      lock.write { _prefetchingChanPostImages.add(prefetchChanPostImage) }
     }
 
     _prefetchEventFlow.tryEmit(PrefetchState.PrefetchStarted(postImage))
@@ -53,28 +68,31 @@ class PrefetchStateManager {
   }
 
   fun onPrefetchCompleted(postImage: ChanPostImage, success: Boolean) {
-    val prefetchedChanPostImage = PrefetchedChanPostImage.fromChanPostImage(postImage)
-    if (prefetchedChanPostImage != null) {
-      lock.write { _prefetchedChanPostImages.add(prefetchedChanPostImage) }
+    val prefetchChanPostImage = PrefetchChanPostImage.fromChanPostImage(postImage)
+    if (prefetchChanPostImage != null) {
+      lock.write {
+        _prefetchingChanPostImages.remove(prefetchChanPostImage)
+        _prefetchedChanPostImages.add(prefetchChanPostImage)
+      }
     }
 
     _prefetchEventFlow.tryEmit(PrefetchState.PrefetchCompleted(postImage, success))
   }
 
-  private data class PrefetchedChanPostImage(
+  private data class PrefetchChanPostImage(
     val postDescriptor: PostDescriptor,
     val thumbnailUrl: HttpUrl?,
     val fullUrl: HttpUrl
   ) {
 
     companion object {
-      fun fromChanPostImage(chanPostImage: ChanPostImage): PrefetchedChanPostImage? {
+      fun fromChanPostImage(chanPostImage: ChanPostImage): PrefetchChanPostImage? {
         val fullUrl = chanPostImage.imageUrl
         if (fullUrl == null) {
           return null
         }
 
-        return PrefetchedChanPostImage(
+        return PrefetchChanPostImage(
           postDescriptor = chanPostImage.ownerPostDescriptor,
           thumbnailUrl = chanPostImage.actualThumbnailUrl,
           fullUrl = fullUrl

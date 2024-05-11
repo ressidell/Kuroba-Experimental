@@ -15,6 +15,7 @@ import com.github.k1rakishou.chan.core.manager.PrefetchStateManager
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.shouldLoadForNetworkType
 import com.github.k1rakishou.chan.utils.BackgroundUtils
+import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.data.post.ChanPostImage
@@ -26,19 +27,32 @@ import java.io.File
 import kotlin.math.abs
 
 class PrefetchLoader(
-  private val chunkedMediaDownloader: Lazy<ChunkedMediaDownloader>,
-  private val cacheHandler: Lazy<CacheHandler>,
-  private val chanThreadManager: Lazy<ChanThreadManager>,
-  private val archivesManager: Lazy<ArchivesManager>,
-  private val prefetchStateManager: PrefetchStateManager,
-  private val threadDownloadManager: Lazy<ThreadDownloadManager>
+  private val chunkedMediaDownloaderLazy: Lazy<ChunkedMediaDownloader>,
+  private val cacheHandlerLazy: Lazy<CacheHandler>,
+  private val chanThreadManagerLazy: Lazy<ChanThreadManager>,
+  private val archivesManagerLazy: Lazy<ArchivesManager>,
+  private val prefetchStateManagerLazy: Lazy<PrefetchStateManager>,
+  private val threadDownloadManagerLazy: Lazy<ThreadDownloadManager>
 ) : OnDemandContentLoader(LoaderType.PrefetchLoader) {
+  private val chunkedMediaDownloader: ChunkedMediaDownloader
+    get() = chunkedMediaDownloaderLazy.get()
+  private val cacheHandler: CacheHandler
+    get() = cacheHandlerLazy.get()
+  private val chanThreadManager: ChanThreadManager
+    get() = chanThreadManagerLazy.get()
+  private val archivesManager: ArchivesManager
+    get() = archivesManagerLazy.get()
+  private val prefetchStateManager: PrefetchStateManager
+    get() = prefetchStateManagerLazy.get()
+  private val threadDownloadManager: ThreadDownloadManager
+    get() = threadDownloadManagerLazy.get()
+
   private val cacheFileType = CacheFileType.PostMediaFull
 
   override suspend fun isCached(postLoaderData: PostLoaderData): Boolean {
     BackgroundUtils.ensureBackgroundThread()
 
-    val post = chanThreadManager.get().getPost(postLoaderData.postDescriptor)
+    val post = chanThreadManager.getPost(postLoaderData.postDescriptor)
     if (post == null) {
       return false
     }
@@ -49,7 +63,7 @@ class PrefetchLoader(
         val fileUrl = postImage.imageUrl?.toString()
           ?: return@all true
 
-        return@all cacheHandler.get().isAlreadyDownloaded(
+        return@all cacheHandler.isAlreadyDownloaded(
           cacheFileType = cacheFileType,
           fileUrl = fileUrl
         )
@@ -60,33 +74,33 @@ class PrefetchLoader(
     BackgroundUtils.ensureBackgroundThread()
 
     val threadDescriptor = postLoaderData.postDescriptor.threadDescriptor()
-    if (archivesManager.get().isSiteArchive(threadDescriptor.siteDescriptor())) {
+    if (archivesManager.isSiteArchive(threadDescriptor.siteDescriptor())) {
       // Disable prefetching for archives because they can ban you for this
       return rejected()
     }
 
-    val downloadStatus = threadDownloadManager.get().getStatus(threadDescriptor)
+    val downloadStatus = threadDownloadManager.getStatus(threadDescriptor)
     if (downloadStatus != null && downloadStatus != ThreadDownload.Status.Stopped) {
       // If downloading a thread then don't use the media prefetch
       return rejected()
     }
 
-    val post = chanThreadManager.get().getPost(postLoaderData.postDescriptor)
+    val post = chanThreadManager.getPost(postLoaderData.postDescriptor)
     if (post == null) {
       return rejected()
     }
 
     val chanDescriptor = postLoaderData.postDescriptor.descriptor
-    val prefetchList = tryGetPrefetchBatch(chanDescriptor, post)
 
+    val prefetchList = tryGetPrefetchBatch(chanDescriptor, post)
     if (prefetchList.isEmpty()) {
       post.postImages.forEach { postImage -> onPrefetchCompleted(postImage, false) }
       return rejected()
     }
 
     prefetchList.forEach { prefetch ->
-      val url = prefetch.postImage.imageUrl
-      if (url == null) {
+      val mediaUrl = prefetch.postImage.imageUrl
+      if (mediaUrl == null) {
         return@forEach
       }
 
@@ -94,9 +108,9 @@ class PrefetchLoader(
         return@forEach
       }
 
-      val cancelableDownload = chunkedMediaDownloader.get().enqueueDownloadFileRequest(
+      val cancelableDownload = chunkedMediaDownloader.enqueueDownloadFileRequest(
         cacheFileType = cacheFileType,
-        mediaUrl = url,
+        mediaUrl = mediaUrl,
         extraInfo = DownloadRequestExtraInfo(isPrefetchDownload = true)
       )
 
@@ -126,7 +140,7 @@ class PrefetchLoader(
         }
 
         override fun onSuccess(file: File) {
-          chanThreadManager.get().setContentLoadedForLoader(post.postDescriptor, loaderType)
+          chanThreadManager.setContentLoadedForLoader(post.postDescriptor, loaderType)
           onPrefetchCompleted(prefetch.postImage)
         }
 
@@ -149,26 +163,36 @@ class PrefetchLoader(
     // no-op
   }
 
-  private fun tryGetPrefetchBatch(
+  private suspend fun tryGetPrefetchBatch(
     chanDescriptor: ChanDescriptor,
     post: ChanPost
   ): List<Prefetch> {
-    if (chanThreadManager.get().isContentLoadedForLoader(post.postDescriptor, loaderType)) {
+    if (chanThreadManager.isContentLoadedForLoader(post.postDescriptor, loaderType)) {
       return emptyList()
     }
 
-    if (!isSuitableForPrefetch()) {
+    if (!ChanSettings.prefetchMedia.get()) {
       return emptyList()
     }
 
-    return getPrefetchBatch(post, chanDescriptor)
-  }
-
-  private fun getPrefetchBatch(post: ChanPost, chanDescriptor: ChanDescriptor): List<Prefetch> {
-    BackgroundUtils.ensureBackgroundThread()
+    // Disable prefetching if highResCells are enabled. They do not work really well together.
+    if (ChanSettings.highResCells.get()) {
+      return emptyList()
+    }
 
     return post.postImages.mapNotNull { postImage ->
       if (!postImage.canBeUsedForPrefetch()) {
+        return@mapNotNull null
+      }
+
+      val mediaUrl = postImage.imageUrl!!
+
+      val outputFile = cacheHandler.getCacheFileOrNull(cacheFileType, mediaUrl.toString())
+      if (outputFile != null) {
+        Logger.verbose(TAG) {
+          "tryGetPrefetchBatch(${mediaUrl}) outputFile already exists, skipping prefetching this media"
+        }
+
         return@mapNotNull null
       }
 
@@ -186,10 +210,6 @@ class PrefetchLoader(
 
   private fun onPrefetchCompleted(postImage: ChanPostImage, success: Boolean = true) {
     prefetchStateManager.onPrefetchCompleted(postImage, success)
-  }
-
-  private fun isSuitableForPrefetch(): Boolean {
-    return ChanSettings.prefetchMedia.get()
   }
 
   private fun ChanPostImage.canBeUsedForPrefetch(): Boolean {

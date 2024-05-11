@@ -500,8 +500,9 @@ class ImageSearchController(
         .clickable { onImageClicked(imageSearchResult) }
     ) {
       KurobaComposeImage(
-        request = request,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        controllerKey = null,
+        request = request
       )
 
       if (imageInfo != null) {

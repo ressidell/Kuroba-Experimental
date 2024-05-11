@@ -9,6 +9,8 @@ import com.github.k1rakishou.chan.core.image.InputFile
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageLoader
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageSize
 import com.github.k1rakishou.chan.core.manager.ApplicationVisibilityManager
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
+import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.utils.isStarted
 import com.github.k1rakishou.chan.utils.lifecycleFromContent
 import com.github.k1rakishou.common.ModularResult
@@ -17,25 +19,68 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import okio.IOException
+import kotlin.math.absoluteValue
 
 private const val TAG = "KurobaComposePostImageThumbnailShared"
+private const val FastScrollingImageLoadDelay = 100L
 private val Delays = arrayOf<Long>(100, 200, 500, 1000, 2000, 5000, 10000)
 
 internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
   kurobaImageLoader: KurobaImageLoader,
   applicationVisibilityManager: ApplicationVisibilityManager,
+  globalUiStateHolder: GlobalUiStateHolder,
   context: Context,
+  controllerKey: ControllerKey?,
+  requestProvider: ImageLoaderRequestProvider,
+  size: IntSize
+) {
+  this.value = ImageLoaderResult.Loading
+
+  if (size.width <= 0 || size.height <= 0) {
+    Logger.verbose(TAG) { "loadImage(${requestProvider.key}, ${size}) bad size" }
+    return
+  }
+
+  if (isFastScrolling(controllerKey, globalUiStateHolder)) {
+    delay(FastScrollingImageLoadDelay)
+  }
+
+  val request = requestProvider.provide()
+  if (request == null) {
+    Logger.error(TAG) { "loadImage(${requestProvider.key}, ${size}) request is null" }
+    return
+  }
+
+  loadImage(
+    kurobaImageLoader = kurobaImageLoader,
+    applicationVisibilityManager = applicationVisibilityManager,
+    globalUiStateHolder = globalUiStateHolder,
+    context = context,
+    controllerKey = controllerKey,
+    request = request,
+    size = size
+  )
+}
+
+internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
+  kurobaImageLoader: KurobaImageLoader,
+  applicationVisibilityManager: ApplicationVisibilityManager,
+  globalUiStateHolder: GlobalUiStateHolder,
+  context: Context,
+  controllerKey: ControllerKey?,
   request: ImageLoaderRequest,
-  size: IntSize?
+  size: IntSize
 ) {
   val lifecycle = context.lifecycleFromContent()
   val maxRetries = 7
 
-  this.value = ImageLoaderResult.Loading
-
-  if (size == null || size.width <= 0 || size.height <= 0) {
-    Logger.verbose(TAG) { "loadImage(${request}, ${size}) bad size: ${size}" }
+  if (size.width <= 0 || size.height <= 0) {
+    Logger.verbose(TAG) { "loadImage(${request}, ${size}) bad size" }
     return
+  }
+
+  if (isFastScrolling(controllerKey, globalUiStateHolder)) {
+    delay(FastScrollingImageLoadDelay)
   }
 
   var imageLoadResult: ModularResult<BitmapPainter> = ModularResult.error(IOException("Unknown error"))
@@ -149,4 +194,21 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
     is ModularResult.Error -> ImageLoaderResult.Error(imageLoadResult.error)
     is ModularResult.Value -> ImageLoaderResult.Success(imageLoadResult.value)
   }
+}
+
+private fun isFastScrolling(
+  controllerKey: ControllerKey?,
+  globalUiStateHolder: GlobalUiStateHolder
+): Boolean {
+  val fastScroller = globalUiStateHolder.fastScroller
+  if (fastScroller.isDraggingFastScroller()) {
+    return true
+  }
+
+  if (controllerKey != null) {
+    val velocity = globalUiStateHolder.mainUi.calculateVelocity(controllerKey)
+    return velocity.yVelocity.absoluteValue > 10000f
+  }
+
+  return false
 }

@@ -40,7 +40,46 @@ sealed class InputFile {
     }
   }
 
-  data class JavaFile(val file: File) : InputFile()
+  data class JavaFile(val file: File) : InputFile() {
+    val filePath = file.absolutePath
 
-  data class FileUri(val uri: Uri) : InputFile()
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as JavaFile
+
+      return filePath == other.filePath
+    }
+
+    override fun hashCode(): Int {
+      return filePath.hashCode() ?: 0
+    }
+
+    override fun toString(): String {
+      return "JavaFile(filePath='$filePath')"
+    }
+
+  }
+
+  class FileUri(val uri: Uri) : InputFile() {
+    val uriString = uri.toString()
+
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as FileUri
+
+      return uriString == other.uriString
+    }
+
+    override fun hashCode(): Int {
+      return uriString.hashCode()
+    }
+
+    override fun toString(): String {
+      return "FileUri(uriString=$uriString)"
+    }
+  }
 }

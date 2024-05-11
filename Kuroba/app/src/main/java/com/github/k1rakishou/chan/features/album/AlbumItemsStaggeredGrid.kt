@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.github.k1rakishou.chan.ui.compose.data.ChanDescriptorUi
 import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalStaggeredGridWithFastScroller
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
@@ -101,7 +102,9 @@ fun AlbumItemsStaggeredGrid(
           isSelected = albumItemData.id in albumSelection.selectedItems,
           isNsfwModeEnabled = globalNsfwMode ?: false,
           showAlbumViewsImageDetails = showAlbumViewsImageDetails ?: false,
-          currentDescriptor = currentDescriptor,
+          albumSpanCount = albumSpanCount,
+          controllerKey = controllerKey,
+          chanDescriptorUi = remember { currentDescriptor?.let { descriptor -> ChanDescriptorUi(descriptor) } },
           albumItemData = albumItemData,
           downloadingAlbumItem = downloadingAlbumItems[albumItemData.id],
           onClick = onClick,

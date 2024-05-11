@@ -158,7 +158,7 @@ class SavedReplyManager(
   }
 
   suspend fun savePost(postDescriptor: PostDescriptor) {
-    val post = chanThreadsCache.getPostFromCache(postDescriptor)
+    val post = chanThreadsCache.getThreadPostFromCache(postDescriptor)
 
     val comment = post?.postComment?.originalComment()?.toString()
     val subject = chanThreadsCache.getOriginalPostFromCache(postDescriptor)?.let { chanOriginalPost ->

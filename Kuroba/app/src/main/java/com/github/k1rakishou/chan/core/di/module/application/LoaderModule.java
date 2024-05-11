@@ -43,7 +43,7 @@ public class LoaderModule {
     public PrefetchLoader providePrefetchLoader(
             Lazy<ChunkedMediaDownloader> chunkedMediaDownloader,
             Lazy<CacheHandler> cacheHandler,
-            PrefetchStateManager prefetchStateManager,
+            Lazy<PrefetchStateManager> prefetchStateManager,
             Lazy<ChanThreadManager> chanThreadManager,
             Lazy<ArchivesManager> archivesManager,
             Lazy<ThreadDownloadManager> threadDownloadManager

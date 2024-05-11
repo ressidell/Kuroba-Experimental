@@ -28,6 +28,7 @@ import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.utils.activityDependencies
 import com.github.k1rakishou.chan.utils.appDependencies
 import com.github.k1rakishou.common.ExceptionWithShortErrorMessage
@@ -38,21 +39,23 @@ import javax.net.ssl.SSLException
 fun KurobaComposeImage(
   modifier: Modifier,
   request: ImageLoaderRequest,
+  controllerKey: ControllerKey?,
   contentScale: ContentScale = ContentScale.Crop,
   loading: (@Composable BoxScope.() -> Unit)? = null,
   error: (@Composable BoxScope.(Throwable) -> Unit)? = { throwable -> DefaultErrorHandler(throwable) },
   success: (@Composable () -> Unit)? = null
 ) {
-  var size by remember { mutableStateOf<IntSize?>(null) }
+  var size by remember { mutableStateOf<IntSize>(IntSize.Zero) }
 
-  val measureModifier = Modifier.onSizeChanged { newSize ->
-    if (newSize.width > 0 || newSize.height > 0) {
-      size = newSize
-    }
-  }
-
-  Box(modifier = modifier.then(measureModifier)) {
+  Box(
+    modifier = modifier
+      .then(
+        Modifier
+          .onSizeChanged { newSize -> size = newSize }
+      )
+  ) {
     BuildInnerImage(
+      controllerKey = controllerKey,
       size = size,
       request = request,
       contentScale = contentScale,
@@ -87,15 +90,17 @@ private fun BoxScope.DefaultErrorHandler(throwable: Throwable) {
 
 @Composable
 private fun BuildInnerImage(
-  size: IntSize?,
+  controllerKey: ControllerKey?,
+  size: IntSize,
   request: ImageLoaderRequest,
   contentScale: ContentScale,
-  loading: (@Composable BoxScope.() -> Unit)? = null,
-  error: (@Composable BoxScope.(Throwable) -> Unit)? = null,
-  success: (@Composable () -> Unit)? = null
+  loading: (@Composable BoxScope.() -> Unit)?,
+  error: (@Composable BoxScope.(Throwable) -> Unit)?,
+  success: (@Composable () -> Unit)?
 ) {
   val context = LocalContext.current
   val kurobaImageLoader = appDependencies().kurobaImageLoader
+  val globalUiStateHolder = appDependencies().globalUiStateHolder
   val applicationVisibility = activityDependencies().applicationVisibilityManager
 
   val imageLoaderResult by produceState<ImageLoaderResult>(
@@ -106,7 +111,9 @@ private fun BuildInnerImage(
       loadImage(
         kurobaImageLoader = kurobaImageLoader,
         applicationVisibilityManager = applicationVisibility,
+        globalUiStateHolder = globalUiStateHolder,
         context = context,
+        controllerKey = controllerKey,
         request = request,
         size = size
       )

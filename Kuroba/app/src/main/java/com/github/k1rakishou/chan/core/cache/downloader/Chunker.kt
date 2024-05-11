@@ -62,6 +62,10 @@ data class Chunk(
   fun chunkSize(): Long = realEnd - start
 
   override fun toString(): String {
+    if (isWholeFile()) {
+      return "Chunk(WholeFile)"
+    }
+
     return "Chunk(${index}, $start..$end)"
   }
 

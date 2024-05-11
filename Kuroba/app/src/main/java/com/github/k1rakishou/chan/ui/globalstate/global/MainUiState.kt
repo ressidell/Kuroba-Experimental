@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.ui.globalstate.global
 import android.view.MotionEvent
 import androidx.compose.ui.geometry.Offset
 import com.github.k1rakishou.chan.ui.compose.window.WindowSizeClass
+import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.core_logger.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,11 +16,17 @@ interface IMainUiState {
 
     fun addTouchPositionListener(key: String, listener: GlobalTouchPositionListener)
     fun removeTouchPositionListener(key: String)
+
+    fun calculateVelocity(controllerKey: ControllerKey): VelocityTracking.Velocity
   }
 
   interface Writeable {
     fun updateTouchPosition(touchPosition: Offset, eventAction: Int?)
     fun updateWindowSizeClass(windowSizeClass: WindowSizeClass)
+
+    fun startTrackingScrollSpeed(controllerKey: ControllerKey)
+    fun updateScrollSpeed(controllerKey: ControllerKey, motionEvent: MotionEvent?)
+    fun stopTrackingScrollSpeed(controllerKey: ControllerKey)
   }
 }
 
@@ -31,6 +38,8 @@ internal class MainUiState : IMainUiState.Readable, IMainUiState.Writeable {
   private val _windowSizeClass = MutableStateFlow<WindowSizeClass?>(null)
   override val windowSizeClass: StateFlow<WindowSizeClass?>
     get() = _windowSizeClass.asStateFlow()
+
+  private val _velocityTracking = VelocityTracking()
 
   private val _listeners = mutableMapOf<String, GlobalTouchPositionListener>()
 
@@ -57,7 +66,32 @@ internal class MainUiState : IMainUiState.Readable, IMainUiState.Writeable {
   }
 
   override fun updateWindowSizeClass(windowSizeClass: WindowSizeClass) {
+    Logger.verbose(TAG) { "updateWindowSizeClass() windowSizeClass: ${windowSizeClass}" }
     _windowSizeClass.value = windowSizeClass
+  }
+
+  override fun startTrackingScrollSpeed(controllerKey: ControllerKey) {
+    Logger.verbose(TAG) { "startTrackingScrollSpeed() controllerKey: ${controllerKey}" }
+    _velocityTracking.startTrackingScrollSpeed(controllerKey)
+  }
+
+  override fun updateScrollSpeed(controllerKey: ControllerKey, motionEvent: MotionEvent?) {
+    if (motionEvent != null) {
+      Logger.verbose(TAG) { "updateScrollSpeed() controllerKey: ${controllerKey}, motionEvent: ${motionEvent}" }
+      _velocityTracking.updateScrollSpeed(controllerKey, motionEvent)
+    }
+  }
+
+  override fun stopTrackingScrollSpeed(controllerKey: ControllerKey) {
+    Logger.verbose(TAG) { "stopTrackingScrollSpeed() controllerKey: ${controllerKey}" }
+    _velocityTracking.stopTrackingScrollSpeed(controllerKey)
+  }
+
+  override fun calculateVelocity(controllerKey: ControllerKey): VelocityTracking.Velocity {
+    val velocity = _velocityTracking.calculateVelocity(controllerKey)
+    Logger.verbose(TAG) { "calculateVelocity() controllerKey: ${controllerKey}, velocity: ${velocity}" }
+
+    return velocity
   }
 
   companion object {

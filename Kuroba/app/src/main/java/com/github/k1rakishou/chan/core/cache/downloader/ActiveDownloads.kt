@@ -149,7 +149,7 @@ internal open class ActiveDownloads {
   }
 
   fun count(): Int {
-    return synchronized(activeDownloads, activeDownloads::size)
+    return synchronized(activeDownloads) { activeDownloads.size }
   }
 
 }

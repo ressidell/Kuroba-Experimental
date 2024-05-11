@@ -152,6 +152,7 @@ class CreateSoundMediaController(
         )
     ) {
       KurobaComposeImage(
+        controllerKey = null,
         request = request,
         modifier = Modifier.fillMaxSize(),
         contentScale = ContentScale.Crop

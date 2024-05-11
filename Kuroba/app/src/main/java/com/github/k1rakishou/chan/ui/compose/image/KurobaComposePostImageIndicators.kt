@@ -174,7 +174,7 @@ fun KurobaComposePostImageIndicators(
 
     LaunchedEffect(key1 = Unit) {
       val chanPostImage = withContext(Dispatchers.Default) {
-        val chanPost = chanThreadsCache.getPost(chanDescriptor, postDescriptor)
+        val chanPost = chanThreadsCache.getPostFromCache(chanDescriptor, postDescriptor)
         if (chanPost == null) {
           return@withContext null
         }
@@ -320,7 +320,7 @@ private fun ListenForThirdEyeUpdates(
       return@LaunchedEffect
     }
 
-    val chanPost = chanThreadsCache.getPost(chanDescriptor, postDescriptor)
+    val chanPost = chanThreadsCache.getPostFromCache(chanDescriptor, postDescriptor)
     if (chanPost == null) {
       return@LaunchedEffect
     }

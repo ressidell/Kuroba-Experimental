@@ -329,7 +329,6 @@ class ThreadDownloadManager(
     return true
   }
 
-  @OptIn(ExperimentalTime::class)
   suspend fun findDownloadedFile(
     httpUrl: HttpUrl,
     threadDescriptor: ChanDescriptor.ThreadDescriptor

@@ -30,8 +30,7 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
   private val chunkPersister: ChunkPersister,
   private val chunkMerger: ChunkMerger,
   private val cacheHandlerLazy: Lazy<CacheHandler>,
-  private val activeDownloads: ActiveDownloads,
-  private val verboseLogs: Boolean
+  private val activeDownloads: ActiveDownloads
 ) {
   private val cacheHandler: CacheHandler
     get() = cacheHandlerLazy.get()
@@ -117,7 +116,7 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
     BackgroundUtils.ensureBackgroundThread()
     check(chunks.isNotEmpty()) { "chunks is empty!" }
 
-    Logger.debug(TAG) {
+    Logger.verbose(TAG) {
       "downloadChunksIntoFile() File ($mediaUrl) was split into ${chunks.size} chunks: ${chunks}"
     }
 
@@ -175,7 +174,7 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
       .filter { chunkDownloadEvent -> chunkDownloadEvent !is ChunkDownloadEvent.Progress }
       .toList()
 
-    Logger.debug(TAG) {
+    Logger.verbose(TAG) {
       val eventsAsString = chunkTerminalEvents.joinToString { event ->
         buildString {
           append(event::class.java.simpleName)
@@ -204,18 +203,17 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
       )
 
       val requestTime = System.currentTimeMillis() - startTime
-      val fileDownloadEventSuccess = FileDownloadEvent.Success(output, requestTime)
-      producerScope.send(fileDownloadEventSuccess)
+      producerScope.send(FileDownloadEvent.Success(output, requestTime))
 
-      Logger.debug(TAG) { "downloadChunksIntoFile() success" }
+      Logger.verbose(TAG) { "downloadChunksIntoFile(${mediaUrl}) success" }
     } catch (error: Throwable) {
+      Logger.error(TAG) { "downloadChunksIntoFile(${mediaUrl}) error: ${error.errorMessageOrClassName()}" }
       error.rethrowCancellationException()
 
       if (error is MediaDownloadException.HttpCodeException && error.isUnsatisfiableRangeStatus()) {
         throw error
       }
 
-      Logger.error(TAG) { "downloadChunksIntoFile() error: ${error.errorMessageOrClassName()}" }
       producerScope.send(FileDownloadEvent.UnknownException(error))
     }
   }
@@ -281,7 +279,7 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
 
     while (retries > 0) {
       try {
-        Logger.debug(TAG) { "processChunk(${mediaUrl}) chunk: ${chunk}, retries: ${retries} start" }
+        Logger.verbose(TAG) { "processChunk(${mediaUrl}) chunk: ${chunk}, retries: ${retries} start" }
         --retries
 
         val chunkResponse = chunkDownloader.downloadChunk(
@@ -299,7 +297,7 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
           totalChunksCount = totalChunksCount
         )
 
-        Logger.debug(TAG) { "processChunk(${mediaUrl}) chunk: ${chunk} success" }
+        Logger.verbose(TAG) { "processChunk(${mediaUrl}) chunk: ${chunk} success" }
         return
       } catch (error: Throwable) {
         Logger.error(TAG) {
@@ -373,7 +371,7 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
     return chunksCount
   }
 
-  private fun removeChunksFromDisk(mediaUrl: HttpUrl) {
+  private suspend fun removeChunksFromDisk(mediaUrl: HttpUrl) {
     val chunks = activeDownloads.getChunks(mediaUrl)
     if (chunks.isEmpty()) {
       return
@@ -385,15 +383,19 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
     for (chunk in chunks) {
       val chunkFile = cacheHandler.getChunkCacheFileOrNull(
         cacheFileType = request.cacheFileType,
-        chunkStart = chunk.start,
-        chunkEnd = chunk.end,
+        chunk = chunk,
         url = mediaUrl.toString()
-      ) ?: continue
+      )
+
+      if (chunkFile == null) {
+        Logger.verbose(TAG) { "removeChunksFromDisk(${mediaUrl}) chunk ${chunk} already deleted from disk cache" }
+        continue
+      }
 
       if (chunkFile.delete()) {
-        Logger.debug(TAG) { "Deleted chunk file ${chunkFile.absolutePath}" }
+        Logger.verbose(TAG) { "removeChunksFromDisk(${mediaUrl}) Deleted chunk file ${chunkFile.absolutePath}" }
       } else {
-        Logger.error(TAG) { "Couldn't delete chunk file ${chunkFile.absolutePath}" }
+        Logger.error(TAG) { "removeChunksFromDisk(${mediaUrl}) Couldn't delete chunk file ${chunkFile.absolutePath}" }
       }
     }
 
@@ -405,10 +407,6 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
     mediaUrl: HttpUrl,
     chunkDownloadEvent: ChunkDownloadEvent
   ) {
-    if (verboseLogs) {
-      Logger.debug(TAG) { "processChunkDownloadEvent(${mediaUrl}) chunkDownloadEvent: ${chunkDownloadEvent}" }
-    }
-
     val fileDownloadEvent = when (chunkDownloadEvent) {
       is ChunkDownloadEvent.Progress -> {
         FileDownloadEvent.Progress(
@@ -420,6 +418,10 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
       is ChunkDownloadEvent.ChunkError -> {
         chunkDownloadEvent.error.rethrowCancellationException()
 
+        Logger.error(TAG) {
+          "processChunkDownloadEvent('${mediaUrl}') ChunkError: ${chunkDownloadEvent.error.rethrowCancellationException()}"
+        }
+
         if (chunkDownloadEvent.error is MediaDownloadException.HttpCodeException) {
           throw chunkDownloadEvent.error
         }
@@ -427,6 +429,10 @@ internal open class ConcurrentChunkedFileDownloader @Inject constructor(
         FileDownloadEvent.UnknownException(chunkDownloadEvent.error)
       }
       is ChunkDownloadEvent.ChunkSuccess -> {
+        Logger.verbose(TAG) {
+          "processChunkDownloadEvent('${mediaUrl}') ChunkSuccess"
+        }
+
         // Do not convert ChunkDownloadEvent.ChunkSuccess into FileDownloadEvent.Success event because we still need to
         // merge all the chunks into a single file.
         return

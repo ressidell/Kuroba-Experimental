@@ -29,7 +29,7 @@ import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import kotlin.time.measureTimedValue
 
 class KurobaImageFromDiskLoaderImpl(
@@ -109,10 +109,11 @@ class KurobaImageFromDiskLoaderImpl(
   ): ModularResult<BitmapDrawable?> {
     return withContext(Dispatchers.IO) {
       return@withContext ModularResult.Try {
-        val httpUrl = url.toHttpUrlOrNull()
-        if (postDescriptor != null && httpUrl != null) {
+        val mediaUrl = url.toHttpUrl()
+
+        if (postDescriptor != null) {
           val foundFile = threadDownloadManager.findDownloadedFile(
-            httpUrl = httpUrl,
+            httpUrl = mediaUrl,
             threadDescriptor = postDescriptor.threadDescriptor()
           )
 

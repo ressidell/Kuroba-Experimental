@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.github.k1rakishou.chan.R
@@ -56,7 +57,25 @@ abstract class ControllerHostActivity :
   }
 
   override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+    if (stack.isEmpty()) {
+      return super.dispatchKeyEvent(event)
+    }
+
     return stack.peek().dispatchKeyEvent(event) || super.dispatchKeyEvent(event)
+  }
+
+  override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+    if (stack.isEmpty() || ev == null) {
+      return super.dispatchTouchEvent(ev)
+    }
+
+    for (controller in stack.reversed()) {
+      if (controller.dispatchTouchEvent(ev)) {
+        break
+      }
+    }
+
+    return super.dispatchTouchEvent(ev)
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

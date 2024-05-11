@@ -381,6 +381,7 @@ class DvachCaptchaLayout(
         .fillMaxWidth()
         .height(160.dp)
         .clickable { onReloadClick() },
+      controllerKey = null,
       request = request,
       loading = { KurobaComposeProgressIndicator() },
       error = { throwable -> KurobaComposeErrorMessage(error = throwable) }

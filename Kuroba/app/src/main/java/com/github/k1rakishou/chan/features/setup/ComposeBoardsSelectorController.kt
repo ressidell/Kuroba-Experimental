@@ -260,6 +260,7 @@ class ComposeBoardsSelectorController(
 
           KurobaComposeImage(
             modifier = siteIconModifier,
+            controllerKey = null,
             request = request,
             error = {
               Image(

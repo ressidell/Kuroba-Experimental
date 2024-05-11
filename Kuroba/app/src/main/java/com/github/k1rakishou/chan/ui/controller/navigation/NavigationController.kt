@@ -270,7 +270,11 @@ abstract class NavigationController(context: Context) : Controller(context), Con
 
   override fun dispatchKeyEvent(event: KeyEvent): Boolean {
     val top = topController
-    return top != null && top.dispatchKeyEvent(event)
+    if (top != null && top.dispatchKeyEvent(event)) {
+      return true
+    }
+
+    return super.dispatchKeyEvent(event)
   }
 
   companion object {

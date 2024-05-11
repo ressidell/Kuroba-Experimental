@@ -126,12 +126,12 @@ internal suspend fun applyTransformationsToDrawable(
         return@Try BitmapDrawable(context.resources, bitmap)
       }
       is ErrorResult -> {
-        if (!result.throwable.isCancellationException()) {
-          Logger.error(TAG) {
-            "applyTransformationsToDrawable() error, " +
-              "fileLocation: ${fileLocation}, error: ${result.throwable.errorMessageOrClassName()}"
-          }
+        Logger.error(TAG) {
+          "applyTransformationsToDrawable() error, " +
+            "fileLocation: ${fileLocation}, error: ${result.throwable.errorMessageOrClassName()}"
+        }
 
+        if (!result.throwable.isCancellationException()) {
           if (!chunkedMediaDownloader.isRunning(url)) {
             cacheHandler.deleteCacheFileByUrl(cacheFileType, url)
           }
@@ -143,10 +143,10 @@ internal suspend fun applyTransformationsToDrawable(
   }
 }
 
-class KurobaImageLoaderException(message: String) : Exception()
+class KurobaImageLoaderException(message: String) : Exception(message)
 
 private class ResizeTransformation : Transformation {
-  override val cacheKey: String = "LoaderShared_ResizeTransformation"
+  override val cacheKey: String = "${TAG}_ResizeTransformation"
 
   override suspend fun transform(input: Bitmap, size: Size): Bitmap {
     val availableWidth = when (val width = size.width) {

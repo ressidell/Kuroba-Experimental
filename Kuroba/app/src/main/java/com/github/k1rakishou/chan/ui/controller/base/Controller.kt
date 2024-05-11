@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -401,6 +402,21 @@ abstract class Controller(
     return false
   }
 
+  open fun dispatchTouchEvent(event: MotionEvent): Boolean {
+    if (!isTouchInsideView(event)) {
+      return false
+    }
+
+    for (i in childControllers.indices.reversed()) {
+      val controller = childControllers[i]
+      if (controller.dispatchTouchEvent(event)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
   open fun onBack(): Boolean {
     for (index in childControllers.indices.reversed()) {
       val controller = childControllers[index]
@@ -589,6 +605,25 @@ abstract class Controller(
         injectActivityDependencies(activityComponent)
       }
     }
+  }
+
+  protected fun isTouchInsideView(event: MotionEvent): Boolean {
+    if (!::view.isInitialized) {
+      return false
+    }
+
+    var x = event.x
+    var y = event.y
+
+    x += view.left.toFloat()
+    y += view.top.toFloat()
+
+    val left = view.left
+    val top = view.top
+    val right = view.right
+    val bottom = view.bottom
+
+    return (x >= left && x <= right && y >= top && y <= bottom)
   }
 
   override fun equals(other: Any?): Boolean {

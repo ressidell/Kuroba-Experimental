@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.core.cache
 import android.os.Environment
 import androidx.annotation.GuardedBy
 import com.github.k1rakishou.ChanSettings
+import com.github.k1rakishou.chan.core.synchronizers.BlockingKeySynchronizer
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.ConversionUtils
@@ -29,13 +30,12 @@ internal class InnerCache(
   cacheDirFile: File,
   chunksCacheDirFile: File,
   private val fileCacheDiskSizeBytes: Long,
-  private val cacheFileType: CacheFileType,
-  private val isDevBuild: Boolean
+  private val cacheFileType: CacheFileType
 ) {
   private val TAG = "InnerCache{${cacheFileType.id}}"
 
   private val executor = Executors.newSingleThreadExecutor()
-  private val cacheHandlerSynchronizer = CacheHandlerSynchronizer()
+  private val cacheHandlerSynchronizer = BlockingKeySynchronizer<File>()
 
   /**
    * An estimation of the current size of the directory. Used to check if trim must be run
@@ -100,7 +100,7 @@ internal class InnerCache(
     BackgroundUtils.ensureBackgroundThread()
     val chunkCacheFile = getChunkCacheFileInternal(chunkStart, chunkEnd, url)
 
-    return cacheHandlerSynchronizer.withLocalLock(chunkCacheFile.name) {
+    return cacheHandlerSynchronizer.withLocalLock(chunkCacheFile) {
       try {
         if (chunkCacheFile.exists()) {
           return@withLocalLock chunkCacheFile
@@ -123,7 +123,7 @@ internal class InnerCache(
     createDirectories()
     val cacheFile = getCacheFileByUrl(url)
 
-    return cacheHandlerSynchronizer.withLocalLock(cacheFile.name) {
+    return cacheHandlerSynchronizer.withLocalLock(cacheFile) {
       try {
         if (!cacheFile.exists()) {
           return@withLocalLock null
@@ -154,7 +154,7 @@ internal class InnerCache(
     createDirectories()
     val cacheFile = getCacheFileByUrl(url)
 
-    return cacheHandlerSynchronizer.withLocalLock(cacheFile.name) {
+    return cacheHandlerSynchronizer.withLocalLock(cacheFile) {
       try {
         if (!cacheFile.exists() && !cacheFile.createNewFile()) {
           throw IOException("Couldn't create cache file, path = ${cacheFile.absolutePath}")
@@ -196,7 +196,7 @@ internal class InnerCache(
     BackgroundUtils.ensureBackgroundThread()
     val chunkCacheFile = getChunkCacheFileInternal(chunkStart, chunkEnd, url)
 
-    return cacheHandlerSynchronizer.withLocalLock(chunkCacheFile.name) {
+    return cacheHandlerSynchronizer.withLocalLock(chunkCacheFile) {
       try {
         if (chunkCacheFile.exists()) {
           if (!chunkCacheFile.delete()) {
@@ -221,11 +221,11 @@ internal class InnerCache(
 
   fun isAlreadyDownloaded(cacheFile: File): Boolean {
     BackgroundUtils.ensureBackgroundThread()
-
     createDirectories()
-    val cacheFileName = cacheFile.name
 
-    return cacheHandlerSynchronizer.withLocalLock(cacheFileName) {
+    return cacheHandlerSynchronizer.withLocalLock(cacheFile) {
+      val cacheFileName = cacheFile.name
+
       try {
         val containsInCache = synchronized(fullyDownloadedFiles) { fullyDownloadedFiles.contains(cacheFileName) }
         if (containsInCache) {
@@ -289,7 +289,7 @@ internal class InnerCache(
   fun markFileDownloaded(output: File): Boolean {
     BackgroundUtils.ensureBackgroundThread()
 
-    return cacheHandlerSynchronizer.withLocalLock(output.name) {
+    return cacheHandlerSynchronizer.withLocalLock(output) {
       try {
         createDirectories()
 
@@ -373,17 +373,17 @@ internal class InnerCache(
   }
 
   fun deleteCacheFile(fileName: String): Boolean {
-    return cacheHandlerSynchronizer.withLocalLock(fileName) {
-      val originalFileName = StringUtils.removeExtensionFromFileName(fileName)
-      if (originalFileName.isEmpty()) {
-        Logger.e(TAG, "Couldn't parse original file name, fileName = $fileName")
-        return@withLocalLock false
-      }
+    val originalFileName = StringUtils.removeExtensionFromFileName(fileName)
+    if (originalFileName.isEmpty()) {
+      Logger.e(TAG, "Couldn't parse original file name, fileName = $fileName")
+      return false
+    }
 
-      val cacheFileName = formatCacheFileName(originalFileName)
+    val cacheFileName = formatCacheFileName(originalFileName)
+    val cacheFile = File(cacheDirFile, cacheFileName)
+
+    return cacheHandlerSynchronizer.withLocalLock(cacheFile) {
       val cacheMetaFileName = formatCacheFileMetaName(originalFileName)
-
-      val cacheFile = File(cacheDirFile, cacheFileName)
       val cacheMetaFile = File(cacheDirFile, cacheMetaFileName)
       val cacheFileSize = cacheFile.length()
 
@@ -413,10 +413,10 @@ internal class InnerCache(
             size.set(0L)
           }
 
-          if (isDevBuild) {
-            Logger.d(TAG, "Deleted $cacheFileName and it's meta $cacheMetaFileName, " +
-              "fileSize = ${ChanPostUtils.getReadableFileSize(fileSize)}, " +
-              "cache size = ${ChanPostUtils.getReadableFileSize(size.get())}")
+          Logger.verbose(TAG) {
+            "Deleted $cacheFileName and it's meta $cacheMetaFileName, " +
+              "fileSize: ${ChanPostUtils.getReadableFileSize(fileSize)}, " +
+              "cache size: ${ChanPostUtils.getReadableFileSize(size.get())}"
           }
         }
 
@@ -478,7 +478,7 @@ internal class InnerCache(
     createdOn: Long?,
     fileDownloaded: Boolean?
   ): Boolean {
-    return cacheHandlerSynchronizer.withLocalLock(file.name) {
+    return cacheHandlerSynchronizer.withLocalLock(file) {
       if (!file.exists()) {
         Logger.e(TAG, "Cache file meta does not exist!")
         return@withLocalLock false
@@ -541,7 +541,7 @@ internal class InnerCache(
 
   @Throws(IOException::class)
   private fun readCacheFileMeta(cacheFileMeta: File): CacheFileMeta? {
-    return cacheHandlerSynchronizer.withLocalLock(cacheFileMeta.name) {
+    return cacheHandlerSynchronizer.withLocalLock(cacheFileMeta) {
       if (!cacheFileMeta.exists()) {
         throw IOException("Cache file meta does not exist, path = ${cacheFileMeta.absolutePath}")
       }
@@ -599,9 +599,9 @@ internal class InnerCache(
         }
 
         return@use CacheFileMeta(
-          fileVersion,
-          split[1].toLong(),
-          split[2].toBoolean()
+          version = fileVersion,
+          createdOn = split[1].toLong(),
+          isDownloaded = split[2].toBoolean()
         )
       }
     }
@@ -761,21 +761,29 @@ internal class InnerCache(
       }
     }
 
-    Logger.d(
-      TAG, "recalculateSize() end took $time, " +
-      "filesOnDiskCount=${filesOnDiskCache.size}, " +
-      "fullyDownloadedFilesCount=${fullyDownloadedFiles.size}")
+    Logger.debug(TAG) {
+      "recalculateSize() end took $time, " +
+        "filesOnDiskCount: ${filesOnDiskCache.size}, " +
+        "fullyDownloadedFilesCount: ${fullyDownloadedFiles.size}"
+    }
   }
 
   private fun trim() {
     BackgroundUtils.ensureBackgroundThread()
     createDirectories()
 
-    val directoryFiles = cacheHandlerSynchronizer.withGlobalLock { cacheDirFile.listFiles() ?: emptyArray() }
+    val (processedFiles, directoryFiles) = cacheHandlerSynchronizer.withGlobalLock {
+      val processedFiles = cacheHandlerSynchronizer.getHeldLockKeys()
+      val directoryFiles = cacheDirFile.listFiles() ?: emptyArray()
+
+      return@withGlobalLock (processedFiles to directoryFiles)
+    }
+
     // Don't try to trim empty directories or just two files in it.
     // Two (not one) because for every cache file we now have a cache file meta with some
     // additional info.
     if (directoryFiles.size <= 2) {
+      Logger.verbose(TAG) { "trim() not enough files in the directory to start trimming" }
       return
     }
 
@@ -807,15 +815,22 @@ internal class InnerCache(
 
     Logger.d(
       TAG, "trim() started, " +
-      "cacheFileType=${cacheFileType}, " +
-      "currentCacheSize=${ChanPostUtils.getReadableFileSize(size.get())}, " +
-      "fileCacheDiskSizeBytes=${ChanPostUtils.getReadableFileSize(fileCacheDiskSizeBytes)}, " +
-      "sizeToFree=${ChanPostUtils.getReadableFileSize(sizeToFree)}")
+      "cacheFileType: ${cacheFileType}, " +
+      "processedFiles: ${processedFiles.size}, " +
+      "directoryFiles: ${directoryFiles.size}, " +
+      "currentCacheSize: ${ChanPostUtils.getReadableFileSize(size.get())}, " +
+      "fileCacheDiskSizeBytes: ${ChanPostUtils.getReadableFileSize(fileCacheDiskSizeBytes)}, " +
+      "sizeToFree: ${ChanPostUtils.getReadableFileSize(sizeToFree)}")
 
     // We either delete all files we can in the cache directory or at most half of the cache
     for (cacheFile in sortedFiles) {
       val file = cacheFile.file
       val createdOn = cacheFile.createdOn
+
+      if (file in processedFiles) {
+        Logger.debug(TAG) { "Skipping ${cacheFile.file.absolutePath} because it's currently being processed in other place'" }
+        continue
+      }
 
       val minCacheFileLifeTime = if (AppModuleAndroidUtils.isDevBuild()) {
         0
@@ -852,8 +867,9 @@ internal class InnerCache(
     recalculateSize()
 
     Logger.d(TAG, "trim() ended (took ${timeDiff} ms), " +
-      "cacheFileType=$cacheFileType, filesDeleted=$filesDeleted, " +
-      "total space freed=${ChanPostUtils.getReadableFileSize(totalDeleted)}") }
+      "cacheFileType: $cacheFileType, filesDeleted=$filesDeleted, " +
+      "total space freed: ${ChanPostUtils.getReadableFileSize(totalDeleted)}")
+  }
 
   private fun groupFilterAndSortFiles(directoryFiles: Array<File>): List<CacheFile> {
     BackgroundUtils.ensureBackgroundThread()

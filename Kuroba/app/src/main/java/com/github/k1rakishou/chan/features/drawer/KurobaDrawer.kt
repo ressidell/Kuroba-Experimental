@@ -529,6 +529,7 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
       }
 
       KurobaComposeImage(
+        controllerKey = null,
         request = thumbnailRequest,
         contentScale = contentScale,
         modifier = Modifier
@@ -583,6 +584,7 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
 
         if (siteIconRequest != null) {
           KurobaComposeImage(
+            controllerKey = null,
             request = siteIconRequest,
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(20.dp),
@@ -701,6 +703,7 @@ private fun LazyGridItemScope.BuildNavigationHistoryListEntryGridMode(
       }
 
       KurobaComposeImage(
+        controllerKey = null,
         request = thumbnailRequest,
         contentScale = contentScale,
         modifier = Modifier
@@ -751,6 +754,7 @@ private fun LazyGridItemScope.BuildNavigationHistoryListEntryGridMode(
 
         if (siteIconRequest != null) {
           KurobaComposeImage(
+            controllerKey = null,
             request = siteIconRequest,
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(20.dp),

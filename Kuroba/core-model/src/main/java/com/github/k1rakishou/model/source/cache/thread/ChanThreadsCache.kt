@@ -166,27 +166,6 @@ class ChanThreadsCache(
     return chanThreads[threadDescriptor]?.getOriginalPost()
   }
 
-  fun getPostFromCache(chanDescriptor: ChanDescriptor, postDescriptor: PostDescriptor): ChanPost? {
-    when (chanDescriptor) {
-      is ChanDescriptor.ThreadDescriptor -> {
-        return chanThreads[chanDescriptor]?.getPost(postDescriptor)
-      }
-      is ChanDescriptor.ICatalogDescriptor -> {
-        val threadDescriptor = chanCatalogSnapshotCache.get(chanDescriptor)
-          ?.catalogThreadDescriptorList
-          ?.firstOrNull { threadDescriptor -> threadDescriptor.threadNo == postDescriptor.getThreadNo() }
-          ?: return null
-
-        return chanThreads[threadDescriptor]?.getOriginalPost()
-      }
-    }
-  }
-
-  fun getPostFromCache(postDescriptor: PostDescriptor): ChanPost? {
-    val threadDescriptor = postDescriptor.threadDescriptor()
-    return chanThreads[threadDescriptor]?.getPost(postDescriptor)
-  }
-
   fun getCatalogThreadDescriptors(
     catalogDescriptor: ChanDescriptor.ICatalogDescriptor
   ): List<ChanDescriptor.ThreadDescriptor> {
@@ -210,11 +189,25 @@ class ChanThreadsCache(
     return chanThreads[threadDescriptor]
   }
 
-  fun getPost(chanDescriptor: ChanDescriptor, postDescriptor: PostDescriptor): ChanPost? {
-    return when (chanDescriptor) {
-      is ChanDescriptor.ICatalogDescriptor -> getCatalog(chanDescriptor)?.getPost(postDescriptor)
-      is ChanDescriptor.ThreadDescriptor -> getThread(chanDescriptor)?.getPost(postDescriptor)
+  fun getPostFromCache(chanDescriptor: ChanDescriptor, postDescriptor: PostDescriptor): ChanPost? {
+    when (chanDescriptor) {
+      is ChanDescriptor.ThreadDescriptor -> {
+        return chanThreads[chanDescriptor]?.getPost(postDescriptor)
+      }
+      is ChanDescriptor.ICatalogDescriptor -> {
+        val threadDescriptor = chanCatalogSnapshotCache.get(chanDescriptor)
+          ?.catalogThreadDescriptorList
+          ?.firstOrNull { threadDescriptor -> threadDescriptor.threadNo == postDescriptor.getThreadNo() }
+          ?: return null
+
+        return chanThreads[threadDescriptor]?.getOriginalPost()
+      }
     }
+  }
+
+  fun getThreadPostFromCache(postDescriptor: PostDescriptor): ChanPost? {
+    val threadDescriptor = postDescriptor.threadDescriptor()
+    return chanThreads[threadDescriptor]?.getPost(postDescriptor)
   }
 
   fun contains(chanDescriptor: ChanDescriptor): Boolean {

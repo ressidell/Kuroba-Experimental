@@ -28,7 +28,7 @@ internal sealed class FileDownloadEvent {
 
     fun isTerminalEvent(): Boolean {
         return when (this) {
-            is Start -> false
+            is Start,
             is Progress -> false
             is Success,
             Canceled,

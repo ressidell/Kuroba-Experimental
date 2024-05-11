@@ -32,7 +32,8 @@ class LogStorage {
     private val oldLogsCleared = AtomicBoolean(false)
 
     @GuardedBy("itself")
-    private val logEntries = ArrayList<LogEntry>(256)
+    private val logEntries = ArrayList<LogEntry>(1024)
+
     private val actor = coroutineScope.actor<Unit>(logsDispatcher) {
         for (event in channel) {
             processLogs()

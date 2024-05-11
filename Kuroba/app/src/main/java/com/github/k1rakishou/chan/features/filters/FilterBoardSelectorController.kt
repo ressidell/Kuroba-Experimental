@@ -334,6 +334,7 @@ class FilterBoardSelectorController(
           KurobaComposeImage(
             modifier = siteIconModifier,
             request = request,
+            controllerKey = null,
             error = {
               Image(
                 modifier = Modifier.fillMaxSize(),

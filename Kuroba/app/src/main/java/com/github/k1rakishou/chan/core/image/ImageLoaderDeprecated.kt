@@ -346,9 +346,13 @@ class ImageLoaderDeprecated(
   ): BitmapDrawable? {
     val fileLocation = when (imageFile) {
       is RawFile -> File(imageFile.getFullPath())
-      is ExternalFile -> imageFile.getUri()
-      null -> return null
+      is ExternalFile -> File(imageFile.getUri().toString())
+      null -> null
       else -> error("Unknown file type: ${imageFile.javaClass.simpleName}")
+    }
+
+    if (fileLocation == null) {
+      return null
     }
 
     // When using any transformations at all we won't be able to use HARDWARE bitmaps. We only really
@@ -376,8 +380,11 @@ class ImageLoaderDeprecated(
         return BitmapDrawable(context.resources, bitmap)
       }
       is ErrorResult -> {
-        Logger.e(TAG, "applyTransformationsToDrawable() error, " +
-          "fileLocation=${fileLocation}, error=${result.throwable.errorMessageOrClassName()}")
+        Logger.error(TAG) {
+          "applyTransformationsToDrawable(${url}) " +
+            "error: ${result.throwable.errorMessageOrClassName()}, " +
+            "fileLocation: ${fileLocation}"
+        }
 
         if (!chunkedMediaDownloader.isRunning(url)) {
           cacheHandler.deleteCacheFileByUrl(cacheFileType, url)
@@ -518,7 +525,11 @@ class ImageLoaderDeprecated(
     }
 
     val success = try {
-      loadFromNetworkIntoFileInternal(url, cacheFileType, cacheFile)
+      loadFromNetworkIntoFileInternal(
+        url = url,
+        cacheFileType = cacheFileType,
+        cacheFile = cacheFile
+      )
     } catch (error: Throwable) {
       if (!chunkedMediaDownloader.isRunning(url)) {
         cacheHandler.deleteCacheFile(cacheFileType, cacheFile)

@@ -22,16 +22,19 @@ data class AlbumItemData(
     get() {
       val fullImageUrl = fullImageUrl
       if (fullImageUrl != null) {
-        return "${postDescriptor.serializeToString()}_${thumbnailImageUrl}_${fullImageUrl}"
+        return "${postDescriptor.userReadableString()}, ${thumbnailImageUrl}, ${fullImageUrl}"
       }
 
-      return "${postDescriptor.serializeToString()}_${thumbnailImageUrl}"
+      return "${postDescriptor.userReadableString()}, ${thumbnailImageUrl}"
     }
 
   val fullImageUrlString: String? = fullImageUrl?.toString()
 
-  val albumItemDataKey: AlbumViewControllerV2ViewModel.AlbumItemDataKey =
-    AlbumViewControllerV2ViewModel.AlbumItemDataKey(postDescriptor, thumbnailImageUrl)
+  val albumItemDataKey: AlbumViewControllerV2ViewModel.AlbumItemDataKey = AlbumViewControllerV2ViewModel.AlbumItemDataKey(
+    postDescriptor = postDescriptor,
+    thumbnailImageUrl = thumbnailImageUrl,
+    fullImageUrl = fullImageUrl
+  )
 
   fun isEqualToChanPostImage(chanPostImage: ChanPostImage): Boolean {
     return fullImageUrl == chanPostImage.imageUrl &&
