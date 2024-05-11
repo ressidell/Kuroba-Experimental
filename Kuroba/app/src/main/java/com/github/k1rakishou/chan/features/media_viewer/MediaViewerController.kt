@@ -742,6 +742,7 @@ class MediaViewerController(
     return kurobaImageLoader.loadFromNetwork(
       context = context,
       url = AppConstants.RESOURCES_ENDPOINT + AUDIO_THUMB_FILE_NAME,
+      memoryCacheKey = null,
       cacheFileType = CacheFileType.PostMediaFull,
       imageSize = KurobaImageSize.MeasurableImageSize.create(appearPreviewImage)
     ).valueOrNull()
@@ -891,6 +892,7 @@ class MediaViewerController(
       return@withTimeoutOrNull kurobaImageLoader.loadFromNetwork(
         context = context,
         url = transitionInfo.transitionThumbnailUrl,
+        memoryCacheKey = null,
         cacheFileType = CacheFileType.PostMediaThumbnail,
         imageSize = KurobaImageSize.MeasurableImageSize.create(appearPreviewImage)
       ).valueOrNull()?.bitmap

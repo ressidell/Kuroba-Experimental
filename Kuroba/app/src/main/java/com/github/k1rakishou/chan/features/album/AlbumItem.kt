@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -110,7 +109,6 @@ fun AlbumItem(
       isNsfwModeEnabled = isNsfwModeEnabled,
       displayErrorMessage = true,
       showShimmerEffectWhenLoading = true,
-      contentScale = ContentScale.Crop,
       onClick = { onClick(albumItemData) },
       onLongClick = { onLongClick(albumItemData) }
     )

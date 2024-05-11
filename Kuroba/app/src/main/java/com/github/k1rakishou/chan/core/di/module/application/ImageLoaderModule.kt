@@ -10,6 +10,8 @@ import com.github.k1rakishou.chan.core.helper.ImageLoaderFileManagerWrapper
 import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageFromDiskLoader
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageFromDiskLoaderImpl
+import com.github.k1rakishou.chan.core.image.loader.KurobaImageFromMemoryLoader
+import com.github.k1rakishou.chan.core.image.loader.KurobaImageFromMemoryLoaderImpl
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageFromNetworkLoader
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageFromNetworkLoaderImpl
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageFromResourcesLoader
@@ -66,12 +68,26 @@ class ImageLoaderModule {
 
   @Provides
   @Singleton
+  fun provideKurobaImageFromMemoryLoader(
+    coilImageLoaderLazy: Lazy<ImageLoader>
+  ): KurobaImageFromMemoryLoader {
+    Logger.deps("KurobaImageFromMemoryLoader")
+
+    return KurobaImageFromMemoryLoaderImpl(
+      coilImageLoaderLazy = coilImageLoaderLazy
+    )
+  }
+
+  @Provides
+  @Singleton
   fun provideKurobaImageFromDiskLoader(
     cacheHandlerLazy: Lazy<CacheHandler>,
     threadDownloadManagerLazy: Lazy<ThreadDownloadManager>,
     fileManagerLazy: Lazy<FileManager>,
     coilImageLoaderLazy: Lazy<ImageLoader>
   ): KurobaImageFromDiskLoader {
+    Logger.deps("KurobaImageFromDiskLoader")
+
     return KurobaImageFromDiskLoaderImpl(
       cacheHandlerLazy = cacheHandlerLazy,
       threadDownloadManagerLazy = threadDownloadManagerLazy,
@@ -90,6 +106,8 @@ class ImageLoaderModule {
     coilImageLoaderLazy: Lazy<ImageLoader>,
     fileManagerLazy: Lazy<FileManager>
   ): KurobaImageFromNetworkLoader {
+    Logger.deps("KurobaImageFromNetworkLoader")
+
     return KurobaImageFromNetworkLoaderImpl(
       cacheHandlerLazy = cacheHandlerLazy,
       chunkedMediaDownloaderLazy = chunkedMediaDownloaderLazy,
@@ -105,6 +123,8 @@ class ImageLoaderModule {
   fun provideKurobaImageFromResourcesLoader(
     coilImageLoaderLazy: Lazy<ImageLoader>
   ): KurobaImageFromResourcesLoader {
+    Logger.deps("KurobaImageFromResourcesLoader")
+
     return KurobaImageFromResourcesLoaderImpl(
       coilImageLoaderLazy = coilImageLoaderLazy
     )
@@ -113,11 +133,15 @@ class ImageLoaderModule {
   @Provides
   @Singleton
   fun provideKurobaImageLoader(
+    memoryLoaderLazy: Lazy<KurobaImageFromMemoryLoader>,
     resourcesLoaderLazy: Lazy<KurobaImageFromResourcesLoader>,
     diskLoaderLazy: Lazy<KurobaImageFromDiskLoader>,
     networkLoaderLazy: Lazy<KurobaImageFromNetworkLoader>,
   ): KurobaImageLoader {
+    Logger.deps("KurobaImageLoader")
+
     return KurobaImageLoaderImpl(
+      memoryLoaderLazy = memoryLoaderLazy,
       resourcesLoaderLazy = resourcesLoaderLazy,
       diskLoaderLazy = diskLoaderLazy,
       networkLoaderLazy = networkLoaderLazy

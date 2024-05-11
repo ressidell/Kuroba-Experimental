@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.BitmapDrawable
 import androidx.core.graphics.drawable.toBitmap
 import coil.ImageLoader
+import coil.memory.MemoryCache
 import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.SuccessResult
@@ -24,6 +25,7 @@ class KurobaImageFromResourcesLoaderImpl(
   override suspend fun loadFromResources(
     context: Context,
     drawableId: Int,
+    memoryCacheKey: MemoryCache.Key,
     scale: Scale,
     imageSize: KurobaImageSize,
     transformations: List<Transformation>
@@ -37,6 +39,7 @@ class KurobaImageFromResourcesLoaderImpl(
         transformations(transformations)
         scale(scale)
         applyImageSize(imageSize)
+        memoryCacheKey(memoryCacheKey)
 
         build()
       }

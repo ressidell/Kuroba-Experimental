@@ -35,7 +35,7 @@ class AppModule {
 
   private val defaultAvailableMemoryPercentage: Double
     get() {
-      var defaultMemoryPercentage = 0.1
+      var defaultMemoryPercentage = 0.2
       if (ChanSettings.isLowRamDevice()) {
         defaultMemoryPercentage /= 2.0
       }
@@ -95,9 +95,9 @@ class AppModule {
     val availableMemoryPercentage = defaultAvailableMemoryPercentage
 
     deps(
-      "ImageLoader(), availableMemoryPercentage=" + availableMemoryPercentage +
-        ", isLowRamDevice=" + isLowRamDevice + ", allowHardware=" + allowHardware +
-        ", allowRgb565=" + isLowRamDevice
+      "ImageLoader() availableMemoryPercentage: " + availableMemoryPercentage +
+        ", isLowRamDevice: " + isLowRamDevice + ", allowHardware: " + allowHardware +
+        ", allowRgb565: " + isLowRamDevice
     )
 
     return ImageLoader.Builder(applicationContext)

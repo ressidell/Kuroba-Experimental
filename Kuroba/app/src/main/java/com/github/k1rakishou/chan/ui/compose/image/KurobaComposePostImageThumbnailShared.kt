@@ -5,9 +5,11 @@ import androidx.compose.runtime.ProduceStateScope
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.unit.IntSize
+import coil.size.Scale
 import com.github.k1rakishou.chan.core.image.InputFile
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageLoader
 import com.github.k1rakishou.chan.core.image.loader.KurobaImageSize
+import com.github.k1rakishou.chan.core.image.loader.memoryCacheKey
 import com.github.k1rakishou.chan.core.manager.ApplicationVisibilityManager
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
@@ -31,8 +33,9 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
   globalUiStateHolder: GlobalUiStateHolder,
   context: Context,
   controllerKey: ControllerKey?,
-  requestProvider: ImageLoaderRequestProvider,
-  size: IntSize
+  size: IntSize,
+  scale: Scale,
+  requestProvider: ImageLoaderRequestProvider
 ) {
   this.value = ImageLoaderResult.Loading
 
@@ -41,24 +44,40 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
     return
   }
 
-  if (isFastScrolling(controllerKey, globalUiStateHolder)) {
-    delay(FastScrollingImageLoadDelay)
-  }
-
   val request = requestProvider.provide()
   if (request == null) {
     Logger.error(TAG) { "loadImage(${requestProvider.key}, ${size}) request is null" }
     return
   }
 
-  loadImage(
-    kurobaImageLoader = kurobaImageLoader,
-    applicationVisibilityManager = applicationVisibilityManager,
-    globalUiStateHolder = globalUiStateHolder,
-    context = context,
+  val bitmapFromCache = kurobaImageLoader.loadFromMemoryCache(
+    memoryCacheKey(request.data, request.transformations, size, scale)
+  )
+
+  if (bitmapFromCache != null) {
+    val imageBitmap = bitmapFromCache.asImageBitmap()
+    value = ImageLoaderResult.Success(BitmapPainter(imageBitmap))
+    return
+  }
+
+  val addDelay = needToAddExtraDelayBeforeLoadingImage(
     controllerKey = controllerKey,
+    globalUiStateHolder = globalUiStateHolder,
+    kurobaImageLoader = kurobaImageLoader,
+    request = request
+  )
+
+  if (addDelay) {
+    delay(FastScrollingImageLoadDelay)
+  }
+
+  loadImageInternal(
+    applicationVisibilityManager = applicationVisibilityManager,
+    kurobaImageLoader = kurobaImageLoader,
     request = request,
-    size = size
+    context = context,
+    size = size,
+    scale = scale
   )
 }
 
@@ -68,20 +87,56 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
   globalUiStateHolder: GlobalUiStateHolder,
   context: Context,
   controllerKey: ControllerKey?,
-  request: ImageLoaderRequest,
-  size: IntSize
+  size: IntSize,
+  scale: Scale,
+  request: ImageLoaderRequest
 ) {
-  val lifecycle = context.lifecycleFromContent()
-  val maxRetries = 7
-
   if (size.width <= 0 || size.height <= 0) {
     Logger.verbose(TAG) { "loadImage(${request}, ${size}) bad size" }
     return
   }
 
-  if (isFastScrolling(controllerKey, globalUiStateHolder)) {
+  val bitmapFromCache = kurobaImageLoader.loadFromMemoryCache(
+    memoryCacheKey(request.data, request.transformations, size, scale)
+  )
+
+  if (bitmapFromCache != null) {
+    val imageBitmap = bitmapFromCache.asImageBitmap()
+    value = ImageLoaderResult.Success(BitmapPainter(imageBitmap))
+    return
+  }
+
+  val addDelay = needToAddExtraDelayBeforeLoadingImage(
+    controllerKey = controllerKey,
+    globalUiStateHolder = globalUiStateHolder,
+    kurobaImageLoader = kurobaImageLoader,
+    request = request
+  )
+
+  if (addDelay) {
     delay(FastScrollingImageLoadDelay)
   }
+
+  loadImageInternal(
+    applicationVisibilityManager = applicationVisibilityManager,
+    kurobaImageLoader = kurobaImageLoader,
+    context = context,
+    request = request,
+    size = size,
+    scale = scale
+  )
+}
+
+private suspend fun ProduceStateScope<ImageLoaderResult>.loadImageInternal(
+  applicationVisibilityManager: ApplicationVisibilityManager,
+  kurobaImageLoader: KurobaImageLoader,
+  context: Context,
+  request: ImageLoaderRequest,
+  size: IntSize,
+  scale: Scale
+) {
+  val maxRetries = 7
+  val lifecycle = context.lifecycleFromContent()
 
   var imageLoadResult: ModularResult<BitmapPainter> = ModularResult.error(IOException("Unknown error"))
 
@@ -117,7 +172,9 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
         kurobaImageLoader.loadFromDisk(
           context = context,
           inputFile = inputFile,
+          memoryCacheKey = memoryCacheKey(data, request.transformations, size, scale),
           imageSize = KurobaImageSize.FixedImageSize(size.width, size.height),
+          scale = scale,
           transformations = request.transformations
         )
       }
@@ -125,8 +182,10 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
         kurobaImageLoader.loadFromNetwork(
           context = context,
           url = data.httpUrl.toString(),
+          memoryCacheKey = memoryCacheKey(data, request.transformations, size, scale),
           cacheFileType = data.cacheFileType,
           imageSize = KurobaImageSize.FixedImageSize(size.width, size.height),
+          scale = scale,
           transformations = request.transformations
         )
       }
@@ -134,7 +193,9 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
         kurobaImageLoader.loadFromResources(
           context = context,
           drawableId = data.drawableId,
+          memoryCacheKey = memoryCacheKey(data, request.transformations, size, scale),
           imageSize = KurobaImageSize.FixedImageSize(size.width, size.height),
+          scale = scale,
           transformations = request.transformations
         )
       }
@@ -150,6 +211,7 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
         Logger.verbose(TAG) { "loadImage(${request}, ${size}) attempt ${reloadAttempt + 1}/${maxRetries}... success!" }
         break
       }
+
       is ModularResult.Error -> {
         val error = result.error
 
@@ -196,10 +258,20 @@ internal suspend fun ProduceStateScope<ImageLoaderResult>.loadImage(
   }
 }
 
-private fun isFastScrolling(
+private suspend fun needToAddExtraDelayBeforeLoadingImage(
   controllerKey: ControllerKey?,
-  globalUiStateHolder: GlobalUiStateHolder
+  globalUiStateHolder: GlobalUiStateHolder,
+  kurobaImageLoader: KurobaImageLoader,
+  request: ImageLoaderRequest
 ): Boolean {
+  if (request.data !is ImageLoaderRequestData.Url) {
+    return false
+  }
+
+  if (kurobaImageLoader.isImageCachedOnDisk(request.data.cacheFileType, request.data.httpUrl.toString())) {
+    return false
+  }
+
   val fastScroller = globalUiStateHolder.fastScroller
   if (fastScroller.isDraggingFastScroller()) {
     return true

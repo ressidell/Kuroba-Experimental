@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import coil.network.HttpException
+import coil.size.Scale
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.ui.compose.Shimmer
 import com.github.k1rakishou.chan.ui.compose.components.IconTint
@@ -93,7 +94,6 @@ fun KurobaComposePostImageThumbnail(
   isNsfwModeEnabled: Boolean = false,
   displayErrorMessage: Boolean = true,
   showShimmerEffectWhenLoading: Boolean = true,
-  contentScale: ContentScale = ContentScale.Crop,
   contentDescription: String? = null,
   onClick: (PostImageThumbnailKey) -> Unit,
   onLongClick: (PostImageThumbnailKey) -> Unit
@@ -127,8 +127,9 @@ fun KurobaComposePostImageThumbnail(
           globalUiStateHolder = globalUiStateHolder,
           context = context,
           controllerKey = controllerKey,
-          requestProvider = requestProvider,
-          size = size
+          size = size,
+          scale = Scale.FIT,
+          requestProvider = requestProvider
         )
       }
     )
@@ -147,7 +148,7 @@ fun KurobaComposePostImageThumbnail(
           },
         painter = imageLoaderResult.painter,
         contentDescription = contentDescription,
-        contentScale = contentScale
+        contentScale = ContentScale.Crop
       )
     }
 

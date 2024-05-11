@@ -1,8 +1,10 @@
 package com.github.k1rakishou.chan.core.image.loader
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import androidx.annotation.GuardedBy
+import coil.memory.MemoryCache
 import coil.size.Scale
 import coil.transform.Transformation
 import com.github.k1rakishou.chan.core.cache.CacheFileType
@@ -18,11 +20,14 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class KurobaImageLoaderImpl(
+  private val memoryLoaderLazy: Lazy<KurobaImageFromMemoryLoader>,
   private val resourcesLoaderLazy: Lazy<KurobaImageFromResourcesLoader>,
   private val diskLoaderLazy: Lazy<KurobaImageFromDiskLoader>,
   private val networkLoaderLazy: Lazy<KurobaImageFromNetworkLoader>,
 ) : KurobaImageLoader {
 
+  private val memoryLoader: KurobaImageFromMemoryLoader
+    get() = memoryLoaderLazy.get()
   private val resourcesLoader: KurobaImageFromResourcesLoader
     get() = resourcesLoaderLazy.get()
   private val diskLoader: KurobaImageFromDiskLoader
@@ -34,16 +39,23 @@ class KurobaImageLoaderImpl(
   @GuardedBy("mutex")
   private val _activeRequests = mutableMapWithCap<RequestKey, RequestResult>(initialCapacity = 64)
 
-  override suspend fun isImageCachedLocally(cacheFileType: CacheFileType, url: String): Boolean {
+  override suspend fun isImageCachedOnDisk(cacheFileType: CacheFileType, url: String): Boolean {
     return diskLoader.isImageCachedLocally(
       cacheFileType = cacheFileType,
       url = url
     )
   }
 
+  override suspend fun loadFromMemoryCache(
+    memoryCacheKey: MemoryCache.Key
+  ): Bitmap? {
+    return memoryLoader.loadFromMemoryCache(memoryCacheKey)
+  }
+
   override suspend fun loadFromResources(
     context: Context,
     drawableId: Int,
+    memoryCacheKey: MemoryCache.Key,
     imageSize: KurobaImageSize,
     scale: Scale,
     transformations: List<Transformation>
@@ -51,6 +63,7 @@ class KurobaImageLoaderImpl(
     return resourcesLoader.loadFromResources(
       context = context,
       drawableId = drawableId,
+      memoryCacheKey = memoryCacheKey,
       scale = scale,
       imageSize = imageSize,
       transformations = transformations
@@ -60,6 +73,7 @@ class KurobaImageLoaderImpl(
   override suspend fun loadFromNetwork(
     context: Context,
     url: String,
+    memoryCacheKey: MemoryCache.Key?,
     cacheFileType: CacheFileType,
     imageSize: KurobaImageSize,
     scale: Scale,
@@ -102,6 +116,7 @@ class KurobaImageLoaderImpl(
       val loadFromDiskResult = diskLoader.tryToLoadFromDisk(
         context = context,
         url = url,
+        memoryCacheKey = memoryCacheKey,
         postDescriptor = postDescriptor,
         cacheFileType = cacheFileType,
         imageSize = imageSize,
@@ -130,7 +145,7 @@ class KurobaImageLoaderImpl(
       val loadFromNetworkResult = networkLoader.loadFromNetwork(
         context = context,
         url = url,
-        scale = scale,
+        memoryCacheKey = memoryCacheKey,
         cacheFileType = cacheFileType,
         imageSize = imageSize,
         transformations = transformations
@@ -162,6 +177,7 @@ class KurobaImageLoaderImpl(
   override suspend fun loadFromDisk(
     context: Context,
     inputFile: InputFile,
+    memoryCacheKey: MemoryCache.Key,
     imageSize: KurobaImageSize,
     scale: Scale,
     transformations: List<Transformation>
@@ -169,6 +185,7 @@ class KurobaImageLoaderImpl(
     return diskLoader.loadFromDisk(
       context = context,
       inputFile = inputFile,
+      memoryCacheKey = memoryCacheKey,
       scale = scale,
       imageSize = imageSize,
       transformations = transformations

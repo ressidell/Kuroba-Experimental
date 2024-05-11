@@ -81,6 +81,7 @@ class MrSkeletonLayout @JvmOverloads constructor(
     val result = kurobaImageLoader.loadFromNetwork(
       context = context,
       url = skeletonUrl,
+      memoryCacheKey = null,
       cacheFileType = CacheFileType.PostMediaFull,
       imageSize = KurobaImageSize.Unspecified
     )

@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.core.image.loader
 
 import android.content.Context
 import android.graphics.drawable.BitmapDrawable
+import coil.memory.MemoryCache
 import coil.size.Scale
 import coil.transform.Transformation
 import com.github.k1rakishou.chan.core.cache.CacheFileType
@@ -19,6 +20,7 @@ interface KurobaImageFromDiskLoader {
   suspend fun loadFromDisk(
     context: Context,
     inputFile: InputFile,
+    memoryCacheKey: MemoryCache.Key?,
     imageSize: KurobaImageSize,
     scale: Scale,
     transformations: List<Transformation>,
@@ -27,6 +29,7 @@ interface KurobaImageFromDiskLoader {
   suspend fun tryToLoadFromDisk(
     context: Context,
     url: String,
+    memoryCacheKey: MemoryCache.Key?,
     postDescriptor: PostDescriptor?,
     cacheFileType: CacheFileType,
     imageSize: KurobaImageSize,

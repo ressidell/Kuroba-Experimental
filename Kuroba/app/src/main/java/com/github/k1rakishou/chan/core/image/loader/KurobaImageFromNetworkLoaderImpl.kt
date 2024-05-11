@@ -3,8 +3,8 @@ package com.github.k1rakishou.chan.core.image.loader
 import android.content.Context
 import android.graphics.drawable.BitmapDrawable
 import coil.ImageLoader
+import coil.memory.MemoryCache
 import coil.network.HttpException
-import coil.size.Scale
 import coil.transform.Transformation
 import com.github.k1rakishou.chan.core.base.okhttp.CoilOkHttpClient
 import com.github.k1rakishou.chan.core.cache.CacheFileType
@@ -50,7 +50,7 @@ class KurobaImageFromNetworkLoaderImpl(
   override suspend fun loadFromNetwork(
     context: Context,
     url: String,
-    scale: Scale,
+    memoryCacheKey: MemoryCache.Key?,
     cacheFileType: CacheFileType,
     imageSize: KurobaImageSize,
     transformations: List<Transformation>
@@ -69,8 +69,8 @@ class KurobaImageFromNetworkLoaderImpl(
           context = context,
           imageFile = fileManager.fromRawFile(imageFile),
           url = url,
+          memoryCacheKey = memoryCacheKey,
           cacheFileType = cacheFileType,
-          scale = scale,
           imageSize = imageSize,
           transformations = transformations
         ).unwrap()

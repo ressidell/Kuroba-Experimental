@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import coil.network.HttpException
+import coil.size.Scale
 import coil.transform.Transformation
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
@@ -114,8 +115,9 @@ private fun BuildInnerImage(
         globalUiStateHolder = globalUiStateHolder,
         context = context,
         controllerKey = controllerKey,
-        request = request,
-        size = size
+        size = size,
+        scale = Scale.FIT,
+        request = request
       )
     }
   )
@@ -193,12 +195,18 @@ sealed class ImageLoaderRequestData {
     }
   }
 
-  data class Uri(val uri: android.net.Uri) : ImageLoaderRequestData()
+  data class Uri(
+    val uri: android.net.Uri
+  ) : ImageLoaderRequestData() {
+    val uriString: String = uri.toString()
+  }
 
   data class Url(
     val httpUrl: HttpUrl,
     val cacheFileType: CacheFileType
-  ) : ImageLoaderRequestData()
+  ) : ImageLoaderRequestData() {
+    val httpUrlString: String = httpUrl.toString()
+  }
 
   data class DrawableResource(
     @DrawableRes val drawableId: Int

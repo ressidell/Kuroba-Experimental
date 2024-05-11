@@ -586,7 +586,6 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
           KurobaComposeImage(
             controllerKey = null,
             request = siteIconRequest,
-            contentScale = ContentScale.Crop,
             modifier = Modifier.size(20.dp),
             error = {
               Image(
@@ -756,7 +755,6 @@ private fun LazyGridItemScope.BuildNavigationHistoryListEntryGridMode(
           KurobaComposeImage(
             controllerKey = null,
             request = siteIconRequest,
-            contentScale = ContentScale.Crop,
             modifier = Modifier.size(20.dp),
             error = {
               Image(

@@ -6,8 +6,10 @@ import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
+import androidx.compose.ui.unit.IntSize
 import androidx.core.graphics.drawable.toBitmap
 import coil.ImageLoader
+import coil.memory.MemoryCache
 import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.SuccessResult
@@ -20,6 +22,7 @@ import com.github.k1rakishou.chan.core.cache.CacheFileType
 import com.github.k1rakishou.chan.core.cache.CacheHandler
 import com.github.k1rakishou.chan.core.cache.downloader.ChunkedMediaDownloader
 import com.github.k1rakishou.chan.core.image.InputFile
+import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequestData
 import com.github.k1rakishou.chan.utils.KurobaMediaType
 import com.github.k1rakishou.chan.utils.MediaUtils
 import com.github.k1rakishou.chan.utils.asKurobaMediaType
@@ -88,8 +91,8 @@ internal suspend fun applyTransformationsToDrawable(
   context: Context,
   imageFile: AbstractFile,
   url: String,
+  memoryCacheKey: MemoryCache.Key?,
   cacheFileType: CacheFileType,
-  scale: Scale,
   imageSize: KurobaImageSize,
   transformations: List<Transformation>
 ): ModularResult<BitmapDrawable> {
@@ -113,9 +116,9 @@ internal suspend fun applyTransformationsToDrawable(
     val request = with(ImageRequest.Builder(context)) {
       lifecycle(context.lifecycleFromContextOrNull())
       data(fileLocation)
-      scale(scale)
       transformations(combinedTransformations)
       applyImageSize(imageSize)
+      memoryCacheKey(memoryCacheKey)
 
       build()
     }
@@ -209,4 +212,29 @@ private class ResizeTransformation : Transformation {
 
     return scaledBitmap
   }
+}
+
+fun memoryCacheKey(
+  data: ImageLoaderRequestData,
+  transformations: List<Transformation>,
+  size: IntSize,
+  scale: Scale
+): MemoryCache.Key {
+  val key = when (data) {
+    is ImageLoaderRequestData.DrawableResource -> "DrawableResource_${data.drawableId}"
+    is ImageLoaderRequestData.File -> "File_${data.absolutePath}"
+    is ImageLoaderRequestData.Uri -> "Uri_${data.uriString}"
+    is ImageLoaderRequestData.Url -> "Url_${data.httpUrlString}"
+  }
+
+  val extras = buildMap<String, String> {
+    put("Transformations", transformations.joinToString { transformation -> transformation.cacheKey })
+    put("Size", "${size.width}x${size.height}")
+    put("Scale", scale.name)
+  }
+
+  return MemoryCache.Key(
+    key = key,
+    extras = extras
+  )
 }

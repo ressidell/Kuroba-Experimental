@@ -61,6 +61,7 @@ class KurobaImageFromDiskLoaderImpl(
   override suspend fun loadFromDisk(
     context: Context,
     inputFile: InputFile,
+    memoryCacheKey: MemoryCache.Key?,
     imageSize: KurobaImageSize,
     scale: Scale,
     transformations: List<Transformation>
@@ -77,6 +78,7 @@ class KurobaImageFromDiskLoaderImpl(
         context = context,
         fileName = fileName,
         inputFile = inputFile,
+        memoryCacheKey = memoryCacheKey,
         imageSize = imageSize,
         scale = scale,
         transformations = transformations
@@ -101,6 +103,7 @@ class KurobaImageFromDiskLoaderImpl(
   override suspend fun tryToLoadFromDisk(
     context: Context,
     url: String,
+    memoryCacheKey: MemoryCache.Key?,
     postDescriptor: PostDescriptor?,
     cacheFileType: CacheFileType,
     imageSize: KurobaImageSize,
@@ -128,6 +131,7 @@ class KurobaImageFromDiskLoaderImpl(
               return@Try getBitmapDrawable(
                 context = context,
                 fileName = fileName,
+                memoryCacheKey = memoryCacheKey,
                 inputFile = InputFile.FileUri(uri = fileUri),
                 imageSize = imageSize,
                 scale = scale,
@@ -151,6 +155,7 @@ class KurobaImageFromDiskLoaderImpl(
         return@Try getBitmapDrawable(
           context = context,
           fileName = cacheFile.name,
+          memoryCacheKey = memoryCacheKey,
           inputFile = InputFile.JavaFile(file = cacheFile),
           imageSize = imageSize,
           scale = scale,
@@ -164,6 +169,7 @@ class KurobaImageFromDiskLoaderImpl(
     context: Context,
     fileName: String,
     inputFile: InputFile,
+    memoryCacheKey: MemoryCache.Key?,
     imageSize: KurobaImageSize,
     scale: Scale,
     transformations: List<Transformation>
@@ -189,6 +195,7 @@ class KurobaImageFromDiskLoaderImpl(
         val decoded = decodedFilePreview(
           isProbablyVideo = true,
           inputFile = inputFile,
+          memoryCacheKey = memoryCacheKey,
           context = context,
           width = width,
           height = height,
@@ -214,6 +221,7 @@ class KurobaImageFromDiskLoaderImpl(
         transformations(transformations)
         scale(scale)
         applyImageSize(imageSize)
+        memoryCacheKey(memoryCacheKey)
 
         build()
       }
@@ -233,6 +241,7 @@ class KurobaImageFromDiskLoaderImpl(
   private suspend fun decodedFilePreview(
     isProbablyVideo: Boolean,
     inputFile: InputFile,
+    memoryCacheKey: MemoryCache.Key?,
     context: Context,
     width: Dimension,
     height: Dimension,
@@ -273,6 +282,7 @@ class KurobaImageFromDiskLoaderImpl(
       val fileImagePreviewMaybe = getFileImagePreview(
         context = context,
         inputFile = inputFile,
+        memoryCacheKey = memoryCacheKey,
         transformations = emptyList(),
         scale = scale,
         width = width,
@@ -290,6 +300,7 @@ class KurobaImageFromDiskLoaderImpl(
   private suspend fun getFileImagePreview(
     context: Context,
     inputFile: InputFile,
+    memoryCacheKey: MemoryCache.Key?,
     transformations: List<Transformation>,
     scale: Scale,
     width: Dimension,
@@ -308,6 +319,7 @@ class KurobaImageFromDiskLoaderImpl(
         transformations(transformations)
         scale(scale)
         size(width, height)
+        memoryCacheKey(memoryCacheKey)
 
         build()
       }
