@@ -2,7 +2,7 @@ package com.github.k1rakishou.chan.core.di.component.viewmodel
 
 import com.github.k1rakishou.chan.core.di.module.activity.ActivityScopedViewModelModule
 import com.github.k1rakishou.chan.core.di.scope.PerViewModel
-import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2ViewModel
+import com.github.k1rakishou.chan.features.album.AlbumViewControllerViewModel
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupPatternSettingsControllerViewModel
 import com.github.k1rakishou.chan.features.bookmarks.BookmarkGroupSettingsControllerViewModel
 import com.github.k1rakishou.chan.features.create_sound_media.CreateSoundMediaControllerViewModel
@@ -48,7 +48,7 @@ abstract class ViewModelComponent {
   abstract fun inject(imageSearchControllerViewModel: ImageSearchControllerViewModel)
   abstract fun inject(createSoundMediaControllerViewModel: CreateSoundMediaControllerViewModel)
   abstract fun inject(replyLayoutViewModel: ReplyLayoutViewModel)
-  abstract fun inject(albumViewControllerV2ViewModel: AlbumViewControllerV2ViewModel)
+  abstract fun inject(albumViewControllerViewModel: AlbumViewControllerViewModel)
 
   @Subcomponent.Builder
   interface Builder {

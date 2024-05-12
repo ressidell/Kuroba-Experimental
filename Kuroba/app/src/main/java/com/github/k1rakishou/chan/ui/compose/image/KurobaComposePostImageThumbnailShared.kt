@@ -21,7 +21,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import okio.IOException
-import kotlin.math.absoluteValue
 
 private const val TAG = "KurobaComposePostImageThumbnailShared"
 private const val FastScrollingImageLoadDelay = 100L
@@ -279,7 +278,7 @@ private suspend fun needToAddExtraDelayBeforeLoadingImage(
 
   if (controllerKey != null) {
     val velocity = globalUiStateHolder.mainUi.calculateVelocity(controllerKey)
-    return velocity.yVelocity.absoluteValue > 10000f
+    return velocity.yVelocity > 10000f
   }
 
   return false

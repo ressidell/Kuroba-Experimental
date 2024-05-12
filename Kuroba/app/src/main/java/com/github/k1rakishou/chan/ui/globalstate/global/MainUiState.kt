@@ -77,7 +77,6 @@ internal class MainUiState : IMainUiState.Readable, IMainUiState.Writeable {
 
   override fun updateScrollSpeed(controllerKey: ControllerKey, motionEvent: MotionEvent?) {
     if (motionEvent != null) {
-      Logger.verbose(TAG) { "updateScrollSpeed() controllerKey: ${controllerKey}, motionEvent: ${motionEvent}" }
       _velocityTracking.updateScrollSpeed(controllerKey, motionEvent)
     }
   }
@@ -88,10 +87,7 @@ internal class MainUiState : IMainUiState.Readable, IMainUiState.Writeable {
   }
 
   override fun calculateVelocity(controllerKey: ControllerKey): VelocityTracking.Velocity {
-    val velocity = _velocityTracking.calculateVelocity(controllerKey)
-    Logger.verbose(TAG) { "calculateVelocity() controllerKey: ${controllerKey}, velocity: ${velocity}" }
-
-    return velocity
+    return _velocityTracking.calculateVelocity(controllerKey)
   }
 
   companion object {

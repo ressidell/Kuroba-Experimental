@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.github.k1rakishou.chan.core.di.key.ViewModelKey
 import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.di.scope.PerController
-import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2ViewModel
+import com.github.k1rakishou.chan.features.album.AlbumViewControllerViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -13,11 +13,11 @@ import dagger.multibindings.IntoMap
 abstract class ControllerScopedViewModelModule {
 
   @IntoMap
-  @ViewModelKey(AlbumViewControllerV2ViewModel::class)
+  @ViewModelKey(AlbumViewControllerViewModel::class)
   @Binds
   @PerController
-  abstract fun bindAlbumViewControllerV2ViewModel(
-    impl: AlbumViewControllerV2ViewModel.ViewModelFactory
+  abstract fun bindAlbumViewControllerViewModel(
+    impl: AlbumViewControllerViewModel.ViewModelFactory
   ): ViewModelAssistedFactory<out ViewModel>
 
 }

@@ -25,7 +25,7 @@ import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.ThreadFollowHistoryManager
 import com.github.k1rakishou.chan.core.manager.ThreadPostSearchManager
 import com.github.k1rakishou.chan.core.site.Site
-import com.github.k1rakishou.chan.features.album.AlbumViewControllerV2
+import com.github.k1rakishou.chan.features.album.AlbumViewController
 import com.github.k1rakishou.chan.features.drawer.MainControllerCallbacks
 import com.github.k1rakishou.chan.features.filters.FiltersController
 import com.github.k1rakishou.chan.features.media_viewer.MediaLocation
@@ -434,18 +434,18 @@ abstract class ThreadController(
 
   override fun showAlbum(initialImageUrl: HttpUrl?) {
     val listenMode = when (chanDescriptor) {
-      is ChanDescriptor.ICatalogDescriptor -> AlbumViewControllerV2.ListenMode.Catalog
-      is ChanDescriptor.ThreadDescriptor -> AlbumViewControllerV2.ListenMode.Thread
+      is ChanDescriptor.ICatalogDescriptor -> AlbumViewController.ListenMode.Catalog
+      is ChanDescriptor.ThreadDescriptor -> AlbumViewController.ListenMode.Thread
       null -> return
     }
 
-    val albumViewControllerV2 = AlbumViewControllerV2(
+    val albumViewController = AlbumViewController(
       context = context,
       listenMode = listenMode,
       initialImageFullUrl = initialImageUrl?.toString()
     )
 
-    pushController(albumViewControllerV2)
+    pushController(albumViewController)
   }
 
   override fun pushController(controller: Controller) {

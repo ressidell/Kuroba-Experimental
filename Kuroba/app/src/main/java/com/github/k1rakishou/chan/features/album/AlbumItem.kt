@@ -145,7 +145,7 @@ fun AlbumItem(
 @Composable
 private fun AlbumItemInfo(
   modifier: Modifier,
-  albumItemPostData: AlbumViewControllerV2ViewModel.AlbumItemPostData
+  albumItemPostData: AlbumViewControllerViewModel.AlbumItemPostData
 ) {
   Column(
     modifier = modifier

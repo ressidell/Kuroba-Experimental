@@ -52,13 +52,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
-class AlbumViewControllerV2(
+class AlbumViewController(
   context: Context,
   private val listenMode: ListenMode,
   private val initialImageFullUrl: String?
-) : BaseComposeController<AlbumViewControllerV2ViewModel, AlbumViewControllerV2.Params>(
+) : BaseComposeController<AlbumViewControllerViewModel, AlbumViewController.Params>(
   context = context,
-  viewModelClass = AlbumViewControllerV2ViewModel::class.java
+  viewModelClass = AlbumViewControllerViewModel::class.java
 ) {
 
   @Inject
@@ -218,7 +218,7 @@ class AlbumViewControllerV2(
       controllerViewModel.presentController
         .collectLatest { presentController ->
           when (presentController) {
-            is AlbumViewControllerV2ViewModel.PresentController.ImageSaverOptionsController -> {
+            is AlbumViewControllerViewModel.PresentController.ImageSaverOptionsController -> {
               val controller = ImageSaverV2OptionsController(context, presentController.options)
               presentController(controller)
             }

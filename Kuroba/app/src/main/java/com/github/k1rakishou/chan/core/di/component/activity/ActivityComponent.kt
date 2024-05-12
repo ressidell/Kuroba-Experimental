@@ -103,7 +103,6 @@ import com.github.k1rakishou.chan.ui.captcha.dvach.DvachCaptchaLayout
 import com.github.k1rakishou.chan.ui.captcha.lynxchan.LynxchanCaptchaLayout
 import com.github.k1rakishou.chan.ui.captcha.v1.CaptchaNojsLayoutV1
 import com.github.k1rakishou.chan.ui.captcha.v2.CaptchaNoJsLayoutV2
-import com.github.k1rakishou.chan.ui.cell.AlbumViewCell
 import com.github.k1rakishou.chan.ui.cell.CardPostCell
 import com.github.k1rakishou.chan.ui.cell.PostCell
 import com.github.k1rakishou.chan.ui.cell.PostStubCell
@@ -365,7 +364,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(floatingMenu: FloatingMenu)
   fun inject(threadStatusCell: ThreadStatusCell)
   fun inject(postCell: PostCell)
-  fun inject(albumViewCell: AlbumViewCell)
   fun inject(navigationControllerContainerLayout: NavigationControllerContainerLayout)
   fun inject(systemGestureZoneBlockerLayout: SystemGestureZoneBlockerLayout)
   fun inject(bookmarksPresenter: BookmarksPresenter)

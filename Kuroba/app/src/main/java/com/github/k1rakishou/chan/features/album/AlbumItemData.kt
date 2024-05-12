@@ -14,7 +14,7 @@ data class AlbumItemData(
   val thumbnailImageUrl: HttpUrl,
   val spoilerThumbnailImageUrl: HttpUrl?,
   val fullImageUrl: HttpUrl?,
-  val albumItemPostData: AlbumViewControllerV2ViewModel.AlbumItemPostData?,
+  val albumItemPostData: AlbumViewControllerViewModel.AlbumItemPostData?,
   val mediaType: KurobaMediaType,
   val downloadUniqueId: String?
 ) {
@@ -30,7 +30,7 @@ data class AlbumItemData(
 
   val fullImageUrlString: String? = fullImageUrl?.toString()
 
-  val albumItemDataKey: AlbumViewControllerV2ViewModel.AlbumItemDataKey = AlbumViewControllerV2ViewModel.AlbumItemDataKey(
+  val albumItemDataKey: AlbumViewControllerViewModel.AlbumItemDataKey = AlbumViewControllerViewModel.AlbumItemDataKey(
     postDescriptor = postDescriptor,
     thumbnailImageUrl = thumbnailImageUrl,
     fullImageUrl = fullImageUrl

@@ -4,6 +4,7 @@ import android.view.MotionEvent
 import android.view.VelocityTracker
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.core_logger.Logger
+import kotlin.math.absoluteValue
 
 class VelocityTracking {
   private val _velocityTracker by lazy { VelocityTracker.obtain() }
@@ -35,8 +36,8 @@ class VelocityTracking {
     _velocityTracker.computeCurrentVelocity(1000)
 
     return Velocity(
-      xVelocity = _velocityTracker.xVelocity,
-      yVelocity = _velocityTracker.yVelocity
+      xVelocity = _velocityTracker.xVelocity.absoluteValue,
+      yVelocity = _velocityTracker.yVelocity.absoluteValue
     )
   }
 

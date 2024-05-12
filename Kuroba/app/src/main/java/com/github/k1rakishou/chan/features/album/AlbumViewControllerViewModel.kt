@@ -72,7 +72,7 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 
-class AlbumViewControllerV2ViewModel(
+class AlbumViewControllerViewModel(
   private val savedStateHandle: SavedStateHandle,
   private val appResources: AppResources,
   private val currentOpenedDescriptorStateManager: CurrentOpenedDescriptorStateManager,
@@ -88,8 +88,8 @@ class AlbumViewControllerV2ViewModel(
 ) : BaseViewModel() {
   private val _albumItemIdCounter = AtomicLong(0)
 
-  private val _currentListenMode: AlbumViewControllerV2.ListenMode
-    get() = savedStateHandle.requireParams<AlbumViewControllerV2.Params>().listenMode
+  private val _currentListenMode: AlbumViewController.ListenMode
+    get() = savedStateHandle.requireParams<AlbumViewController.Params>().listenMode
 
   private val _currentDescriptor = MutableStateFlow<ChanDescriptor?>(null)
   val currentDescriptor: StateFlow<ChanDescriptor?>
@@ -147,8 +147,8 @@ class AlbumViewControllerV2ViewModel(
 
   private val snackbarManager by lazy {
     val snackbarScope = when (_currentListenMode) {
-      AlbumViewControllerV2.ListenMode.Catalog -> SnackbarScope.Album(SnackbarScope.MainLayoutAnchor.Catalog)
-      AlbumViewControllerV2.ListenMode.Thread -> SnackbarScope.Album(SnackbarScope.MainLayoutAnchor.Thread)
+      AlbumViewController.ListenMode.Catalog -> SnackbarScope.Album(SnackbarScope.MainLayoutAnchor.Catalog)
+      AlbumViewController.ListenMode.Thread -> SnackbarScope.Album(SnackbarScope.MainLayoutAnchor.Thread)
     }
 
     snackbarManagerFactory.snackbarManager(snackbarScope)
@@ -526,7 +526,7 @@ class AlbumViewControllerV2ViewModel(
       .flatMap { chanPost -> chanPost.postImages }
 
     val initialImageFullUrl = savedStateHandle
-      .paramsOrNull<AlbumViewControllerV2.Params>()
+      .paramsOrNull<AlbumViewController.Params>()
       ?.initialImageFullUrl
 
     val scrollToPosition = if (initialLoad) {
@@ -676,11 +676,11 @@ class AlbumViewControllerV2ViewModel(
     Logger.debug(TAG) { "listenForCurrentChanDescriptor() currentListenMode: ${_currentListenMode}" }
 
     val currentDescriptorFlow = when (_currentListenMode) {
-      AlbumViewControllerV2.ListenMode.Catalog -> {
+      AlbumViewController.ListenMode.Catalog -> {
         currentOpenedDescriptorStateManager.currentCatalogDescriptorFlow
           .map { catalogDescriptor -> catalogDescriptor as ChanDescriptor? }
       }
-      AlbumViewControllerV2.ListenMode.Thread -> {
+      AlbumViewController.ListenMode.Thread -> {
         currentOpenedDescriptorStateManager.currentThreadDescriptorFlow
           .map { threadDescriptor -> threadDescriptor as ChanDescriptor? }
       }
@@ -857,9 +857,9 @@ class AlbumViewControllerV2ViewModel(
     private val imageSaverV2: ImageSaverV2,
     private val imageSaverV2ServiceDelegate: ImageSaverV2ServiceDelegate,
     private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager
-  ) : ViewModelAssistedFactory<AlbumViewControllerV2ViewModel> {
-    override fun create(handle: SavedStateHandle): AlbumViewControllerV2ViewModel {
-      return AlbumViewControllerV2ViewModel(
+  ) : ViewModelAssistedFactory<AlbumViewControllerViewModel> {
+    override fun create(handle: SavedStateHandle): AlbumViewControllerViewModel {
+      return AlbumViewControllerViewModel(
         savedStateHandle = handle,
         appResources = appResources,
         currentOpenedDescriptorStateManager = currentOpenedDescriptorStateManager,
@@ -877,7 +877,7 @@ class AlbumViewControllerV2ViewModel(
   }
 
   companion object {
-    private const val TAG = "AlbumViewControllerV2ViewModel"
+    private const val TAG = "AlbumViewControllerViewModel"
 
     private const val MAX_RATIO = 2f
     private const val MIN_RATIO = .4f

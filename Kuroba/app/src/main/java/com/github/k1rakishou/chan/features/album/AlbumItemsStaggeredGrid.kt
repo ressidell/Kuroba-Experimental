@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,16 +19,18 @@ import com.github.k1rakishou.chan.ui.compose.lazylist.LazyVerticalStaggeredGridW
 import com.github.k1rakishou.chan.ui.compose.providers.LocalContentPaddings
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
 import com.github.k1rakishou.chan.ui.helper.awaitWhile
-import kotlinx.coroutines.android.awaitFrame
+import com.github.k1rakishou.core_logger.Logger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 
+private const val TAG = "AlbumItemsStaggeredGrid"
+
 @Composable
 fun AlbumItemsStaggeredGrid(
   controllerKey: ControllerKey,
-  controllerViewModel: AlbumViewControllerV2ViewModel,
+  controllerViewModel: AlbumViewControllerViewModel,
   albumSpanCount: Int,
   onClick: (AlbumItemData) -> Unit,
   onLongClick: (AlbumItemData) -> Unit,
@@ -45,17 +48,34 @@ fun AlbumItemsStaggeredGrid(
   val state = rememberLazyStaggeredGridState(
     initialFirstVisibleItemIndex = controllerViewModel.lastScrollPosition.intValue
   )
+  val currentLazyStaggeredGridState = rememberUpdatedState(newValue = state)
 
-  LaunchedEffect(key1 = state) {
+  LaunchedEffect(key1 = Unit) {
     controllerViewModel.scrollToPosition
       .filter { scrollToPosition -> scrollToPosition >= 0 }
       .collectLatest { scrollToPosition ->
         try {
-          val success = awaitWhile(maxWaitTimeMs = 1_000L) { state.layoutInfo.totalItemsCount >= scrollToPosition }
-          if (success) {
-            awaitFrame()
-            state.scrollToItem(scrollToPosition)
+          val currentState = currentLazyStaggeredGridState.value
+
+          Logger.debug(TAG) {
+            "scrollToPosition() Got scroll request to position ${scrollToPosition}, " +
+              "current totalItemsCount: ${currentState.layoutInfo.totalItemsCount}, " +
+              "waiting for LazyList to fully load..."
           }
+
+          val success = awaitWhile(
+            maxWaitTimeMs = 1_000L,
+            waitWhile = { currentState.layoutInfo.totalItemsCount < scrollToPosition }
+          )
+
+          Logger.debug(TAG) {
+            "scrollToPosition() " +
+              "totalItemsCount: ${currentState.layoutInfo.totalItemsCount}, " +
+              "scrollToPosition: ${scrollToPosition}, " +
+              "success: ${success}"
+          }
+
+          currentState.scrollToItem(scrollToPosition)
         } catch (_: Throwable) {
           // no-op
         }
