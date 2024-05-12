@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.forEachTextValue
-import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,9 +26,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.ui.compose.clearText
+import com.github.k1rakishou.chan.ui.compose.forEachTextValue
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 import com.github.k1rakishou.chan.ui.compose.providers.OverrideChanTheme
+import com.github.k1rakishou.chan.ui.compose.textAsFlow
 import com.github.k1rakishou.core_themes.ChanTheme
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach

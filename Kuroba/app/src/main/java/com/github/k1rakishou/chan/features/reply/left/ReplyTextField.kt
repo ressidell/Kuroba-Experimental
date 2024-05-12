@@ -18,6 +18,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
@@ -136,7 +137,9 @@ internal fun ReplyTextField(
     state = replyTextState,
 //    visualTransformation = replyInputVisualTransformation,
     keyboardOptions = KeyboardOptions(
-      capitalization = KeyboardCapitalization.Sentences
+      capitalization = KeyboardCapitalization.Sentences,
+      autoCorrectEnabled = true,
+      keyboardType = KeyboardType.Text
     ),
     label = {
       KurobaLabelText(

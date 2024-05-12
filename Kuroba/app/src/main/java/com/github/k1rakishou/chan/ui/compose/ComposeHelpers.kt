@@ -5,9 +5,15 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
@@ -18,6 +24,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.isDevBuild
 import com.github.k1rakishou.core_logger.Logger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 
 private const val TAG = "ComposeHelpers"
 const val enableDebugCompositionLogs = true
@@ -119,4 +127,26 @@ fun List<Measurable>.ensureSingleMeasurable(): Measurable {
   }
 
   return first()
+}
+
+fun TextFieldState.textAsFlow(): Flow<CharSequence> {
+  return snapshotFlow { text }
+}
+
+@Composable
+fun TextFieldState.collectText(): CharSequence {
+  var currentText by remember { mutableStateOf(text) }
+
+  LaunchedEffect(key1 = this) {
+    forEachTextValue { text -> currentText = text }
+  }
+
+  return currentText
+}
+
+suspend fun TextFieldState.forEachTextValue(block: (CharSequence) -> Unit): Nothing {
+  textAsFlow()
+    .collectLatest { text -> block(text) }
+
+  error("forEachTextValue doesn't return normally")
 }

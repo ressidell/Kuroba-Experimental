@@ -16,11 +16,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.material.ContentAlpha
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +36,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.clearText
+import com.github.k1rakishou.chan.ui.compose.collectText
 import com.github.k1rakishou.chan.ui.compose.components.IconTint
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
@@ -184,10 +183,7 @@ fun SearchIcon(
 ) {
   val chanTheme = LocalChanTheme.current
 
-  val searchQuery by searchQueryState
-    .textAsFlow()
-    .collectAsState(initial = "")
-
+  val searchQuery = searchQueryState.collectText()
   val iconTintColor = chanTheme.resolveIconTint(forColor = chanTheme.toolbarBackgroundComposeColor)
 
   AnimatedContent(targetState = searchQuery.isEmpty()) { searchQueryEmpty ->

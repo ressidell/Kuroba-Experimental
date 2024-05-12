@@ -1,6 +1,5 @@
 package com.github.k1rakishou.chan.ui.compose.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.InteractionSource
@@ -10,9 +9,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -42,7 +41,7 @@ import com.github.k1rakishou.chan.ui.compose.animatedHorizontalLine
 import com.github.k1rakishou.chan.ui.compose.collectTextFontSize
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun KurobaComposeTextFieldV2(
   state: TextFieldState,
@@ -55,7 +54,7 @@ fun KurobaComposeTextFieldV2(
   textStyle: TextStyle = TextStyle.Default,
   shape: Shape = TextFieldDefaults.TextFieldShape,
   keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-  keyboardActions: KeyboardActions = KeyboardActions.Default,
+  onKeyboardAction: KeyboardActionHandler? = null,
   lineLimits: TextFieldLineLimits = TextFieldLineLimits.Default,
   onTextLayout: (Density.(getResult: () -> TextLayoutResult?) -> Unit)? = null,
   interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -124,7 +123,7 @@ fun KurobaComposeTextFieldV2(
       inputTransformation = inputTransformation,
       textStyle = mergedTextStyle,
       keyboardOptions = keyboardOptions,
-      keyboardActions = keyboardActions,
+      onKeyboardAction = onKeyboardAction,
       lineLimits = lineLimits,
       onTextLayout = onTextLayout,
       interactionSource = interactionSource,

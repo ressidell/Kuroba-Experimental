@@ -27,7 +27,7 @@ import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.util.*
+import java.util.UUID
 import java.util.regex.Pattern
 
 class ReplyLayoutHelper(
@@ -613,7 +613,7 @@ class ReplyLayoutHelper(
   fun handleQuote(replyTextState: TextFieldState, postNo: Long, textQuote: String?) {
     val stringBuilder = StringBuilder()
     val comment = replyTextState.text
-    val selectionStart = replyTextState.text.selectionInChars.start.coerceAtLeast(0)
+    val selectionStart = replyTextState.selection.start.coerceAtLeast(0)
 
     if (selectionStart - 1 >= 0
       && comment.isNotEmpty()
@@ -656,7 +656,7 @@ class ReplyLayoutHelper(
 
     replyTextState.edit {
       replace(0, length, resultComment)
-      selectCharsIn(TextRange(selectionStart + stringBuilder.length))
+      selection = TextRange(selectionStart + stringBuilder.length)
     }
   }
 

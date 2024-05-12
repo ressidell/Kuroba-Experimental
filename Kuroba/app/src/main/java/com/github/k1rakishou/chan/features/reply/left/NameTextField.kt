@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.features.reply.left
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.runtime.Composable
@@ -42,7 +41,7 @@ internal fun NameTextField(
       capitalization = KeyboardCapitalization.Sentences,
       imeAction = ImeAction.Next
     ),
-    keyboardActions = KeyboardActions(onNext = { onMoveFocus() }),
+    onKeyboardAction = { onMoveFocus() },
     label = { interactionSource ->
       KurobaLabelText(
         enabled = replyLayoutEnabled,

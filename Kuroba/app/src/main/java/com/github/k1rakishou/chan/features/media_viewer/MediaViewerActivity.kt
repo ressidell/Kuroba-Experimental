@@ -176,7 +176,7 @@ class MediaViewerActivity :
     overridePendingTransition(0, 0)
   }
 
-  override fun onNewIntent(intent: Intent?) {
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
 
     lifecycleScope.launch {

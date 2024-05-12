@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.features.reply.data
 
 import android.Manifest
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.forEachTextValue
 import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.runtime.IntState
 import androidx.compose.runtime.Stable
@@ -34,6 +33,7 @@ import com.github.k1rakishou.chan.features.posting.PostingServiceDelegate
 import com.github.k1rakishou.chan.features.posting.PostingStatus
 import com.github.k1rakishou.chan.features.reply.left.ReplyTextFieldHelpers
 import com.github.k1rakishou.chan.ui.compose.clearText
+import com.github.k1rakishou.chan.ui.compose.forEachTextValue
 import com.github.k1rakishou.chan.ui.controller.ThreadControllerType
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.helper.AppResources
@@ -443,8 +443,8 @@ class ReplyLayoutState(
       var selectionIndex = -1
 
       val newText = buildString(capacity = capacity) {
-        val selectionStart = replyTextState.text.selectionInChars.start
-        val selectionEnd = replyTextState.text.selectionInChars.end
+        val selectionStart = replyTextState.selection.start
+        val selectionEnd = replyTextState.selection.end
 
         append(replyText.subSequence(0, selectionStart))
         append(postFormatterButton.openTag)
@@ -462,7 +462,7 @@ class ReplyLayoutState(
       replyTextState.edit {
         clearText()
         append(newText)
-        selectCharsIn(TextRange(selectionIndex))
+        selection = TextRange(selectionIndex)
       }
 
       afterReplyTextChanged()
@@ -500,7 +500,7 @@ class ReplyLayoutState(
       Logger.error(TAG, error) {
         "replyLayoutHelper.handleQuote() error. " +
           "replyTextState: '${replyTextState}', " +
-          "selection: ${replyTextState.text.selectionInChars}, " +
+          "selection: ${replyTextState.selection}, " +
           "postNo: ${postNo}, " +
           "textQuote: '$textQuote'"
       }

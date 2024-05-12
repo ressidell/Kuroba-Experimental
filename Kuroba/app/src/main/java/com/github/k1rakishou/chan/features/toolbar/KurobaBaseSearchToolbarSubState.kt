@@ -1,7 +1,6 @@
 package com.github.k1rakishou.chan.features.toolbar
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.textAsFlow
 import androidx.compose.runtime.IntState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableIntStateOf
@@ -9,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import com.github.k1rakishou.chan.features.toolbar.state.KurobaToolbarSubState
 import com.github.k1rakishou.chan.ui.compose.clearText
+import com.github.k1rakishou.chan.ui.compose.textAsFlow
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
