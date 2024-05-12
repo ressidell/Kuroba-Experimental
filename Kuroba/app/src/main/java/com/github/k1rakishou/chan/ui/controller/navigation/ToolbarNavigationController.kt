@@ -102,6 +102,13 @@ abstract class ToolbarNavigationController(context: Context) : NavigationControl
     }
   }
 
+  override fun onBack(): Boolean {
+    if (toolbarState.onBack()) {
+      return true
+    }
+
+    return super.onBack()
+  }
 }
 
 interface ContainerToolbarStateUpdatedListener {

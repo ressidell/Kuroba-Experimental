@@ -39,6 +39,7 @@ import com.github.k1rakishou.chan.features.thirdeye.ThirdEyeSettingsController
 import com.github.k1rakishou.chan.features.toolbar.CloseMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMenuCheckableOverflowItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarOverflowMenuBuilder
+import com.github.k1rakishou.chan.features.toolbar.state.ToolbarStateKind
 import com.github.k1rakishou.chan.ui.compose.snackbar.SnackbarScope
 import com.github.k1rakishou.chan.ui.controller.ThreadSlideController.SlideChangeListener
 import com.github.k1rakishou.chan.ui.controller.base.Controller
@@ -279,6 +280,25 @@ abstract class ThreadController(
         .flatMapLatest { chanDescriptor -> threadPostSearchManager.listenForScrollAnchorPostDescriptor(chanDescriptor) }
         .filterNotNull()
         .onEach { scrollAnchorPostDescriptor -> threadLayout.scrollToPost(scrollAnchorPostDescriptor) }
+        .collect()
+    }
+
+    controllerScope.launch {
+      kurobaToolbarState.toolbarSubStateChangesFlow
+        .onEach {
+          if (!globalUiStateHolder.replyLayout.state(threadControllerType).isOpenedOrExpanded()) {
+            return@onEach
+          }
+
+          val toolbarHasReplyState = kurobaToolbarState.toolbarStateList.value
+            .any { kurobaToolbarSubState -> kurobaToolbarSubState.kind == ToolbarStateKind.Reply }
+
+          if (toolbarHasReplyState) {
+            return@onEach
+          }
+
+          threadLayout.openOrCloseReply(open = false)
+        }
         .collect()
     }
 

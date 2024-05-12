@@ -42,9 +42,13 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -54,11 +58,6 @@ class KurobaToolbarState(
   private val controllerKey: ControllerKey,
   private val globalUiStateHolder: GlobalUiStateHolder
 ) {
-  private var _destroyed = false
-
-  private val _invokeAfterTransitionFinishedCallbacks = mutableListOf<KurobaToolbarState.() -> Unit>()
-  private var _coroutineScope = KurobaCoroutineScope()
-
   private val _keyboardOpenRequesters = MutableStateFlow<PersistentSet<ToolbarStateKind>>(persistentSetOf())
   val keyboardOpenRequesters: StateFlow<ImmutableSet<ToolbarStateKind>>
     get() = _keyboardOpenRequesters.asStateFlow()
@@ -116,6 +115,14 @@ class KurobaToolbarState(
   val reply: KurobaReplyToolbarSubState
     get() = _reply.value
 
+  private val _toolbarSubStateChangesFlow = MutableSharedFlow<Unit>(extraBufferCapacity = Channel.UNLIMITED)
+  val toolbarSubStateChangesFlow: SharedFlow<Unit>
+    get() = _toolbarSubStateChangesFlow.asSharedFlow()
+
+  private val _invokeAfterTransitionFinishedCallbacks = mutableListOf<KurobaToolbarState.() -> Unit>()
+  private var _destroyed = false
+  private var _coroutineScope = KurobaCoroutineScope()
+
   val toolbarVisibleState: Flow<Boolean>
     get() = globalUiStateHolder.toolbar.toolbarShown
   val toolbarHeightState: StateFlow<Dp?>
@@ -156,6 +163,12 @@ class KurobaToolbarState(
     _toolbarAlpha.floatValue = 0f
     _destroyed = true
     _coroutineScope.cancel()
+
+    _toolbarSubStateChangesFlow.tryEmit(Unit)
+  }
+
+  fun onBack(): Boolean {
+    return pop(withAnimation = true)
   }
 
   fun onToolbarHeightChanged(totalToolbarHeight: Dp) {
@@ -518,6 +531,8 @@ class KurobaToolbarState(
       if (newTop != null) {
         globalUiStateHolder.updateToolbarState { onToolbarTopStateChanged(controllerKey, newTop.kind) }
       }
+
+      _toolbarSubStateChangesFlow.tryEmit(Unit)
     } else {
       val belowTop = _toolbarList.getOrNull(_toolbarList.lastIndex - 1)
       if (belowTop == null) {
@@ -621,6 +636,7 @@ class KurobaToolbarState(
 
     _transitionToolbarState.value = null
     invokeAllAfterTransitionFinishedCallbacks()
+    _toolbarSubStateChangesFlow.tryEmit(Unit)
   }
 
   private fun enterToolbarMode(
@@ -653,6 +669,8 @@ class KurobaToolbarState(
             showKeyboard(newTop.kind)
           }
         }
+
+        _toolbarSubStateChangesFlow.tryEmit(Unit)
       } else {
         _transitionToolbarState.value = KurobaToolbarTransition.Instant(
           transitionMode = TransitionMode.In,

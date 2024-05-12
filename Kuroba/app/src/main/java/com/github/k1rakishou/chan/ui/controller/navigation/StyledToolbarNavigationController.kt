@@ -185,6 +185,7 @@ class StyledToolbarNavigationController(context: Context) : ToolbarNavigationCon
         doubleNavigationController!!.updateRightController(null, false)
         return true
       }
+
       return false
     }
 
