@@ -51,7 +51,7 @@ fun AlbumItemsStaggeredGrid(
   val currentLazyStaggeredGridState = rememberUpdatedState(newValue = state)
 
   LaunchedEffect(key1 = Unit) {
-    controllerViewModel.scrollToPosition
+    controllerViewModel.scrollToPositionRequests
       .filter { scrollToPosition -> scrollToPosition >= 0 }
       .collectLatest { scrollToPosition ->
         try {
@@ -78,6 +78,8 @@ fun AlbumItemsStaggeredGrid(
           currentState.scrollToItem(scrollToPosition)
         } catch (_: Throwable) {
           // no-op
+        } finally {
+          controllerViewModel.resetScrollToPositionRequests()
         }
       }
   }

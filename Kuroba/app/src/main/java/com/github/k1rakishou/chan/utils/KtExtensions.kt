@@ -387,7 +387,6 @@ fun rememberComposableLambda(vararg keys: Any, block: @Composable () -> Unit): @
   return remember(keys) { { block() } }
 }
 
-@Suppress("UnnecessaryVariable")
 @Composable
 fun <T> rememberComposableLambda(vararg keys: Any, block: @Composable (T) -> Unit): @Composable (T) -> Unit {
   return remember(keys) {

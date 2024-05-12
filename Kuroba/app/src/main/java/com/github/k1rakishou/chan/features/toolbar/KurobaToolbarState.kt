@@ -156,7 +156,7 @@ class KurobaToolbarState(
     _invokeAfterTransitionFinishedCallbacks.forEach { callback -> callback.invoke(this) }
     _invokeAfterTransitionFinishedCallbacks.clear()
 
-    Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being destroyed (${hashCode()})" }
+    Logger.debug(TAG) { "Toolbar '${toolbarKey}' is being destroyed" }
 
     _toolbarStateList.value = persistentListOf()
     _transitionToolbarState.value = null

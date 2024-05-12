@@ -107,12 +107,9 @@ class AlbumViewControllerViewModel(
   val downloadingAlbumItems: SnapshotStateMap<Long, DownloadingAlbumItem>
     get() = _downloadingAlbumItems
 
-  private val _scrollToPosition = MutableSharedFlow<Int>(
-    extraBufferCapacity = 1,
-    onBufferOverflow = BufferOverflow.DROP_OLDEST
-  )
-  val scrollToPosition: SharedFlow<Int>
-    get() = _scrollToPosition.asSharedFlow()
+  private val _scrollToPositionRequests = MutableStateFlow<Int>(-1)
+  val scrollToPositionRequests: SharedFlow<Int>
+    get() = _scrollToPositionRequests.asSharedFlow()
 
   private val _presentController = MutableSharedFlow<PresentController>(
     extraBufferCapacity = 1,
@@ -257,7 +254,11 @@ class AlbumViewControllerViewModel(
       return
     }
 
-    _scrollToPosition.emit(newPosition)
+    _scrollToPositionRequests.value = newPosition
+  }
+
+  fun resetScrollToPositionRequests() {
+    _scrollToPositionRequests.value = -1
   }
 
   fun enterSelectionMode(chanPostImage: ChanPostImage) {
@@ -399,7 +400,7 @@ class AlbumViewControllerViewModel(
 
       if (scrollToPosition != null) {
         Logger.debug(TAG) { "updateScrollPosition() '${initialImageFullUrl}' found at ${scrollToPosition}, performing scroll" }
-        _scrollToPosition.emit(scrollToPosition)
+        _scrollToPositionRequests.value = scrollToPosition
         _lastScrollPosition.intValue = scrollToPosition
       } else {
         Logger.debug(TAG) { "updateScrollPosition() '${initialImageFullUrl}' failed to find scroll position" }
