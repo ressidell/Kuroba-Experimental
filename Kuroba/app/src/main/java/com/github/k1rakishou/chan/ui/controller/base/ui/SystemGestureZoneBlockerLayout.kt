@@ -135,7 +135,9 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
 
     _coroutineScope.launch {
       PersistableChanState.newSystemGestureZoneBlockerDialogShown.listenForChanges().asFlow()
-        .onEach { newSystemGestureZoneBlockerDialogShown -> _newSystemGestureZoneBlockerDialogShown = newSystemGestureZoneBlockerDialogShown }
+        .onEach { newSystemGestureZoneBlockerDialogShown ->
+          _newSystemGestureZoneBlockerDialogShown = newSystemGestureZoneBlockerDialogShown
+        }
         .collect()
     }
 
