@@ -21,7 +21,11 @@ import com.github.k1rakishou.core_themes.colors.HSL
 import com.github.k1rakishou.fsaf.file.ExternalFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.min
@@ -35,6 +39,13 @@ open class ThemeEngine(
   private val listeners = hashMapOf<Long, ThemeChangesListener>()
   private val attributeCache = AttributeCache()
   private val rootViews = mutableMapOf<Activity, View>()
+
+  private val _themeChangeEventsFlow = MutableSharedFlow<ChanTheme>(
+    extraBufferCapacity = 1,
+    onBufferOverflow = BufferOverflow.DROP_LATEST
+  )
+  val themeChangeEventsFlow: SharedFlow<ChanTheme>
+    get() = _themeChangeEventsFlow.asSharedFlow()
 
   lateinit var defaultDarkTheme: ChanTheme
   lateinit var defaultLightTheme: ChanTheme
@@ -160,10 +171,11 @@ open class ThemeEngine(
       return
     }
 
-    rootViews.values.forEach { rootView ->
-      updateViews(rootView)
+    if (::chanTheme.isInitialized) {
+      _themeChangeEventsFlow.tryEmit(chanTheme)
     }
 
+    rootViews.values.forEach { rootView -> updateViews(rootView) }
     listeners.forEach { listener -> listener.value.onThemeChanged() }
   }
 

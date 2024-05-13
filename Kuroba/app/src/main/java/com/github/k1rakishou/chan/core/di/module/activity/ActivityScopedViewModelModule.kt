@@ -28,8 +28,6 @@ import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
 
-// TODO: scoped viewmodels. Move this into ControllerScopedViewModelModule? Because the viewmodels are now destroyed once
-//  the controller is destroyed so there is no point in keeping them in a module with different scope.
 @Module
 abstract class ActivityScopedViewModelModule {
 

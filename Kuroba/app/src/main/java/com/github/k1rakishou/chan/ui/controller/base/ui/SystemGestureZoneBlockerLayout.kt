@@ -23,6 +23,7 @@ import com.github.k1rakishou.chan.utils.awaitUntilGloballyLaidOutAndGetSize
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.resumeValueSafe
 import com.github.k1rakishou.core_logger.Logger
+import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.persist_state.PersistableChanState
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.channels.BufferOverflow
@@ -53,6 +54,8 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
   lateinit var globalWindowInsetsManager: GlobalWindowInsetsManager
   @Inject
   lateinit var dialogFactory: DialogFactory
+  @Inject
+  lateinit var themeEngine: ThemeEngine
 
   private val _coroutineScope = KurobaCoroutineScope()
   private val _gestureIgnoreZones = mutableListOf(Rect(), Rect())
@@ -152,6 +155,13 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
 
           _animationRequests.tryEmit(Unit)
         }
+    }
+
+    _coroutineScope.launch {
+      paint.color = themeEngine.chanTheme.accentColor
+
+      themeEngine.themeChangeEventsFlow
+        .collectLatest { chanTheme -> paint.color = chanTheme.accentColor  }
     }
 
     _coroutineScope.launch {
