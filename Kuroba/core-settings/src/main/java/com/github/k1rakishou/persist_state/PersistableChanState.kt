@@ -81,6 +81,8 @@ object PersistableChanState {
   lateinit var remoteImageSearchSettings: GsonJsonSetting<RemoteImageSearchSettings>
   @JvmStatic
   lateinit var newReplyLayoutTutorialFinished: BooleanSetting
+  @JvmStatic
+  lateinit var newSystemGestureZoneBlockerDialogShown: BooleanSetting
 
   fun init(persistableChanStateInfo: PersistableChanStateInfo) {
     PersistableChanState.persistableChanStateInfo = persistableChanStateInfo
@@ -179,6 +181,7 @@ object PersistableChanState {
         RemoteImageSearchSettings.defaults()
       )
       newReplyLayoutTutorialFinished = BooleanSetting(provider, "new_reply_layout_tutorial_finished", false)
+      newSystemGestureZoneBlockerDialogShown = BooleanSetting(provider, "new_system_gesture_zone_blocking_dialog_shown", false)
     } catch (e: Exception) {
       Logger.e(TAG, "Error while initializing the state", e)
       throw e

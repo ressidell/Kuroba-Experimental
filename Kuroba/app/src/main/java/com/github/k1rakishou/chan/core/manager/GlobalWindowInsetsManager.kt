@@ -35,6 +35,10 @@ class GlobalWindowInsetsManager {
   val currentWindowInsets: State<KurobaWindowInsets>
     get() = _currentWindowInsets
 
+  private val _isGestureNavigationEnabled = mutableStateOf(false)
+  val isGestureNavigationEnabled: State<Boolean>
+    get() = _isGestureNavigationEnabled
+
   var currentInsetsCompose = mutableStateOf(PaddingValues())
     private set
 
@@ -67,6 +71,17 @@ class GlobalWindowInsetsManager {
     val applyWindowInsetsListener = OnApplyWindowInsetsListener { _, insets ->
       val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
       val systemBarInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+      val isGestureNavigationEnabledNow = if (AndroidUtils.isAndroid10()) {
+        val gestureInsets = insets.getInsets(WindowInsetsCompat.Type.systemGestures())
+        gestureInsets.left > 0 || gestureInsets.right > 0
+      } else {
+        false
+      }
+
+      if (_isGestureNavigationEnabled.value != isGestureNavigationEnabledNow) {
+        _isGestureNavigationEnabled.value = isGestureNavigationEnabledNow
+      }
 
       val left = Math.max(imeInsets.left, systemBarInsets.left)
       val top = Math.max(imeInsets.top, systemBarInsets.top)

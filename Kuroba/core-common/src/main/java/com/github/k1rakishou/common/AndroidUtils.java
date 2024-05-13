@@ -47,6 +47,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
+import androidx.annotation.ChecksSdkIntAtLeast;
 import androidx.preference.PreferenceManager;
 
 import org.acra.ACRA;
@@ -294,38 +295,47 @@ public class AndroidUtils {
         return Build.VERSION.SDK_INT;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.TIRAMISU)
     public static boolean isAndroid13() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.R)
     public static boolean isAndroid11() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.Q)
     public static boolean isAndroid10() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
     public static boolean isAndroidO() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     public static boolean isAndroidL_MR1() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.P)
     public static boolean isAndroidP() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.M)
     public static boolean isAndroidM() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N)
     public static boolean isAndroidN() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N_MR1)
     public static boolean isAndroidNMR1() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1;
     }
