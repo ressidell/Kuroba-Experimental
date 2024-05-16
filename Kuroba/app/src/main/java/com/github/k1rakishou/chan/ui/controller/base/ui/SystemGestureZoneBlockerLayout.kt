@@ -170,13 +170,20 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
       _animationRequests
         .collectLatest {
           // Poor man's alpha animation
-          paint.alpha = 150
+
+          var currentAlpha = 150
+          paint.alpha = currentAlpha
           delay(1000)
 
           while (isActive) {
             awaitFrame()
 
-            paint.alpha = (paint.alpha - 2).coerceAtLeast(0)
+            currentAlpha -= 2
+            if (currentAlpha < 0) {
+              currentAlpha = 0
+            }
+
+            paint.alpha = currentAlpha
             invalidate()
 
             if (paint.alpha <= 0) {
