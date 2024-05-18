@@ -33,6 +33,7 @@ import com.github.k1rakishou.chan.core.manager.PageRequestManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.manager.PostHideManager
 import com.github.k1rakishou.chan.core.manager.PostHighlightManager
+import com.github.k1rakishou.chan.core.manager.RevealedSpoilerImagesManager
 import com.github.k1rakishou.chan.core.manager.SavedReplyManager
 import com.github.k1rakishou.chan.core.manager.SeenPostsManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
@@ -149,7 +150,8 @@ class ThreadPresenter @Inject constructor(
   private val currentOpenedDescriptorStateManagerLazy: Lazy<CurrentOpenedDescriptorStateManager>,
   private val chanCatalogSnapshotCacheLazy: Lazy<ChanCatalogSnapshotCache>,
   private val compositeCatalogManagerLazy: Lazy<CompositeCatalogManager>,
-  private val refreshChan4CaptchaTicketUseCaseLazy: Lazy<RefreshChan4CaptchaTicketUseCase>
+  private val refreshChan4CaptchaTicketUseCaseLazy: Lazy<RefreshChan4CaptchaTicketUseCase>,
+  private val revealedSpoilerImagesManagerLazy: Lazy<RevealedSpoilerImagesManager>
 ) : PostAdapterCallback,
   PostCellCallback,
   ThreadStatusCell.Callback,
@@ -210,6 +212,8 @@ class ThreadPresenter @Inject constructor(
     get() = mediaViewerGoToPostHelperLazy.get()
   private val refreshChan4CaptchaTicketUseCase: RefreshChan4CaptchaTicketUseCase
     get() = refreshChan4CaptchaTicketUseCaseLazy.get()
+  private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager
+    get() = revealedSpoilerImagesManagerLazy.get()
 
   override val endOfCatalogReached: Boolean
     get() {
@@ -1680,16 +1684,20 @@ class ThreadPresenter @Inject constructor(
       return
     }
 
-    val initialImageUrl = postImage.imageUrl?.toString()
-      ?: return
-    val transitionThumbnailUrl = postImage.getThumbnailUrl()?.toString()
-      ?: return
+    launch {
+      val isSpoilerRevealed = revealedSpoilerImagesManager.isImageSpoilerImageRevealed(postImage)
 
-    threadPresenterCallback?.showImages(
-      chanDescriptor = postCellData.chanDescriptor,
-      initialImageUrl = initialImageUrl,
-      transitionThumbnailUrl = transitionThumbnailUrl
-    )
+      val initialImageUrl = postImage.imageUrl?.toString()
+        ?: return@launch
+      val transitionThumbnailUrl = postImage.getThumbnailUrl(isSpoilerRevealed = isSpoilerRevealed)?.toString()
+        ?: return@launch
+
+      threadPresenterCallback?.showImages(
+        chanDescriptor = postCellData.chanDescriptor,
+        initialImageUrl = initialImageUrl,
+        transitionThumbnailUrl = transitionThumbnailUrl
+      )
+    }
   }
 
   override fun onThumbnailLongClicked(chanDescriptor: ChanDescriptor, postImage: ChanPostImage) {
