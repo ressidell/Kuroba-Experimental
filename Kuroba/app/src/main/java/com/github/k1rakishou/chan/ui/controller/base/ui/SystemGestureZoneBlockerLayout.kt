@@ -15,6 +15,7 @@ import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.KurobaCoroutineScope
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
+import com.github.k1rakishou.chan.core.manager.HapticFeedbackManager
 import com.github.k1rakishou.chan.ui.globalstate.GlobalUiStateHolder
 import com.github.k1rakishou.chan.ui.globalstate.global.GlobalTouchPositionListener
 import com.github.k1rakishou.chan.ui.helper.AppResources
@@ -56,6 +57,8 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
   lateinit var dialogFactory: DialogFactory
   @Inject
   lateinit var themeEngine: ThemeEngine
+  @Inject
+  lateinit var hapticFeedbackManager: HapticFeedbackManager
 
   private val _coroutineScope = KurobaCoroutineScope()
   private val _gestureIgnoreZones = mutableListOf(Rect(), Rect())
@@ -81,6 +84,7 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
   private var _isGestureNavigationEnabled = false
   private var _anyReplyLayoutOpened = false
   private var _newSystemGestureZoneBlockerDialogShown = false
+  private var _wasInsideOfTheZone: Boolean = false
 
   private var _totalWidth: Int = 0
   private var _totalHeight: Int = 0
@@ -265,10 +269,10 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
     val newLeftZone = Rect(0, zoneTop, minZoneSize, zoneBottom)
     val newRightZone = Rect(totalWidth - minZoneSize, zoneTop, totalWidth, zoneBottom)
 
-    if (
-      touchPosition.x.toInt() in newLeftZone.left..newLeftZone.right ||
-      touchPosition.x.toInt() in newRightZone.left..newRightZone.right
-    ) {
+    val isInsideOfTheZoneNow = touchPosition.x.toInt() in newLeftZone.left..newLeftZone.right
+      || touchPosition.x.toInt() in newRightZone.left..newRightZone.right
+
+    if (isInsideOfTheZoneNow) {
       if (!_newSystemGestureZoneBlockerDialogShown) {
         _showExplanationDialog.tryEmit(Unit)
         _newSystemGestureZoneBlockerDialogShown = true
@@ -276,6 +280,16 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
 
       _animationRequests.tryEmit(Unit)
     }
+
+    if (isInsideOfTheZoneNow != _wasInsideOfTheZone) {
+      if (isInsideOfTheZoneNow) {
+        hapticFeedbackManager.gestureStart()
+      } else {
+        hapticFeedbackManager.gestureEnd()
+      }
+    }
+
+    _wasInsideOfTheZone = isInsideOfTheZoneNow
 
     val currentLeftZone = _gestureIgnoreZones[0]
     val currentRightZone = _gestureIgnoreZones[1]

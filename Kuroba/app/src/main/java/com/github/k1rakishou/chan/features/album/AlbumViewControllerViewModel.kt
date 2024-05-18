@@ -18,6 +18,7 @@ import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
+import com.github.k1rakishou.chan.core.manager.HapticFeedbackManager
 import com.github.k1rakishou.chan.core.manager.RevealedSpoilerImagesManager
 import com.github.k1rakishou.chan.core.usecase.FilterOutHiddenImagesUseCase
 import com.github.k1rakishou.chan.features.image_saver.ImageSaverV2
@@ -84,7 +85,8 @@ class AlbumViewControllerViewModel(
   private val filterOutHiddenImagesUseCase: FilterOutHiddenImagesUseCase,
   private val imageSaverV2: ImageSaverV2,
   private val imageSaverV2ServiceDelegate: ImageSaverV2ServiceDelegate,
-  private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager
+  private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager,
+  private val hapticFeedbackManager: HapticFeedbackManager
 ) : BaseViewModel() {
   private val _albumItemIdCounter = AtomicLong(0)
 
@@ -272,6 +274,8 @@ class AlbumViewControllerViewModel(
   }
 
   fun enterSelectionMode() {
+    hapticFeedbackManager.toggleOn()
+
     val selectedItemIds = _albumItems
       .filter { albumItemData -> albumItemData.downloadUniqueId == null }
       .map { albumItemData -> albumItemData.id }
@@ -284,17 +288,23 @@ class AlbumViewControllerViewModel(
 
   fun toggleSelection(albumItemData: AlbumItemData) {
     _albumSelection.value = if (_albumSelection.value.contains(albumItemData.id)) {
+      hapticFeedbackManager.toggleOff()
       _albumSelection.value.remove(albumItemData.id)
     } else {
+      hapticFeedbackManager.toggleOn()
       _albumSelection.value.add(albumItemData.id)
     }
   }
 
   fun toggleAlbumItemsSelection() {
     if (_albumSelection.value.size != albumItems.size) {
+      hapticFeedbackManager.toggleOn()
+
       val albumItemIds = albumItems.map { albumItemData -> albumItemData.id }.toPersistentSet()
       _albumSelection.value = _albumSelection.value.addAll(albumItemIds)
     } else {
+      hapticFeedbackManager.toggleOff()
+
       _albumSelection.value = _albumSelection.value.copy(selectedItems = persistentSetOf())
     }
   }
@@ -857,7 +867,8 @@ class AlbumViewControllerViewModel(
     private val filterOutHiddenImagesUseCase: FilterOutHiddenImagesUseCase,
     private val imageSaverV2: ImageSaverV2,
     private val imageSaverV2ServiceDelegate: ImageSaverV2ServiceDelegate,
-    private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager
+    private val revealedSpoilerImagesManager: RevealedSpoilerImagesManager,
+    private val hapticFeedbackManager: HapticFeedbackManager
   ) : ViewModelAssistedFactory<AlbumViewControllerViewModel> {
     override fun create(handle: SavedStateHandle): AlbumViewControllerViewModel {
       return AlbumViewControllerViewModel(
@@ -872,7 +883,8 @@ class AlbumViewControllerViewModel(
         filterOutHiddenImagesUseCase = filterOutHiddenImagesUseCase,
         imageSaverV2 = imageSaverV2,
         imageSaverV2ServiceDelegate = imageSaverV2ServiceDelegate,
-        revealedSpoilerImagesManager = revealedSpoilerImagesManager
+        revealedSpoilerImagesManager = revealedSpoilerImagesManager,
+        hapticFeedbackManager = hapticFeedbackManager
       )
     }
   }

@@ -37,6 +37,7 @@ import com.github.k1rakishou.chan.core.manager.CompositeCatalogManager
 import com.github.k1rakishou.chan.core.manager.CurrentOpenedDescriptorStateManager
 import com.github.k1rakishou.chan.core.manager.DownloadedImagesManager
 import com.github.k1rakishou.chan.core.manager.FirewallBypassManager
+import com.github.k1rakishou.chan.core.manager.HapticFeedbackManager
 import com.github.k1rakishou.chan.core.manager.HistoryNavigationManager
 import com.github.k1rakishou.chan.core.manager.NotificationAutoDismissManager
 import com.github.k1rakishou.chan.core.manager.OnDemandContentLoaderManager
@@ -1029,6 +1030,13 @@ class ManagerModule {
   fun provideDownloadedImagesManager(fileManager: FileManager): DownloadedImagesManager {
     Logger.deps("DownloadedImagesManager")
     return DownloadedImagesManager(fileManager)
+  }
+
+  @Singleton
+  @Provides
+  fun provideHapticFeedbackManager(): HapticFeedbackManager {
+    Logger.deps("HapticFeedbackManager")
+    return HapticFeedbackManager()
   }
 
 }

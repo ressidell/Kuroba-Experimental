@@ -295,6 +295,11 @@ public class AndroidUtils {
         return Build.VERSION.SDK_INT;
     }
 
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    public static boolean isAndroid14() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
+    }
+
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.TIRAMISU)
     public static boolean isAndroid13() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU;

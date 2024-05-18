@@ -290,20 +290,10 @@ class AlbumViewController(
           controllerViewModel = controllerViewModel,
           albumSpanCount = actualSpanCount,
           onClick = { albumItemData ->
-            if (controllerViewModel.isInSelectionMode()) {
-              controllerViewModel.toggleSelection(albumItemData)
-            } else {
-              coroutineTask.launch { onImageClick(albumItemData) }
-            }
+            coroutineTask.launch { onImageClick(albumItemData) }
           },
           onLongClick = { albumItemData ->
-            if (controllerViewModel.isInSelectionMode()) {
-              // TODO: start "Move to select/unselect" mode.
-              //  For now we will just toggle selection because that mode is not implemented yet.
-              controllerViewModel.toggleSelection(albumItemData)
-            } else {
-              coroutineTask.launch { onImageLongClick(albumItemData) }
-            }
+            coroutineTask.launch { onImageLongClick(albumItemData) }
           },
           clearDownloadingAlbumItemState = { downloadingAlbumItem ->
             controllerViewModel.clearDownloadingAlbumItemState(downloadingAlbumItem)
@@ -316,6 +306,13 @@ class AlbumViewController(
   }
 
   private suspend fun onImageLongClick(albumItemData: AlbumItemData) {
+    if (controllerViewModel.isInSelectionMode()) {
+      // TODO: start "Move to select/unselect" mode.
+      //  For now we will just toggle selection because that mode is not implemented yet.
+      controllerViewModel.toggleSelection(albumItemData)
+      return
+    }
+
     val chanDescriptor = controllerViewModel.currentDescriptor.value
     if (chanDescriptor == null) {
       return
@@ -401,6 +398,11 @@ class AlbumViewController(
   }
 
   private suspend fun onImageClick(albumItemData: AlbumItemData) {
+    if (controllerViewModel.isInSelectionMode()) {
+      controllerViewModel.toggleSelection(albumItemData)
+      return
+    }
+
     val chanDescriptor = controllerViewModel.currentDescriptor.value
     if (chanDescriptor == null) {
       return

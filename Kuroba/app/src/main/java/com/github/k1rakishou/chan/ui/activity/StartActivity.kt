@@ -25,6 +25,7 @@ import com.github.k1rakishou.chan.core.helper.StartActivityStartupHandlerHelper
 import com.github.k1rakishou.chan.core.manager.ApplicationCrashNotifier
 import com.github.k1rakishou.chan.core.manager.ChanThreadViewableInfoManager
 import com.github.k1rakishou.chan.core.manager.GlobalWindowInsetsManager
+import com.github.k1rakishou.chan.core.manager.HapticFeedbackManager
 import com.github.k1rakishou.chan.core.manager.UpdateManager
 import com.github.k1rakishou.chan.features.drawer.MainController
 import com.github.k1rakishou.chan.ui.controller.BrowseController
@@ -91,6 +92,8 @@ class StartActivity :
   lateinit var applicationCrashNotifier: ApplicationCrashNotifier
   @Inject
   lateinit var globalUiStateHolder: GlobalUiStateHolder
+  @Inject
+  lateinit var hapticFeedbackManager: HapticFeedbackManager
 
   private val compositeDisposable = CompositeDisposable()
   private var intentMismatchWorkaroundActive = false
@@ -195,6 +198,10 @@ class StartActivity :
     if (::globalWindowInsetsManager.isInitialized) {
       globalWindowInsetsManager.stopListeningForWindowInsetsChanges(window)
     }
+
+    if (::hapticFeedbackManager.isInitialized) {
+      hapticFeedbackManager.onDetachedFromView()
+    }
   }
 
   override fun onThemeChanged() {
@@ -219,6 +226,8 @@ class StartActivity :
       onCreate()
       onShow()
     }
+
+    hapticFeedbackManager.onAttachedToView(mainController.view)
 
     mainRootLayoutMargins = mainController.view.findViewById(R.id.drawer_layout)
     globalWindowInsetsManager.listenForWindowInsetsChanges(window, mainRootLayoutMargins)
