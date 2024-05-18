@@ -41,7 +41,6 @@ import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.k1rakishou.chan.R
@@ -62,9 +61,9 @@ import com.github.k1rakishou.chan.ui.compose.SelectableItem
 import com.github.k1rakishou.chan.ui.compose.addBottom
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeClickableText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableElementContainer
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessageNoInsets
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeSwitch
-import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
 import com.github.k1rakishou.chan.ui.compose.compose_task.rememberCancellableCoroutineTask
 import com.github.k1rakishou.chan.ui.compose.ktu
@@ -95,7 +94,6 @@ import com.github.k1rakishou.fsaf.callback.FileChooserCallback
 import com.github.k1rakishou.fsaf.callback.FileCreateCallback
 import com.github.k1rakishou.model.data.filter.ChanFilter
 import com.github.k1rakishou.model.data.filter.ChanFilterMutable
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -251,26 +249,10 @@ class FiltersController(
     val chanTheme = LocalChanTheme.current
     val windowInsets = LocalWindowInsets.current
 
-    val filters = remember { viewModel.filters }
-    val coroutineScope = rememberCoroutineScope()
-
     Box(
       modifier = Modifier.fillMaxSize()
     ) {
-      if (filters.isNotEmpty()) {
-        BuildFilterList(
-          filters = filters,
-          coroutineScope = coroutineScope
-        )
-      } else {
-        KurobaComposeText(
-          modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-          text = stringResource(id = R.string.filter_controller_not_filters),
-          textAlign = TextAlign.Center
-        )
-      }
+      BuildFilterList()
 
       val bottomPanelHeight by globalUiStateHolder.bottomPanel.bottomPanelHeight.collectAsState()
 
@@ -300,11 +282,7 @@ class FiltersController(
   }
 
   @Composable
-  private fun BuildFilterList(
-    filters: List<FiltersControllerViewModel.ChanFilterInfo>,
-    coroutineScope: CoroutineScope
-  ) {
-    val chanTheme = LocalChanTheme.current
+  private fun BuildFilterList() {
     val layoutDirection = LocalLayoutDirection.current
     val contentPaddings = LocalContentPaddings.current
 
@@ -312,33 +290,27 @@ class FiltersController(
       textFieldState = toolbarState.search.searchQueryState
     )
 
+    val filters by viewModel.filtersState
     val searchQuery = searchState.textFieldState.text
 
-    LaunchedEffect(key1 = searchQuery, block = {
-      if (searchQuery.isEmpty()) {
-        searchState.results.value = filters
-        return@LaunchedEffect
-      }
+    LaunchedEffect(
+      key1 = searchQuery,
+      key2 = filters,
+      block = {
+        if (searchQuery.isEmpty()) {
+          searchState.results.value = filters
+          return@LaunchedEffect
+        }
 
-      delay(125L)
+        delay(125L)
 
-      withContext(Dispatchers.Default) {
-        searchState.results.value = processSearchQuery(searchQuery, filters)
+        withContext(Dispatchers.Default) {
+          searchState.results.value = processSearchQuery(searchQuery, filters)
+        }
       }
-    })
+    )
 
     val searchResults by searchState.results
-    if (searchResults.isEmpty()) {
-      KurobaComposeText(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(8.dp),
-        textAlign = TextAlign.Center,
-        text = stringResource(id = R.string.search_nothing_found_with_query, searchQuery)
-      )
-
-      return
-    }
 
     val reorderTask = rememberCancellableCoroutineTask()
     val reorderableState = rememberReorderableLazyListState(
@@ -360,9 +332,36 @@ class FiltersController(
       contentPadding = paddingValues,
       draggableScrollbar = false
     ) {
+      if (searchResults.isEmpty()) {
+        if (searchState.usingSearch) {
+          item(
+            key = "nothing_found_with_query",
+            contentType = "nothing_found_with_query_item"
+          ) {
+            KurobaComposeErrorMessageNoInsets(
+              modifier = Modifier.fillParentMaxSize(),
+              errorMessage = stringResource(id = R.string.search_nothing_found_with_query, searchQuery)
+            )
+          }
+        } else {
+          item(
+            key = "no_filters",
+            contentType = "no_filters_item"
+          ) {
+            KurobaComposeErrorMessageNoInsets(
+              modifier = Modifier.fillParentMaxSize(),
+              errorMessage = stringResource(id = R.string.filter_controller_no_filters)
+            )
+          }
+        }
+
+        return@LazyColumnWithFastScroller
+      }
+
       items(
         count = searchResults.size,
         key = { index -> searchResults[index].chanFilter.getDatabaseId() },
+        contentType = { "filter_item" },
         itemContent = { index ->
           val chanFilterInfo = searchResults[index]
 
@@ -371,7 +370,6 @@ class FiltersController(
             totalCount = searchResults.size,
             reorderableState = reorderableState,
             chanFilterInfo = chanFilterInfo,
-            coroutineScope = coroutineScope,
             onFilterClicked = { clickedFilter ->
               if (viewModel.viewModelSelectionHelper.isInSelectionMode()) {
                 viewModel.toggleSelection(clickedFilter)
@@ -401,7 +399,6 @@ class FiltersController(
     totalCount: Int,
     reorderableState: ReorderableLazyListState,
     chanFilterInfo: FiltersControllerViewModel.ChanFilterInfo,
-    coroutineScope: CoroutineScope,
     onFilterClicked: (ChanFilter) -> Unit,
     onFilterLongClicked: (ChanFilter) -> Unit,
   ) {
@@ -409,6 +406,8 @@ class FiltersController(
     val selectionEvent by viewModel.viewModelSelectionHelper.collectSelectionModeAsState()
     val isInSelectionMode = selectionEvent?.isIsSelectionMode() ?: false
     val chanFilter = chanFilterInfo.chanFilter
+
+    val coroutineScope = rememberCoroutineScope()
 
     ReorderableItem(
       reorderableState = reorderableState,

@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalDensity
@@ -57,6 +58,7 @@ fun rememberReorderableLazyGridState(
     return state
 }
 
+@Stable
 class ReorderableLazyGridState(
     val gridState: LazyGridState,
     scope: CoroutineScope,

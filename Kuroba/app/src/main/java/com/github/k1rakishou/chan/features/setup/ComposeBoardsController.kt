@@ -1,7 +1,6 @@
 package com.github.k1rakishou.chan.features.setup
 
 import android.content.Context
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -22,8 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -316,17 +315,10 @@ class ComposeBoardsController(
                   KurobaComposeImage(
                     modifier = Modifier
                       .size(28.dp)
-                      .padding(horizontal = 4.dp)
                       .align(Alignment.CenterVertically),
                     controllerKey = null,
                     request = imageLoaderRequest,
-                    error = {
-                      Image(
-                        modifier = Modifier.fillMaxSize(),
-                        painter = painterResource(id = R.drawable.error_icon),
-                        contentDescription = null
-                      )
-                    }
+                    contentScale = ContentScale.Fit
                   )
 
                   val text = remember(key1 = catalogCompositionSlot) {

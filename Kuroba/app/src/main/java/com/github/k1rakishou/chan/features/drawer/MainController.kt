@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import coil.transform.CircleCropTransformation
 import com.github.k1rakishou.BottomNavViewButton
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
@@ -1040,6 +1039,5 @@ class MainController(
     val LIST_MODE_ROW_HEIGHT = 52.dp
     val NAV_HISTORY_DELETE_BTN_SIZE = 24.dp
     val NAV_HISTORY_DELETE_BTN_BG_COLOR = Color(0x50000000)
-    val CIRCLE_CROP = CircleCropTransformation()
   }
 }

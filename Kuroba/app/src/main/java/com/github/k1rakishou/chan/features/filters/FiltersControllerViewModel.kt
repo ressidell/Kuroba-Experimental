@@ -1,8 +1,10 @@
 package com.github.k1rakishou.chan.features.filters
 
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -23,13 +25,16 @@ import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItemId
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.getString
 import com.github.k1rakishou.common.isNotNullNorBlank
-import com.github.k1rakishou.common.removeIfKt
 import com.github.k1rakishou.common.toHashSetBy
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.model.data.filter.ChanFilter
 import com.github.k1rakishou.model.data.filter.FilterAction
 import com.github.k1rakishou.model.data.filter.FilterType
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -48,8 +53,12 @@ class FiltersControllerViewModel(
   private val boardManager: BoardManager,
   private val themeEngine: ThemeEngine,
 ) : BaseViewModel() {
-  private val _filters = mutableStateListOf<ChanFilterInfo>()
-  val filters: List<ChanFilterInfo>
+  private val _filtersState = mutableStateOf<PersistentList<ChanFilterInfo>>(persistentListOf())
+  val filtersState: State<ImmutableList<ChanFilterInfo>>
+    get() = _filtersState
+  private val _filters: PersistentList<ChanFilterInfo>
+    get() = _filtersState.value
+  val filters: ImmutableList<ChanFilterInfo>
     get() = _filters
 
   private val _filterMatchedPostCountMap = mutableStateMapOf<Long, Int>()
@@ -152,7 +161,7 @@ class FiltersControllerViewModel(
     }
 
     if (moved) {
-      _filters.move(fromIdx = fromIndex, toIdx = toIndex)
+      _filtersState.value = _filters.move(fromIdx = fromIndex, toIdx = toIndex)
     }
   }
 
@@ -184,16 +193,16 @@ class FiltersControllerViewModel(
       }
       is ChanFilterManager.FilterEvent.Created -> {
         filterEvent.chanFilters.forEach { chanFilter ->
-          _filters.add(createChanFilterInfo(chanFilter))
+          _filtersState.value = _filters.add(createChanFilterInfo(chanFilter))
         }
       }
       is ChanFilterManager.FilterEvent.Deleted -> {
         val databaseIds = filterEvent.chanFilters
           .toHashSetBy { chanFilter -> chanFilter.getDatabaseId() }
 
-        _filters.removeIfKt { chanFilterInfo ->
-          chanFilterInfo.chanFilter.getDatabaseId() in databaseIds
-        }
+        _filtersState.value = _filters
+          .filter { chanFilterInfo -> chanFilterInfo.chanFilter.getDatabaseId() !in databaseIds }
+          .toPersistentList()
       }
       is ChanFilterManager.FilterEvent.Updated -> {
         filterEvent.chanFilters.forEach { chanFilter ->
@@ -202,9 +211,9 @@ class FiltersControllerViewModel(
           }
 
           if (index >= 0) {
-            _filters[index] = createChanFilterInfo(chanFilter)
+            _filtersState.value = _filters.set(index, createChanFilterInfo(chanFilter))
           } else {
-            _filters.add(createChanFilterInfo(chanFilter))
+            _filtersState.value = _filters.add(createChanFilterInfo(chanFilter))
           }
         }
       }
@@ -215,13 +224,10 @@ class FiltersControllerViewModel(
     awaitUntilDependenciesInitialized()
     _activeBoardsCountForAllSites.set(activeBoardsCountForAllSites())
 
-    val allFilters = withContext(Dispatchers.Default) {
+    _filtersState.value = withContext(Dispatchers.Default) {
       return@withContext chanFilterManager.getAllFilters()
         .map { chanFilter -> createChanFilterInfo(chanFilter) }
-    }
-
-    _filters.clear()
-    _filters.addAll(allFilters)
+    }.toPersistentList()
 
     _updateEnableDisableAllFiltersButtonFlow.emit(Unit)
   }
@@ -443,6 +449,7 @@ class FiltersControllerViewModel(
     return itemsList
   }
 
+  @Immutable
   data class ChanFilterInfo(
     val chanFilter: ChanFilter,
     val filterText: AnnotatedString,

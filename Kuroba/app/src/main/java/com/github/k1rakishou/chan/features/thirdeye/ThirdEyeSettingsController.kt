@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -407,28 +406,30 @@ class ThirdEyeSettingsController(context: Context) : BaseFloatingComposeControll
             key = "no_sites_added_key",
             content = {
               KurobaComposeErrorMessage(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillParentMaxSize(),
                 errorMessage = stringResource(id = R.string.third_eye_settings_controller_no_sites_added)
               )
             }
           )
-        } else {
-          items(
-            count = addedBoorus.size,
-            key = { index -> addedBoorus[index].booruUniqueKey },
-            itemContent = { index ->
-              val booruSetting = addedBoorus[index]
 
-              BuildBooruSettingItem(
-                reorderableState = reorderableState,
-                thirdEyeSettingState = thirdEyeSettingState,
-                booruSetting = booruSetting,
-                onBooruSettingClicked = onBooruSettingClicked,
-                onBooruSettingLongClicked = onBooruSettingLongClicked
-              )
-            }
-          )
+          return@LazyColumnWithFastScroller
         }
+
+        items(
+          count = addedBoorus.size,
+          key = { index -> addedBoorus[index].booruUniqueKey },
+          itemContent = { index ->
+            val booruSetting = addedBoorus[index]
+
+            BuildBooruSettingItem(
+              reorderableState = reorderableState,
+              thirdEyeSettingState = thirdEyeSettingState,
+              booruSetting = booruSetting,
+              onBooruSettingClicked = onBooruSettingClicked,
+              onBooruSettingLongClicked = onBooruSettingLongClicked
+            )
+          }
+        )
       }
     )
   }

@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
@@ -384,7 +385,8 @@ class DvachCaptchaLayout(
       controllerKey = null,
       request = request,
       loading = { KurobaComposeProgressIndicator() },
-      error = { throwable -> KurobaComposeErrorMessage(error = throwable) }
+      error = { throwable -> KurobaComposeErrorMessage(error = throwable) },
+      contentScale = ContentScale.Crop
     )
   }
 

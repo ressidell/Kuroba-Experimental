@@ -15,7 +15,6 @@
  */
 package com.github.k1rakishou.chan.ui.compose.reorder
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -25,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LazyItemScope.ReorderableItem(
     reorderableState: ReorderableState<*>,
@@ -40,7 +38,7 @@ fun LazyItemScope.ReorderableItem(
         state = reorderableState,
         key = key,
         modifier = modifier,
-        defaultDraggingModifier = Modifier.animateItemPlacement(),
+        defaultDraggingModifier = Modifier.animateItem(),
         enabled = enabled,
         orientationLocked = orientationLocked,
         index = index,
@@ -48,7 +46,6 @@ fun LazyItemScope.ReorderableItem(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LazyGridItemScope.ReorderableItem(
     reorderableState: ReorderableState<*>,
@@ -62,7 +59,7 @@ fun LazyGridItemScope.ReorderableItem(
         state = reorderableState,
         key = key,
         modifier = modifier,
-        defaultDraggingModifier = Modifier.animateItemPlacement(),
+        defaultDraggingModifier = Modifier.animateItem(),
         enabled = enabled,
         orientationLocked = false,
         index = index,
@@ -125,8 +122,17 @@ private fun draggingModifier(
         return Modifier
             .zIndex(1f)
             .graphicsLayer {
-                translationX = if (!orientationLocked || !state.isVerticalScroll) state.draggingItemLeft else 0f
-                translationY = if (!orientationLocked || state.isVerticalScroll) state.draggingItemTop else 0f
+                translationX = if (!orientationLocked || !state.isVerticalScroll) {
+                    state.draggingItemLeft
+                } else {
+                    0f
+                }
+
+                translationY = if (!orientationLocked || state.isVerticalScroll) {
+                    state.draggingItemTop
+                } else {
+                    0f
+                }
             }
     }
 
@@ -140,10 +146,17 @@ private fun draggingModifier(
         return Modifier
             .zIndex(1f)
             .graphicsLayer {
-                translationX =
-                    if (!orientationLocked || !state.isVerticalScroll) state.dragCancelledAnimation.offset.x else 0f
-                translationY =
-                    if (!orientationLocked || state.isVerticalScroll) state.dragCancelledAnimation.offset.y else 0f
+                translationX = if (!orientationLocked || !state.isVerticalScroll) {
+                    state.dragCancelledAnimation.offset.x
+                } else {
+                    0f
+                }
+
+                translationY = if (!orientationLocked || state.isVerticalScroll) {
+                    state.dragCancelledAnimation.offset.y
+                } else {
+                    0f
+                }
             }
     }
 

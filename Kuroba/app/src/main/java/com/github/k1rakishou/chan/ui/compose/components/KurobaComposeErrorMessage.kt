@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalWindowInsets
 import com.github.k1rakishou.common.errorMessageOrClassName
 
@@ -31,13 +32,32 @@ fun KurobaComposeErrorMessage(
   val windowInsets = LocalWindowInsets.current
 
   Box(
-    modifier = Modifier
-        .padding(bottom = windowInsets.bottom)
-        .then(modifier)
+    modifier = modifier
+      .then(
+        Modifier
+          .padding(bottom = windowInsets.bottom)
+      ),
+    contentAlignment = Alignment.Center
   ) {
     KurobaComposeText(
-      modifier = Modifier.align(Alignment.Center),
-      text = errorMessage
+      text = errorMessage,
+      fontSize = 16.ktu
+    )
+  }
+}
+
+@Composable
+fun KurobaComposeErrorMessageNoInsets(
+  modifier: Modifier = Modifier.fillMaxSize(),
+  errorMessage: String
+) {
+  Box(
+    modifier = modifier,
+    contentAlignment = Alignment.Center
+  ) {
+    KurobaComposeText(
+      text = errorMessage,
+      fontSize = 16.ktu
     )
   }
 }

@@ -249,6 +249,7 @@ public class RemovedPostsController
 
             this.imageLoaderDeprecated = imageLoaderDeprecated;
             this.themeEngine = themeEngine;
+            this.appResources = appResources;
         }
 
         @Override
@@ -300,7 +301,7 @@ public class RemovedPostsController
                 activeRequestDisposable.dispose();
             }
 
-            if (hiddenOrRemovedPost.images.size() > 0) {
+            if (!hiddenOrRemovedPost.images.isEmpty()) {
                 ChanPostImage image = hiddenOrRemovedPost.getImages().get(0);
                 HttpUrl thumbnailUrl = image.getThumbnailUrl();
 

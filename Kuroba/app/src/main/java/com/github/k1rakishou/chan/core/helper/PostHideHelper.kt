@@ -379,6 +379,10 @@ class PostHideHelper(
       return false
     }
 
+    if (postHide?.manuallyRestored == true) {
+      return false
+    }
+
     if (postFilter != null) {
       val attemptingToHide = (postFilter.enabled && postFilter.remove)
       if (attemptingToHide) {
@@ -387,10 +391,6 @@ class PostHideHelper(
     }
 
     if (postHide != null) {
-      if (postHide.manuallyRestored) {
-        return false
-      }
-
       if (processingCatalog) {
         if (post.isOP() && !postHide.applyToWholeThread) {
           return false
@@ -419,6 +419,10 @@ class PostHideHelper(
       return false
     }
 
+    if (postHide?.manuallyRestored == true) {
+      return false
+    }
+
     if (postFilter != null) {
       val attemptingToHide = (postFilter.enabled && postFilter.stub)
       if (attemptingToHide) {
@@ -427,10 +431,6 @@ class PostHideHelper(
     }
 
     if (postHide != null) {
-      if (postHide.manuallyRestored) {
-        return false
-      }
-
       if (processingCatalog) {
         if (post.isOP() && !postHide.applyToWholeThread) {
           return false

@@ -159,24 +159,8 @@ class ComposeBoardsSelectorControllerViewModel(
     val siteCellData: SiteCellData,
     val catalogCellData: CatalogCellData
   ) {
-    val formattedSiteAndBoardFullNameForUi by lazy {
-      buildString {
-        append(catalogCellData.boardDescriptorOrNull!!.siteName())
-        appendLine()
-        append("/")
-        append(catalogCellData.boardDescriptorOrNull!!.boardCode)
-        append("/")
-      }
-    }
-
-    val formattedSiteAndBoardFullNameForSearch by lazy {
-      buildString {
-        append(catalogCellData.boardDescriptorOrNull!!.siteName())
-        append("/")
-        append(catalogCellData.boardDescriptorOrNull!!.boardCode)
-        append("/")
-      }
-    }
+    val siteName: String = catalogCellData.boardDescriptorOrNull!!.siteName()
+    val boardCode: String = "/${catalogCellData.boardDescriptorOrNull!!.boardCode}/"
   }
 
   class ViewModelFactory @Inject constructor(

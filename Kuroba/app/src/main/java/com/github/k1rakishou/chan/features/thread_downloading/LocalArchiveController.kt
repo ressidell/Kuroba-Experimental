@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -71,6 +72,7 @@ import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.SelectableItem
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessageNoInsets
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.image.ImageLoaderRequest
@@ -307,7 +309,6 @@ class LocalArchiveController(
     onThreadDownloadClicked: (ChanDescriptor.ThreadDescriptor) -> Unit,
     onThreadDownloadLongClicked: (ChanDescriptor.ThreadDescriptor) -> Unit
   ) {
-    val chanTheme = LocalChanTheme.current
     val contentPaddings = LocalContentPaddings.current
 
     val state = rememberLazyListState(
@@ -315,11 +316,14 @@ class LocalArchiveController(
       initialFirstVisibleItemScrollOffset = viewModel.rememberedFirstVisibleItemScrollOffset
     )
 
-    DisposableEffect(key1 = Unit, effect = {
-      onDispose {
-        viewModel.updatePrevLazyListState(state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset)
+    DisposableEffect(
+      key1 = Unit,
+      effect = {
+        onDispose {
+          viewModel.updatePrevLazyListState(state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset)
+        }
       }
-    })
+    )
 
     var animationAtEnd by remember { mutableStateOf(false) }
     val hasAnyRunningDownloads = remember(key1 = threadDownloadViews) {
@@ -359,13 +363,15 @@ class LocalArchiveController(
           val searchQuery = toolbarState.search.searchQueryState.text
           if (searchQuery.isNullOrEmpty()) {
             item(key = "error_nothing_found", contentType = "error") {
-              KurobaComposeErrorMessage(
+              KurobaComposeErrorMessageNoInsets(
+                modifier = Modifier.fillParentMaxSize(),
                 errorMessage = stringResource(id = R.string.search_nothing_found)
               )
             }
           } else {
             item(key = "error_nothing_found_with_query", contentType = "error") {
-              KurobaComposeErrorMessage(
+              KurobaComposeErrorMessageNoInsets(
+                modifier = Modifier.fillParentMaxSize(),
                 errorMessage = stringResource(id = R.string.search_nothing_found_with_query, searchQuery)
               )
             }
@@ -508,17 +514,18 @@ class LocalArchiveController(
         .fillMaxWidth()
         .wrapContentHeight()
         .padding(2.dp)
-        .animateItemPlacement()
+        .animateItem()
     ) {
-      Box(modifier = Modifier
-        .fillMaxWidth()
-        .height(170.dp)
-        .combinedClickable(
-          onClick = { onThreadDownloadClicked(threadDownloadView.threadDescriptor) },
-          onLongClick = { onThreadDownloadLongClicked(threadDownloadView.threadDescriptor) }
-        )
-        .background(chanTheme.backColorSecondaryCompose)
-        .padding(4.dp)
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(170.dp)
+          .combinedClickable(
+            onClick = { onThreadDownloadClicked(threadDownloadView.threadDescriptor) },
+            onLongClick = { onThreadDownloadLongClicked(threadDownloadView.threadDescriptor) }
+          )
+          .background(chanTheme.backColorSecondaryCompose)
+          .padding(4.dp)
       ) {
         val threadDescriptor = threadDownloadView.threadDescriptor
 
@@ -572,12 +579,13 @@ class LocalArchiveController(
               }
 
               KurobaComposeImage(
-                request = imageLoaderRequest,
-                controllerKey = null,
                 modifier = Modifier
                   .height(100.dp)
                   .width(60.dp)
-                  .alpha(contentAlpha)
+                  .alpha(contentAlpha),
+                request = imageLoaderRequest,
+                controllerKey = null,
+                contentScale = ContentScale.Crop
               )
 
               Spacer(modifier = Modifier.width(4.dp))

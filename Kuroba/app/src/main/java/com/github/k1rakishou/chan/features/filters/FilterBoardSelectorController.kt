@@ -3,6 +3,7 @@ package com.github.k1rakishou.chan.features.filters
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -10,11 +11,11 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -31,7 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -197,6 +198,7 @@ class FilterBoardSelectorController(
 
     LaunchedEffect(
       key1 = searchState,
+      key2 = cellDataList,
       block = {
         searchState.textFieldState.textAsFlow()
           .onEach { query ->
@@ -305,7 +307,7 @@ class FilterBoardSelectorController(
 
     KurobaComposeCard(
       modifier = Modifier
-        .height(CELL_HEIGHT)
+        .size(CELL_HEIGHT)
         .width(CELL_WIDTH)
         .padding(4.dp)
         .kurobaClickable(
@@ -315,33 +317,30 @@ class FilterBoardSelectorController(
       backgroundColor = cardBgColor
     ) {
       Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+          .fillMaxSize(),
+        verticalArrangement = Arrangement.Center
       ) {
         val siteIcon = cellData.siteCellData.siteIcon
         val siteIconModifier = Modifier
           .fillMaxWidth()
           .height(ICON_SIZE)
-          .padding(4.dp)
 
         if (siteIcon.url != null) {
-          val data = ImageLoaderRequestData.Url(
-            httpUrl = siteIcon.url!!,
-            cacheFileType = CacheFileType.SiteIcon
-          )
-
-          val request = ImageLoaderRequest(data)
+          val request = remember(key1 = siteIcon.url) {
+            return@remember ImageLoaderRequest(
+              data = ImageLoaderRequestData.Url(
+                httpUrl = siteIcon.url!!,
+                cacheFileType = CacheFileType.SiteIcon
+              )
+            )
+          }
 
           KurobaComposeImage(
             modifier = siteIconModifier,
             request = request,
             controllerKey = null,
-            error = {
-              Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.error_icon),
-                contentDescription = null
-              )
-            }
+            contentScale = ContentScale.Fit
           )
         } else if (siteIcon.drawable != null) {
           val bitmapPainter = remember {
@@ -355,10 +354,12 @@ class FilterBoardSelectorController(
           )
         }
 
+        Spacer(modifier = Modifier.height(4.dp))
+
         Box(
           modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight()
+            .wrapContentHeight()
         ) {
           Column(
             modifier = Modifier
@@ -369,18 +370,20 @@ class FilterBoardSelectorController(
               modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-              fontSize = 11.ktu,
+              fontSize = 10.ktu,
               maxLines = 3,
               overflow = TextOverflow.Ellipsis,
               textAlign = TextAlign.Center,
               text = cellData.siteCellData.siteName
             )
 
+            Spacer(modifier = Modifier.height(2.dp))
+
             KurobaComposeText(
               modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-              fontSize = 11.ktu,
+              fontSize = 10.ktu,
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,
               textAlign = TextAlign.Center,

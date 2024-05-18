@@ -2893,7 +2893,10 @@ class ThreadPresenter @Inject constructor(
       return
     }
 
-    threadPresenterCallback?.onRestoreRemovedPostsClicked(currentChanDescriptor!!, selectedPosts)
+    val chanDescriptor = currentChanDescriptor
+      ?: return
+
+    threadPresenterCallback?.onRestoreRemovedPostsClicked(chanDescriptor, selectedPosts)
   }
 
   fun processDvachPostReport(reason: String, post: ChanPost, site: Site, retrying: Boolean = false) {

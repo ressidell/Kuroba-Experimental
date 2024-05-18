@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalDensity
@@ -66,6 +67,7 @@ fun rememberReorderableLazyListState(
     return state
 }
 
+@Stable
 class ReorderableLazyListState(
     val listState: LazyListState,
     scope: CoroutineScope,

@@ -33,6 +33,7 @@ import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessage
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessageNoInsets
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeProgressIndicator
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
@@ -138,7 +139,9 @@ class BoardArchiveController(
     val chanTheme = LocalChanTheme.current
     val contentPaddings = LocalContentPaddings.current
 
-    val boardArchiveControllerState by viewModel.state
+    val boardArchiveControllerStateMut by viewModel.state
+    val boardArchiveControllerState = boardArchiveControllerStateMut
+
     val page by viewModel.page
     val endReached by viewModel.endReached
 
@@ -151,11 +154,13 @@ class BoardArchiveController(
       initialValue = searchState.usingSearch to archiveThreads,
       key1 = searchQuery,
       key2 = page,
+      key3 = archiveThreads,
       producer = {
         withContext(Dispatchers.Default) {
           value = processSearchQuery(searchQuery, archiveThreads)
         }
-      })
+      }
+    )
 
     val resultsFromSearch = searchResultsPair.first
     val searchResults = searchResultsPair.second
@@ -203,6 +208,27 @@ class BoardArchiveController(
       contentPadding = paddingValues,
       draggableScrollbar = true
     ) {
+      if (searchResults.isEmpty()) {
+        if (boardArchiveControllerState is AsyncData.Error) {
+          item {
+            KurobaComposeErrorMessage(
+              modifier = Modifier.fillParentMaxSize(),
+              error = boardArchiveControllerState.throwable
+            )
+          }
+
+          return@LazyColumnWithFastScroller
+        }
+
+        if (boardArchiveControllerState is AsyncData.Loading) {
+          item {
+            KurobaComposeProgressIndicator(modifier = Modifier.fillParentMaxSize())
+          }
+
+          return@LazyColumnWithFastScroller
+        }
+      }
+
       items(
         count = searchResults.size + 1,
         key = { index -> searchResults.getOrNull(index)?.threadDescriptor ?: "<null_${index}>" },
@@ -263,7 +289,11 @@ class BoardArchiveController(
       .padding(horizontal = 8.dp, vertical = 12.dp)
 
     if (boardArchiveControllerState is AsyncData.Error) {
-      KurobaComposeErrorMessage(modifier = modifier, error = boardArchiveControllerState.throwable)
+      KurobaComposeErrorMessage(
+        modifier = modifier,
+        error = boardArchiveControllerState.throwable
+      )
+
       return
     }
 
@@ -274,27 +304,28 @@ class BoardArchiveController(
 
     boardArchiveControllerState as AsyncData.Data
 
+    if (!hasResults) {
+      if (!resultsFromSearch || searchQuery == null) {
+        KurobaComposeErrorMessageNoInsets(
+          modifier = modifier,
+          errorMessage = stringResource(id = R.string.search_nothing_found)
+        )
+      } else {
+        KurobaComposeErrorMessageNoInsets(
+          modifier = modifier,
+          errorMessage = stringResource(id = R.string.search_nothing_found_with_query, searchQuery)
+        )
+      }
+
+      return
+    }
+
     if (endReached) {
       KurobaComposeText(
         modifier = modifier,
         text = stringResource(id = R.string.archives_end_reached),
         textAlign = TextAlign.Center
       )
-      return
-    }
-
-    if (!hasResults) {
-      if (!resultsFromSearch || searchQuery == null) {
-        KurobaComposeErrorMessage(
-          modifier = modifier,
-          errorMessage = stringResource(id = R.string.search_nothing_found)
-        )
-      } else {
-        KurobaComposeErrorMessage(
-          modifier = modifier,
-          errorMessage = stringResource(id = R.string.search_nothing_found_with_query, searchQuery)
-        )
-      }
 
       return
     }

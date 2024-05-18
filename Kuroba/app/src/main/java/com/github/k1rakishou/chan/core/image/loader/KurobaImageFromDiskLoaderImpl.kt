@@ -177,8 +177,6 @@ class KurobaImageFromDiskLoaderImpl(
     val appContext = context.applicationContext
 
     return ModularResult.Try {
-      BackgroundUtils.ensureBackgroundThread()
-
       val videoFrameBitmap = withContext(Dispatchers.IO) {
         if (!fileIsProbablyVideoInterruptible(appContext, fileName, inputFile)) {
           return@withContext null

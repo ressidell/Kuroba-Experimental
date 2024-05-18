@@ -45,6 +45,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
@@ -194,6 +195,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
 
   LaunchedEffect(
     key1 = searchState,
+    key2 = currentNavHistoryEntryList,
     block = {
       searchState.textFieldState.textAsFlow()
         .onEach { query ->
@@ -304,6 +306,7 @@ private fun ColumnScope.BuildNavigationHistoryList(
           .fillMaxWidth()
           .wrapContentHeight(),
         draggableScrollbar = false,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
         content = {
           items(
             count = searchResults.size,
@@ -475,14 +478,6 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
   val chanDescriptor = navHistoryEntry.descriptor
   val chanTheme = LocalChanTheme.current
 
-  val circleCropTransformation = remember(key1 = chanDescriptor) {
-    if (chanDescriptor is ChanDescriptor.ICatalogDescriptor) {
-      emptyList()
-    } else {
-      listOf(MainController.CIRCLE_CROP)
-    }
-  }
-
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -501,7 +496,7 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
           onHistoryEntryViewLongClicked(navHistoryEntry)
         }
       )
-      .animateItemPlacement(),
+      .animateItem(),
     verticalAlignment = Alignment.CenterVertically
   ) {
     Box {
@@ -514,27 +509,25 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
       val thumbnailRequest = remember(key1 = chanDescriptor) {
         if (navHistoryEntry.isCompositeIconUrl) {
           ImageLoaderRequest(
-            data = ImageLoaderRequestData.DrawableResource(R.drawable.composition_icon),
-            transformations = circleCropTransformation
+            data = ImageLoaderRequestData.DrawableResource(R.drawable.composition_icon)
           )
         } else {
           ImageLoaderRequest(
             data = ImageLoaderRequestData.Url(
               httpUrl = navHistoryEntry.threadThumbnailUrl,
               cacheFileType = CacheFileType.NavHistoryThumbnail
-            ),
-            transformations = circleCropTransformation
+            )
           )
         }
       }
 
       KurobaComposeImage(
-        controllerKey = null,
-        request = thumbnailRequest,
-        contentScale = contentScale,
         modifier = Modifier
           .size(MainController.LIST_MODE_ROW_HEIGHT)
-          .padding(horizontal = 6.dp, vertical = 2.dp)
+          .clip(CircleShape),
+        controllerKey = null,
+        request = thumbnailRequest,
+        contentScale = contentScale
       )
 
       val showDeleteButtonShortcut by remember { kurobaDrawerState.showDeleteButtonShortcut }
@@ -587,13 +580,7 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
             controllerKey = null,
             request = siteIconRequest,
             modifier = Modifier.size(20.dp),
-            error = {
-              Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.error_icon),
-                contentDescription = null
-              )
-            }
+            contentScale = ContentScale.Crop
           )
 
           Spacer(modifier = Modifier.weight(1f))
@@ -608,6 +595,8 @@ private fun LazyItemScope.BuildNavigationHistoryListEntryListMode(
         }
       }
     }
+
+    Spacer(modifier = Modifier.width(8.dp))
 
     KurobaComposeText(
       modifier = Modifier
@@ -692,7 +681,7 @@ private fun LazyGridItemScope.BuildNavigationHistoryListEntryGridMode(
           onHistoryEntryViewLongClicked(navHistoryEntry)
         }
       )
-      .animateItemPlacement(),
+      .animateItem(),
   ) {
     Box {
       val contentScale = if (navHistoryEntry.descriptor is ChanDescriptor.ICatalogDescriptor) {
@@ -756,13 +745,7 @@ private fun LazyGridItemScope.BuildNavigationHistoryListEntryGridMode(
             controllerKey = null,
             request = siteIconRequest,
             modifier = Modifier.size(20.dp),
-            error = {
-              Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.error_icon),
-                contentDescription = null
-              )
-            }
+            contentScale = ContentScale.Crop
           )
         }
       }

@@ -3,16 +3,18 @@ package com.github.k1rakishou.chan.features.setup
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -27,8 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -155,6 +157,7 @@ class ComposeBoardsSelectorController(
 
     LaunchedEffect(
       key1 = searchState,
+      key2 = cellDataList,
       block = {
         searchState.textFieldState.textAsFlow()
           .onEach { query ->
@@ -193,7 +196,7 @@ class ComposeBoardsSelectorController(
         .weight(1f)
         .defaultMinSize(minHeight = 256.dp),
       state = listState,
-      columns = GridCells.Adaptive(CELL_SIZE),
+      columns = GridCells.Adaptive(CELL_WIDTH),
       draggableScrollbar = false,
       content = {
         items(searchResults.size) { index ->
@@ -221,8 +224,15 @@ class ComposeBoardsSelectorController(
     }
 
     return cellDataList.filter { navigationHistoryEntry ->
-      return@filter navigationHistoryEntry.formattedSiteAndBoardFullNameForSearch
-        .contains(other = searchQuery, ignoreCase = true)
+      if (navigationHistoryEntry.siteName.contains(other = searchQuery, ignoreCase = true)) {
+        return@filter true
+      }
+
+      if (navigationHistoryEntry.boardCode.contains(other = searchQuery, ignoreCase = true)) {
+        return@filter true
+      }
+
+      return@filter false
     }
   }
 
@@ -236,19 +246,24 @@ class ComposeBoardsSelectorController(
 
     KurobaComposeCard(
       modifier = Modifier
-        .size(CELL_SIZE)
+        .wrapContentHeight()
+        .size(CELL_HEIGHT)
+        .width(CELL_WIDTH)
         .padding(4.dp)
-        .kurobaClickable(bounded = true, onClick = { onCellClickedRemembered.value.invoke(cellData) }),
+        .kurobaClickable(
+          bounded = true,
+          onClick = { onCellClickedRemembered.value.invoke(cellData) }
+        ),
       backgroundColor = chanTheme.backColorSecondaryCompose
     ) {
       Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center
       ) {
         val siteIcon = cellData.siteCellData.siteIcon
         val siteIconModifier = Modifier
           .fillMaxWidth()
           .height(ICON_SIZE)
-          .padding(4.dp)
 
         if (siteIcon.url != null) {
           val data = ImageLoaderRequestData.Url(
@@ -262,13 +277,7 @@ class ComposeBoardsSelectorController(
             modifier = siteIconModifier,
             controllerKey = null,
             request = request,
-            error = {
-              Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.error_icon),
-                contentDescription = null
-              )
-            }
+            contentScale = ContentScale.Fit
           )
         } else if (siteIcon.drawable != null) {
           val bitmapPainter = remember {
@@ -282,18 +291,35 @@ class ComposeBoardsSelectorController(
           )
         }
 
-        Row(modifier = Modifier.fillMaxSize()) {
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Column(
+          modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+        ) {
           KurobaComposeText(
-            fontSize = 11.ktu,
-            maxLines = 2,
+            fontSize = 10.ktu,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
             modifier = Modifier
               .fillMaxWidth()
-              .height(CELL_SIZE - ICON_SIZE)
-              .padding(4.dp)
-              .align(Alignment.CenterVertically),
-            text = cellData.formattedSiteAndBoardFullNameForUi
+              .wrapContentHeight(),
+            text = cellData.siteName
+          )
+
+          Spacer(modifier = Modifier.height(2.dp))
+
+          KurobaComposeText(
+            fontSize = 10.ktu,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+              .fillMaxWidth()
+              .wrapContentHeight(),
+            text = cellData.boardCode
           )
         }
       }
@@ -301,7 +327,8 @@ class ComposeBoardsSelectorController(
   }
 
   companion object {
-    private val CELL_SIZE = 72.dp
+    private val CELL_HEIGHT = 92.dp
+    private val CELL_WIDTH = 72.dp
     private val ICON_SIZE = 24.dp
   }
 }

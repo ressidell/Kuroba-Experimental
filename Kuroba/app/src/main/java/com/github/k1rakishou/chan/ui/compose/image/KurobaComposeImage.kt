@@ -2,10 +2,15 @@ package com.github.k1rakishou.chan.ui.compose.image
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -18,14 +23,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.coerceAtMost
+import androidx.compose.ui.unit.dp
 import coil.network.HttpException
 import coil.size.Scale
 import coil.transform.Transformation
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.cache.CacheFileType
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.ktu
 import com.github.k1rakishou.chan.ui.compose.providers.LocalChanTheme
@@ -41,19 +50,17 @@ fun KurobaComposeImage(
   modifier: Modifier,
   request: ImageLoaderRequest,
   controllerKey: ControllerKey?,
-  contentScale: ContentScale = ContentScale.Crop,
+  contentScale: ContentScale,
   loading: (@Composable BoxScope.() -> Unit)? = null,
-  error: (@Composable BoxScope.(Throwable) -> Unit)? = { throwable -> DefaultErrorHandler(throwable) },
-  success: (@Composable () -> Unit)? = null
+  error: (@Composable BoxScope.(Throwable) -> Unit)? = { throwable -> DefaultErrorHandler(throwable) }
 ) {
   var size by remember { mutableStateOf<IntSize>(IntSize.Zero) }
 
   Box(
-    modifier = modifier
-      .then(
-        Modifier
-          .onSizeChanged { newSize -> size = newSize }
-      )
+    modifier = modifier.then(
+      Modifier
+        .onSizeChanged { newSize -> size = newSize }
+    )
   ) {
     BuildInnerImage(
       controllerKey = controllerKey,
@@ -61,14 +68,13 @@ fun KurobaComposeImage(
       request = request,
       contentScale = contentScale,
       loading = loading,
-      error = error,
-      success = success
+      error = error
     )
   }
 }
 
 @Composable
-private fun BoxScope.DefaultErrorHandler(throwable: Throwable) {
+private fun DefaultErrorHandler(throwable: Throwable) {
   val errorMsg = when (throwable) {
     is ExceptionWithShortErrorMessage -> throwable.shortErrorMessage()
     is SSLException -> stringResource(id = R.string.ssl_error)
@@ -77,16 +83,52 @@ private fun BoxScope.DefaultErrorHandler(throwable: Throwable) {
   }
 
   val chanTheme = LocalChanTheme.current
+  val density = LocalDensity.current
   val textColor = chanTheme.textColorSecondaryCompose
 
-  KurobaComposeText(
-    modifier = Modifier.align(Alignment.Center),
-    text = errorMsg,
-    color = textColor,
-    fontSize = 11.ktu.fixedSize(),
-    maxLines = 3,
-    textAlign = TextAlign.Center
-  )
+  var contentSize by remember { mutableStateOf<IntSize>(IntSize.Zero) }
+
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .onSizeChanged { intSize -> contentSize = intSize },
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    if (contentSize.width > 0 && contentSize.height > 0) {
+      val displayText = with(density) {
+        contentSize.width > 64.dp.roundToPx() && contentSize.height > 64.dp.roundToPx()
+      }
+
+      val iconSize = with(density) {
+        val multiplier = if (displayText) 0.5f else 0.75f
+
+        (minOf(contentSize.width, contentSize.height) * multiplier)
+          .toDp()
+          .coerceAtMost(64.dp)
+      }
+
+      if (iconSize > 16.dp) {
+        KurobaComposeIcon(
+          modifier = Modifier.size(iconSize),
+          drawableId = R.drawable.ic_baseline_warning_24
+        )
+
+        if (displayText) {
+          Spacer(modifier = Modifier.height(8.dp))
+
+          KurobaComposeText(
+            modifier = Modifier.wrapContentSize(),
+            text = errorMsg,
+            color = textColor,
+            fontSize = 10.ktu.fixedSize(),
+            maxLines = 3,
+            textAlign = TextAlign.Center
+          )
+        }
+      }
+    }
+  }
 }
 
 @Composable
@@ -96,8 +138,7 @@ private fun BuildInnerImage(
   request: ImageLoaderRequest,
   contentScale: ContentScale,
   loading: (@Composable BoxScope.() -> Unit)?,
-  error: (@Composable BoxScope.(Throwable) -> Unit)?,
-  success: (@Composable () -> Unit)?
+  error: (@Composable BoxScope.(Throwable) -> Unit)?
 ) {
   val context = LocalContext.current
   val kurobaImageLoader = appDependencies().kurobaImageLoader
@@ -146,13 +187,11 @@ private fun BuildInnerImage(
       return
     }
     is ImageLoaderResult.Success -> {
-      success?.invoke()
-
       Image(
+        modifier = Modifier.fillMaxSize(),
         painter = result.painter,
         contentDescription = null,
-        contentScale = contentScale,
-        modifier = Modifier.fillMaxSize()
+        contentScale = contentScale
       )
     }
   }

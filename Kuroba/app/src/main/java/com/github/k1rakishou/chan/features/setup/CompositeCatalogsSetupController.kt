@@ -26,9 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.base.RendezvousCoroutineExecutor
 import com.github.k1rakishou.chan.core.di.component.activity.ActivityComponent
@@ -37,6 +35,7 @@ import com.github.k1rakishou.chan.features.toolbar.BackArrowMenuItem
 import com.github.k1rakishou.chan.features.toolbar.ToolbarMiddleContent
 import com.github.k1rakishou.chan.features.toolbar.ToolbarText
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeDraggableElementContainer
+import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeErrorMessageNoInsets
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeIcon
 import com.github.k1rakishou.chan.ui.compose.components.KurobaComposeText
 import com.github.k1rakishou.chan.ui.compose.components.kurobaClickable
@@ -147,56 +146,55 @@ class CompositeCatalogsSetupController(
     Box(
       modifier = Modifier.fillMaxSize()
     ) {
-      if (compositeCatalogs.isNotEmpty()) {
-        LazyColumnWithFastScroller(
-          state = reorderableState.listState,
-          modifier = Modifier
-            .fillMaxSize()
-            .reorderable(reorderableState),
-          contentPadding = paddingValues,
-          draggableScrollbar = false,
-          content = {
-            items(compositeCatalogs.size) { index ->
-              val compositeCatalog = compositeCatalogs.get(index)
-
-              BuildCompositeCatalogItem(
-                index = index,
-                chanTheme = chanTheme,
-                reorderableState = reorderableState,
-                compositeCatalog = compositeCatalog,
-                onCompositeCatalogItemClicked = { clickedCompositeCatalog ->
-                  showComposeBoardsController(compositeCatalog = clickedCompositeCatalog)
-                },
-                onDeleteCompositeCatalogItemClicked = { clickedCompositeCatalog ->
-                  rendezvousCoroutineExecutor.post {
-                    viewModel.delete(clickedCompositeCatalog)
-                      .toastOnError(longToast = true)
-                      .toastOnSuccess(message = {
-                        return@toastOnSuccess getString(
-                          R.string.controller_composite_catalogs_catalog_deleted,
-                          clickedCompositeCatalog.name
-                        )
-                      })
-                      .ignore()
-                  }
-                },
+      LazyColumnWithFastScroller(
+        state = reorderableState.listState,
+        modifier = Modifier
+          .fillMaxSize()
+          .reorderable(reorderableState),
+        contentPadding = paddingValues,
+        draggableScrollbar = false,
+        content = {
+          if (compositeCatalogs.isEmpty()) {
+            item {
+              KurobaComposeErrorMessageNoInsets(
+                modifier = Modifier.fillParentMaxSize(),
+                errorMessage = stringResource(id = R.string.controller_composite_catalogs_empty_text)
               )
             }
-          })
-      } else {
-        KurobaComposeText(
-          modifier = Modifier.fillMaxSize(),
-          fontSize = 16.ktu,
-          textAlign = TextAlign.Center,
-          text = stringResource(id = R.string.controller_composite_catalogs_empty_text)
-        )
-      }
 
-      val fabBottomOffset = if (ChanSettings.isSplitLayoutMode()) {
-        globalWindowInsetsManager.bottomDp() + 16.dp
-      } else {
-        16.dp
-      }
+            return@LazyColumnWithFastScroller
+          }
+
+          items(compositeCatalogs.size) { index ->
+            val compositeCatalog = compositeCatalogs.get(index)
+
+            BuildCompositeCatalogItem(
+              index = index,
+              chanTheme = chanTheme,
+              reorderableState = reorderableState,
+              compositeCatalog = compositeCatalog,
+              onCompositeCatalogItemClicked = { clickedCompositeCatalog ->
+                showComposeBoardsController(compositeCatalog = clickedCompositeCatalog)
+              },
+              onDeleteCompositeCatalogItemClicked = { clickedCompositeCatalog ->
+                rendezvousCoroutineExecutor.post {
+                  viewModel.delete(clickedCompositeCatalog)
+                    .toastOnError(longToast = true)
+                    .toastOnSuccess(message = {
+                      return@toastOnSuccess getString(
+                        R.string.controller_composite_catalogs_catalog_deleted,
+                        clickedCompositeCatalog.name
+                      )
+                    })
+                    .ignore()
+                }
+              },
+            )
+          }
+        }
+      )
+
+      val fabBottomOffset = globalWindowInsetsManager.bottomDp() + 16.dp
 
       FloatingActionButton(
         modifier = Modifier

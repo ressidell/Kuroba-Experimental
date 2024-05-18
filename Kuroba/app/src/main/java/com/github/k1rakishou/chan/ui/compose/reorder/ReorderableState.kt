@@ -15,6 +15,7 @@
  */
 package com.github.k1rakishou.chan.ui.compose.reorder
 
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -35,7 +36,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.min
 import kotlin.math.sign
 
-
+@Stable
 abstract class ReorderableState<T>(
     private val scope: CoroutineScope,
     private val maxScrollPerFrame: Float,
