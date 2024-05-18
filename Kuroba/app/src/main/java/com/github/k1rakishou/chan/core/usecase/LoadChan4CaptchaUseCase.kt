@@ -22,10 +22,12 @@ import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.prefs.GsonJsonSetting
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Request
+import okio.Buffer
 
 class LoadChan4CaptchaUseCase(
   private val moshi: Moshi,
@@ -128,7 +130,13 @@ class LoadChan4CaptchaUseCase(
         throw ParsingException("Failed to parse 4chan captcha json, captchaInfoRawString: ${captchaInfoRawString}")
       }
 
-      return CaptchaResult(captchaInfoRaw, captchaInfoRawString)
+      val ticketPresent = isKeyPresent(captchaInfoRawString, "ticket")
+
+      return CaptchaResult(
+        captchaInfoRaw = captchaInfoRaw,
+        captchaInfoRawString = captchaInfoRawString,
+        ticketPresent = ticketPresent
+      )
     } catch (error: Throwable) {
       Logger.error(TAG) {
         "loadCaptcha($chanDescriptor) captchaInfoRawAdapter.fromJson() error: ${error.errorMessageOrClassName()}"
@@ -162,6 +170,33 @@ class LoadChan4CaptchaUseCase(
     val chan4CaptchaSettingsSetting = siteManager.bySiteDescriptor(Chan4.SITE_DESCRIPTOR)
       ?.getSettingBySettingId<GsonJsonSetting<Chan4CaptchaSettings>>(SiteSetting.SiteSettingId.Chan4CaptchaSettings)
       ?: return
+
+    if (captchaResult.isFakeTicket) {
+      Logger.debug(TAG) {
+        "updateCaptchaTicket($chanDescriptor) fake ticket detected. " +
+          "Removing ticket from settings. " +
+          "Actual ticket value: '${captchaResult.captchaInfoRaw.ticket}'"
+      }
+
+      var previousTicket: String? = null
+
+      chan4CaptchaSettingsSetting.update(sync = true) { chan4CaptchaSettings ->
+        previousTicket = chan4CaptchaSettings.captchaTicket
+
+        chan4CaptchaSettings.copy(
+          captchaTicket = null,
+          lastRefreshTime = 0L
+        )
+      }
+
+      if (previousTicket.isNullOrEmpty()) {
+        Logger.debug(TAG) { "updateCaptchaTicket($chanDescriptor) ticket was already removed" }
+      } else {
+        Logger.debug(TAG) { "updateCaptchaTicket($chanDescriptor) removed ticket '${previousTicket}'" }
+      }
+
+      return
+    }
 
     val newTicket = captchaResult.captchaInfoRaw.ticketAsString
     if (newTicket.isNullOrBlank()) {
@@ -264,10 +299,54 @@ class LoadChan4CaptchaUseCase(
       .removeSuffix("}")
   }
 
+  private fun isKeyPresent(jsonString: String, keyToFind: String): Boolean {
+    val buffer = Buffer().writeUtf8(jsonString)
+    JsonReader.of(buffer).use { jsonReader ->
+      jsonReader.beginObject()
+
+      while (jsonReader.hasNext()) {
+        if (jsonReader.nextName() == keyToFind) {
+          return true
+        }
+
+        jsonReader.skipValue()
+      }
+
+      jsonReader.endObject()
+    }
+
+    return false
+  }
+
   data class CaptchaResult(
     val captchaInfoRaw: CaptchaInfoRaw,
-    val captchaInfoRawString: String
-  )
+    val captchaInfoRawString: String,
+    val ticketPresent: Boolean
+  ) {
+
+    val isFakeTicket: Boolean
+      get() {
+        if (!ticketPresent) {
+          return false
+        }
+
+        val ticket = captchaInfoRaw.ticket
+        if (ticket is String) {
+          return ticket.isEmpty()
+        }
+
+        if (ticket is Number) {
+          return ticket == 0
+        }
+
+        if (ticket is Boolean) {
+          return ticket == false
+        }
+
+        return ticket == null
+      }
+
+  }
 
   @JsonClass(generateAdapter = true)
   data class CaptchaInfoRaw(

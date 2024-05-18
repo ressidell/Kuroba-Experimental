@@ -53,7 +53,7 @@ class CloudFlareHandlerInterceptor(
 
     val response = chain.proceed(request)
 
-    if (response.code == 503 || response.code == 403 && !ignoreCloudFlareBotDetectionErrors(request)) {
+    if ((response.code == 503 || response.code == 403) && !ignoreCloudFlareBotDetectionErrors(request)) {
       val newResponse = processCloudflareRejectedRequest(
         response = response,
         host = host,

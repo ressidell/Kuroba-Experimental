@@ -96,11 +96,7 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
     setWillNotDraw(false)
   }
 
-  override fun onAttachedToWindow() {
-    super.onAttachedToWindow()
-
-    _coroutineScope.cancelChildren()
-
+  fun init() {
     if (AndroidUtils.isAndroid10()) {
       globalUiStateHolder.mainUi.addTouchPositionListener(_touchPositionListenerKey, this)
 
@@ -123,7 +119,6 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
         }
         .collect()
     }
-
 
     _coroutineScope.launch {
       globalUiStateHolder.replyLayout.replyLayoutVisibilityEventsFlow
@@ -163,7 +158,7 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
       paint.color = themeEngine.chanTheme.accentColor
 
       themeEngine.themeChangeEventsFlow
-        .collectLatest { chanTheme -> paint.color = chanTheme.accentColor  }
+        .collectLatest { chanTheme -> paint.color = chanTheme.accentColor }
     }
 
     _coroutineScope.launch {
@@ -194,13 +189,9 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
     }
   }
 
-  override fun onDetachedFromWindow() {
-    super.onDetachedFromWindow()
-
-    if (AndroidUtils.isAndroid10()) {
-      _coroutineScope.cancelChildren()
-      globalUiStateHolder.mainUi.removeTouchPositionListener(_touchPositionListenerKey)
-    }
+  fun destroy() {
+    _coroutineScope.cancelChildren()
+    globalUiStateHolder.mainUi.removeTouchPositionListener(_touchPositionListenerKey)
   }
 
   override fun dispatchDraw(canvas: Canvas) {
