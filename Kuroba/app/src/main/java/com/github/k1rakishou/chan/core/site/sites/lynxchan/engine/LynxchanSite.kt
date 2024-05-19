@@ -50,6 +50,7 @@ abstract class LynxchanSite : CommonSite() {
   // When false, json payload will be used.
   // When true, form data parameters will be used.
   abstract val postingViaFormData: Boolean
+  open val enabled: Boolean = true
 
   val captchaIdCookie by lazy { StringSetting(prefs, "captcha_id", "") }
   val bypassCookie by lazy { StringSetting(prefs, "bypass_cookie", "") }
@@ -81,7 +82,7 @@ abstract class LynxchanSite : CommonSite() {
   }
 
   override fun setup() {
-    setEnabled(true)
+    setEnabled(enabled)
     setName(siteName)
     setIcon(siteIcon)
     setBoardsType(Site.BoardsType.DYNAMIC)

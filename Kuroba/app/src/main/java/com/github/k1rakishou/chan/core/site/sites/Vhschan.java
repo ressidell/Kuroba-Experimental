@@ -124,7 +124,7 @@ public class Vhschan extends CommonSite {
 
     @Override
     public void setup() {
-        setEnabled(true);
+        setEnabled(false);
         setName(SITE_NAME);
         setIcon(SiteIcon.fromFavicon(getImageLoaderDeprecated(), HttpUrl.parse("https://vhschan.org/stylesheets/favicon.ico")));
 

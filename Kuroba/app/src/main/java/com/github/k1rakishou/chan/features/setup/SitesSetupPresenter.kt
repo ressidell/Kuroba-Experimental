@@ -66,42 +66,40 @@ class SitesSetupPresenter(
   }
 
   private fun showSites() {
-    val siteCellDataList = mutableListOf<SiteCellData>()
+    val allSites = mutableListOf<SiteCellData>()
+    val disabledSites = mutableListOf<SiteCellData>()
 
     siteManager.viewSitesOrdered { chanSiteData, site ->
-      val siteEnableState = SiteEnableState.create(chanSiteData.active, site.enabled())
-      siteCellDataList += SiteCellData(
+      val siteEnableState = SiteEnableState.create(
+        active = chanSiteData.active,
+        enabled = site.enabled()
+      )
+
+      val siteCellData = SiteCellData(
         siteDescriptor = chanSiteData.siteDescriptor,
         siteIcon = site.icon(),
         siteName = site.name(),
         siteEnableState = siteEnableState
       )
 
+      if (site.enabled()) {
+        allSites += siteCellData
+      } else {
+        disabledSites += siteCellData
+      }
+
       return@viewSitesOrdered true
     }
 
-    val groupedSiteCellDataList = groupSitesWithArchives(siteCellDataList)
-    if (groupedSiteCellDataList.isEmpty()) {
+    // Put disabled sites at the end of the list
+    allSites.addAll(disabledSites)
+
+    if (allSites.isEmpty()) {
       setState(SitesSetupControllerState.Empty)
       return
     }
 
-    setState(SitesSetupControllerState.Data(groupedSiteCellDataList))
-  }
-
-  private fun groupSitesWithArchives(siteCellDataList: MutableList<SiteCellData>): List<SiteCellData> {
-    val resultList = mutableListOf<SiteCellData>()
-
-    siteCellDataList.forEach { siteCellData ->
-      resultList += SiteCellData(
-        siteDescriptor = siteCellData.siteDescriptor,
-        siteIcon = siteCellData.siteIcon,
-        siteName = siteCellData.siteName,
-        siteEnableState = siteCellData.siteEnableState
-      )
-    }
-
-    return resultList
+    setState(SitesSetupControllerState.Data(allSites))
   }
 
   private fun setState(stateSetup: SitesSetupControllerState) {

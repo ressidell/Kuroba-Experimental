@@ -18,6 +18,8 @@ class YesHoney : LynxchanSite() {
   private val mediaHostsLazy = lazy { arrayOf(domainUrl.value) }
   private val siteUrlHandler = lazy { YesHoneyUrlHandler(domainUrl.value, mediaHostsLazy.value) }
 
+  override val enabled: Boolean
+    get() = false
   override val defaultDomain: HttpUrl
     get() = DEFAULT_DOMAIN
   override val siteName: String

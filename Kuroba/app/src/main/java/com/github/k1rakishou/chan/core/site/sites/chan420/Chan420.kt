@@ -46,7 +46,7 @@ class Chan420 : CommonSite() {
   )
   
   override fun setup() {
-    setEnabled(true)
+    setEnabled(false)
     setName(SITE_NAME)
     setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, "https://420chan.org/favicon.ico".toHttpUrl()))
     setBoardsType(Site.BoardsType.DYNAMIC)

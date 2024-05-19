@@ -19,7 +19,7 @@ class RozenArcana : BaseFoolFuukaSite() {
   override fun setup() {
     super.setup()
 
-    setEnabled(true)
+    setEnabled(false)
     setName(SITE_NAME)
     setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, FAVICON_URL))
     setBoardsType(Site.BoardsType.DYNAMIC)
