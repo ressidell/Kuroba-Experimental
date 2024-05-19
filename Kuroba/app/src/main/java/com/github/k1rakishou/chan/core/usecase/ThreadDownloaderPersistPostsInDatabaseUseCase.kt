@@ -16,7 +16,6 @@ import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.repository.ChanPostRepository
 import dagger.Lazy
 import okhttp3.Request
-import kotlin.time.ExperimentalTime
 
 class ThreadDownloaderPersistPostsInDatabaseUseCase(
   private val siteManager: SiteManager,
@@ -39,7 +38,6 @@ class ThreadDownloaderPersistPostsInDatabaseUseCase(
     }
   }
 
-  @OptIn(ExperimentalTime::class)
   private suspend fun downloadThreadPosts(
     ownerThreadDatabaseId: Long,
     threadDescriptor: ChanDescriptor.ThreadDescriptor,
@@ -130,10 +128,10 @@ class ThreadDownloaderPersistPostsInDatabaseUseCase(
       parsingResult.parsedPosts
     ).unwrap()
 
-    Logger.d(TAG, "downloadThreadPosts() deleted=${chanReaderProcessor.deleted}, " +
-      "closed=${chanReaderProcessor.closed}, " +
-      "archived=${chanReaderProcessor.archived}, " +
-      "posts=${parsingResult.parsedPosts.size}")
+    Logger.d(TAG, "downloadThreadPosts() deleted: ${chanReaderProcessor.deleted}, " +
+      "closed: ${chanReaderProcessor.closed}, " +
+      "archived: ${chanReaderProcessor.archived}, " +
+      "posts: ${parsingResult.parsedPosts.size}")
 
     return DownloadResult(
       deleted = chanReaderProcessor.deleted,

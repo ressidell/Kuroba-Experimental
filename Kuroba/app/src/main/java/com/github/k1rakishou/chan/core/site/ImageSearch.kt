@@ -1,116 +1,97 @@
-/*
- * KurobaEx - *chan browser https://github.com/K1rakishou/Kuroba-Experimental/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-package com.github.k1rakishou.chan.core.site;
+package com.github.k1rakishou.chan.core.site
 
-import java.util.ArrayList;
-import java.util.List;
+abstract class ImageSearch {
+  abstract val id: Int
+  abstract val name: String
+  abstract fun getUrl(imageUrl: String): String
 
-public abstract class ImageSearch {
-    public static final List<ImageSearch> engines = new ArrayList<>();
+  companion object {
+    val engines: MutableList<ImageSearch> = ArrayList()
 
-    public abstract int getId();
+    init {
+      engines.add(object : ImageSearch() {
+        override val id: Int
+          get() = 0
 
-    public abstract String getName();
+        override val name: String
+          get() = "Google"
 
-    public abstract String getUrl(String imageUrl);
+        override fun getUrl(imageUrl: String): String {
+          return "https://www.google.com/searchbyimage?sbisrc=cr_1&safe=off&image_url=$imageUrl"
+        }
+      })
 
-    static {
-        engines.add(new ImageSearch() {
-            public int getId() {
-                return 0;
-            }
+      engines.add(object : ImageSearch() {
+        override val id: Int
+          get() = 1
 
-            public String getName() {
-                return "Google";
-            }
+        override val name: String
+          get() = "Google Lens"
 
-            public String getUrl(String imageUrl) {
-                return "https://www.google.com/searchbyimage?sbisrc=cr_1&safe=off&image_url=" + imageUrl;
-            }
-        });
+        override fun getUrl(imageUrl: String): String {
+          return "https://lens.google.com/uploadbyurl?url=$imageUrl"
+        }
+      })
 
-        engines.add(new ImageSearch() {
-            public int getId() {
-                return 1;
-            }
+      engines.add(object : ImageSearch() {
+        override val id: Int
+          get() = 2
 
-            public String getName() {
-                return "iqdb";
-            }
+        override val name: String
+          get() = "iqdb"
 
-            public String getUrl(String imageUrl) {
-                return "http://iqdb.org/?url=" + imageUrl;
-            }
-        });
+        override fun getUrl(imageUrl: String): String {
+          return "http://iqdb.org/?url=$imageUrl"
+        }
+      })
 
-        engines.add(new ImageSearch() {
-            public int getId() {
-                return 2;
-            }
+      engines.add(object : ImageSearch() {
+        override val id: Int
+          get() = 3
 
-            public String getName() {
-                return "SauceNao";
-            }
+        override val name: String
+          get() = "SauceNao"
 
-            public String getUrl(String imageUrl) {
-                return "https://saucenao.com/search.php?url=" + imageUrl;
-            }
-        });
+        override fun getUrl(imageUrl: String): String {
+          return "https://saucenao.com/search.php?url=$imageUrl"
+        }
+      })
 
-        engines.add(new ImageSearch() {
-            public int getId() {
-                return 3;
-            }
+      engines.add(object : ImageSearch() {
+        override val id: Int
+          get() = 4
 
-            public String getName() {
-                return "TinEye";
-            }
+        override val name: String
+          get() = "TinEye"
 
-            public String getUrl(String imageUrl) {
-                return "http://tineye.com/search/?url=" + imageUrl;
-            }
-        });
+        override fun getUrl(imageUrl: String): String {
+          return "http://tineye.com/search/?url=$imageUrl"
+        }
+      })
 
-        engines.add(new ImageSearch() {
-            public int getId() {
-                return 4;
-            }
+      engines.add(object : ImageSearch() {
+        override val id: Int
+          get() = 5
 
-            public String getName() {
-                return "WAIT";
-            }
+        override val name: String
+          get() = "WAIT"
 
-            public String getUrl(String imageUrl) {
-                return "https://trace.moe/?url=" + imageUrl;
-            }
-        });
+        override fun getUrl(imageUrl: String): String {
+          return "https://trace.moe/?url=$imageUrl"
+        }
+      })
 
-        engines.add(new ImageSearch() {
-            public int getId() {
-                return 5;
-            }
+      engines.add(object : ImageSearch() {
+        override val id: Int
+          get() = 6
 
-            public String getName() {
-                return "Yandex";
-            }
+        override val name: String
+          get() = "Yandex"
 
-            public String getUrl(String imageUrl) {
-                return "https://yandex.com/images/search?rpt=imageview&url=" + imageUrl;
-            }
-        });
+        override fun getUrl(imageUrl: String): String {
+          return "https://yandex.com/images/search?rpt=imageview&url=$imageUrl"
+        }
+      })
     }
+  }
 }
