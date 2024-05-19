@@ -1,8 +1,8 @@
 package com.github.k1rakishou.chan.core.cache.downloader
 
 import com.github.k1rakishou.chan.core.cache.CacheHandler
+import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.exhaustive
-import com.github.k1rakishou.common.rethrowCancellationException
 import com.github.k1rakishou.core_logger.Logger
 import dagger.Lazy
 import kotlinx.coroutines.channels.ProducerScope
@@ -247,11 +247,6 @@ internal class ChunkPersister(
             chunkSize
           )
         )
-
-        if (downloaded != chunkSize) {
-          Logger.error(TAG) { "readBodyLoop(${chunk}, $mediaUrl) downloaded (${downloaded}) != chunkSize (${chunkSize})" }
-          activeDownloads.throwCancellationException(mediaUrl)
-        }
       }
 
       Logger.verbose(TAG) {
@@ -266,7 +261,7 @@ internal class ChunkPersister(
         )
       )
     } catch (error: Throwable) {
-      Logger.error(TAG) { "readBodyLoop($chunk, $mediaUrl) error: ${error.rethrowCancellationException()}" }
+      Logger.error(TAG) { "readBodyLoop($chunk, $mediaUrl) error: ${error.errorMessageOrClassName()}" }
 
       // Handle StreamResetExceptions and such
       if (DownloaderUtils.isCancellationError(error)) {
