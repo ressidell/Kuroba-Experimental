@@ -18,6 +18,7 @@ import com.github.k1rakishou.chan.utils.MediaUtils
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.model.data.post.ChanPostHttpIcon
 import dagger.Lazy
+import okhttp3.HttpUrl
 import java.util.*
 
 class PostIcons @JvmOverloads constructor(
@@ -25,19 +26,20 @@ class PostIcons @JvmOverloads constructor(
   attrs: AttributeSet? = null,
   defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+  private val drawRect = RectF()
+  private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+  private val textRect = Rect()
+  private val httpIcons = mutableMapOf<HttpUrl, PostIconsHttpIcon>()
+
   var iconsHeight = 0
     private set
   private var spacing = 0
   private var icons = 0
   private var previousIcons = 0
-  private val drawRect = RectF()
-  private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-  private val textRect = Rect()
   private var httpIconTextColor = 0
   private var httpIconTextSize = 0
   private var rtl = false
   private var compactMode = false
-  private var httpIcons = mutableListOf<PostIconsHttpIcon>()
 
   val hasIcons: Boolean
     get() = icons != 0
@@ -86,7 +88,6 @@ class PostIcons @JvmOverloads constructor(
 
   fun edit() {
     previousIcons = icons
-    httpIcons.clear()
   }
 
   fun apply() {
@@ -114,9 +115,9 @@ class PostIcons @JvmOverloads constructor(
     theme: ChanTheme,
     size: Int
   ) {
-    httpIconTextColor = theme.postDetailsColor
-    httpIconTextSize = size
-    httpIcons = ArrayList(icons.size)
+    if (icons.isEmpty()) {
+      return
+    }
 
     for (icon in icons) {
       // this is for country codes
@@ -124,16 +125,28 @@ class PostIcons @JvmOverloads constructor(
       val name = icon.iconName.substring(0, if (codeIndex != -1) codeIndex else icon.iconName.length)
 
       val postIconsHttpIcon = PostIconsHttpIcon(
-        context,
-        this,
-        imageLoaderDeprecated,
-        name,
-        icon.iconUrl
+        context = context,
+        postIcons = this,
+        imageLoaderDeprecated = imageLoaderDeprecated,
+        name = name,
+        url = icon.iconUrl,
+        size = size
       )
 
-      httpIcons.add(postIconsHttpIcon)
+      val previousPostHttpIcon = httpIcons[icon.iconUrl]
+      if (previousPostHttpIcon != null &&
+        previousPostHttpIcon.isTheSameAs(postIconsHttpIcon) &&
+        previousPostHttpIcon.hasDrawable()
+      ) {
+        continue
+      }
+
+      httpIcons.put(icon.iconUrl, postIconsHttpIcon)
       postIconsHttpIcon.request(size)
     }
+
+    httpIconTextColor = theme.postDetailsColor
+    httpIconTextSize = size
   }
 
   fun cancelRequests() {
@@ -141,7 +154,7 @@ class PostIcons @JvmOverloads constructor(
       return
     }
 
-    for (httpIcon in httpIcons) {
+    for ((_, httpIcon) in httpIcons) {
       httpIcon.cancel()
     }
 
@@ -212,7 +225,7 @@ class PostIcons @JvmOverloads constructor(
     }
 
     if (get(HTTP_ICONS) && httpIcons.isNotEmpty()) {
-      for (httpIcon in httpIcons) {
+      for ((_, httpIcon) in httpIcons) {
         if (httpIcon.drawable == null) {
           continue
         }
@@ -257,7 +270,7 @@ class PostIcons @JvmOverloads constructor(
     }
 
     if (get(HTTP_ICONS) && httpIcons.isNotEmpty()) {
-      for (httpIcon in httpIcons) {
+      for ((_, httpIcon) in httpIcons) {
         if (httpIcon.drawable == null) {
           continue
         }

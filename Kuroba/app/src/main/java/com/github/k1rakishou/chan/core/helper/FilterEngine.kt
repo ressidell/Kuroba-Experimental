@@ -9,6 +9,7 @@ import com.github.k1rakishou.model.data.filter.ChanFilter
 import com.github.k1rakishou.model.data.filter.ChanFilterMutable
 import com.github.k1rakishou.model.data.filter.FilterType
 import com.github.k1rakishou.model.data.post.ChanPostBuilder
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -18,7 +19,7 @@ class FilterEngine @Inject constructor(
 ) {
   private val cacheHits = AtomicLong(0)
   private val cacheMisses = AtomicLong(0)
-  private val patternCache: MutableMap<String?, Pattern> = HashMap()
+  private val patternCache = ConcurrentHashMap<String, Pattern>(128)
 
   fun currentCacheHits(): Long {
     return cacheHits.get()
@@ -47,7 +48,7 @@ class FilterEngine @Inject constructor(
       return emptySet()
     }
 
-    val pattern = synchronized(patternCache) { patternCache[chanFilter.pattern] }
+    val pattern = patternCache[chanFilter.pattern]
     if (pattern == null) {
       return emptySet()
     }
@@ -99,24 +100,24 @@ class FilterEngine @Inject constructor(
     }
 
     if (typeMatches(filter, FilterType.COMMENT) && post.postCommentBuilder.getComment().isNotEmpty()) {
-      if (matches(filter, post.postCommentBuilder.getComment(), false)) {
+      if (matches(filter, post.postCommentBuilder.getComment())) {
         return true
       }
     }
 
-    if (typeMatches(filter, FilterType.SUBJECT) && matches(filter, post.subject, false)) {
+    if (typeMatches(filter, FilterType.SUBJECT) && matches(filter, post.subject)) {
       return true
     }
 
-    if (typeMatches(filter, FilterType.NAME) && matches(filter, post.name, false)) {
+    if (typeMatches(filter, FilterType.NAME) && matches(filter, post.name)) {
       return true
     }
 
-    if (typeMatches(filter, FilterType.TRIPCODE) && matches(filter, post.tripcode, false)) {
+    if (typeMatches(filter, FilterType.TRIPCODE) && matches(filter, post.tripcode)) {
       return true
     }
 
-    if (typeMatches(filter, FilterType.ID) && matches(filter, post.posterId, false)) {
+    if (typeMatches(filter, FilterType.ID) && matches(filter, post.posterId)) {
       return true
     }
 
@@ -151,12 +152,12 @@ class FilterEngine @Inject constructor(
       return false
     }
 
-    return typeMatches(filter, FilterType.COUNTRY_CODE) && matches(filter, countryCode, false)
+    return typeMatches(filter, FilterType.COUNTRY_CODE) && matches(filter, countryCode)
   }
 
   private fun tryMatchPostImagesWithFilter(filter: ChanFilter, post: ChanPostBuilder): Boolean {
     for (image in post.postImages) {
-      if (typeMatches(filter, FilterType.IMAGE) && matches(filter, image.fileHash, false)) {
+      if (typeMatches(filter, FilterType.IMAGE) && matches(filter, image.fileHash)) {
         return true
       }
     }
@@ -169,7 +170,7 @@ class FilterEngine @Inject constructor(
 
     val fnames = files.toString()
     if (fnames.isNotEmpty()) {
-      if (typeMatches(filter, FilterType.FILENAME) && matches(filter, fnames, false)) {
+      if (typeMatches(filter, FilterType.FILENAME) && matches(filter, fnames)) {
         return true
       }
     }
@@ -195,19 +196,28 @@ class FilterEngine @Inject constructor(
   @AnyThread
   fun matches(
     filter: ChanFilter,
-    text: CharSequence?,
-    forceCompile: Boolean
+    text: CharSequence?
   ): Boolean {
-    return matchesInternal(filter.pattern, filter.type, text, forceCompile)
+    return matchesInternal(
+      patternRaw = filter.pattern,
+      filterType = filter.type,
+      text = text,
+      forceCompile = false
+    )
   }
 
   @AnyThread
   fun matches(
     filter: ChanFilterMutable,
     text: CharSequence?,
-    forceCompile: Boolean
+    forceCompile: Boolean = false
   ): Boolean {
-    return matchesInternal(filter.pattern, filter.type, text, forceCompile)
+    return matchesInternal(
+      patternRaw = filter.pattern,
+      filterType = filter.type,
+      text = text,
+      forceCompile = forceCompile
+    )
   }
 
   @AnyThread
@@ -217,19 +227,21 @@ class FilterEngine @Inject constructor(
     text: CharSequence?,
     forceCompile: Boolean
   ): Boolean {
+    if (patternRaw == null) {
+      return false
+    }
+
     if (text.isNullOrEmpty()) {
       return false
     }
 
     var pattern: Pattern? = null
     if (!forceCompile) {
-      synchronized(patternCache) {
-        pattern = patternCache[patternRaw]
-        if (pattern == null) {
-          cacheMisses.incrementAndGet()
-        } else {
-          cacheHits.incrementAndGet()
-        }
+      pattern = patternCache[patternRaw]
+      if (pattern == null) {
+        cacheMisses.incrementAndGet()
+      } else {
+        cacheHits.incrementAndGet()
       }
     }
 
@@ -242,7 +254,7 @@ class FilterEngine @Inject constructor(
 
       pattern = compile(patternRaw, extraFlags).patternOrNull
       if (pattern != null) {
-        synchronized(patternCache) { patternCache.put(patternRaw, pattern!!) }
+        patternCache.put(patternRaw, pattern)
       }
     }
 
@@ -250,12 +262,12 @@ class FilterEngine @Inject constructor(
       return false
     }
 
-    val matcher = pattern!!.matcher(text)
+    val matcher = pattern.matcher(text)
 
     try {
       return matcher.find()
     } catch (e: IllegalArgumentException) {
-      Logger.e(TAG, "matcher.find() exception, pattern=" + pattern!!.pattern(), e)
+      Logger.error(TAG, e) { "matcher.find() exception, pattern: ${pattern.pattern()}" }
       return false
     }
   }

@@ -42,7 +42,7 @@ import okhttp3.HttpUrl
 import okhttp3.Request
 import org.jsoup.parser.Parser
 import java.io.IOException
-import java.util.*
+import java.util.BitSet
 
 class BookmarkFilterWatchableThreadsUseCase(
   private val verboseLogsEnabled: Boolean,
@@ -387,7 +387,7 @@ class BookmarkFilterWatchableThreadsUseCase(
       }
 
       if (filterEngine.typeMatches(watchFilter, FilterType.COMMENT)) {
-        if (filterEngine.matches(watchFilter, parsedComment, false)) {
+        if (filterEngine.matches(watchFilter, parsedComment)) {
           if (watchFilter.isAvoidWatchFilter())
           {
             return null;
@@ -397,7 +397,7 @@ class BookmarkFilterWatchableThreadsUseCase(
       }
 
       if (filterEngine.typeMatches(watchFilter, FilterType.SUBJECT)) {
-        if (filterEngine.matches(watchFilter, subject, false)) {
+        if (filterEngine.matches(watchFilter, subject)) {
           if (watchFilter.isAvoidWatchFilter())
           {
             return null;

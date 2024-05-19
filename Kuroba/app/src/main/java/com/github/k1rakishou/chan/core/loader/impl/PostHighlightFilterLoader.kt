@@ -48,14 +48,14 @@ class PostHighlightFilterLoader(
     val matchedKeywords = highlightFilters.flatMapNotNull { chanFilter ->
       val keywordsSet = mutableSetOf<HighlightFilterKeyword>()
 
-      if (filterEngine.matches(chanFilter, chanPost.postComment.comment(), false)) {
+      if (filterEngine.matches(chanFilter, chanPost.postComment.comment())) {
         val keywords = filterEngine.extractMatchedKeywords(chanFilter, chanPost.postComment.comment())
         if (keywords.isNotEmpty()) {
           keywordsSet += keywords.toHashSetBy { keyword -> HighlightFilterKeyword(keyword, chanFilter.color) }
         }
       }
 
-      if (filterEngine.matches(chanFilter, chanPost.subject, false)) {
+      if (filterEngine.matches(chanFilter, chanPost.subject)) {
         val keywords = filterEngine.extractMatchedKeywords(chanFilter, chanPost.subject)
         if (keywords.isNotEmpty()) {
           keywordsSet += keywords.toHashSetBy { keyword -> HighlightFilterKeyword(keyword, chanFilter.color) }

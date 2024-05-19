@@ -15,38 +15,29 @@ import okhttp3.HttpUrl
 import java.io.IOException
 
 class PostIconsHttpIcon(
-  context: Context,
-  postIcons: PostIcons,
-  imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>,
-  name: String,
-  url: HttpUrl
+  val context: Context,
+  val postIcons: PostIcons,
+  val imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>,
+  val name: String,
+  val url: HttpUrl,
+  val size: Int
 ) : ImageLoaderDeprecated.FailureAwareImageListener {
-  private val context: Context
-  private val postIcons: PostIcons
-  private val url: HttpUrl
-  private var requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
+  private var _requestDisposable: ImageLoaderDeprecated.ImageLoaderRequestDisposable? = null
 
-  var drawable: Drawable? = null
-    private set
+  private var _drawable: Drawable? = null
+  val drawable: Drawable?
+    get() = _drawable
 
-  val name: String
-
-  private val imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>
-
-  init {
-    this.context = context
-    this.postIcons = postIcons
-    this.name = name
-    this.url = url
-    this.imageLoaderDeprecated = imageLoaderDeprecated
-  }
+  private var _isInErrorState = false
+  val isInErrorState: Boolean
+    get() = _isInErrorState
 
   fun request(size: Int) {
     cancel()
 
     val actualSize = size.coerceIn(MIN_SIZE_PX, MIN_SIZE_PX * 2)
 
-    requestDisposable = imageLoaderDeprecated.get().loadFromNetwork(
+    _requestDisposable = imageLoaderDeprecated.get().loadFromNetwork(
       context = context,
       requestUrl = url.toString(),
       cacheFileType = CacheFileType.SiteIcon,
@@ -57,12 +48,14 @@ class PostIconsHttpIcon(
   }
 
   fun cancel() {
-    requestDisposable?.dispose()
-    requestDisposable = null
+    _requestDisposable?.dispose()
+    _requestDisposable = null
   }
 
   override fun onResponse(drawable: BitmapDrawable, isImmediate: Boolean) {
-    this.drawable = drawable
+    this._drawable = drawable
+    this._isInErrorState = false
+
     postIcons.invalidate()
   }
 
@@ -71,8 +64,17 @@ class PostIconsHttpIcon(
   }
 
   override fun onResponseError(error: Throwable) {
-    drawable = errorIcon
+    this._isInErrorState = true
+    this._drawable = errorIcon
     postIcons.invalidate()
+  }
+
+  fun isTheSameAs(other: PostIconsHttpIcon): Boolean {
+    return name == other.name && url == other.url && size == other.size
+  }
+
+  fun hasDrawable(): Boolean {
+    return _drawable != null && !isInErrorState
   }
 
   companion object {

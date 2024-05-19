@@ -181,7 +181,12 @@ object CreateOrUpdateFilterControllerHelper {
       return FilterMatchResult.TestTextEmpty
     }
 
-    val result = filterEngine.matches(chanFilterMutable, text, true)
+    val result = filterEngine.matches(
+      filter = chanFilterMutable,
+      text = text,
+      forceCompile = true
+    )
+
     if (result) {
       return FilterMatchResult.Matches
     }
@@ -192,7 +197,7 @@ object CreateOrUpdateFilterControllerHelper {
 }
 
 sealed class FilterValidationResult {
-  object Undefined : FilterValidationResult()
+  data object Undefined : FilterValidationResult()
   data class Success(val mode: RegexPatternCompiler.RegexMode) : FilterValidationResult()
   data class Error(val errorMessage: String) : FilterValidationResult()
 }
