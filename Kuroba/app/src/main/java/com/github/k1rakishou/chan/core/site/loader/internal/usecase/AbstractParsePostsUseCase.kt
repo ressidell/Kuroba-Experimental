@@ -117,10 +117,12 @@ abstract class AbstractParsePostsUseCase(
 
       if (filterEngine.matches(filter, postToParse)) {
         postFilterManager.insert(postDescriptor, createPostFilter(filter))
-      } else {
-        postFilterManager.remove(postDescriptor)
+        return
       }
     }
+
+    // None of the filters matched this post so remove PostFilter associated with this post.
+    postFilterManager.remove(postDescriptor)
   }
 
   @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
