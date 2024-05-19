@@ -1,5 +1,6 @@
 package com.github.k1rakishou.chan.core.usecase
 
+import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.base.okhttp.CloudFlareHandlerInterceptor
 import com.github.k1rakishou.chan.core.base.okhttp.ProxiedOkHttpClient
 import com.github.k1rakishou.chan.core.manager.SiteManager
@@ -174,28 +175,32 @@ class LoadChan4CaptchaUseCase(
     if (captchaResult.isFakeTicket) {
       Logger.debug(TAG) {
         "updateCaptchaTicket($chanDescriptor) fake ticket detected. " +
-          "Removing ticket from settings. " +
+          "Removing ticket from settings: ${ChanSettings.removeFakeTicket.get()}. " +
           "Actual ticket value: '${captchaResult.captchaInfoRaw.ticket}'"
       }
 
-      var previousTicket: String? = null
+      if (ChanSettings.removeFakeTicket.get()) {
+        var previousTicket: String? = null
 
-      chan4CaptchaSettingsSetting.update(sync = true) { chan4CaptchaSettings ->
-        previousTicket = chan4CaptchaSettings.captchaTicket
+        chan4CaptchaSettingsSetting.update(sync = true) { chan4CaptchaSettings ->
+          previousTicket = chan4CaptchaSettings.captchaTicket
 
-        chan4CaptchaSettings.copy(
-          captchaTicket = null,
-          lastRefreshTime = 0L
-        )
+          chan4CaptchaSettings.copy(
+            captchaTicket = null,
+            lastRefreshTime = 0L
+          )
+        }
+
+        if (previousTicket.isNullOrEmpty()) {
+          Logger.debug(TAG) { "updateCaptchaTicket($chanDescriptor) ticket was already removed" }
+        } else {
+          Logger.debug(TAG) { "updateCaptchaTicket($chanDescriptor) removed ticket '${previousTicket}'" }
+        }
+
+        return
       }
 
-      if (previousTicket.isNullOrEmpty()) {
-        Logger.debug(TAG) { "updateCaptchaTicket($chanDescriptor) ticket was already removed" }
-      } else {
-        Logger.debug(TAG) { "updateCaptchaTicket($chanDescriptor) removed ticket '${previousTicket}'" }
-      }
-
-      return
+      Logger.debug(TAG) { "updateCaptchaTicket($chanDescriptor) removeFakeTicket setting is disabled" }
     }
 
     val newTicket = captchaResult.captchaInfoRaw.ticketAsString

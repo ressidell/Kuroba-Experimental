@@ -96,6 +96,15 @@ class ExperimentalSettingsScreen(
           requiresRestart = true
         )
 
+        group += BooleanSettingV2.createBuilder(
+          context = context,
+          identifier = ExperimentalScreen.MainSettingsGroup.RemoveFakeTicket,
+          topDescriptionIdFunc = { R.string.setting_remove_fake_ticket },
+          bottomDescriptionIdFunc = { R.string.setting_remove_fake_ticket_description },
+          setting = ChanSettings.removeFakeTicket,
+          requiresRestart = false
+        )
+
         group += ListSettingV2.createBuilder(
           context = context,
           identifier = ExperimentalScreen.MainSettingsGroup.DonateCaptchaForGreaterGood,
