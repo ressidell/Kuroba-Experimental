@@ -172,22 +172,28 @@ class SystemGestureZoneBlockerLayout @JvmOverloads constructor(
 
           var currentAlpha = 150
           paint.alpha = currentAlpha
-          delay(1000)
+          invalidate()
 
-          while (isActive) {
-            awaitFrame()
+          try {
+            delay(1000)
 
-            currentAlpha -= 2
-            if (currentAlpha < 0) {
-              currentAlpha = 0
+            while (isActive) {
+              awaitFrame()
+
+              currentAlpha -= 2
+              if (currentAlpha < 0) {
+                currentAlpha = 0
+              }
+
+              paint.alpha = currentAlpha
+              invalidate()
+
+              if (paint.alpha <= 0) {
+                break
+              }
             }
-
-            paint.alpha = currentAlpha
-            invalidate()
-
-            if (paint.alpha <= 0) {
-              break
-            }
+          } finally {
+            paint.alpha = 0
           }
         }
     }
