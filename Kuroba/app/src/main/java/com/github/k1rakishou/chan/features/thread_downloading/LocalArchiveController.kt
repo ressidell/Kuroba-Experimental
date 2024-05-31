@@ -797,7 +797,7 @@ class LocalArchiveController(
       LocalArchiveViewModel.MenuItemType.Export -> {
         val items = listOf(
           FloatingListMenuItem(ACTION_EXPORT_THREADS, getString(R.string.controller_local_archive_export_threads)),
-          FloatingListMenuItem(ACTION_EXPORT_THREAD_MEDIA, getString(R.string.controller_local_archive_export_thread_media))
+          FloatingListMenuItem(ACTION_EXPORT_THREAD_MEDIA, getString(R.string.controller_local_archive_export_thread_media)),
           FloatingListMenuItem(ACTION_EXPORT_THREAD_JSON, getString(R.string.controller_local_archive_export_thread_json))
         )
 
