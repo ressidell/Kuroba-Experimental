@@ -17,6 +17,7 @@ import com.github.k1rakishou.model.data.post.ChanOriginalPost
 import com.github.k1rakishou.model.data.post.ChanPost
 import com.github.k1rakishou.model.repository.ChanPostRepository
 import com.github.k1rakishou.model.util.ChanPostUtils
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runInterruptible
@@ -108,38 +109,10 @@ class ExportDownloadedThreadAsJsonUseCase(
     runInterruptible {
       outputStream.use { os ->
         ZipOutputStream(os).use { zos ->
-          appContext.resources.openRawResource(R.raw.tomorrow).use { cssFileInputStream ->
-            zos.putNextEntry(ZipEntry("tomorrow.css"))
-            cssFileInputStream.copyTo(zos)
-          }
-
-          kotlin.run {
-            zos.putNextEntry(ZipEntry("thread_data.html"))
-            HTML_TEMPLATE_START.byteInputStream().use { templateStartStream ->
-              templateStartStream.copyTo(zos)
-            }
-
-            chanPosts.forEach { chanPost ->
-              formatPost(chanPost).byteInputStream().use { formattedPostStream ->
-                formattedPostStream.copyTo(zos)
-              }
-            }
-
-            HTML_TEMPLATE_END.byteInputStream().use { templateEndStream ->
-              templateEndStream.copyTo(zos)
-            }
-          }
-
-          appContext.resources.openRawResource(R.raw.tomorrow).use { cssFileInputStream ->
-            zos.putNextEntry(ZipEntry("thread_data.json"))
-            cssFileInputStream.copyTo(zos)
-            
-            chanPosts.forEach { chanPost ->
-              formatPost(chanPost).byteInputStream().use { formattedPostStream ->
-                formattedPostStream.copyTo(zos)
-              }
-            }
-          }
+          // threadDescriptor.siteName + threadDescriptor.boardCode + threadNoOrNull
+          zos.putNextEntry(ZipEntry("thread_data.json"))
+          Gson gson = new Gson();
+          gson.toJson(chanPosts).copyto(zos);
 
           val threadMediaDirName = ThreadDownloadingDelegate.formatDirectoryName(threadDescriptor)
           val threadMediaDir = File(appConstants.threadDownloaderCacheDir, threadMediaDirName)

@@ -798,6 +798,7 @@ class LocalArchiveController(
         val items = listOf(
           FloatingListMenuItem(ACTION_EXPORT_THREADS, getString(R.string.controller_local_archive_export_threads)),
           FloatingListMenuItem(ACTION_EXPORT_THREAD_MEDIA, getString(R.string.controller_local_archive_export_thread_media))
+          FloatingListMenuItem(ACTION_EXPORT_THREAD_JSON, getString(R.string.controller_local_archive_export_thread_json))
         )
 
         val floatingListMenuController = FloatingListMenuController(
@@ -812,6 +813,9 @@ class LocalArchiveController(
                 }
                 ACTION_EXPORT_THREAD_MEDIA -> {
                   exportThreadMedia(selectedItems)
+                }
+                ACTION_EXPORT_THREAD_JSON -> {
+                  exportThreadAsJson(selectedItems)
                 }
               }
             }
@@ -995,6 +999,7 @@ class LocalArchiveController(
 
     private const val ACTION_EXPORT_THREADS = 100
     private const val ACTION_EXPORT_THREAD_MEDIA = 101
+    private const val ACTION_EXPORT_THREAD_JSON = 102
 
     private val ICON_SIZE = 26.dp
     private val PROGRESS_SIZE = 20.dp
