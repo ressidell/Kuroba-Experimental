@@ -29,6 +29,7 @@ import com.github.k1rakishou.chan.core.usecase.ClearPostingCookies
 import com.github.k1rakishou.chan.core.usecase.DownloadThemeJsonFilesUseCase
 import com.github.k1rakishou.chan.core.usecase.ExportBackupFileUseCase
 import com.github.k1rakishou.chan.core.usecase.ExportDownloadedThreadAsHtmlUseCase
+import com.github.k1rakishou.chan.core.usecase.ExportDownloadedThreadAsJsonUseCase
 import com.github.k1rakishou.chan.core.usecase.ExportDownloadedThreadMediaUseCase
 import com.github.k1rakishou.chan.core.usecase.ExportFiltersUseCase
 import com.github.k1rakishou.chan.core.usecase.ExtractPostMapInfoHolderUseCase
@@ -284,6 +285,23 @@ class UseCaseModule {
   ): ExportDownloadedThreadAsHtmlUseCase {
     deps("ExportDownloadedThreadAsHtmlUseCase")
     return ExportDownloadedThreadAsHtmlUseCase(
+      appContext,
+      appConstants,
+      fileManager,
+      chanPostRepository
+    )
+  }
+
+  @Provides
+  @Singleton
+  fun provideExportDownloadedThreadAsJsonUseCase(
+    appContext: Context,
+    appConstants: AppConstants,
+    fileManager: FileManager,
+    chanPostRepository: ChanPostRepository
+  ): ExportDownloadedThreadAsJsonUseCase {
+    deps("ExportDownloadedThreadAsJsonUseCase")
+    return ExportDownloadedThreadAsJsonUseCase(
       appContext,
       appConstants,
       fileManager,
