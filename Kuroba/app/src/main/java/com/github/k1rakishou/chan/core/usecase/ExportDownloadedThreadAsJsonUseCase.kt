@@ -54,7 +54,7 @@ class ExportDownloadedThreadAsJsonUseCase(
           val outputDir = fileManager.fromUri(outputDirUri)
             ?: throw ThreadExportException("Failed to get output file for directory: \'$outputDirUri\'")
 
-          val fileName = "${threadDescriptor.siteName()}_${threadDescriptor.boardCode()}_${threadDescriptor.threadNo}.zip"
+          val fileName = "${threadDescriptor.siteName()}_${threadDescriptor.boardCode()}_${threadDescriptor.threadNo}_json.zip"
           val outputFile = fileManager.createFile(outputDir, fileName)
             ?: throw ThreadExportException("Failed to create output file \'$fileName\' in directory \'${outputDir}\'")
 
