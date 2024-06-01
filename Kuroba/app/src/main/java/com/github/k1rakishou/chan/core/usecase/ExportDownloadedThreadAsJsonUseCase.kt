@@ -25,6 +25,7 @@ import java.util.zip.ZipOutputStream
 class ExportDownloadedThreadAsJsonUseCase(
   private val appContext: Context,
   private val appConstants: AppConstants,
+  private val gson: Gson,
   private val fileManager: FileManager,
   private val chanPostRepository: ChanPostRepository
 ) : ISuspendUseCase<ExportDownloadedThreadAsJsonUseCase.Params, ModularResult<Unit>> {
@@ -101,7 +102,9 @@ class ExportDownloadedThreadAsJsonUseCase(
       outputStream.use { os ->
         ZipOutputStream(os).use { zos ->
           zos.putNextEntry(ZipEntry("thread_data.json"))
-          ByteArrayInputStream(Gson().toJson(chanPosts).toByteArray()).copyTo(zos)
+
+          ByteArrayInputStream(gson.toJson(chanPosts).toByteArray())
+            .use { postsJsonByteArray -> postsJsonByteArray.copyTo(zos) }
 
           val threadMediaDirName = ThreadDownloadingDelegate.formatDirectoryName(threadDescriptor)
           val threadMediaDir = File(appConstants.threadDownloaderCacheDir, threadMediaDirName)

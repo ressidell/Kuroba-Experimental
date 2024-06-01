@@ -297,6 +297,7 @@ class UseCaseModule {
   fun provideExportDownloadedThreadAsJsonUseCase(
     appContext: Context,
     appConstants: AppConstants,
+    gson: Gson,
     fileManager: FileManager,
     chanPostRepository: ChanPostRepository
   ): ExportDownloadedThreadAsJsonUseCase {
@@ -304,6 +305,7 @@ class UseCaseModule {
     return ExportDownloadedThreadAsJsonUseCase(
       appContext,
       appConstants,
+      gson,
       fileManager,
       chanPostRepository
     )
