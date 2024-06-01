@@ -101,16 +101,16 @@ class ExportDownloadedThreadAsJsonUseCase(
       outputStream.use { os ->
         ZipOutputStream(os).use { zos ->
           zos.putNextEntry(ZipEntry("thread_data.json"))
-          val gson = Gson()
-          ByteArrayInputStream(gson.toJson(chanPosts).toByteArray()).copyTo(zos)
-
+          ByteArrayInputStream(Gson().toJson(chanPosts).toByteArray()).copyTo(zos)
 
           val threadMediaDirName = ThreadDownloadingDelegate.formatDirectoryName(threadDescriptor)
           val threadMediaDir = File(appConstants.threadDownloaderCacheDir, threadMediaDirName)
-
           threadMediaDir.listFiles()?.forEach { mediaFile ->
-            zos.putNextEntry(ZipEntry(mediaFile.name))
+            // Use this to skip exporting thumbnails
+            val matcher = MEDIA_EXCLUDE_PATTERN.matcher(mediaFile.name)
+            if (matcher.matches()) return@forEach
 
+            zos.putNextEntry(ZipEntry(mediaFile.name))
             mediaFile.inputStream().use { mediaFileSteam ->
               mediaFileSteam.copyTo(zos)
             }
@@ -132,5 +132,6 @@ class ExportDownloadedThreadAsJsonUseCase(
 
   companion object {
     private const val TAG = "ExportDownloadedThreadAsJsonUseCase"
+    private val MEDIA_EXCLUDE_PATTERN = Pattern.compile(".*s\\..+")
   }
 }
