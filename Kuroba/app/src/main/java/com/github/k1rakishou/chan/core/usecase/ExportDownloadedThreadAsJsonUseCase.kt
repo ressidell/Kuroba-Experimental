@@ -26,6 +26,7 @@ import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormatterBuilder
 import org.joda.time.format.ISODateTimeFormat
 import java.io.File
+import java.io.ByteArrayInputStream
 import java.util.*
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
@@ -111,8 +112,9 @@ class ExportDownloadedThreadAsJsonUseCase(
         ZipOutputStream(os).use { zos ->
           // threadDescriptor.siteName + threadDescriptor.boardCode + threadNoOrNull
           zos.putNextEntry(ZipEntry("thread_data.json"))
-          Gson gson = new Gson();
-          gson.toJson(chanPosts).copyto(zos);
+          val gson = Gson()
+          ByteArrayInputStream(gson.toJson(chanPosts).toByteArray()).copyTo(zos)
+
 
           val threadMediaDirName = ThreadDownloadingDelegate.formatDirectoryName(threadDescriptor)
           val threadMediaDir = File(appConstants.threadDownloaderCacheDir, threadMediaDirName)

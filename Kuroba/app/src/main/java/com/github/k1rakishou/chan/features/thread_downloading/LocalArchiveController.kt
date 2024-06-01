@@ -870,6 +870,49 @@ class LocalArchiveController(
     })
   }
 
+  private fun exportThreadAsJson(threadDescriptors: List<ChanDescriptor.ThreadDescriptor>) {
+    if (threadDescriptors.isEmpty()) {
+      return
+    }
+
+    fileChooser.openChooseDirectoryDialog(object : DirectoryChooserCallback() {
+      override fun onCancel(reason: String) {
+        showToast(R.string.canceled)
+      }
+
+      override fun onResult(uri: Uri) {
+        val loadingViewController = LoadingViewController(context, false)
+
+        val job = controllerScope.launch(start = CoroutineStart.LAZY) {
+          try {
+            viewModel.exportThreadsAsJson(
+              outputDirUri = uri,
+              threadDescriptors = threadDescriptors,
+              onUpdate = { exported, total ->
+                val text = context.resources.getString(R.string.controller_local_archive_exported_format, exported, total)
+                loadingViewController.updateWithText(text)
+              }
+            )
+              .toastOnError(message = { error -> "Failed to export. Error: ${error.errorMessageOrClassName()}" })
+              .toastOnSuccess(message = { "Successfully exported" })
+              .ignore()
+          } finally {
+            loadingViewController.stopPresenting()
+          }
+        }
+
+        loadingViewController.enableCancellation {
+          if (job.isActive) {
+            job.cancel()
+          }
+        }
+
+        presentController(loadingViewController)
+        job.start()
+      }
+    })
+  }
+
   private suspend fun exportThreadMedia(threadDescriptors: List<ChanDescriptor.ThreadDescriptor>) {
     fileChooser.openChooseDirectoryDialog(object : DirectoryChooserCallback() {
       override fun onCancel(reason: String) {
