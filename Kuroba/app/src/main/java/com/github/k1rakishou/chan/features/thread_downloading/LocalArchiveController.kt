@@ -796,8 +796,9 @@ class LocalArchiveController(
       }
       LocalArchiveViewModel.MenuItemType.Export -> {
         val items = listOf(
+          FloatingListMenuItem(ACTION_EXPORT_THREAD_MEDIA, getString(R.string.controller_local_archive_export_thread_media)),
           FloatingListMenuItem(ACTION_EXPORT_THREADS, getString(R.string.controller_local_archive_export_threads)),
-          FloatingListMenuItem(ACTION_EXPORT_THREAD_MEDIA, getString(R.string.controller_local_archive_export_thread_media))
+          FloatingListMenuItem(ACTION_EXPORT_THREAD_JSON, getString(R.string.controller_local_archive_export_thread_json))
         )
 
         val floatingListMenuController = FloatingListMenuController(
@@ -812,6 +813,9 @@ class LocalArchiveController(
                 }
                 ACTION_EXPORT_THREAD_MEDIA -> {
                   exportThreadMedia(selectedItems)
+                }
+                ACTION_EXPORT_THREAD_JSON -> {
+                  exportThreadAsJson(selectedItems)
                 }
               }
             }
@@ -839,6 +843,49 @@ class LocalArchiveController(
         val job = controllerScope.launch(start = CoroutineStart.LAZY) {
           try {
             viewModel.exportThreadsAsHtml(
+              outputDirUri = uri,
+              threadDescriptors = threadDescriptors,
+              onUpdate = { exported, total ->
+                val text = context.resources.getString(R.string.controller_local_archive_exported_format, exported, total)
+                loadingViewController.updateWithText(text)
+              }
+            )
+              .toastOnError(message = { error -> "Failed to export. Error: ${error.errorMessageOrClassName()}" })
+              .toastOnSuccess(message = { "Successfully exported" })
+              .ignore()
+          } finally {
+            loadingViewController.stopPresenting()
+          }
+        }
+
+        loadingViewController.enableCancellation {
+          if (job.isActive) {
+            job.cancel()
+          }
+        }
+
+        presentController(loadingViewController)
+        job.start()
+      }
+    })
+  }
+
+  private fun exportThreadAsJson(threadDescriptors: List<ChanDescriptor.ThreadDescriptor>) {
+    if (threadDescriptors.isEmpty()) {
+      return
+    }
+
+    fileChooser.openChooseDirectoryDialog(object : DirectoryChooserCallback() {
+      override fun onCancel(reason: String) {
+        showToast(R.string.canceled)
+      }
+
+      override fun onResult(uri: Uri) {
+        val loadingViewController = LoadingViewController(context, false)
+
+        val job = controllerScope.launch(start = CoroutineStart.LAZY) {
+          try {
+            viewModel.exportThreadsAsJson(
               outputDirUri = uri,
               threadDescriptors = threadDescriptors,
               onUpdate = { exported, total ->
@@ -995,6 +1042,7 @@ class LocalArchiveController(
 
     private const val ACTION_EXPORT_THREADS = 100
     private const val ACTION_EXPORT_THREAD_MEDIA = 101
+    private const val ACTION_EXPORT_THREAD_JSON = 102
 
     private val ICON_SIZE = 26.dp
     private val PROGRESS_SIZE = 20.dp
