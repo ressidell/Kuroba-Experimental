@@ -106,7 +106,7 @@ class CaptchaContainerController(
       }
     }
 
-    val authenticationLayout = createAuthenticationLayout(
+    authenticationLayout = createAuthenticationLayout(
       authentication = postAuthentication,
       useV2NoJsCaptcha = useV2NoJsCaptcha
     )

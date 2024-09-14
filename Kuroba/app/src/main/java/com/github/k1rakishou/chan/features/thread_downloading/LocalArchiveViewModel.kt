@@ -16,6 +16,7 @@ import com.github.k1rakishou.chan.core.di.component.viewmodel.ViewModelComponent
 import com.github.k1rakishou.chan.core.di.module.shared.ViewModelAssistedFactory
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.usecase.ExportDownloadedThreadAsHtmlUseCase
+import com.github.k1rakishou.chan.core.usecase.ExportDownloadedThreadAsJsonUseCase
 import com.github.k1rakishou.chan.core.usecase.ExportDownloadedThreadMediaUseCase
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItem
 import com.github.k1rakishou.chan.ui.view.bottom_menu_panel.BottomMenuPanelItemId
@@ -54,6 +55,7 @@ class LocalArchiveViewModel(
   private val chanPostRepository: ChanPostRepository,
   private val threadDownloadProgressNotifier: ThreadDownloadProgressNotifier,
   private val exportDownloadedThreadAsHtmlUseCase: ExportDownloadedThreadAsHtmlUseCase,
+  private val exportDownloadedThreadAsJsonUseCase: ExportDownloadedThreadAsJsonUseCase,
   private val exportDownloadedThreadMediaUseCase: ExportDownloadedThreadMediaUseCase,
 ) : BaseViewModel() {
 
@@ -483,6 +485,16 @@ class LocalArchiveViewModel(
       .onError { error -> Logger.e(TAG, "exportThreadsAsHtml() error", error) }
   }
 
+  suspend fun exportThreadsAsJson(
+    outputDirUri: Uri,
+    threadDescriptors: List<ChanDescriptor.ThreadDescriptor>,
+    onUpdate: (Int, Int) -> Unit
+  ): ModularResult<Unit> {
+    val params = ExportDownloadedThreadAsJsonUseCase.Params(outputDirUri, threadDescriptors, onUpdate)
+    return exportDownloadedThreadAsJsonUseCase.execute(params)
+      .onError { error -> Logger.e(TAG, "exportThreadsAsJson() error", error) }
+  }
+
   suspend fun exportThreadsMedia(
     outputDirectoryUri: Uri,
     threadDescriptors: List<ChanDescriptor.ThreadDescriptor>,
@@ -558,6 +570,7 @@ class LocalArchiveViewModel(
     private val chanPostRepository: ChanPostRepository,
     private val threadDownloadProgressNotifier: ThreadDownloadProgressNotifier,
     private val exportDownloadedThreadAsHtmlUseCase: ExportDownloadedThreadAsHtmlUseCase,
+    private val exportDownloadedThreadAsJsonUseCase: ExportDownloadedThreadAsJsonUseCase,
     private val exportDownloadedThreadMediaUseCase: ExportDownloadedThreadMediaUseCase,
   ) : ViewModelAssistedFactory<LocalArchiveViewModel> {
     override fun create(handle: SavedStateHandle): LocalArchiveViewModel {
@@ -568,6 +581,7 @@ class LocalArchiveViewModel(
         chanPostRepository = chanPostRepository,
         threadDownloadProgressNotifier = threadDownloadProgressNotifier,
         exportDownloadedThreadAsHtmlUseCase = exportDownloadedThreadAsHtmlUseCase,
+        exportDownloadedThreadAsJsonUseCase = exportDownloadedThreadAsJsonUseCase,
         exportDownloadedThreadMediaUseCase = exportDownloadedThreadMediaUseCase
       )
     }
