@@ -45,7 +45,6 @@ import com.github.k1rakishou.chan.ui.controller.ThreadSlideController
 import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.ControllerKey
-import com.github.k1rakishou.chan.ui.controller.base.ui.SystemGestureZoneBlockerLayout
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.StyledToolbarNavigationController
 import com.github.k1rakishou.chan.ui.controller.navigation.ToolbarNavigationController
@@ -127,7 +126,6 @@ class MainController(
   private lateinit var drawerLayout: DrawerLayout
   private lateinit var drawer: TouchBlockingLinearLayoutNoBackground
   private lateinit var snackbarContainerView: SnackbarContainerView
-  private lateinit var systemGestureZoneBlockerLayout: SystemGestureZoneBlockerLayout
 
   private val _latestDrawerEnableState = MutableStateFlow<DrawerEnableState?>(null)
 
@@ -209,9 +207,6 @@ class MainController(
 
     snackbarContainerView = view.findViewById(R.id.snackbar_container_view)
     snackbarContainerView.init(SnackbarScope.Global())
-
-    systemGestureZoneBlockerLayout = view.findViewById(R.id.system_gesture_zone_blocker)
-    systemGestureZoneBlockerLayout.init()
 
     drawerLayout.addDrawerListener(this)
 
@@ -331,10 +326,6 @@ class MainController(
 
   override fun onDestroy() {
     super.onDestroy()
-
-    if (::systemGestureZoneBlockerLayout.isInitialized) {
-      systemGestureZoneBlockerLayout.destroy()
-    }
 
     drawerLayout.removeDrawerListener(this)
     themeEngine.removeListener(this)

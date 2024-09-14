@@ -70,7 +70,7 @@ inline fun <reified VM : ViewModel> IHasViewModelScope.viewModelByKey(
   key: String? = null,
   noinline params: (() -> Parcelable?)? = null
 ): Lazy<VM> {
-  return lazy(LazyThreadSafetyMode.NONE) {
+  return lazy {
     return@lazy with(viewModelScope) { viewModelByKey(key, params, VM::class.java) }
   }
 }
@@ -88,7 +88,7 @@ fun <VM : ViewModel> IHasViewModelScope.viewModelByKeyWithClass(
   key: String? = null,
   params: (() -> Parcelable?)? = null
 ): Lazy<VM> {
-  return lazy(LazyThreadSafetyMode.NONE) {
+  return lazy {
     return@lazy with(viewModelScope) { viewModelByKey(key, params, clazz) }
   }
 }

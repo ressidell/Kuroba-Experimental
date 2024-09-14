@@ -88,7 +88,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import org.acra.ktx.sendWithAcra
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.format.DateTimeFormatterBuilder
@@ -480,27 +479,6 @@ class CrashReportActivity :
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
           Spacer(modifier = Modifier.height(16.dp))
-
-          KurobaComposeTextButton(
-            modifier = Modifier.wrapContentWidth(),
-            enabled = !isDebugCrash && !blockButtons && !crashReportSent,
-            text = when {
-              isDebugCrash -> stringResource(id = R.string.crash_report_activity_debug_crash)
-              crashReportSent -> stringResource(id = R.string.crash_report_activity_crash_report_sent)
-              else -> stringResource(id = R.string.crash_report_activity_report_crash)
-            },
-            onClick = {
-              blockButtons = true
-              try {
-                exception.sendWithAcra()
-                crashReportSent = true
-              } finally {
-                blockButtons = false
-              }
-            }
-          )
-
-          Spacer(modifier = Modifier.height(32.dp))
 
           KurobaComposeTextButton(
             modifier = Modifier.wrapContentWidth(),

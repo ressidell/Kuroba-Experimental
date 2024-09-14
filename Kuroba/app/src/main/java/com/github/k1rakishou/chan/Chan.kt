@@ -88,9 +88,6 @@ import kotlinx.coroutines.launch
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
-import org.acra.config.httpSender
-import org.acra.data.StringFormat
-import org.acra.ktx.initAcra
 import org.joda.time.Duration
 import org.joda.time.format.PeriodFormatterBuilder
 import java.io.IOException
@@ -188,14 +185,6 @@ class Chan : Application(), ActivityLifecycleCallbacks {
       DEBUG_PROPERTY_NAME,
       if (isDev) DEBUG_PROPERTY_VALUE_ON else DEBUG_PROPERTY_VALUE_OFF
     )
-
-    initAcra {
-      buildConfigClass = BuildConfig::class.java
-      reportFormat = StringFormat.JSON
-      httpSender {
-        uri = "https://collector.tracepot.com/L2tB5o4BSv-KO-nHntCU"
-      }
-    }
 
     AndroidUtils.init(this)
     AppModuleAndroidUtils.init(this)

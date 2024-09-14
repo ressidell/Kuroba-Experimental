@@ -171,11 +171,13 @@ class BoardSelectionPresenter(
     return sortedCatalogCellData.take(maxBoardsToShow)
   }
 
-  private fun collectCatalogCellDataFromBoards(
+  private suspend fun collectCatalogCellDataFromBoards(
     query: String,
     siteDescriptor: SiteDescriptor,
     activeSiteCount: Int
   ): List<CatalogCellData> {
+    boardManager.awaitUntilInitialized()
+
     val boardCellDataList = mutableListOf<CatalogCellData>()
 
     val iteratorFunc = iteratorFunc@ { chanBoard: ChanBoard ->

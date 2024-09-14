@@ -5,8 +5,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-    <com.github.k1rakishou.chan.ui.controller.base.ui.SystemGestureZoneBlockerLayout
-        android:id="@+id/system_gesture_zone_blocker"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -49,6 +48,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
-    </com.github.k1rakishou.chan.ui.controller.base.ui.SystemGestureZoneBlockerLayout>
+    </FrameLayout>
 
 </com.github.k1rakishou.chan.ui.theme.widget.TouchBlockingFrameLayout>

@@ -50,8 +50,6 @@ import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.ChecksSdkIntAtLeast;
 import androidx.preference.PreferenceManager;
 
-import org.acra.ACRA;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,15 +89,7 @@ public class AndroidUtils {
     }
 
     public static boolean isNotMainProcess() {
-        return getProcessType() != AppProcessType.Main;
-    }
-
-    private static AppProcessType getProcessType() {
-        if (ACRA.isACRASenderServiceProcess()) {
-            return AppProcessType.Acra;
-        }
-
-        return AppProcessType.Main;
+        return false;
     }
 
     public static SharedPreferences getAppMainPreferences() {
@@ -356,10 +346,5 @@ public class AndroidUtils {
         Debug,
         Release,
         Unknown
-    }
-
-    public enum AppProcessType {
-        Main,
-        Acra
     }
 }

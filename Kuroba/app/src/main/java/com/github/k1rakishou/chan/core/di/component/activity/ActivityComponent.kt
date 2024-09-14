@@ -127,7 +127,6 @@ import com.github.k1rakishou.chan.ui.controller.ViewThreadController
 import com.github.k1rakishou.chan.ui.controller.WebViewReportController
 import com.github.k1rakishou.chan.ui.controller.base.Controller
 import com.github.k1rakishou.chan.ui.controller.base.ui.NavigationControllerContainerLayout
-import com.github.k1rakishou.chan.ui.controller.base.ui.SystemGestureZoneBlockerLayout
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaAlertDialogHostController
 import com.github.k1rakishou.chan.ui.controller.dialog.KurobaComposeDialogController
 import com.github.k1rakishou.chan.ui.controller.navigation.SplitNavigationController
@@ -365,7 +364,6 @@ interface ActivityComponent : ActivityDependencies {
   fun inject(threadStatusCell: ThreadStatusCell)
   fun inject(postCell: PostCell)
   fun inject(navigationControllerContainerLayout: NavigationControllerContainerLayout)
-  fun inject(systemGestureZoneBlockerLayout: SystemGestureZoneBlockerLayout)
   fun inject(bookmarksPresenter: BookmarksPresenter)
   fun inject(baseThreadBookmarkViewHolder: BaseThreadBookmarkViewHolder)
   fun inject(settingsCoordinator: SettingsCoordinator)
