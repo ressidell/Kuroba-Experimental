@@ -16,6 +16,7 @@
  */
 package com.github.k1rakishou.chan.core.di.module.application
 
+import com.github.k1rakishou.chan.ui.captcha.dvach.DvachCaptchaLayoutViewModel
 import com.github.k1rakishou.common.jsonObject
 import com.github.k1rakishou.common.nextStringOrNull
 import com.github.k1rakishou.core_logger.Logger
@@ -94,6 +95,7 @@ class JsonParserModule {
 
     return Moshi.Builder()
       .add(DescriptorParcelableMoshiAdapter())
+      .add(DvachCaptchaLayoutViewModel.EmojiCaptchaInfo.Adapter())
       .build()
   }
 

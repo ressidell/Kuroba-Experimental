@@ -85,6 +85,16 @@ object HashingUtil {
     }
   }
 
+  fun stringHashSha512(inputString: String): String {
+    return HashingSink.sha512(blackholeSink()).use { hashingSink ->
+      hashingSink.buffer().outputStream().use { outputStream ->
+        inputString.encodeUtf8().write(outputStream)
+      }
+
+      return@use hashingSink.hash.hex()
+    }
+  }
+
   @JvmStatic
   fun byteArrayHashSha256HexString(byteArray: ByteArray): String {
     return byteArray.toByteString(0, byteArray.size).sha256().hex()

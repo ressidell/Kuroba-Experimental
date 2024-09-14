@@ -61,22 +61,16 @@ class TwoCaptchaSolver(
       return false
     }
 
-    val postAuthenticate = site.actions().postAuthenticate().type
-      ?: SiteAuthentication.Type.NONE
-
-    when (postAuthenticate) {
+    return when (site.actions().postAuthenticate().type) {
       SiteAuthentication.Type.NONE,
       SiteAuthentication.Type.GENERIC_WEBVIEW,
       SiteAuthentication.Type.ID_BASED_CAPTCHA,
       SiteAuthentication.Type.ENDPOINT_BASED_CAPTCHA,
-      SiteAuthentication.Type.CUSTOM_CAPTCHA -> {
-        return false
-      }
+      SiteAuthentication.Type.CUSTOM_CAPTCHA,
+      SiteAuthentication.Type.EMOJI_CAPTCHA -> false
       SiteAuthentication.Type.CAPTCHA2,
       SiteAuthentication.Type.CAPTCHA2_NOJS,
-      SiteAuthentication.Type.CAPTCHA2_INVISIBLE -> {
-        return true
-      }
+      SiteAuthentication.Type.CAPTCHA2_INVISIBLE -> true
     }
   }
 
@@ -122,7 +116,8 @@ class TwoCaptchaSolver(
         SiteAuthentication.Type.GENERIC_WEBVIEW,
         SiteAuthentication.Type.ID_BASED_CAPTCHA,
         SiteAuthentication.Type.ENDPOINT_BASED_CAPTCHA,
-        SiteAuthentication.Type.CUSTOM_CAPTCHA -> {
+        SiteAuthentication.Type.CUSTOM_CAPTCHA,
+        SiteAuthentication.Type.EMOJI_CAPTCHA -> {
           Logger.d(TAG, "solve() selected authentication type is not supported: ${postAuthenticate.type}")
           return@Try TwoCaptchaResult.NotSupported(solverName = name, siteDescriptor = siteDescriptor)
         }

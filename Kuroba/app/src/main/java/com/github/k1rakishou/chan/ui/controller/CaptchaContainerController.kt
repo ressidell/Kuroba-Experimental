@@ -177,7 +177,8 @@ class CaptchaContainerController(
         view.layoutParams = params
         return view
       }
-      SiteAuthentication.Type.ID_BASED_CAPTCHA -> {
+      SiteAuthentication.Type.ID_BASED_CAPTCHA,
+      SiteAuthentication.Type.EMOJI_CAPTCHA -> {
         val view = DvachCaptchaLayout(context)
         val params = FrameLayout.LayoutParams(
           ViewGroup.LayoutParams.MATCH_PARENT,

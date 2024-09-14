@@ -18,6 +18,7 @@ package com.github.k1rakishou.chan.core.site.sites.dvach
 
 import android.text.TextUtils
 import com.github.k1rakishou.chan.core.manager.ReplyManager
+import com.github.k1rakishou.chan.core.site.SiteAuthentication
 import com.github.k1rakishou.chan.core.site.SiteSetting
 import com.github.k1rakishou.chan.core.site.common.CommonReplyHttpCall
 import com.github.k1rakishou.chan.core.site.http.ProgressRequestBody
@@ -135,20 +136,27 @@ class DvachReplyCall internal constructor(
     formBuilder: MultipartBody.Builder,
     captchaSolution: CaptchaSolution.ChallengeWithSolution
   ) {
+    val challenge = captchaSolution.challenge
     val solution = captchaSolution.solution
+
+    if (site.actions().postAuthenticate().type == SiteAuthentication.Type.EMOJI_CAPTCHA) {
+      formBuilder.addFormDataPart("captcha_type", "emoji_captcha")
+      formBuilder.addFormDataPart("emoji_captcha_id", solution)
+      return
+    }
 
     val puzzleAnswer = DvachPuzzleSolution.decode(solution)
     if (puzzleAnswer != null) {
       formBuilder.addFormDataPart("captcha_type", "puzzle")
-      formBuilder.addFormDataPart("puzzle_id", captchaSolution.challenge)
+      formBuilder.addFormDataPart("puzzle_id", challenge)
       formBuilder.addFormDataPart("puzzle_x", puzzleAnswer.puzzleX.toString())
       formBuilder.addFormDataPart("puzzle_y", puzzleAnswer.puzzleY.toString())
       return
     }
 
     formBuilder.addFormDataPart("captcha_type", "2chcaptcha")
-    formBuilder.addFormDataPart("2chcaptcha_value", captchaSolution.solution)
-    formBuilder.addFormDataPart("2chcaptcha_id", captchaSolution.challenge)
+    formBuilder.addFormDataPart("2chcaptcha_value", solution)
+    formBuilder.addFormDataPart("2chcaptcha_id", challenge)
   }
 
   private fun recaptchaAuth(

@@ -135,6 +135,12 @@ class Dvach : CommonSite() {
     )
   }
 
+  val dvachEmojiCaptcha by lazy {
+    SiteAuthentication.emoji(
+      "${domainString}/api/captcha/emoji/id"
+    )
+  }
+
   override val siteDomainSetting: StringSetting? by lazy {
     StringSetting(prefs, "site_domain", DEFAULT_DOMAIN.toString())
   }
@@ -151,7 +157,7 @@ class Dvach : CommonSite() {
       prefs,
       "preference_captcha_type_dvach",
       CaptchaType::class.java,
-      CaptchaType.DVACH_CAPTCHA
+      CaptchaType.DVACH_CAPTCHA_EMOJI
     )
 
     passCodeInfo = GsonJsonSetting(
@@ -718,6 +724,7 @@ class Dvach : CommonSite() {
         CaptchaType.V2_INVISIBLE -> captchaV2Invisible
         CaptchaType.DVACH_CAPTCHA -> dvachCaptcha
         CaptchaType.DVACH_CAPTCHA_PUZZLE -> dvachCaptchaPuzzle
+        CaptchaType.DVACH_CAPTCHA_EMOJI -> dvachEmojiCaptcha
         else -> throw IllegalArgumentException()
       }
     }
@@ -810,7 +817,8 @@ class Dvach : CommonSite() {
     V2NOJS("v2nojs"),
     V2_INVISIBLE("v2_invisible"),
     DVACH_CAPTCHA("dvach_captcha"),
-    DVACH_CAPTCHA_PUZZLE("dvach_captcha_puzzle");
+    DVACH_CAPTCHA_PUZZLE("dvach_captcha_puzzle"),
+    DVACH_CAPTCHA_EMOJI("dvach_captcha_emoji");
 
     override fun getKey(): String {
       return value

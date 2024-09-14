@@ -49,6 +49,9 @@ class SiteAuthentication private constructor(val type: Type) {
     // (For now only 4chan.org has this type of captcha).
     ENDPOINT_BASED_CAPTCHA,
 
+    // New 2ch.hk captcha
+    EMOJI_CAPTCHA,
+
     CUSTOM_CAPTCHA
   }
 
@@ -98,6 +101,12 @@ class SiteAuthentication private constructor(val type: Type) {
     fun idBased(idGetUrl: String?): SiteAuthentication {
       val siteAuthentication = SiteAuthentication(Type.ID_BASED_CAPTCHA)
       siteAuthentication.baseUrl = idGetUrl
+      return siteAuthentication
+    }
+
+    fun emoji(baseUrl: String): SiteAuthentication {
+      val siteAuthentication = SiteAuthentication(Type.EMOJI_CAPTCHA)
+      siteAuthentication.baseUrl = baseUrl
       return siteAuthentication
     }
 

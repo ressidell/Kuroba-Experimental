@@ -17,6 +17,11 @@ class HapticFeedbackManager {
     _view = null
   }
 
+  fun tap() {
+    Logger.verbose(TAG) { "tap()" }
+    _view?.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+  }
+
   fun toggleOn() {
     Logger.verbose(TAG) { "toggleOn()" }
     complainIfViewIsNull()

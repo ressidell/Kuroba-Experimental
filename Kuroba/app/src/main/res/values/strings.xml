@@ -1562,6 +1562,9 @@ Actual error: \'%1$s\'</string>
     <string name="dvach_report_post_sending">Sending report…</string>
     <string name="dvach_report_post_error">Error: \'%1$s\'</string>
 
+    <string name="dvach_emoji_captcha_title">Emoji captcha help</string>
+    <string name="dvach_emoji_captcha_description">Выберите все символы на картинке\n1. Порядок ввода иконок не важен\n2. Не все иконки отображаются сразу\n3. Отсутствующие иконки появятся в следующих шагах</string>
+
     <string name="third_eye_import_settings">Import third eye settings</string>
     <string name="third_eye_export_settings">Export third eye settings</string>
     <string name="third_eye_settings_controller_failed_to_update_settings">Failed to update third eye settings</string>
