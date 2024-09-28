@@ -86,11 +86,12 @@ fun AlbumItem(
     onDispose { onDemandContentLoaderManager.onPostUnbind(albumItemData.postDescriptor, true) }
   }
 
-  val requestProvider = remember(key1 = albumItemData, key2 = albumSpanCount, key3 = chanDescriptorUi) {
+  val requestProvider = remember(chanDescriptorUi, albumItemData, albumSpanCount, isInSelectionMode) {
     getImageLoaderRequestProvider(
       chanDescriptor = chanDescriptorUi?.chanDescriptor,
       albumItemData = albumItemData,
-      albumSpanCount = albumSpanCount
+      albumSpanCount = albumSpanCount,
+      isInSelectionMode = isInSelectionMode
     )
   }
 
@@ -295,14 +296,15 @@ private fun Modifier.albumItemSelection(
 private fun getImageLoaderRequestProvider(
   chanDescriptor: ChanDescriptor?,
   albumItemData: AlbumItemData,
-  albumSpanCount: Int
+  albumSpanCount: Int,
+  isInSelectionMode: Boolean
 ): ImageLoaderRequestProvider {
   val cacheHandler = appDependencies().cacheHandler
   val chanThreadsCache = appDependencies().chanThreadsCache
   val revealedSpoilerImagesManager = appDependencies().revealedSpoilerImagesManager
 
   return ImageLoaderRequestProvider(
-    key = ImageLoaderRequestProvider.FullKey(arrayOf(chanDescriptor, albumItemData, albumItemData)),
+    key = ImageLoaderRequestProvider.FullKey(arrayOf(chanDescriptor, albumItemData, albumItemData, isInSelectionMode)),
     provide = {
       if (chanDescriptor == null) {
         return@ImageLoaderRequestProvider null
@@ -332,7 +334,7 @@ private fun getImageLoaderRequestProvider(
           cacheHandler = cacheHandler,
           postImage = postImage,
           canUseHighResCells = canUseHighResCells,
-          revealSpoilerImage = revealSpoilerImage
+          revealSpoilerImage = revealSpoilerImage || isInSelectionMode
         )
 
         if (imageUrl == null || cacheFileType == null) {
