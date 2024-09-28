@@ -66,7 +66,7 @@ internal fun ToolbarTitleWithSubtitle(
     val marqueeModifier = if (scrollableTitle) {
       Modifier.basicMarquee(
         iterations = Int.MAX_VALUE,
-        delayMillis = 3_000
+        repeatDelayMillis = 3_000
       )
     } else {
       Modifier
