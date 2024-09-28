@@ -760,7 +760,11 @@ class ReplyLayoutState(
         val pickedFileResult = withContext(Dispatchers.IO) { imagePickHelper.pickLocalFile(input) }
           .unwrap()
 
-        val replyFiles = (pickedFileResult as PickedFile.Result).replyFiles
+        val replyFiles = when (pickedFileResult) {
+          is PickedFile.Failure -> throw pickedFileResult.reason
+          is PickedFile.Result -> pickedFileResult.replyFiles
+        }
+
         replyFiles.forEach { replyFile ->
           val replyFileMeta = replyFile.getReplyFileMeta().safeUnwrap { error ->
             Logger.e(TAG, "pickLocalMedia() imagePickHelper.pickLocalFile($chanDescriptor) getReplyFileMeta() error", error)
@@ -804,7 +808,11 @@ class ReplyLayoutState(
         val pickedFileResult = withContext(Dispatchers.IO) { imagePickHelper.pickRemoteFile(input) }
           .unwrap()
 
-        val replyFiles = (pickedFileResult as PickedFile.Result).replyFiles
+        val replyFiles = when (pickedFileResult) {
+          is PickedFile.Failure -> throw pickedFileResult.reason
+          is PickedFile.Result -> pickedFileResult.replyFiles
+        }
+
         replyFiles.forEach { replyFile ->
           val replyFileMeta = replyFile.getReplyFileMeta().safeUnwrap { error ->
             Logger.e(TAG, "pickLocalMedia() imagePickHelper.pickRemoteMedia($chanDescriptor) getReplyFileMeta() error", error)
