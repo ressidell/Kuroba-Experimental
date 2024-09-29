@@ -75,7 +75,6 @@ class FoolFuukaActions(site: CommonSite) : CommonSite.CommonActions(site) {
 
     return FoolFuukaBoardsRequest(
       siteDescriptor = site.siteDescriptor(),
-      boardManager = site.boardManager,
       request = request,
       proxiedOkHttpClient = site.proxiedOkHttpClient
     ).execute()
@@ -115,7 +114,7 @@ class FoolFuukaActions(site: CommonSite) : CommonSite.CommonActions(site) {
     return FoolFuukaSearchRequest(
       searchParams,
       requestBuilder.build(),
-      site.proxiedOkHttpClient.get()
+      site.proxiedOkHttpClientLazy.get()
     ).execute()
   }
 

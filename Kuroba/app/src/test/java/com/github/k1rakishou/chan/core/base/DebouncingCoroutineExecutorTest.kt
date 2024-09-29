@@ -3,7 +3,7 @@ package com.github.k1rakishou.chan.core.base
 import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -12,7 +12,7 @@ class DebouncingCoroutineExecutorTest {
 
   @Test
   fun `test call the callback once after time out`() {
-    runBlockingTest {
+    runTest {
       val suspendDebouncer = DebouncingCoroutineExecutor(this)
       val counter = AtomicInteger(0)
 
@@ -27,7 +27,7 @@ class DebouncingCoroutineExecutorTest {
 
   @Test
   fun `test debouncing`() {
-    runBlockingTest {
+    runTest {
       val suspendDebouncer = DebouncingCoroutineExecutor(this)
       val counter = AtomicInteger(0)
 
@@ -42,7 +42,7 @@ class DebouncingCoroutineExecutorTest {
 
   @Test
   fun `test debouncing should not call the callback`() {
-    runBlockingTest {
+    runTest {
       val suspendDebouncer = DebouncingCoroutineExecutor(this)
       val counter = AtomicInteger(0)
 
@@ -60,7 +60,7 @@ class DebouncingCoroutineExecutorTest {
 
   @Test
   fun `test multiple post updates`() {
-    runBlockingTest {
+    runTest {
       val suspendDebouncer = DebouncingCoroutineExecutor(this)
       val counter = AtomicInteger(0)
 

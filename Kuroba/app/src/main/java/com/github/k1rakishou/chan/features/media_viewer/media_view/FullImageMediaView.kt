@@ -82,7 +82,7 @@ class FullImageMediaView(
     AppModuleAndroidUtils.extractActivityComponent(context)
       .inject(this)
 
-    inflate(context, R.layout.media_view_full_image, this)
+    inflate(context, R.layout.media_view_full_image_layout, this)
     setWillNotDraw(false)
 
     movableContainer = findViewById(R.id.movable_container)

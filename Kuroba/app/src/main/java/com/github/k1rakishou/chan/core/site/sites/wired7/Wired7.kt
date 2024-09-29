@@ -44,7 +44,7 @@ class Wired7 : CommonSite() {
   override fun setup() {
     setEnabled(true)
     setName(SITE_NAME)
-    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, "https://wired-7.org/favicon_144.png".toHttpUrl()))
+    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecatedLazy, "https://wired-7.org/favicon_144.png".toHttpUrl()))
 
     setBoards(
       ChanBoard.create(BoardDescriptor.create(siteDescriptor().siteName, "a"), "Anime"),

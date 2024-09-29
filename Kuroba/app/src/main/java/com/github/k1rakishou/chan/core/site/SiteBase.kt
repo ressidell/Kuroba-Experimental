@@ -9,6 +9,7 @@ import com.github.k1rakishou.chan.core.base.okhttp.RealProxiedOkHttpClient
 import com.github.k1rakishou.chan.core.image.ImageLoaderDeprecated
 import com.github.k1rakishou.chan.core.manager.ArchivesManager
 import com.github.k1rakishou.chan.core.manager.BoardManager
+import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.manager.PostFilterManager
 import com.github.k1rakishou.chan.core.manager.ReplyManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
@@ -45,31 +46,58 @@ abstract class SiteBase : Site, CoroutineScope {
   private val job = SupervisorJob()
 
   @Inject
-  lateinit var proxiedOkHttpClient: Lazy<RealProxiedOkHttpClient>
+  lateinit var gson: Gson
   @Inject
   lateinit var appConstants: AppConstants
   @Inject
-  lateinit var boardManager: BoardManager
+  lateinit var boardManagerLazy: Lazy<BoardManager>
   @Inject
-  lateinit var httpCallManager: Lazy<HttpCallManager>
+  lateinit var siteManagerLazy: Lazy<SiteManager>
   @Inject
-  lateinit var moshi: Lazy<Moshi>
+  lateinit var proxiedOkHttpClientLazy: Lazy<RealProxiedOkHttpClient>
   @Inject
-  lateinit var siteManager: SiteManager
+  lateinit var httpCallManagerLazy: Lazy<HttpCallManager>
   @Inject
-  lateinit var imageLoaderDeprecated: Lazy<ImageLoaderDeprecated>
+  lateinit var moshiLazy: Lazy<Moshi>
   @Inject
-  lateinit var archivesManager: ArchivesManager
+  lateinit var imageLoaderDeprecatedLazy: Lazy<ImageLoaderDeprecated>
   @Inject
-  lateinit var postFilterManager: Lazy<PostFilterManager>
+  lateinit var archivesManagerLazy: Lazy<ArchivesManager>
   @Inject
-  lateinit var replyManager: Lazy<ReplyManager>
+  lateinit var postFilterManagerLazy: Lazy<PostFilterManager>
   @Inject
-  lateinit var gson: Gson
+  lateinit var replyManagerLazy: Lazy<ReplyManager>
   @Inject
-  lateinit var boardFlagInfoRepository: Lazy<BoardFlagInfoRepository>
+  lateinit var boardFlagInfoRepositoryLazy: Lazy<BoardFlagInfoRepository>
   @Inject
-  lateinit var simpleCommentParser: Lazy<SimpleCommentParser>
+  lateinit var simpleCommentParserLazy: Lazy<SimpleCommentParser>
+  @Inject
+  lateinit var chanThreadManagerLazy: Lazy<ChanThreadManager>
+
+  val boardManager: BoardManager
+    get() = boardManagerLazy.get()
+  val siteManager: SiteManager
+    get() = siteManagerLazy.get()
+  val proxiedOkHttpClient: RealProxiedOkHttpClient
+    get() = proxiedOkHttpClientLazy.get()
+  val httpCallManager: HttpCallManager
+    get() = httpCallManagerLazy.get()
+  val moshi: Moshi
+    get() = moshiLazy.get()
+  val imageLoaderDeprecated: ImageLoaderDeprecated
+    get() = imageLoaderDeprecatedLazy.get()
+  val archivesManager: ArchivesManager
+    get() = archivesManagerLazy.get()
+  val postFilterManager: PostFilterManager
+    get() = postFilterManagerLazy.get()
+  val replyManager: ReplyManager
+    get() = replyManagerLazy.get()
+  val boardFlagInfoRepository: BoardFlagInfoRepository
+    get() = boardFlagInfoRepositoryLazy.get()
+  val simpleCommentParser: SimpleCommentParser
+    get() = simpleCommentParserLazy.get()
+  val chanThreadManager: ChanThreadManager
+    get() = chanThreadManagerLazy.get()
 
   override val coroutineContext: CoroutineContext
     get() = job + Dispatchers.Main + CoroutineName("SiteBase")
@@ -108,7 +136,7 @@ abstract class SiteBase : Site, CoroutineScope {
     )
 
     cloudFlareClearanceCookieMap = MapSetting(
-      _moshi = moshi,
+      _moshi = moshiLazy,
       mapperFrom = { mapSettingEntry ->
         return@MapSetting MapSetting.KeyValue(
           key = mapSettingEntry.key,

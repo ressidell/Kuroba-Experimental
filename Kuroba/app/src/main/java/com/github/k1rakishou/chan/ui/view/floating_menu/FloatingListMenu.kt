@@ -25,7 +25,7 @@ class FloatingListMenu @JvmOverloads constructor(
   private var stackCallback: ((moreItems: List<FloatingListMenuItem>) -> Unit)? = null
 
   init {
-    inflate(context, R.layout.floating_list_menu, this)
+    inflate(context, R.layout.floating_list_menu_layout, this)
 
     epoxyRecyclerView = findViewById(R.id.floating_list_menu_recycler)
   }

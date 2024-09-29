@@ -1,7 +1,6 @@
 package com.github.k1rakishou.chan.core.site.sites.foolfuuka
 
 import com.github.k1rakishou.chan.core.base.okhttp.RealProxiedOkHttpClient
-import com.github.k1rakishou.chan.core.manager.BoardManager
 import com.github.k1rakishou.chan.core.net.AbstractRequest
 import com.github.k1rakishou.common.ParsingException
 import com.github.k1rakishou.common.useHtmlReader
@@ -9,7 +8,6 @@ import com.github.k1rakishou.model.data.board.ChanBoard
 import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
 import com.github.k1rakishou.model.data.site.SiteBoards
-import dagger.Lazy
 import okhttp3.Request
 import okhttp3.ResponseBody
 import org.jsoup.nodes.Document
@@ -18,9 +16,8 @@ import org.jsoup.nodes.TextNode
 
 class FoolFuukaBoardsRequest(
   private val siteDescriptor: SiteDescriptor,
-  private val boardManager: BoardManager,
   request: Request,
-  proxiedOkHttpClient: Lazy<RealProxiedOkHttpClient>
+  proxiedOkHttpClient: RealProxiedOkHttpClient
 ) : AbstractRequest<SiteBoards>(request, proxiedOkHttpClient) {
 
   override suspend fun processBody(responseBody: ResponseBody): SiteBoards {

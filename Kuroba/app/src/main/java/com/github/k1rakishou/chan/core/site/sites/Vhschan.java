@@ -126,7 +126,7 @@ public class Vhschan extends CommonSite {
     public void setup() {
         setEnabled(false);
         setName(SITE_NAME);
-        setIcon(SiteIcon.fromFavicon(getImageLoaderDeprecated(), HttpUrl.parse("https://vhschan.org/stylesheets/favicon.ico")));
+        setIcon(SiteIcon.fromFavicon(getImageLoaderDeprecatedLazy(), HttpUrl.parse("https://vhschan.org/stylesheets/favicon.ico")));
 
         setBoards(
                 ChanBoard.create(BoardDescriptor.create(siteDescriptor().getSiteName(), "b"), "Betamax"),
@@ -155,7 +155,7 @@ public class Vhschan extends CommonSite {
         });
 
         setEndpoints(new VhschanEndpoints(this, "https://vhschan.org", "https://vhschan.org"));
-        setActions(new VichanActions(this, getProxiedOkHttpClient(), getSiteManager(), getReplyManager()));
+        setActions(new VichanActions(this, getProxiedOkHttpClientLazy(), getSiteManager(), getReplyManagerLazy()));
         setApi(new VichanApi(getSiteManager(), getBoardManager(), this));
         setParser(new VichanCommentParser());
     }

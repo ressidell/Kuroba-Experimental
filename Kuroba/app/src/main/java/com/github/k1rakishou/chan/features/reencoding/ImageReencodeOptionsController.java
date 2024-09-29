@@ -181,7 +181,7 @@ public class ImageReencodeOptionsController
             format = "Unknown";
         }
 
-        reencodeImageAsIs.setText(getString(R.string.reencode_image_as_is, format));
+        reencodeImageAsIs.setText(getString(R.string.reencode_image_as_is_text, format));
     }
 
     @Override

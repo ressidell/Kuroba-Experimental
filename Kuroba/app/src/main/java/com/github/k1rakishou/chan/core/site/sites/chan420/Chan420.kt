@@ -48,7 +48,7 @@ class Chan420 : CommonSite() {
   override fun setup() {
     setEnabled(false)
     setName(SITE_NAME)
-    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, "https://420chan.org/favicon.ico".toHttpUrl()))
+    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecatedLazy, "https://420chan.org/favicon.ico".toHttpUrl()))
     setBoardsType(Site.BoardsType.DYNAMIC)
     setResolvable(URL_HANDLER)
     
@@ -61,7 +61,7 @@ class Chan420 : CommonSite() {
     })
     
     setEndpoints(TaimabaEndpoints(this, "https://api.420chan.org", "https://boards.420chan.org"))
-    setActions(object : TaimabaActions(this@Chan420, replyManager) {
+    setActions(object : TaimabaActions(this@Chan420, replyManagerLazy) {
       override suspend fun boards(): ModularResult<SiteBoards> {
         return genericBoardsRequestResponseHandler(
           requestProvider = {
@@ -71,10 +71,10 @@ class Chan420 : CommonSite() {
               .build()
 
             return@genericBoardsRequestResponseHandler Chan420BoardsRequest(
-              siteDescriptor(),
-              boardManager,
-              request,
-              proxiedOkHttpClient
+              siteDescriptor = siteDescriptor(),
+              boardManager = boardManager,
+              request = request,
+              proxiedOkHttpClient = proxiedOkHttpClient
             )
           },
           defaultBoardsProvider = {

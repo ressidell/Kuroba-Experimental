@@ -9,19 +9,15 @@ import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.suspendConvertIntoJsoupDocument
 import com.github.k1rakishou.core_logger.Logger
-import dagger.Lazy
 import okhttp3.MultipartBody
 import okhttp3.Request
 import java.util.Locale
 
 class Chan4ReportPostRequest(
   private val siteManager: SiteManager,
-  private val _proxiedOkHttpClient: Lazy<RealProxiedOkHttpClient>,
+  private val proxiedOkHttpClient: RealProxiedOkHttpClient,
   private val postReportData: PostReportData.Chan4
 ) {
-
-  private val proxiedOkHttpClient: RealProxiedOkHttpClient
-    get() = _proxiedOkHttpClient.get()
 
   suspend fun execute(): PostReportResult {
     val postDescriptor = postReportData.postDescriptor

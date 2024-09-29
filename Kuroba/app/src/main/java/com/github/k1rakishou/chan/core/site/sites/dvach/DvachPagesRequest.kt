@@ -13,13 +13,12 @@ import com.github.k1rakishou.model.data.board.pages.BoardPages
 import com.github.k1rakishou.model.data.board.pages.ThreadNoTimeModPair
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.google.gson.stream.JsonReader
-import dagger.Lazy
 import okhttp3.Request
 
 class DvachPagesRequest(
   private val chanBoard: ChanBoard,
   request: Request,
-  proxiedOkHttpClient: Lazy<RealProxiedOkHttpClient>
+  proxiedOkHttpClient: RealProxiedOkHttpClient
 ) : JsonReaderRequest<BoardPages>(
   request,
   proxiedOkHttpClient

@@ -34,7 +34,7 @@ class Kun8 : CommonSite() {
   override fun setup() {
     setEnabled(true)
     setName(SITE_NAME)
-    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, "https://media.128ducks.com/static/favicon.ico".toHttpUrl()))
+    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecatedLazy, "https://media.128ducks.com/static/favicon.ico".toHttpUrl()))
     setBoardsType(BoardsType.DYNAMIC)
     setResolvable(URL_HANDLER)
 
@@ -96,7 +96,7 @@ class Kun8 : CommonSite() {
       }
     })
 
-    setActions(object : VichanActions(this@Kun8, proxiedOkHttpClient, siteManager, replyManager) {
+    setActions(object : VichanActions(this@Kun8, proxiedOkHttpClientLazy, siteManager, replyManagerLazy) {
       override suspend fun boards(): ModularResult<SiteBoards> {
         val request = Request.Builder()
           .url(endpoints().boards().toString())
@@ -104,10 +104,10 @@ class Kun8 : CommonSite() {
           .build()
 
         return Kun8BoardsRequest(
-          siteDescriptor(),
-          boardManager,
-          request,
-          proxiedOkHttpClient
+          siteDescriptor = siteDescriptor(),
+          boardManager = boardManager,
+          request = request,
+          proxiedOkHttpClient = proxiedOkHttpClient
         ).execute()
       }
 

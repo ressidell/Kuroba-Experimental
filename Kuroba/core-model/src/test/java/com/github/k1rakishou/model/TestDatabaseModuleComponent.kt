@@ -13,13 +13,19 @@ import java.util.concurrent.TimeUnit
 class TestDatabaseModuleComponent(
   private val application: Application = RuntimeEnvironment.application
 ) {
-  private val logger = Logger()
   private var inMemoryDatabase: KurobaDatabase? = null
   private var onDiskDatabase: KurobaDatabase? = null
   private var okHttpClient: OkHttpClient? = null
   private var gson: Gson? = null
 
-  fun provideLogger() = logger
+  init {
+    Logger.init(
+      prefix = "Testing",
+      isDevBuild = true,
+      verboseLogs = true,
+      appContext = application.applicationContext
+    )
+  }
 
   fun provideGson(): Gson {
     if (gson == null) {

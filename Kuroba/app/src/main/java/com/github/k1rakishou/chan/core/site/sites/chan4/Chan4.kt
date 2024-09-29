@@ -79,7 +79,7 @@ open class Chan4 : SiteBase() {
   lateinit var chan4CaptchaSettings: GsonJsonSetting<Chan4CaptchaSettings>
   lateinit var check4chanPostAcknowledged: BooleanSetting
 
-  private val _siteIcon by lazy { SiteIcon.fromFavicon(imageLoaderDeprecated, "https://s.4cdn.org/image/favicon.ico".toHttpUrl()) }
+  private val _siteIcon by lazy { SiteIcon.fromFavicon(imageLoaderDeprecatedLazy, "https://s.4cdn.org/image/favicon.ico".toHttpUrl()) }
 
   private val siteRequestModifier by lazy { Chan4SiteRequestModifier(this, appConstants) }
 
@@ -294,10 +294,10 @@ open class Chan4 : SiteBase() {
         .build()
 
       return Chan4BoardsRequest(
-        siteDescriptor(),
-        boardManager,
-        request,
-        proxiedOkHttpClient
+        siteDescriptor = siteDescriptor(),
+        boardManager = boardManager,
+        request = request,
+        proxiedOkHttpClient = proxiedOkHttpClient
       ).execute()
     }
 
@@ -308,10 +308,10 @@ open class Chan4 : SiteBase() {
         .build()
 
       return Chan4PagesRequest(
-        board.boardDescriptor,
-        board.pages,
-        request,
-        proxiedOkHttpClient
+        boardDescriptor = board.boardDescriptor,
+        boardTotalPagesCount = board.pages,
+        request = request,
+        proxiedOkHttpClient = proxiedOkHttpClient
       ).execute()
     }
 
@@ -325,7 +325,7 @@ open class Chan4 : SiteBase() {
         appConstants = appConstants
       )
 
-      return httpCallManager.get().makePostHttpCallWithProgress(replyCall, replyChanDescriptor)
+      return httpCallManagerLazy.get().makePostHttpCallWithProgress(replyCall, replyChanDescriptor)
         .map { replyCallResult ->
           when (replyCallResult) {
             is HttpCall.HttpCallWithProgressResult.Success -> {
@@ -350,7 +350,7 @@ open class Chan4 : SiteBase() {
     }
 
     override suspend fun delete(deleteRequest: DeleteRequest): SiteActions.DeleteResult {
-      val deleteResult = httpCallManager.get().makeHttpCall(
+      val deleteResult = httpCallManagerLazy.get().makeHttpCall(
         Chan4DeleteHttpCall(this@Chan4, deleteRequest)
       )
 
@@ -375,7 +375,7 @@ open class Chan4 : SiteBase() {
       passUser.set(chan4LoginRequest.user)
       passPass.set(chan4LoginRequest.pass)
 
-      val loginResult = httpCallManager.get().makeHttpCall(
+      val loginResult = httpCallManagerLazy.get().makeHttpCall(
         Chan4PassHttpCall(this@Chan4, chan4LoginRequest)
       )
 
@@ -446,7 +446,7 @@ open class Chan4 : SiteBase() {
 
       return Chan4SearchRequest(
         requestBuilder.build(),
-        proxiedOkHttpClient,
+        proxiedOkHttpClientLazy,
         searchParams
       ).execute()
     }
@@ -462,7 +462,7 @@ open class Chan4 : SiteBase() {
 
       return Chan4ArchiveThreadsRequest(
         request = requestBuilder.build(),
-        proxiedOkHttpClient = proxiedOkHttpClient
+        proxiedOkHttpClient = proxiedOkHttpClientLazy
       ).execute()
     }
 
@@ -473,7 +473,7 @@ open class Chan4 : SiteBase() {
 
       return Chan4ReportPostRequest(
         siteManager = siteManager,
-        _proxiedOkHttpClient = proxiedOkHttpClient,
+        proxiedOkHttpClient = proxiedOkHttpClient,
         postReportData = postReportData
       ).execute()
     }
@@ -483,9 +483,10 @@ open class Chan4 : SiteBase() {
       replyPostDescriptor: PostDescriptor
     ): ModularResult<Boolean> {
       return Chan4CheckPostExistsRequest(
-        proxiedOkHttpClientLazy = proxiedOkHttpClient,
         chan4 = this@Chan4,
-        replyPostDescriptor = replyPostDescriptor
+        replyPostDescriptor = replyPostDescriptor,
+        proxiedOkHttpClient = proxiedOkHttpClient,
+        chanThreadManager = chanThreadManager
       ).execute()
     }
 
@@ -564,9 +565,9 @@ open class Chan4 : SiteBase() {
 
   override fun chanReader(): ChanReader {
     return FutabaChanReader(
-      archivesManager,
-      siteManager,
-      boardManager
+      archivesManager = archivesManager,
+      siteManager = siteManager,
+      boardManager = boardManager
     )
   }
 

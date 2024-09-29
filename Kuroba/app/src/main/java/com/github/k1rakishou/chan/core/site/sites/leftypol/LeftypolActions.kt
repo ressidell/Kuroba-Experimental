@@ -9,14 +9,13 @@ import com.github.k1rakishou.chan.core.site.sites.lainchan.LainchanActions
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.site.SiteBoards
-import dagger.Lazy
 import okhttp3.Request
 
 class LeftypolActions(
         commonSite: CommonSite,
-        proxiedOkHttpClient: Lazy<RealProxiedOkHttpClient>,
+        proxiedOkHttpClient: RealProxiedOkHttpClient,
         siteManager: SiteManager,
-        replyManager: Lazy<ReplyManager>
+        replyManager: ReplyManager
 ) : LainchanActions(commonSite, proxiedOkHttpClient, siteManager, replyManager) {
 
     override suspend fun boards(): ModularResult<SiteBoards> {

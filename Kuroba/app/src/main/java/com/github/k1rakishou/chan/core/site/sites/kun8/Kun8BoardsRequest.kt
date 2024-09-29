@@ -11,16 +11,14 @@ import com.github.k1rakishou.model.data.board.ChanBoard
 import com.github.k1rakishou.model.data.descriptor.SiteDescriptor
 import com.github.k1rakishou.model.data.site.SiteBoards
 import com.google.gson.stream.JsonReader
-import dagger.Lazy
 import okhttp3.Request
 import okhttp3.ResponseBody
-import java.util.*
 
 class Kun8BoardsRequest(
   private val siteDescriptor: SiteDescriptor,
   private val boardManager: BoardManager,
   request: Request,
-  proxiedOkHttpClient: Lazy<RealProxiedOkHttpClient>
+  proxiedOkHttpClient: RealProxiedOkHttpClient
 ) : AbstractRequest<SiteBoards>(request, proxiedOkHttpClient) {
 
   override suspend fun processBody(responseBody: ResponseBody): SiteBoards {

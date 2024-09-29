@@ -35,7 +35,6 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import kotlin.math.max
 
-@Suppress("BlockingMethodInNonBlockingContext")
 class FutabaChanReader(
   private val archivesManager: ArchivesManager,
   private val siteManager: SiteManager,

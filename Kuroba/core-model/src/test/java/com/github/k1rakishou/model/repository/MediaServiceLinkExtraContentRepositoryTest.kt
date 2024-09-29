@@ -18,7 +18,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.TestScope
 import org.joda.time.Period
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -29,7 +29,7 @@ import org.robolectric.RobolectricTestRunner
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 class MediaServiceLinkExtraContentRepositoryTest {
-  private val coroutineScope = TestCoroutineScope()
+  private val coroutineScope = TestScope()
 
   lateinit var cache: GenericSuspendableCacheSource<MediaServiceLinkExtraContentRepository.MediaServiceKey, MediaServiceLinkExtraContent>
   lateinit var repository: MediaServiceLinkExtraContentRepository

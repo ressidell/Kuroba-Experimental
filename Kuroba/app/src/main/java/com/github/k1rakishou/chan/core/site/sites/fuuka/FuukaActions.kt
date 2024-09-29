@@ -106,7 +106,7 @@ class FuukaActions(site: CommonSite) : CommonSite.CommonActions(site) {
       ChanSettings.verboseLogs.get(),
       searchParams,
       requestBuilder.build(),
-      site.proxiedOkHttpClient.get()
+      site.proxiedOkHttpClientLazy.get()
     ).execute()
   }
 

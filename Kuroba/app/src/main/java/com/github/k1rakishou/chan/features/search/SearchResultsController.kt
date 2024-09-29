@@ -234,7 +234,7 @@ class SearchResultsController(
       }
       else -> {
         getString(
-          R.string.controller_search_results,
+          R.string.controller_search_results_ok,
           siteDescriptor.siteName,
           searchParameters.getCurrentQuery(),
           totalFound

@@ -2,6 +2,7 @@ package com.github.k1rakishou.chan.core.site.sites.chan4
 
 import android.os.SystemClock
 import com.github.k1rakishou.chan.core.base.okhttp.RealProxiedOkHttpClient
+import com.github.k1rakishou.chan.core.manager.ChanThreadManager
 import com.github.k1rakishou.chan.core.site.loader.UnknownClientException
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.suspendCall
@@ -9,17 +10,15 @@ import com.github.k1rakishou.common.useHtmlReader
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
-import dagger.Lazy
 import kotlinx.coroutines.delay
 import okhttp3.Request
 
 class Chan4CheckPostExistsRequest(
-  private val proxiedOkHttpClientLazy: Lazy<RealProxiedOkHttpClient>,
   private val chan4: Chan4,
-  private val replyPostDescriptor: PostDescriptor
+  private val replyPostDescriptor: PostDescriptor,
+  private val proxiedOkHttpClient: RealProxiedOkHttpClient,
+  private val chanThreadManager: ChanThreadManager
 ) {
-  private val proxiedOkHttpClient: RealProxiedOkHttpClient
-    get() = proxiedOkHttpClientLazy.get()
 
   suspend fun execute(): ModularResult<Boolean> {
     return ModularResult.Try {
@@ -29,13 +28,9 @@ class Chan4CheckPostExistsRequest(
         return SystemClock.elapsedRealtime() - startTime
       }
 
-      // Wait flat 5 seconds before doing anything because 4chan doesn't return fresh posts right away after posting.
-      // There is now a ~5 seconds delay.
-      delay(5000)
-
       for (attempt in 0 until MAX_ATTEMPTS) {
         // Wait some time on each attempt before making the requests
-        delay((attempt + 1) * 1000L)
+        delay(3000)
 
         if (checkStrangerPostExists(attempt)) {
           // The current catalog's greatest postId is equal to or above the postId that the server has returned.
@@ -48,15 +43,24 @@ class Chan4CheckPostExistsRequest(
           return@Try false
         }
 
-        if (checkOurPostExists(attempt)) {
-          // The post was found on the server
+        if (!checkOurPostExists(attempt)) {
           Logger.debug(TAG) {
-            "Found post with id ${replyPostDescriptor} on the server on ${attempt + 1} attempt, " +
-              "took ${deltaTime()}ms"
+            "Failed to find post ${replyPostDescriptor}. " +
+              "attempt: ${attempt + 1}, took ${deltaTime()}ms"
           }
 
-          return@Try true
+          return@Try false
         }
+
+
+
+        // The post was found on the server
+        Logger.debug(TAG) {
+          "Found post with id ${replyPostDescriptor} on the server on ${attempt + 1} attempt, " +
+            "took ${deltaTime()}ms"
+        }
+
+        return@Try true
       }
 
       Logger.debug(TAG) { "Failed to find post with id ${replyPostDescriptor} on the server, total time: ${deltaTime()}ms" }
@@ -193,7 +197,9 @@ class Chan4CheckPostExistsRequest(
 
   companion object {
     private const val TAG = "Chan4CheckPostExistsRequest"
-    private const val MAX_ATTEMPTS = 7
+
+    // 20 * 3000ms = 60000ms = 1min
+    private const val MAX_ATTEMPTS = 20
 
     private val POST_ID_REGEX = "(\\d+)".toRegex()
   }

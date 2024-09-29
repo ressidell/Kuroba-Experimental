@@ -225,7 +225,7 @@ class UpdateManager(
 
     val response = UpdateApiRequest(
       request = request,
-      proxiedOkHttpClient = proxiedOkHttpClient,
+      proxiedOkHttpClient = proxiedOkHttpClient.get(),
       isRelease = flavorType == FlavorType.Stable
     ).execute()
 

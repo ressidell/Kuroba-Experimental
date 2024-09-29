@@ -90,7 +90,7 @@ abstract class LynxchanSite : CommonSite() {
     setLazyResolvable(urlHandler)
     setConfig(LynxchanConfig())
     setEndpointsLazy(endpoints)
-    setActions(LynxchanActions(replyManager, moshi, httpCallManager, _lynxchanGetBoardsUseCase, this))
+    setActions(LynxchanActions(replyManagerLazy, moshiLazy, httpCallManagerLazy, _lynxchanGetBoardsUseCase, this))
     setRequestModifier(LynxchanRequestModifier(this, appConstants) as SiteRequestModifier<Site>)
     setApi(LynxchanApi(_moshi, _siteManager, _boardManager, this))
     setParser(LynxchanCommentParser())

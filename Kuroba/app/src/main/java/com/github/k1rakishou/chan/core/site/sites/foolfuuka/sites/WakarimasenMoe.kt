@@ -25,9 +25,9 @@ class WakarimasenMoe: BaseFoolFuukaSite() {
     // https://archived.moe/_/api/chan/thread/?board=a&num=208364509
     override fun thread(threadDescriptor: ChanDescriptor.ThreadDescriptor): HttpUrl {
       return archivesManager.getRequestLink(
-        ArchiveType.WakarimasenMoe,
-        threadDescriptor.boardCode(),
-        threadDescriptor.threadNo
+        archiveType = ArchiveType.WakarimasenMoe,
+        boardCode = threadDescriptor.boardCode(),
+        threadNo = threadDescriptor.threadNo
       ).toHttpUrl()
     }
 
@@ -38,7 +38,7 @@ class WakarimasenMoe: BaseFoolFuukaSite() {
 
     setEnabled(true)
     setName(SITE_NAME)
-    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecated, FAVICON_URL))
+    setIcon(SiteIcon.fromFavicon(imageLoaderDeprecatedLazy, FAVICON_URL))
     setBoardsType(Site.BoardsType.DYNAMIC)
     setResolvable(URL_HANDLER)
     setConfig(object : CommonConfig() {})

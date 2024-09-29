@@ -448,7 +448,7 @@ class BookmarksController(
   private fun onToolbarHeightChanged(toolbarHeightDp: Dp?) {
     var toolbarHeight = with(appResources.composeDensity) { toolbarHeightDp?.toPx()?.toInt() }
     if (toolbarHeight == null) {
-      toolbarHeight = appResources.dimension(com.github.k1rakishou.chan.R.dimen.toolbar_height).toInt()
+      toolbarHeight = appResources.dimension(R.dimen.toolbar_height).toInt()
     }
 
     swipeRefreshLayout.setProgressViewOffset(
@@ -917,7 +917,7 @@ class BookmarksController(
 
   private fun updateTitleWithoutStats() {
     toolbarState.default.updateTitle(
-      newTitle = ToolbarText.String(getString(R.string.controller_bookmarks))
+      newTitle = ToolbarText.String(getString(R.string.controller_bookmarks_title))
     )
   }
 
@@ -930,12 +930,12 @@ class BookmarksController(
   private fun formatTitleWithStats(state: BookmarksControllerState.Data): String {
     val groupedBookmarks = state.groupedBookmarks
 
-    val totalBookmarksCount = groupedBookmarks.sumBy { group -> group.threadBookmarkItemViews.size }
+    val totalBookmarksCount = groupedBookmarks.sumOf { group -> group.threadBookmarkItemViews.size }
     if (totalBookmarksCount <= 0) {
-      return context.getString(R.string.controller_bookmarks)
+      return context.getString(R.string.controller_bookmarks_title)
     }
 
-    val watchingBookmarksCount = groupedBookmarks.sumBy { group ->
+    val watchingBookmarksCount = groupedBookmarks.sumOf { group ->
       group.threadBookmarkItemViews.count { threadBookmarkItemView ->
         threadBookmarkItemView.threadBookmarkStats.watching
       }
@@ -997,7 +997,7 @@ class BookmarksController(
         onClick = { requireNavController().popController() }
       ),
       middleContent = ToolbarMiddleContent.Title(
-        title = ToolbarText.Id(R.string.controller_bookmarks)
+        title = ToolbarText.Id(R.string.controller_bookmarks_title)
       ),
       iconClickInterceptor = {
         exitReorderingModeIfActive()
