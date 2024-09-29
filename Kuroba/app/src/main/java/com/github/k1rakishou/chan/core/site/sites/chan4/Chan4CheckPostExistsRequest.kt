@@ -264,6 +264,8 @@ class Chan4CheckPostExistsRequest(
         "similarity: ${similarity}"
     }
 
+    // This thing doesn't account for the fact that the all the links/quotes/etc will be formatted differently in
+    // postCommentFromServer that's why the similarity threshold is this low.
     return similarity >= 0.35f
   }
 
