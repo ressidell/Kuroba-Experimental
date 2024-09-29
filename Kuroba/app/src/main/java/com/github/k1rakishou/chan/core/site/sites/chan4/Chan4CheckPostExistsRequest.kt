@@ -3,21 +3,30 @@ package com.github.k1rakishou.chan.core.site.sites.chan4
 import android.os.SystemClock
 import com.github.k1rakishou.chan.core.base.okhttp.RealProxiedOkHttpClient
 import com.github.k1rakishou.chan.core.manager.ChanThreadManager
+import com.github.k1rakishou.chan.core.manager.ReplyManager
+import com.github.k1rakishou.chan.core.site.loader.ThreadLoadResult
 import com.github.k1rakishou.chan.core.site.loader.UnknownClientException
 import com.github.k1rakishou.common.ModularResult
+import com.github.k1rakishou.common.StringUtils
 import com.github.k1rakishou.common.suspendCall
 import com.github.k1rakishou.common.useHtmlReader
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
+import com.github.k1rakishou.model.data.options.ChanCacheOptions
+import com.github.k1rakishou.model.data.options.ChanCacheUpdateOptions
+import com.github.k1rakishou.model.data.options.ChanLoadOptions
+import com.github.k1rakishou.model.data.options.ChanReadOptions
 import kotlinx.coroutines.delay
 import okhttp3.Request
 
 class Chan4CheckPostExistsRequest(
   private val chan4: Chan4,
+  private val chanDescriptor: ChanDescriptor,
   private val replyPostDescriptor: PostDescriptor,
   private val proxiedOkHttpClient: RealProxiedOkHttpClient,
-  private val chanThreadManager: ChanThreadManager
+  private val chanThreadManager: ChanThreadManager,
+  private val replyManager: ReplyManager
 ) {
 
   suspend fun execute(): ModularResult<Boolean> {
@@ -30,7 +39,7 @@ class Chan4CheckPostExistsRequest(
 
       for (attempt in 0 until MAX_ATTEMPTS) {
         // Wait some time on each attempt before making the requests
-        delay(3000)
+        delay(TIMEOUT_PER_ATTEMPT_MS)
 
         if (checkStrangerPostExists(attempt)) {
           // The current catalog's greatest postId is equal to or above the postId that the server has returned.
@@ -49,14 +58,21 @@ class Chan4CheckPostExistsRequest(
               "attempt: ${attempt + 1}, took ${deltaTime()}ms"
           }
 
-          return@Try false
+          continue
         }
 
+        if (!refreshThreadAndCheckPostExists()) {
+          Logger.debug(TAG) {
+            "Post not found in cache after refreshing ${replyPostDescriptor}. " +
+              "attempt: ${attempt + 1}, took ${deltaTime()}ms"
+          }
 
+          continue
+        }
 
         // The post was found on the server
         Logger.debug(TAG) {
-          "Found post with id ${replyPostDescriptor} on the server on ${attempt + 1} attempt, " +
+          "Found post with id ${replyPostDescriptor} in the cache on ${attempt + 1} attempt, " +
             "took ${deltaTime()}ms"
         }
 
@@ -195,11 +211,68 @@ class Chan4CheckPostExistsRequest(
     return false
   }
 
+  private suspend fun refreshThreadAndCheckPostExists(): Boolean {
+    val reply = replyManager.getReplyOrNull(chanDescriptor)
+    if (reply == null) {
+      Logger.error(TAG) { "refreshThreadAndCheckPostExists() replyManager.getReplyOrNull($chanDescriptor) -> null" }
+      return false
+    }
+
+    val threadLoadResult = chanThreadManager.loadThreadOrCatalog(
+      page = null,
+      compositeCatalogDescriptor = null,
+      chanDescriptor = chanDescriptor,
+      chanCacheUpdateOptions = ChanCacheUpdateOptions.UpdateCache,
+      chanLoadOptions = ChanLoadOptions.retainAll(),
+      chanCacheOptions = ChanCacheOptions.onlyCacheInMemory(),
+      chanReadOptions = ChanReadOptions.default(),
+    )
+
+    when (threadLoadResult) {
+      is ThreadLoadResult.Error -> {
+        Logger.error(TAG) { "refreshThreadAndCheckPostExists() error: ${threadLoadResult.exception}" }
+        return false
+      }
+      is ThreadLoadResult.Loaded -> {
+        Logger.error(TAG) { "refreshThreadAndCheckPostExists() fetched latest posts for '${chanDescriptor}'" }
+      }
+    }
+
+    val chanPost = when (chanDescriptor) {
+      is ChanDescriptor.ICatalogDescriptor -> {
+        chanThreadManager.getChanThread(replyPostDescriptor.threadDescriptor())
+          ?.let { chanThread -> chanThread.getPost(replyPostDescriptor) }
+      }
+      is ChanDescriptor.ThreadDescriptor -> {
+        chanThreadManager.getPost(replyPostDescriptor)
+      }
+    }
+
+    if (chanPost == null) {
+      Logger.error(TAG) { "refreshThreadAndCheckPostExists() post ${replyPostDescriptor} not found in the cache" }
+      return false
+    }
+
+    val postCommentFromReply = reply.comment
+    val postCommentFromServer = chanPost.postComment.comment().toString()
+    val similarity = StringUtils.calculateSimilarity(postCommentFromReply, postCommentFromServer)
+
+    Logger.debug(TAG) {
+      "refreshThreadAndCheckPostExists() " +
+        "postCommentFromServer: '${postCommentFromServer}', " +
+        "postCommentFromReply: '${postCommentFromReply}', " +
+        "similarity: ${similarity}"
+    }
+
+    return similarity >= 0.35f
+  }
+
   companion object {
     private const val TAG = "Chan4CheckPostExistsRequest"
 
-    // 20 * 3000ms = 60000ms = 1min
-    private const val MAX_ATTEMPTS = 20
+    // 10 * 5000ms = 50seconds
+    private const val MAX_ATTEMPTS = 10
+    private const val TIMEOUT_PER_ATTEMPT_MS = 5000L
 
     private val POST_ID_REGEX = "(\\d+)".toRegex()
   }

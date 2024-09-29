@@ -1353,7 +1353,7 @@ class PostingServiceDelegate(
 
     replyManager.deleteCachedDraftFromDisk(prevChanDescriptor)
 
-    if (ChanSettings.donateSolvedCaptchaForGreaterGood.get() == ChanSettings.NullableBoolean.True) {
+    if (ChanSettings.donateSolvedCaptchaForGreaterGood.get() == ChanSettings.Tralse.True) {
       replyResponse.captchaSolution?.let { captchaSolution ->
         when (captchaSolution) {
           is CaptchaSolution.ChallengeWithSolution -> {
@@ -1372,65 +1372,62 @@ class PostingServiceDelegate(
     newDescriptor: ChanDescriptor,
     threadNo: Long
   ) {
-    if (newDescriptor is ChanDescriptor.ThreadDescriptor) {
-      if (bookmarksManager.contains(newDescriptor)) {
-        return
+    when (newDescriptor) {
+      is ChanDescriptor.CompositeCatalogDescriptor -> {
+        // no-op
       }
+      is ChanDescriptor.ThreadDescriptor -> {
+        if (bookmarksManager.contains(newDescriptor)) {
+          return
+        }
 
-      val thread = chanThreadManager.getChanThread(newDescriptor)
-      val bookmarkThreadDescriptor = newDescriptor.toThreadDescriptor(threadNo)
+        val thread = chanThreadManager.getChanThread(newDescriptor)
+        val bookmarkThreadDescriptor = newDescriptor.toThreadDescriptor(threadNo)
 
-      // Reply in an existing thread
-      val createBookmarkResult = if (thread != null) {
-        val originalPost = thread.getOriginalPost()
-        val title = ChanPostUtils.getTitle(originalPost, newDescriptor)
-        val thumbnail = originalPost?.firstImage()?.actualThumbnailUrl
+        // Reply in an existing thread
+        val createBookmarkResult = if (thread != null) {
+          val originalPost = thread.getOriginalPost()
+          val title = ChanPostUtils.getTitle(originalPost, newDescriptor)
+          val thumbnail = originalPost?.firstImage()?.actualThumbnailUrl
 
-        bookmarksManager.createBookmark(bookmarkThreadDescriptor, title, thumbnail)
-      } else {
-        bookmarksManager.createBookmark(bookmarkThreadDescriptor)
-      }
+          bookmarksManager.createBookmark(bookmarkThreadDescriptor, title, thumbnail)
+        } else {
+          bookmarksManager.createBookmark(bookmarkThreadDescriptor)
+        }
 
-      if (!createBookmarkResult) {
-        Logger.e(TAG, "bookmarkThread() Failed to create bookmark with newThreadDescriptor=$newDescriptor, " +
-          "threadDescriptor: $bookmarkThreadDescriptor, newThreadDescriptor=$newDescriptor, " +
-          "threadNo=$threadNo")
-      }
-
-      return
-    }
-
-    if (newDescriptor is ChanDescriptor.CatalogDescriptor) {
-      val bookmarkThreadDescriptor = ChanDescriptor.ThreadDescriptor.create(
-        boardDescriptor = newDescriptor.boardDescriptor(),
-        threadNo = threadNo
-      )
-
-      if (bookmarksManager.contains(bookmarkThreadDescriptor)) {
-        return
-      }
-
-      // New thread
-      val title = replyManager.readReply(newDescriptor) { reply ->
-        PostHelper.getTitle(reply)
-      }
-
-      val createBookmarkResult = bookmarksManager.createBookmark(
-        bookmarkThreadDescriptor,
-        title
-      )
-
-      if (!createBookmarkResult) {
-        Logger.e(TAG, "bookmarkThread() Failed to create bookmark with newThreadDescriptor=$newDescriptor, " +
+        if (!createBookmarkResult) {
+          Logger.e(TAG, "bookmarkThread() Failed to create bookmark with newThreadDescriptor=$newDescriptor, " +
             "threadDescriptor: $bookmarkThreadDescriptor, newThreadDescriptor=$newDescriptor, " +
             "threadNo=$threadNo")
+        }
       }
+      is ChanDescriptor.CatalogDescriptor -> {
+        val bookmarkThreadDescriptor = ChanDescriptor.ThreadDescriptor.create(
+          boardDescriptor = newDescriptor.boardDescriptor(),
+          threadNo = threadNo
+        )
 
-      return
+        if (bookmarksManager.contains(bookmarkThreadDescriptor)) {
+          return
+        }
+
+        // New thread
+        val title = replyManager.readReply(newDescriptor) { reply ->
+          PostHelper.getTitle(reply)
+        }
+
+        val createBookmarkResult = bookmarksManager.createBookmark(
+          bookmarkThreadDescriptor,
+          title
+        )
+
+        if (!createBookmarkResult) {
+          Logger.e(TAG, "bookmarkThread() Failed to create bookmark with newThreadDescriptor=$newDescriptor, " +
+            "threadDescriptor: $bookmarkThreadDescriptor, newThreadDescriptor=$newDescriptor, " +
+            "threadNo=$threadNo")
+        }
+      }
     }
-
-    // newThreadDescriptor is ChanDescriptor.CompositeCatalogDescriptor
-    // no-op
   }
 
   private suspend fun awaitUntilEverythingIsInitialized(chanDescriptor: ChanDescriptor): ModularResult<Unit> {

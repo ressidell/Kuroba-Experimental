@@ -2,7 +2,7 @@ package com.github.k1rakishou.chan.features.settings.screens
 
 import android.content.Context
 import com.github.k1rakishou.ChanSettings
-import com.github.k1rakishou.ChanSettings.NullableBoolean
+import com.github.k1rakishou.ChanSettings.Tralse
 import com.github.k1rakishou.chan.R
 import com.github.k1rakishou.chan.core.helper.DialogFactory
 import com.github.k1rakishou.chan.features.settings.ExperimentalScreen
@@ -108,12 +108,12 @@ class ExperimentalSettingsScreen(
         group += ListSettingV2.createBuilder(
           context = context,
           identifier = ExperimentalScreen.MainSettingsGroup.DonateCaptchaForGreaterGood,
-          items = listOf(NullableBoolean.True, NullableBoolean.False, NullableBoolean.Undefined),
+          items = listOf(Tralse.True, Tralse.False, Tralse.Undefined),
           itemNameMapper = { value ->
             return@createBuilder when (value) {
-              NullableBoolean.True -> "True"
-              NullableBoolean.False -> "False"
-              NullableBoolean.Undefined -> "Not set"
+              Tralse.True -> "True"
+              Tralse.False -> "False"
+              Tralse.Undefined -> "Not set"
             }
           },
           topDescriptionIdFunc = { R.string.setting_donate_captcha },

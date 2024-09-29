@@ -219,14 +219,14 @@ public class ChanSettings {
         }
     }
 
-    public enum NullableBoolean implements OptionSettingItem {
+    public enum Tralse implements OptionSettingItem {
         True("True"),
         False("False"),
         Undefined("Undefined");
 
         String name;
 
-        NullableBoolean(String name) {
+        Tralse(String name) {
             this.name = name;
         }
 
@@ -385,7 +385,7 @@ public class ChanSettings {
     public static BooleanSetting colorizeTextSelectionCursors;
     public static BooleanSetting removeFakeTicket;
     public static StringSetting customUserAgent;
-    public static OptionsSetting<NullableBoolean> donateSolvedCaptchaForGreaterGood;
+    public static OptionsSetting<Tralse> donateSolvedCaptchaForGreaterGood;
     //endregion
 
     //region OTHER
@@ -623,8 +623,8 @@ public class ChanSettings {
         donateSolvedCaptchaForGreaterGood = new OptionsSetting<>(
                 provider,
                 "donate_solved_captcha_for_greater_good",
-                NullableBoolean.class,
-                NullableBoolean.Undefined
+                Tralse.class,
+                Tralse.Undefined
         );
         customUserAgent = new StringSetting(provider, "custom_user_agent", "");
         //endregion

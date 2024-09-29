@@ -484,9 +484,11 @@ open class Chan4 : SiteBase() {
     ): ModularResult<Boolean> {
       return Chan4CheckPostExistsRequest(
         chan4 = this@Chan4,
+        chanDescriptor = chanDescriptor,
         replyPostDescriptor = replyPostDescriptor,
         proxiedOkHttpClient = proxiedOkHttpClient,
-        chanThreadManager = chanThreadManager
+        chanThreadManager = chanThreadManager,
+        replyManager = replyManager
       ).execute()
     }
 

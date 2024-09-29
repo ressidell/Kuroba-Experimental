@@ -115,7 +115,7 @@ class Chan4CaptchaLayoutViewModel(
       return
     }
 
-    if (ChanSettings.donateSolvedCaptchaForGreaterGood.get() != ChanSettings.NullableBoolean.True) {
+    if (ChanSettings.donateSolvedCaptchaForGreaterGood.get() != ChanSettings.Tralse.True) {
       return
     }
 

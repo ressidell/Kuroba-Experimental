@@ -687,19 +687,19 @@ class Chan4CaptchaLayout(
       return
     }
 
-    if (ChanSettings.donateSolvedCaptchaForGreaterGood.get() == ChanSettings.NullableBoolean.Undefined) {
+    if (ChanSettings.donateSolvedCaptchaForGreaterGood.get() == ChanSettings.Tralse.Undefined) {
       dialogFactory.createSimpleConfirmationDialog(
         context = context,
         titleTextId = R.string.reply_donate_captcha_title,
         descriptionTextId = R.string.reply_donate_captcha_description,
         positiveButtonText = getString(R.string.reply_donate_captcha_positive_button_text),
         onPositiveButtonClickListener = {
-          ChanSettings.donateSolvedCaptchaForGreaterGood.set(ChanSettings.NullableBoolean.True)
+          ChanSettings.donateSolvedCaptchaForGreaterGood.set(ChanSettings.Tralse.True)
           finishUpCaptchaVerification(solution, ttl, uuid)
         },
         negativeButtonText = getString(R.string.reply_donate_captcha_negative_button_text),
         onNegativeButtonClickListener = {
-          ChanSettings.donateSolvedCaptchaForGreaterGood.set(ChanSettings.NullableBoolean.False)
+          ChanSettings.donateSolvedCaptchaForGreaterGood.set(ChanSettings.Tralse.False)
           finishUpCaptchaVerification(solution, ttl, uuid)
         }
       )
