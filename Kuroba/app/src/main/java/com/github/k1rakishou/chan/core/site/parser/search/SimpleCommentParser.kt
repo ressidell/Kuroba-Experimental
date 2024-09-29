@@ -9,18 +9,15 @@ import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.chan.core.site.parser.style.StyleRule
 import com.github.k1rakishou.chan.core.site.parser.style.StyleRulesParamsBuilder
 import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils.sp
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_parser.comment.HtmlNode
 import com.github.k1rakishou.core_parser.comment.HtmlParser
 import com.github.k1rakishou.core_parser.comment.HtmlTag
 import com.github.k1rakishou.core_spannable.PostLinkable
 import com.github.k1rakishou.core_themes.ChanThemeColorId
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.getOrSet
 
-@DoNotStrip
 open class SimpleCommentParser {
   private val rules = ConcurrentHashMap<String, MutableList<StyleRule>>()
   private val htmlParserThreadLocal = ThreadLocal<HtmlParser>()

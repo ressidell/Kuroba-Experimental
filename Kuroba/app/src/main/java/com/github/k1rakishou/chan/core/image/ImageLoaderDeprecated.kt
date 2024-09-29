@@ -40,7 +40,6 @@ import com.github.k1rakishou.chan.utils.BackgroundUtils
 import com.github.k1rakishou.chan.utils.MediaUtils
 import com.github.k1rakishou.chan.utils.lifecycleFromContextOrNull
 import com.github.k1rakishou.common.BadContentTypeException
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.ModularResult.Companion.Try
 import com.github.k1rakishou.common.ModularResult.Companion.value
@@ -79,7 +78,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.measureTimedValue
 
-@DoNotStrip
 @Deprecated("There are bugs when using suspend versions of load functions related to cancellation. Use KurobaImageLoader instead!")
 class ImageLoaderDeprecated(
   private val verboseLogs: Boolean,

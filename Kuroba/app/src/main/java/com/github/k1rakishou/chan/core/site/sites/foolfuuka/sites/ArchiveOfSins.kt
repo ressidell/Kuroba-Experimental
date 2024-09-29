@@ -7,12 +7,10 @@ import com.github.k1rakishou.chan.core.site.sites.foolfuuka.FoolFuukaApi
 import com.github.k1rakishou.chan.core.site.sites.foolfuuka.FoolFuukaCommentParser
 import com.github.k1rakishou.chan.core.site.sites.foolfuuka.FoolFuukaEndpoints
 import com.github.k1rakishou.chan.core.site.sites.search.SiteGlobalSearchType
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.data.ArchiveType
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-@DoNotStrip
 class ArchiveOfSins : BaseFoolFuukaSite() {
 
   override fun rootUrl(): HttpUrl = ROOT_URL

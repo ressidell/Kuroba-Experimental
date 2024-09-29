@@ -3,7 +3,6 @@ package com.github.k1rakishou.chan.core.mpv
 import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.core_logger.Logger
 import java.io.File
 import kotlin.math.abs
@@ -12,7 +11,6 @@ import kotlin.math.abs
  * Taken from https://github.com/mpv-android/mpv-android
  * */
 
-@DoNotStrip
 object MpvUtils {
   private const val TAG = "MpvUtils"
 

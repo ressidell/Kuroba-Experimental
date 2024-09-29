@@ -2,7 +2,6 @@ package com.github.k1rakishou.chan.core.manager
 
 import androidx.annotation.GuardedBy
 import com.github.k1rakishou.chan.core.base.DebouncingCoroutineExecutor
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.SuspendableInitializer
 import com.github.k1rakishou.common.linkedMapWithCap
@@ -28,7 +27,6 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.time.measureTime
 
-@DoNotStrip
 class BoardManager(
   private val appScope: CoroutineScope,
   private val isDevFlavor: Boolean,

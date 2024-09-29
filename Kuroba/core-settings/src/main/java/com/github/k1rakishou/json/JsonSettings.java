@@ -16,13 +16,11 @@
  */
 package com.github.k1rakishou.json;
 
-import com.github.k1rakishou.common.DoNotStrip;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@DoNotStrip
 public class JsonSettings {
     @SerializedName("settings")
     Map<String, JsonSetting> settings = new HashMap<>();

@@ -1,7 +1,6 @@
 package com.github.k1rakishou.chan.core.base
 
 import androidx.annotation.CallSuper
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.coroutines.CancellationException
@@ -12,7 +11,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 
-@DoNotStrip
 abstract class BasePresenter<V> {
   private var view: V? = null
 

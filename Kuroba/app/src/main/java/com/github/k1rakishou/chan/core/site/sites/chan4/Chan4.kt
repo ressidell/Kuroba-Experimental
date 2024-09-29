@@ -36,7 +36,6 @@ import com.github.k1rakishou.chan.core.site.sites.search.SearchParams
 import com.github.k1rakishou.chan.core.site.sites.search.SearchResult
 import com.github.k1rakishou.chan.core.site.sites.search.SiteGlobalSearchType
 import com.github.k1rakishou.common.AppConstants
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.StringUtils.formatToken
 import com.github.k1rakishou.common.addOrReplaceCookieHeader
@@ -63,7 +62,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import java.util.Locale
 
-@DoNotStrip
 open class Chan4 : SiteBase() {
 
   private val TAG = "Chan4"
@@ -722,7 +720,6 @@ open class Chan4 : SiteBase() {
     }
   }
 
-  @DoNotStrip
   enum class CaptchaType(val value: String) : OptionSettingItem {
     V2JS("v2js"),
     V2NOJS("v2nojs"),

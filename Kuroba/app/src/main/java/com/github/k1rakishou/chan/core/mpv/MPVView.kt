@@ -14,7 +14,6 @@ import com.github.k1rakishou.chan.core.mpv.MPVLib.mpvFormat.MPV_FORMAT_INT64
 import com.github.k1rakishou.chan.core.mpv.MPVLib.mpvFormat.MPV_FORMAT_NONE
 import com.github.k1rakishou.chan.core.mpv.MPVLib.mpvFormat.MPV_FORMAT_STRING
 import com.github.k1rakishou.common.AppConstants
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.util.ChanPostUtils
 import java.io.File
@@ -28,7 +27,6 @@ import kotlin.reflect.KProperty
  * NATIVE LIBRARIES DEPEND ON THE CLASS PACKAGE!
  * */
 
-@DoNotStrip
 class MPVView(
     context: Context,
     attrs: AttributeSet?

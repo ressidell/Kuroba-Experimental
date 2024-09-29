@@ -44,7 +44,6 @@ import com.github.k1rakishou.chan.utils.FullScreenUtils.setupEdgeToEdge
 import com.github.k1rakishou.chan.utils.FullScreenUtils.setupStatusAndNavBarColors
 import com.github.k1rakishou.common.AndroidUtils
 import com.github.k1rakishou.common.AppConstants
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.core_themes.ThemeEngine
 import com.github.k1rakishou.fsaf.FileChooser
@@ -61,7 +60,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.measureTime
 
-@DoNotStrip
 class StartActivity :
   ControllerHostActivity(),
   FSAFActivityCallbacks,

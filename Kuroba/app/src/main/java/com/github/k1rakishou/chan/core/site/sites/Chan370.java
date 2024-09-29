@@ -28,7 +28,6 @@ import com.github.k1rakishou.chan.core.site.common.vichan.VichanApi;
 import com.github.k1rakishou.chan.core.site.common.vichan.VichanCommentParser;
 import com.github.k1rakishou.chan.core.site.common.vichan.VichanEndpoints;
 import com.github.k1rakishou.chan.core.site.parser.CommentParserType;
-import com.github.k1rakishou.common.DoNotStrip;
 import com.github.k1rakishou.model.data.board.ChanBoard;
 import com.github.k1rakishou.model.data.descriptor.BoardDescriptor;
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor;
@@ -39,7 +38,6 @@ import java.util.Map;
 
 import okhttp3.HttpUrl;
 
-@DoNotStrip
 public class Chan370
         extends CommonSite {
     private final ChunkDownloaderSiteProperties chunkDownloaderSiteProperties;

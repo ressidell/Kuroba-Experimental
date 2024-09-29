@@ -4,7 +4,6 @@ import androidx.annotation.GuardedBy
 import com.github.k1rakishou.chan.core.base.DebouncingCoroutineExecutor
 import com.github.k1rakishou.chan.core.site.Site
 import com.github.k1rakishou.chan.core.site.SiteRegistry
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.SuspendableInitializer
 import com.github.k1rakishou.common.mutableListWithCap
@@ -26,7 +25,6 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.time.measureTime
 
-@DoNotStrip
 open class SiteManager(
   private val appScope: CoroutineScope,
   private val isDevFlavor: Boolean,

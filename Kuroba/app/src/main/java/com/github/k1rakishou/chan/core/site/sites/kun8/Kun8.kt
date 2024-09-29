@@ -12,7 +12,6 @@ import com.github.k1rakishou.chan.core.site.common.vichan.VichanActions
 import com.github.k1rakishou.chan.core.site.common.vichan.VichanApi
 import com.github.k1rakishou.chan.core.site.common.vichan.VichanEndpoints
 import com.github.k1rakishou.chan.core.site.parser.CommentParserType
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
@@ -24,7 +23,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Request
 
-@DoNotStrip
 class Kun8 : CommonSite() {
   private val chunkDownloaderSiteProperties = ChunkDownloaderSiteProperties(
     enabled = false,

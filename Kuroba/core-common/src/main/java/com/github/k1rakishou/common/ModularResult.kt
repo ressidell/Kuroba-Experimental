@@ -6,7 +6,6 @@ import java.util.Locale
 import java.util.concurrent.Callable
 import javax.annotation.CheckReturnValue
 
-@DoNotStrip
 sealed class ModularResult<V : Any?> {
   data class Value<V : Any?>(val value: V) : ModularResult<V>()
   data class Error<V : Any?>(val error: Throwable) : ModularResult<V>()

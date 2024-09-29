@@ -11,9 +11,7 @@ import androidx.appcompat.widget.AppCompatImageView;
 import androidx.core.content.ContextCompat;
 
 import com.github.k1rakishou.chan.R;
-import com.github.k1rakishou.common.DoNotStrip;
 
-@DoNotStrip
 public class ThumbnailImageView extends AppCompatImageView {
 
     private boolean isOriginalMediaPlayable = false;

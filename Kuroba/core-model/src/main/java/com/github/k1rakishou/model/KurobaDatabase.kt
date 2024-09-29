@@ -5,7 +5,6 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.model.converter.BitSetTypeConverter
 import com.github.k1rakishou.model.converter.ChanPostImageTypeTypeConverter
 import com.github.k1rakishou.model.converter.DateTimeTypeConverter
@@ -117,7 +116,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
 
-@DoNotStrip
 @Database(
   entities = [
     ChanSiteIdEntity::class,

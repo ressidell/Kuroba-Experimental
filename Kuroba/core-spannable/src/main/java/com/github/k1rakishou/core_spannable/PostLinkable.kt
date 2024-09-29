@@ -21,7 +21,6 @@ import android.text.style.ClickableSpan
 import android.view.View
 import com.github.k1rakishou.ChanSettings
 import com.github.k1rakishou.common.CommentParserConstants
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.data.ArchiveType
 import com.github.k1rakishou.core_themes.ChanTheme
 import com.github.k1rakishou.core_themes.ThemeEngine
@@ -31,7 +30,6 @@ import com.github.k1rakishou.core_themes.ThemeEngine
  * spoilers etc. PostCell has a [PostViewMovementMethod], that searches spans at the
  * location the TextView was tapped, and handled if it was a PostLinkable.
  */
-@DoNotStrip
 open class PostLinkable(
   val key: CharSequence,
   val linkableValue: Value,

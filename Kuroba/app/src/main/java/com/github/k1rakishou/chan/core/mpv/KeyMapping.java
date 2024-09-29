@@ -63,9 +63,6 @@ import static android.view.KeyEvent.KEYCODE_TAB;
 
 import android.util.SparseArray;
 
-import com.github.k1rakishou.common.DoNotStrip;
-
-@DoNotStrip
 public class KeyMapping {
     public static final SparseArray<String> map = new SparseArray<>();
 

@@ -19,13 +19,11 @@ package com.github.k1rakishou.model.data.export;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.github.k1rakishou.common.DoNotStrip;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@DoNotStrip
 public class ExportedAppSettings {
     // Don't forget to change this when changing any of the Export models.
     // Also, don't forget to handle the change in the onUpgrade or onDowngrade methods

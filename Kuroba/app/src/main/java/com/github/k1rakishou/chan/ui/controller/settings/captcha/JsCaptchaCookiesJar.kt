@@ -1,9 +1,7 @@
 package com.github.k1rakishou.chan.ui.controller.settings.captcha
 
-import com.github.k1rakishou.common.DoNotStrip
 import com.google.gson.annotations.SerializedName
 
-@DoNotStrip
 data class JsCaptchaCookiesJar(
   @SerializedName("hsid_cookie")
   val hsidCookie: String = "",

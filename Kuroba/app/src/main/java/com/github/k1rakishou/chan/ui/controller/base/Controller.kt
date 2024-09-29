@@ -43,7 +43,6 @@ import com.github.k1rakishou.chan.utils.AppModuleAndroidUtils
 import com.github.k1rakishou.chan.utils.IHasViewModelScope
 import com.github.k1rakishou.chan.utils.ViewModelScope
 import com.github.k1rakishou.common.AndroidUtils
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.errorMessageOrClassName
 import com.github.k1rakishou.common.requireComponentActivity
@@ -60,7 +59,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
-@DoNotStrip
 abstract class Controller(
   @JvmField var context: Context
 ) : IHasViewModelScope, IHasViewModelProviderFactory, SavedStateRegistryOwner {

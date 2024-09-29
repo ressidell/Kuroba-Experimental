@@ -26,10 +26,8 @@ import androidx.annotation.Nullable;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.github.k1rakishou.ChanSettings;
 import com.github.k1rakishou.common.AndroidUtils;
-import com.github.k1rakishou.common.DoNotStrip;
 import com.github.k1rakishou.core_logger.Logger;
 
-@DoNotStrip
 public class CustomScaleImageView extends SubsamplingScaleImageView {
     private static final String TAG = "CustomScaleImageView";
     private static final float MIN_PAN_OFFSET = 3f;

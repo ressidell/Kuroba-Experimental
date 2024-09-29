@@ -3,7 +3,6 @@ package com.github.k1rakishou.chan.core.manager
 import androidx.annotation.GuardedBy
 import com.github.k1rakishou.chan.core.base.DebouncingCoroutineExecutor
 import com.github.k1rakishou.chan.core.base.SerializedCoroutineExecutor
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.SuspendableInitializer
 import com.github.k1rakishou.common.mutableListWithCap
@@ -26,7 +25,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl
 import org.joda.time.DateTime
-import java.util.*
+import java.util.BitSet
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -721,7 +720,6 @@ class BookmarksManager(
     val initialFlags: BitSet? = null
   )
 
-  @DoNotStrip
   sealed class BookmarkChange {
     object BookmarksInitialized : BookmarkChange()
 

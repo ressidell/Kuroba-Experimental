@@ -19,8 +19,6 @@ package com.github.k1rakishou.chan.core.cache.downloader;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.github.k1rakishou.common.DoNotStrip;
-
 import java.io.File;
 
 /**
@@ -28,7 +26,6 @@ import java.io.File;
  *
  * onStart -> onProgress (?) -> (onSuccess | onFail | onNotFound | onStop | onCancel) -> onEnd
  * */
-@DoNotStrip
 public abstract class FileCacheListener {
 
     /**

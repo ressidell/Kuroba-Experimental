@@ -38,7 +38,6 @@ import com.github.k1rakishou.chan.core.site.sites.search.SearchParams
 import com.github.k1rakishou.chan.core.site.sites.search.SearchResult
 import com.github.k1rakishou.chan.core.site.sites.search.SiteGlobalSearchType
 import com.github.k1rakishou.common.AppConstants
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.addOrReplaceCookieHeader
 import com.github.k1rakishou.common.errorMessageOrClassName
@@ -65,7 +64,6 @@ import okhttp3.MultipartBody
 import okhttp3.Request
 import java.util.regex.Pattern
 
-@DoNotStrip
 class Dvach : CommonSite() {
   private val chunkDownloaderSiteProperties = ChunkDownloaderSiteProperties(
     enabled = true,
@@ -811,7 +809,6 @@ class Dvach : CommonSite() {
     }
   }
 
-  @DoNotStrip
   enum class CaptchaType(val value: String) : OptionSettingItem {
     V2JS("v2js"),
     V2NOJS("v2nojs"),

@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.annotation.GuardedBy
 import com.github.k1rakishou.chan.core.site.sites.chan4.Chan4
 import com.github.k1rakishou.common.AppConstants
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.ModularResult
 import com.github.k1rakishou.common.ModularResult.Companion.Try
 import com.github.k1rakishou.common.SuspendableInitializer
@@ -29,7 +28,6 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.time.measureTime
 
-@DoNotStrip
 open class ArchivesManager(
   gson: Lazy<Gson>,
   private val appContext: Context,
@@ -231,7 +229,6 @@ open class ArchivesManager(
     }
   }
 
-  @DoNotStrip
   class ArchiveData(
     @Expose
     @SerializedName("name")

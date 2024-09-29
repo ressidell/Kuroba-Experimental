@@ -30,7 +30,6 @@ import com.github.k1rakishou.chan.utils.MediaUtils
 import com.github.k1rakishou.chan.utils.MediaUtils.getImageDims
 import com.github.k1rakishou.chan.utils.MediaUtils.getImageFormat
 import com.github.k1rakishou.common.AndroidUtils.getDisplaySize
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.core_logger.Logger
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import com.google.gson.Gson
@@ -281,7 +280,6 @@ class ImageReencodingPresenter(
       && imageOptions.reencodeSettings == null
   }
 
-  @DoNotStrip
   class ImageOptions {
     var fixExif = false
     var removeMetadata = false

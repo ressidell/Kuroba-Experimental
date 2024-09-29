@@ -18,7 +18,6 @@ import android.view.Surface;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.github.k1rakishou.common.DoNotStrip;
 import com.github.k1rakishou.common.KotlinExtensionsKt;
 import com.github.k1rakishou.core_logger.Logger;
 
@@ -29,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@DoNotStrip
 @SuppressWarnings("unused")
 public class MPVLib {
     private static final String TAG = "MPVLib";
@@ -395,7 +393,6 @@ public class MPVLib {
         return checkedLibsMap;
     }
 
-    @DoNotStrip
     public static class MismatchedVersionException extends Exception {
 
         public MismatchedVersionException(int playerVersion, int supportedVersion) {
@@ -405,7 +402,6 @@ public class MPVLib {
         }
     }
 
-    @DoNotStrip
     public interface EventObserver {
         void eventProperty(@NonNull String property);
 
@@ -418,12 +414,10 @@ public class MPVLib {
         void event(int eventId);
     }
 
-    @DoNotStrip
     public interface LogObserver {
         void logMessage(@NonNull String prefix, int level, @NonNull String text);
     }
 
-    @DoNotStrip
     public static class mpvFormat {
         public static final int MPV_FORMAT_NONE = 0;
         public static final int MPV_FORMAT_STRING = 1;
@@ -437,7 +431,6 @@ public class MPVLib {
         public static final int MPV_FORMAT_BYTE_ARRAY = 9;
     }
 
-    @DoNotStrip
     public static class mpvEventId {
         public static final int MPV_EVENT_NONE = 0;
         public static final int MPV_EVENT_SHUTDOWN = 1;
@@ -460,7 +453,6 @@ public class MPVLib {
         public static final int MPV_EVENT_HOOK = 25;
     }
 
-    @DoNotStrip
     public static class mpvLogLevel {
         public static final int MPV_LOG_LEVEL_NONE = 0;
         public static final int MPV_LOG_LEVEL_FATAL = 10;

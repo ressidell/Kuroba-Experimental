@@ -28,7 +28,6 @@ import com.github.k1rakishou.chan.core.site.limitations.ConstantAttachablesCount
 import com.github.k1rakishou.chan.core.site.limitations.ConstantMaxTotalSizeInfo
 import com.github.k1rakishou.chan.core.site.limitations.SitePostingLimitation
 import com.github.k1rakishou.chan.core.site.parser.CommentParserType
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.model.data.board.ChanBoard.Companion.create
 import com.github.k1rakishou.model.data.descriptor.BoardDescriptor.Companion.create
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
@@ -36,7 +35,6 @@ import com.github.k1rakishou.model.data.descriptor.SiteDescriptor.Companion.crea
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-@DoNotStrip
 class Lainchan : CommonSite() {
     private val chunkDownloaderSiteProperties = ChunkDownloaderSiteProperties(
         enabled = true,

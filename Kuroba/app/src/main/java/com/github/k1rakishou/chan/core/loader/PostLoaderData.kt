@@ -1,12 +1,10 @@
 package com.github.k1rakishou.chan.core.loader
 
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.model.data.descriptor.PostDescriptor
 import kotlinx.coroutines.Job
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-@DoNotStrip
 class PostLoaderData(
   val catalogMode: Boolean,
   val postDescriptor: PostDescriptor,

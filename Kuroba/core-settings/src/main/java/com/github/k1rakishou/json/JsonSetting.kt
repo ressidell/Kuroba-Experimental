@@ -16,10 +16,8 @@
  */
 package com.github.k1rakishou.json
 
-import com.github.k1rakishou.common.DoNotStrip
 import com.google.gson.annotations.SerializedName
 
-@DoNotStrip
 open class JsonSetting(
   @SerializedName("key")
   var key: String? = null

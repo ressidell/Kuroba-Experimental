@@ -1,10 +1,8 @@
 package com.github.k1rakishou.chan.core.cache.downloader
 
-import com.github.k1rakishou.common.DoNotStrip
 import okhttp3.HttpUrl
 import java.io.File
 
-@DoNotStrip
 internal sealed class FileDownloadEvent {
     fun rethrowUnsatisfiableRangeHttpError() {
         when (this) {
@@ -52,7 +50,6 @@ internal sealed class FileDownloadEvent {
     }
 }
 
-@DoNotStrip
 internal sealed class MediaDownloadException(message: String) : Exception(message) {
 
     fun rethrowUnsatisfiableRangeHttpError() {

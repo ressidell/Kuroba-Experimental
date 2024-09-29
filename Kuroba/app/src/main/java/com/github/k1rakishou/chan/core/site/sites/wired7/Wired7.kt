@@ -27,14 +27,12 @@ import com.github.k1rakishou.chan.core.site.limitations.ConstantMaxTotalSizeInfo
 import com.github.k1rakishou.chan.core.site.limitations.SitePostingLimitation
 import com.github.k1rakishou.chan.core.site.parser.CommentParserType
 import com.github.k1rakishou.chan.core.site.sites.lainchan.LainchanActions
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.model.data.board.ChanBoard
 import com.github.k1rakishou.model.data.descriptor.BoardDescriptor
 import com.github.k1rakishou.model.data.descriptor.ChanDescriptor
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-@DoNotStrip
 class Wired7 : CommonSite() {
   private val chunkDownloaderSiteProperties = ChunkDownloaderSiteProperties(
     enabled = true,

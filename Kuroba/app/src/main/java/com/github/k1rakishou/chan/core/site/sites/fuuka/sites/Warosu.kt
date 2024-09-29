@@ -9,12 +9,10 @@ import com.github.k1rakishou.chan.core.site.sites.fuuka.FuukaApi
 import com.github.k1rakishou.chan.core.site.sites.fuuka.FuukaCommentParser
 import com.github.k1rakishou.chan.core.site.sites.fuuka.FuukaEndpoints
 import com.github.k1rakishou.chan.core.site.sites.search.SiteGlobalSearchType
-import com.github.k1rakishou.common.DoNotStrip
 import com.github.k1rakishou.common.data.ArchiveType
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-@DoNotStrip
 class Warosu : BaseFuukaSite() {
   private val chunkDownloaderSiteProperties = ChunkDownloaderSiteProperties(
     enabled = true,
