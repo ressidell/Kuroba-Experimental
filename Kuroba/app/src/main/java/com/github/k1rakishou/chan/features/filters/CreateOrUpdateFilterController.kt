@@ -26,7 +26,6 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -559,7 +558,7 @@ class CreateOrUpdateFilterController(
       }
     }
 
-    Text(
+    KurobaComposeText(
       modifier = Modifier
         .fillMaxWidth()
         .wrapContentHeight()
@@ -674,7 +673,7 @@ class CreateOrUpdateFilterController(
         key = filterAction.id,
         name = FilterAction.filterActionName(filterAction),
         groupId = groupId,
-        isCurrentlySelected = chanFilterMutableState.action.value == filterAction.id
+        checked = chanFilterMutableState.action.value == filterAction.id
       )
     }
 
@@ -829,8 +828,6 @@ class CreateOrUpdateFilterController(
     val testPattern: MutableState<TextFieldValue> = mutableStateOf(TextFieldValue()),
     val filterWatchAutoSave: MutableState<Boolean> = mutableStateOf(false),
     val filterWatchAutoSaveMedia: MutableState<Boolean> = mutableStateOf(false),
-
-    val testPattern: MutableState<String> = mutableStateOf(""),
     val filterValidationResult: MutableState<FilterValidationResult> = mutableStateOf(FilterValidationResult.Undefined)
   ) {
 
