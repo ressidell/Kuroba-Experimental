@@ -327,7 +327,7 @@ dependencies {
     testImplementation "org.powermock:powermock-api-mockito2:${versions.powermock}"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:${versions.kotlin_coroutines_version}"
 
-    devImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
+    //devImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
 }
 
 //====================================================================
