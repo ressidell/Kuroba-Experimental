@@ -156,6 +156,7 @@ class BookmarkFilterWatchableThreadsUseCase(
     val bookmarksToCreate = mutableListOf<BookmarksManager.SimpleThreadBookmark>()
     val bookmarksToUpdate = mutableListOf<ChanDescriptor.ThreadDescriptor>()
     val bookmarksToNotify = mutableMapOf<String, MutableList<ChanDescriptor.ThreadDescriptor>>()
+    val bookmarksToAutoSave = mutableMapOf<ChanDescriptor.ThreadDescriptor,Boolean>()
     val bookmarkGroupsToCreate = mutableMapOf<String, MutableList<ChanDescriptor.ThreadDescriptor>>()
 
     matchedCatalogThreads.forEach { filterWatchCatalogThreadInfoObject ->

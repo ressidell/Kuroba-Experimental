@@ -18,6 +18,7 @@ import com.github.k1rakishou.chan.core.manager.SeenPostsManager
 import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.ThirdEyeManager
 import com.github.k1rakishou.chan.core.manager.ThreadBookmarkGroupManager
+import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
 import com.github.k1rakishou.chan.core.site.loader.ChanThreadLoaderCoordinator
 import com.github.k1rakishou.chan.core.site.loader.internal.usecase.ParsePostsV1UseCase
 import com.github.k1rakishou.chan.core.site.parser.ReplyParser
@@ -192,6 +193,7 @@ class UseCaseModule {
     appScope: CoroutineScope,
     boardManager: BoardManager,
     bookmarksManager: BookmarksManager,
+    threadDownloadManager: Lazy<ThreadDownloadManager> ,
     threadBookmarkGroupManager: ThreadBookmarkGroupManager,
     chanFilterManager: ChanFilterManager,
     siteManager: SiteManager,
@@ -207,6 +209,7 @@ class UseCaseModule {
       appConstants,
       boardManager,
       bookmarksManager,
+      threadDownloadManager,
       threadBookmarkGroupManager,
       chanFilterManager,
       siteManager,
