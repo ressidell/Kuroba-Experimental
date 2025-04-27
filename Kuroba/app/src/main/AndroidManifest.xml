@@ -48,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </queries>
 
     <application
+        android:networkSecurityConfig="@xml/network_security_config"
         android:name="com.github.k1rakishou.chan.Chan"
         android:allowBackup="true"
         android:icon="${iconLoc}"
