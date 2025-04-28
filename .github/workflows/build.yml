@@ -35,7 +35,7 @@ jobs:
       run: |
         cd Kuroba
         chmod +x ./gradlew
-        ./gradlew assembleDevRelease -Pandroid.injected.signing.store.file=${{ github.workspace }}/kurobaex.jks -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEYSTORE_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+        ./gradlew assembleDevRelease -Pandroid.injected.signing.store.file=${{ github.workspace }}/kurobaex.jks -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PW }} -Pandroid.injected.signing.key.alias=${{ secrets.KEYSTORE_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_PW }}
     - name: Create release
       run: |
         python ${{ github.workspace }}/.github/workflows/create_release.py
