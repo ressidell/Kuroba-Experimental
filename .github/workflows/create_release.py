@@ -142,17 +142,25 @@ if __name__ == "__main__":
     print(f'tag_name: {tag_name}')
     print(f'commits:\n{commits}')
 
-    repo = 'K1rakishou/Kuroba-Experimental-beta'
-    release_name = f'KurobaEx-beta release {tag_name}'
+    repo = 'ressidell/Kuroba-Experimental'
+    release_name = f'KurobaEx-dev release {tag_name}'
 
     body = ""
     if (len(commits) > 0):
         body = f'New release available. It includes the following commits:\n{commits}'
     else:
         body = f'New release available.'
+        
+    asset_path = 'Kuroba/app/dev/release/KurobaEx-dev.apk'
+    asset_path_fallback = 'Kuroba/app/build/outputs/apk/dev/release/KurobaEx-dev.apk'
 
-    asset_path = 'Kuroba/app/build/outputs/apk/beta/release/KurobaEx-beta.apk'
-
+    
+    if (!os.path.isfile(asset_path)):
+        asset_path = asset_path_fallback
+    else if (!os.path.isfile(asset_path_fallback)):
+        print("APK not found.")
+        exit(-1)        
+    
     token = os.getenv('PAT')
     if (len(token) == 0):
         print("Token is empty.")
