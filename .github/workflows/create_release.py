@@ -63,7 +63,7 @@ def get_new_tag_name(repo):
     tag_name = get_latest_release_tag(repo)
     print(f"get_new_tag_name() tag_name: {tag_name}")
 
-    pattern = r'v(\d+?)\.(\d{1,2})\.(\d{1,2})(?:\.(\d+))?-beta$'
+    pattern = r'v(\d+?)\.(\d{1,2})\.(\d{1,2})(?:\.(\d+))?-dev$'
     
     match = re.search(pattern, tag_name)
     if match:
@@ -75,7 +75,7 @@ def get_new_tag_name(repo):
         else:
             incremented = 0
         
-        new_version = f"v{groups[0]}.{groups[1]}.{groups[2]}.{incremented}-beta"
+        new_version = f"v{groups[0]}.{groups[1]}.{groups[2]}.{incremented}-dev"
         return new_version
     else:
         return ""
@@ -127,7 +127,7 @@ def get_latest_release_commit_hash(repo, access_token=None):
     return ""
 
 if __name__ == "__main__":
-    tag_name = get_new_tag_name('K1rakishou/Kuroba-Experimental-beta')
+    tag_name = get_new_tag_name('K1rakishou/Kuroba-Experimental-dev')
     if (len(tag_name) == 0):
         print("Failed to get the release tag.")
         exit(-1)
@@ -155,11 +155,12 @@ if __name__ == "__main__":
     asset_path_fallback = 'Kuroba/app/build/outputs/apk/dev/release/KurobaEx-dev.apk'
 
     
-    if (!os.path.isfile(asset_path)):
-        asset_path = asset_path_fallback
-    else if (!os.path.isfile(asset_path_fallback)):
-        print("APK not found.")
-        exit(-1)        
+    if (not os.path.isfile(asset_path)):
+        if (not os.path.isfile(asset_path_fallback)):
+            print("APK not found.")
+            exit(-1)        
+        else:
+            asset_path = asset_path_fallback
     
     token = os.getenv('PAT')
     if (len(token) == 0):
@@ -167,3 +168,4 @@ if __name__ == "__main__":
         exit(-1)
 
     create_github_release(token, repo, tag_name, release_name, body, asset_path)
+    
