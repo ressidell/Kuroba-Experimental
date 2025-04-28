@@ -26,16 +26,16 @@ jobs:
         pip install requests
     - name: Decode Keystore File
       run: |
-        if [ -z "${{ secrets.KEYSTORE }}" ]; then
-        echo "KEYSTORE secret is not set"
+        if [ -z "${{ secrets.KEYSTORE_B64 }}" ]; then
+        echo "KEYSTORE_B64 secret is not set"
         exit 1
         fi
-        echo "${{ secrets.KEYSTORE }}" | base64 --decode > "${{ github.workspace }}/kurobaex.jks"
+        echo "${{ secrets.KEYSTORE_B64 }}" | base64 --decode > "${{ github.workspace }}/kurobaex.jks"
     - name: Build and Sign APK
       run: |
         cd Kuroba
         chmod +x ./gradlew
-        ./gradlew assembleBetaRelease -Pandroid.injected.signing.store.file=${{ github.workspace }}/kurobaex.jks -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+        ./gradlew assembleDevRelease -Pandroid.injected.signing.store.file=${{ github.workspace }}/kurobaex.jks -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEYSTORE_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
     - name: Create release
       run: |
         python ${{ github.workspace }}/.github/workflows/create_release.py
