@@ -74,6 +74,7 @@ import com.github.k1rakishou.model.migrations.Migration_v40_to_v41
 import com.github.k1rakishou.model.migrations.Migration_v41_to_v42
 import com.github.k1rakishou.model.migrations.Migration_v42_to_v43
 import com.github.k1rakishou.model.migrations.Migration_v43_to_v44
+import com.github.k1rakishou.model.migrations.Migration_v44_to_v45
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
@@ -114,7 +115,7 @@ import java.util.concurrent.atomic.AtomicInteger
     ChanThreadsWithPosts::class,
     OldChanPostThread::class
   ],
-  version = 44,
+  version = 45,
   exportSchema = true
 )
 @TypeConverters(
@@ -214,6 +215,7 @@ abstract class KurobaMainDatabase : RoomDatabase() {
           Migration_v41_to_v42(),
           Migration_v42_to_v43(),
           Migration_v43_to_v44(),
+          Migration_v44_to_v45(),
         )
         .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)
         .build()
