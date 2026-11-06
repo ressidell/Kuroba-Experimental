@@ -53,8 +53,8 @@ class Migration_v43_to_v44 : Migration(43, 44) {
                 NULL, `spoilers`, `user_ids`, `country_flags`, `is_unlimited_catalog`
             FROM `chan_board`
         """.trimIndent())
-    db.execSQL("ALTER TABLE chan_filter ADD COLUMN filter_watch_autosave INTEGER NOT NULL DEFAULT ${KurobaDatabase.SQLITE_FALSE}")
-    db.execSQL("ALTER TABLE chan_filter ADD COLUMN filter_watch_autosave_media INTEGER NOT NULL DEFAULT ${KurobaDatabase.SQLITE_FALSE}")
+    db.execSQL("ALTER TABLE chan_filter ADD COLUMN filter_watch_autosave INTEGER NOT NULL DEFAULT 0")
+    db.execSQL("ALTER TABLE chan_filter ADD COLUMN filter_watch_autosave_media INTEGER NOT NULL DEFAULT 0")
 
     db.execSQL("DROP TABLE `chan_board`")
 

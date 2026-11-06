@@ -2,9 +2,9 @@ name: Build/Verify/Publish MR/Release
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ autobuild ]
   pull_request:
-    branches: [ develop ]
+    branches: [ autobuild ]
 
 jobs:
   precheck:

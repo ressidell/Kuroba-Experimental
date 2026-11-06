@@ -7,13 +7,13 @@ on:
         required: true
         type: string  # 'beta' or 'stable'
     secrets:
-      KEYSTORE:
+      KEYSTORE_B64:
         required: true
-      KEYSTORE_PASSWORD:
+      KEYSTORE_PW:
         required: true
-      KEY_ALIAS:
+      KEYSTORE_ALIAS:
         required: true
-      KEY_PASSWORD:
+      KEY_PW:
         required: true
       PAT:
         required: true
@@ -61,7 +61,7 @@ jobs:
       - name: Decode Keystore File
         if: steps.check.outputs.has-permission
         run: |
-          echo ${{ secrets.KEYSTORE }} | base64 -d > ${{ github.workspace }}/kurobaex.jks
+          echo ${{ secrets.KEYSTORE_B64 }} | base64 -d > ${{ github.workspace }}/kurobaex.jks
 
       - name: Publish APK
         if: steps.check.outputs.has-permission
@@ -76,9 +76,9 @@ jobs:
             ./gradlew assembleRelease \
               -PbuildType=1 \
               -Pandroid.injected.signing.store.file=${{ github.workspace }}/kurobaex.jks \
-              -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-              -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-              -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }} \
+              -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PW }} \
+              -Pandroid.injected.signing.key.alias=${{ secrets.KEYSTORE_ALIAS }} \
+              -Pandroid.injected.signing.key.password=${{ secrets.KEY_PW }} \
               -Dorg.gradle.jvmargs="-Xmx4096m"
             python ${{ github.workspace }}/.github/workflows/publish/main.py beta ${{ github.workspace }}
           elif [[ "$TYPE" == "stable" && "$MSG" == "[stable]"* ]]; then
@@ -86,9 +86,9 @@ jobs:
             ./gradlew assembleRelease \
               -PbuildType=0 \
               -Pandroid.injected.signing.store.file=${{ github.workspace }}/kurobaex.jks \
-              -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-              -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-              -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }} \
+              -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PW }} \
+              -Pandroid.injected.signing.key.alias=${{ secrets.KEYSTORE_ALIAS }} \
+              -Pandroid.injected.signing.key.password=${{ secrets.KEY_PW }} \
               -Dorg.gradle.jvmargs="-Xmx4096m"
             python ${{ github.workspace }}/.github/workflows/publish/main.py stable ${{ github.workspace }}
           fi
