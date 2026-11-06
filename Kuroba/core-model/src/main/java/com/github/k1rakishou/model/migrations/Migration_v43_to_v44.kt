@@ -53,6 +53,16 @@ class Migration_v43_to_v44 : Migration(43, 44) {
                 NULL, `spoilers`, `user_ids`, `country_flags`, `is_unlimited_catalog`
             FROM `chan_board`
         """.trimIndent())
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.doWithoutForeignKeys {
+            try {
+                database.execSQL("ALTER TABLE chan_filter ADD COLUMN filter_watch_autosave INTEGER NOT NULL DEFAULT ${KurobaDatabase.SQLITE_FALSE}");
+                database.execSQL("ALTER TABLE chan_filter ADD COLUMN filter_watch_autosave_media INTEGER NOT NULL DEFAULT ${KurobaDatabase.SQLITE_FALSE}");
+            } catch (ex: SQLiteException) {
+                if (!ex.message?.startsWith( "duplicate column name" )!!){throw ex}
+            }
+        }
+    }
 
     db.execSQL("DROP TABLE `chan_board`")
 

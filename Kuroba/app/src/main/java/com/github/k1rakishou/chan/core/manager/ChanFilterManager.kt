@@ -543,6 +543,8 @@ class ChanFilterManager(
       applyToSaved = newChanFilter.applyToSaved,
       applyToEmptyComments = newChanFilter.applyToEmptyComments,
       filterWatchNotify = newChanFilter.filterWatchNotify,
+      filterWatchAutoSave = newChanFilter.filterWatchAutoSave,
+      filterWatchAutoSaveMedia = newChanFilter.filterWatchAutoSaveMedia,
     )
   }
 
