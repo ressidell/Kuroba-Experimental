@@ -434,7 +434,7 @@ class FiltersControllerViewModel(
           append(" ")
           append(chanFilter.filterWatchNotify.toString())
         }
-        if (chanFilter.filterWatchAutoSave){
+        if (chanFilter.filterWatchAutoSave) {
           append("\n")
           append(
             AnnotatedString(getString(R.string.filter_filter_watch_auto_save),
@@ -443,7 +443,7 @@ class FiltersControllerViewModel(
           append(" ")
           append(chanFilter.filterWatchAutoSave.toString())
         }
-        if (chanFilter.filterWatchAutoSaveMedia){
+        if (chanFilter.filterWatchAutoSaveMedia) {
           append("\n")
           append(
             AnnotatedString(getString(R.string.filter_filter_watch_auto_save_media),

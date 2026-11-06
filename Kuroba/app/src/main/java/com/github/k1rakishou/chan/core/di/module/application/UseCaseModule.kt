@@ -166,7 +166,7 @@ class UseCaseModule {
     kurobaSettings: KurobaSettings,
     boardManager: BoardManager,
     bookmarksManager: BookmarksManager,
-    threadDownloadManager: Lazy<ThreadDownloadManager> ,
+    threadDownloadManager: Lazy<ThreadDownloadManager>,
     threadBookmarkGroupManager: ThreadBookmarkGroupManager,
     chanFilterManager: ChanFilterManager,
     siteManager: SiteManager,

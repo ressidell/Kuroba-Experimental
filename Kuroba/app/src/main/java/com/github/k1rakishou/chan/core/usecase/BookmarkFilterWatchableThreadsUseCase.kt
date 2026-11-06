@@ -9,7 +9,6 @@ import com.github.k1rakishou.chan.core.manager.SiteManager
 import com.github.k1rakishou.chan.core.manager.ThreadBookmarkGroupManager
 import com.github.k1rakishou.chan.core.site.parser.SiteApi
 import com.github.k1rakishou.chan.core.manager.ThreadDownloadManager
-import com.github.k1rakishou.chan.core.site.parser.ChanReader
 import com.github.k1rakishou.chan.core.site.parser.search.SimpleCommentParser
 import com.github.k1rakishou.common.AppConstants
 import com.github.k1rakishou.common.ModularResult
@@ -156,7 +155,7 @@ class BookmarkFilterWatchableThreadsUseCase(
     val bookmarksToCreate = mutableListOf<BookmarksManager.SimpleThreadBookmark>()
     val bookmarksToUpdate = mutableListOf<ChanDescriptor.ThreadDescriptor>()
     val bookmarksToNotify = mutableMapOf<String, MutableList<ChanDescriptor.ThreadDescriptor>>()
-    val bookmarksToAutoSave = mutableMapOf<ChanDescriptor.ThreadDescriptor,Boolean>()
+    val bookmarksToAutoSave = mutableMapOf<ChanDescriptor.ThreadDescriptor, Boolean>()
     val bookmarkGroupsToCreate = mutableMapOf<String, MutableList<ChanDescriptor.ThreadDescriptor>>()
 
     matchedCatalogThreads.forEach { filterWatchCatalogThreadInfoObject ->
@@ -204,8 +203,9 @@ class BookmarkFilterWatchableThreadsUseCase(
             bookmarkDescriptorsToNotify.add(bookmarkThreadDescriptor)
           }
           if (filterWatchCatalogThreadInfoObject.matchedFilter().filterWatcherAutoSaveThread()) {
-            bookmarksToAutoSave[bookmarkThreadDescriptor] = filterWatchCatalogThreadInfoObject.matchedFilter().filterWatcherAutoSaveThreadMedia()
-
+            bookmarksToAutoSave[bookmarkThreadDescriptor] = filterWatchCatalogThreadInfoObject
+              .matchedFilter()
+              .filterWatcherAutoSaveThreadMedia()
           }
         }
 
@@ -249,9 +249,9 @@ class BookmarkFilterWatchableThreadsUseCase(
           val downloadMedia = descriptorMap.value
 
           threadDownloadManager.get().startDownloading(
-            threadDescriptor =  autoSavedThreadDescriptor,
+            threadDescriptor = autoSavedThreadDescriptor,
             threadThumbnailUrl = thumbnailUrlString,
-            downloadMedia =  downloadMedia
+            downloadMedia = downloadMedia
           )
         }
         Logger.d(TAG, "createOrUpdateBookmarks() success=$success created ${createdThreadBookmarks.size} " +
