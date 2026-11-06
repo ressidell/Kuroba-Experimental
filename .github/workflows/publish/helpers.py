@@ -3,7 +3,7 @@ import subprocess
 import re
 import github
 
-RepoName = 'K1rakishou/Kuroba-Experimental'
+RepoName = 'ressidell/Kuroba-Experimental'
 
 BetaTagPattern = r'v(\d+?)\.(\d{1,2})\.(\d{1,2})\.(\d+)-beta$'
 ReleaseTagPattern = r'v(\d+?)\.(\d{1,2})\.(\d{1,2})-release$'

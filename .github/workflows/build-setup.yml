@@ -60,8 +60,10 @@ jobs:
 
       - name: Decode Keystore File
         if: steps.check.outputs.has-permission
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
         run: |
-          echo ${{ secrets.KEYSTORE_B64 }} | base64 -d > ${{ github.workspace }}/kurobaex.jks
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/kurobaex.jks"
 
       - name: Publish APK
         if: steps.check.outputs.has-permission
